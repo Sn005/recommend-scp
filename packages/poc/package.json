@@ -1,0 +1,25 @@
+{
+  "name": "@recommend-scp/poc",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "type-check": "tsc --noEmit",
+    "run:01-fetch": "tsx scripts/01-fetch.ts",
+    "run:02-embed": "tsx scripts/02-embed.ts",
+    "run:03-tag": "tsx scripts/03-tag.ts",
+    "run:04-search": "tsx scripts/04-search.ts",
+    "run:05-report": "tsx scripts/05-report.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "openai": "^4.77.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
