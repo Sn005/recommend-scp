@@ -33,3 +33,6 @@ logs/
 
 # Turbo
 .turbo/
+
+# local document
+/.local-docs
