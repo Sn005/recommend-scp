@@ -152,9 +152,13 @@ EARS記法パターン:
 │                                                 │
 │  2. テストが全て通過することを確認              │
 │                                                 │
-│  3. ステータス更新                              │
+│  3. ステータス更新 ⚠️ 最重要                    │
 │     - status: "completed"                       │
 │     - completed_at: "YYYY-MM-DD"                │
+│     - 一覧ファイルも必ず更新:                   │
+│       - subtask-list.md                         │
+│       - story-list.md（Story完了時）            │
+│       - epic-list.md（EPIC完了時）              │
 │                                                 │
 │  4. 親Storyの確認                               │
 │     - 全Subtask完了 → Story完了                 │
@@ -221,6 +225,7 @@ AC: 「ユーザー認証APIを実装すること」
 - [ ] 全ACがチェックされている
 - [ ] 全テストが通過している
 - [ ] ステータスを "completed" に更新した
+- [ ] **一覧ファイル（subtask-list.md, story-list.md）のステータスも更新した** ⚠️
 - [ ] completed_at を記入した
 - [ ] 次のSubtaskをユーザーに提示した
 
@@ -263,8 +268,11 @@ AC: 「ユーザー認証APIを実装すること」
 | タイミング | ファイル | 更新内容 |
 |-----------|----------|----------|
 | 完了時 | `specs/{epic-id}/{story-id}/{subtask-id}.md` | status, completed_at, ACチェック |
+| **完了時** ⚠️ | `specs/{epic-id}/{story-id}/subtask-list.md` | **ステータス列を `completed` に更新** |
 | 全Subtask完了時 | `specs/{epic-id}/{story-id}/{story-id}.md` | status, completed_at |
+| **全Subtask完了時** ⚠️ | `specs/{epic-id}/story-list.md` | **ステータス列を `completed` に更新** |
 | 全Story完了時 | `specs/{epic-id}/{epic-id}.md` | status, completed_at |
+| **全Story完了時** ⚠️ | `specs/epic-list.md` | **ステータス列を `completed` に更新** |
 
 ---
 
