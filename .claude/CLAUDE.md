@@ -72,6 +72,35 @@ specs/                  # 仕様書本体
 - スコープ外の「ついでに」実装
 - ユーザー確認なしの仕様変更
 
+## コーディングルール
+
+### Import文
+
+- **`.js` 拡張子は使用しない**: 特別な事情がない限り、import文に `.js` 拡張子を付けない
+  - 良い例: `import { foo } from "./lib/bar"`
+  - 悪い例: `import { foo } from "./lib/bar.js"`
+- tsconfig.jsonで `moduleResolution: "Bundler"` を使用しているため、拡張子なしで解決可能
+
+### 変数と制御フロー
+
+- **変数の再代入は避ける**: `let` より `const` を優先し、イミュータブルなコードを書く
+- **for文での再代入は避ける**: `map` / `filter` / `reduce` などの高階関数を使用
+  - 良い例: `const doubled = numbers.map(n => n * 2)`
+  - 悪い例: `let result = []; for (const n of numbers) { result.push(n * 2); }`
+- 副作用のない純粋関数を推奨
+
+### 環境変数
+
+- **dotenvは `src/lib/env.ts` で一元管理**: 環境変数の読み込みと検証は env.ts に集約
+- スクリプトのエントリポイントでは `import "../src/lib/env"` を最初にインポート
+- `process.env` への直接アクセスではなく、`env` オブジェクト経由でアクセス
+
+### TypeScript
+
+- 型定義は `src/types.ts` に集約
+- 明示的な型アノテーションを推奨
+- `any` 型の使用は避ける
+
 ## 学習記録
 
 （プロジェクト固有の知見をここに蓄積）

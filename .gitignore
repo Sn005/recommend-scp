@@ -30,3 +30,9 @@ coverage/
 # Logs
 *.log
 logs/
+
+# Turbo
+.turbo/
+
+# local document
+/.local-docs
