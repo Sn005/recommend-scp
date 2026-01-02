@@ -211,7 +211,7 @@ function notifyUser(
 
 ---
 
-### 4. コーディング規約
+### 4. コーディング規約・ESLint（厳格チェック）
 
 プロジェクト固有ルール（`.claude/CLAUDE.md` より）:
 
@@ -222,6 +222,105 @@ function notifyUser(
 | ループ | `for` より `map/filter/reduce` を使用しているか |
 | 環境変数 | `src/lib/env.ts` 経由でアクセスしているか |
 | 型 | `any` 型を避けているか |
+
+#### ESLint 最新版 厳格ルール（必須）
+
+以下の設定をクリアすること:
+- `@typescript-eslint/strict-type-checked`
+- `@typescript-eslint/stylistic-type-checked`
+
+##### 型安全性（strict-type-checked）
+
+```typescript
+// ❌ 違反例
+const x: any = getValue();           // @typescript-eslint/no-explicit-any
+const y = value!;                    // @typescript-eslint/no-non-null-assertion
+async function f() { doSomething(); } // @typescript-eslint/no-floating-promises
+if (maybeString) {}                  // @typescript-eslint/strict-boolean-expressions
+const arr = [1, 2, 3];
+arr.forEach(async (n) => await process(n)); // @typescript-eslint/no-misused-promises
+
+// ✅ 準拠例
+const x: string = getValue();
+const y = value ?? defaultValue;
+await doSomething();
+if (maybeString !== undefined && maybeString !== '') {}
+await Promise.all(arr.map((n) => process(n)));
+```
+
+**必須チェック項目:**
+- [ ] `any` 型が使われていないか（`no-explicit-any`）
+- [ ] 非nullアサーション `!` が使われていないか（`no-non-null-assertion`）
+- [ ] Promiseが適切にawait/catchされているか（`no-floating-promises`）
+- [ ] boolean以外の値がif条件に使われていないか（`strict-boolean-expressions`）
+- [ ] 配列メソッドにasync関数を渡していないか（`no-misused-promises`）
+- [ ] 未使用の変数がないか（`no-unused-vars`）
+- [ ] 安全でない代入がないか（`no-unsafe-assignment`）
+- [ ] 安全でない引数がないか（`no-unsafe-argument`）
+- [ ] 安全でない戻り値がないか（`no-unsafe-return`）
+- [ ] 安全でないメンバーアクセスがないか（`no-unsafe-member-access`）
+
+##### コードスタイル（stylistic-type-checked）
+
+```typescript
+// ❌ 違反例
+const obj = { 'key': value };        // quote-props
+array.indexOf(item) !== -1;          // @typescript-eslint/prefer-includes
+for (let i = 0; i < arr.length; i++) {} // @typescript-eslint/prefer-for-of
+str.indexOf('x') === 0;              // @typescript-eslint/prefer-string-starts-ends-with
+const f = function() {};             // @typescript-eslint/prefer-function-type
+arr.filter(x => x).length > 0;       // @typescript-eslint/prefer-some
+
+// ✅ 準拠例
+const obj = { key: value };
+array.includes(item);
+for (const item of arr) {}
+str.startsWith('x');
+const f = () => {};
+arr.some(x => x);
+```
+
+**必須チェック項目:**
+- [ ] `includes()` を使用しているか（`prefer-includes`）
+- [ ] `for-of` を使用しているか（`prefer-for-of`）
+- [ ] `startsWith/endsWith` を使用しているか（`prefer-string-starts-ends-with`）
+- [ ] アロー関数を優先しているか（`prefer-function-type`）
+- [ ] `some()` を使用しているか（`prefer-some`）
+- [ ] オプショナルチェーンを使用しているか（`prefer-optional-chain`）
+- [ ] nullish coalescingを使用しているか（`prefer-nullish-coalescing`）
+
+##### 追加の厳格ルール
+
+```typescript
+// ❌ 違反例
+eval('code');                        // no-eval
+new Function('return this');         // no-new-func
+console.log('debug');                // no-console
+// @ts-ignore                        // @typescript-eslint/ban-ts-comment
+// eslint-disable-next-line          // 例外なしの無効化
+
+// ✅ 準拠例
+// 安全な代替手段を使用
+logger.debug('debug');               // 専用ロガー使用
+// @ts-expect-error: 理由を記載      // 理由付きなら許可
+```
+
+**禁止事項:**
+- [ ] `eval()` が使われていないか
+- [ ] `new Function()` が使われていないか
+- [ ] `console.log` がプロダクションコードにないか
+- [ ] 理由なしの `@ts-ignore` がないか
+- [ ] 理由なしの `eslint-disable` がないか
+
+#### ESLint実行確認
+
+```bash
+# ESLint実行（エラー0が必須）
+npm run lint
+
+# 厳格モードで実行（警告もエラー扱い）
+npm run lint -- --max-warnings 0
+```
 
 ---
 
@@ -302,11 +401,24 @@ TDDサイクルが守られているか:
 | モック可能性 | ✅/⚠️/❌ | ... |
 | テスト独立性 | ✅/⚠️/❌ | ... |
 
+### ESLint厳格チェック
+
+| カテゴリ | 評価 | 違反数 | 主な指摘 |
+|---------|------|--------|----------|
+| strict-type-checked | ✅/❌ | X件 | no-explicit-any, no-floating-promises... |
+| stylistic-type-checked | ✅/❌ | X件 | prefer-nullish-coalescing... |
+| 禁止パターン | ✅/❌ | X件 | no-console, ban-ts-comment... |
+
+```bash
+# 実行結果
+npm run lint -- --max-warnings 0
+# X errors, Y warnings
+```
+
 ### その他の品質
 
 | 観点 | 評価 | コメント |
 |------|------|----------|
-| コーディング規約 | ✅/⚠️/❌ | ... |
 | セキュリティ | ✅/⚠️/❌ | ... |
 | テスト品質 | ✅/⚠️/❌ | ... |
 | パフォーマンス | ✅/⚠️/❌ | ... |
@@ -340,7 +452,11 @@ TDDサイクルが守られているか:
 ### 総合判定
 🟢 APPROVE / 🟡 APPROVE WITH COMMENTS / 🔴 REQUEST CHANGES
 
-**注意**: SOLID原則違反またはテスタビリティ欠如が1つでもある場合は 🔴 REQUEST CHANGES とします。
+**🔴 REQUEST CHANGES となる条件（1つでも該当すればマージ不可）:**
+- SOLID原則違反が1つでもある
+- テスタビリティ欠如がある
+- ESLint エラーが1件でもある（`--max-warnings 0` でエラー）
+- セキュリティ上の問題がある
 ```
 
 ## テスト実行
