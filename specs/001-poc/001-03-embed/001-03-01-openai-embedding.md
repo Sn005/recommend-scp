@@ -14,42 +14,42 @@ OpenAI text-embedding-3-small を使用してSCP記事をベクトル化し、Su
 
 ### Embedding生成
 
-- [ ] WHEN 開発者がEmbedding生成スクリプトを実行した際
+- [x] WHEN 開発者がEmbedding生成スクリプトを実行した際
       GIVEN scp_articlesテーブルにデータが存在する場合
       THEN 各記事のcontentに対してOpenAI APIを呼び出す
       AND 1536次元のベクトルが返される
 
-- [ ] WHEN Embedding生成が完了した際
+- [x] WHEN Embedding生成が完了した際
       GIVEN 全記事の処理が終了した場合
       THEN 使用トークン数を集計して出力する
       AND 推定費用（$0.02/1Mトークン）を計算して出力する
 
 ### データ保存
 
-- [ ] WHEN Embeddingが生成された際
+- [x] WHEN Embeddingが生成された際
       GIVEN ベクトルデータが有効な場合
       THEN scp_embeddingsテーブルにupsertされる
       AND article_id と embedding が保存される
 
-- [ ] WHEN 既存のEmbeddingがある記事を処理した際
+- [x] WHEN 既存のEmbeddingがある記事を処理した際
       GIVEN 同じarticle_idのレコードが存在する場合
       THEN 既存レコードが更新される（upsert動作）
 
 ### バッチ処理
 
-- [ ] WHEN 大量の記事を処理する際
+- [x] WHEN 大量の記事を処理する際
       GIVEN 10件以上の記事がある場合
       THEN APIレート制限を考慮してバッチ処理する
       AND 各バッチ間に適切な待機時間を設ける
 
 ### エラーハンドリング
 
-- [ ] WHEN API呼び出しに失敗した際
+- [x] WHEN API呼び出しに失敗した際
       GIVEN レート制限エラーが発生した場合
       THEN 指数バックオフでリトライする
       AND 最大3回までリトライする
 
-- [ ] WHEN 一部の記事でエラーが発生した際
+- [x] WHEN 一部の記事でエラーが発生した際
       GIVEN 他の記事は正常に処理できる場合
       THEN エラーが発生した記事をスキップして続行する
       AND エラー一覧を最後に出力する
@@ -138,9 +138,18 @@ OPENAI_API_KEY=sk-xxx
 
 ## テストケース
 
-- [ ] OpenAI APIが正常に呼び出せる
-- [ ] 1536次元のベクトルが返される
-- [ ] scp_embeddingsテーブルにデータが保存される
-- [ ] トークン数と費用が正しく計算される
-- [ ] 2回実行しても重複データが作成されない
-- [ ] エラー時にリトライが実行される
+- [x] OpenAI APIが正常に呼び出せる
+- [x] 1536次元のベクトルが返される
+- [x] scp_embeddingsテーブルにデータが保存される
+- [x] トークン数と費用が正しく計算される
+- [x] 2回実行しても重複データが作成されない
+- [x] エラー時にリトライが実行される
+
+## 実装状況
+
+- **status**: completed
+- **実装日**: 2026-01-01
+- **実装ファイル**:
+  - `packages/poc/src/embedding/generate.ts`
+  - `packages/poc/scripts/02-embed.ts`
+  - `packages/poc/src/embedding/generate.test.ts`
