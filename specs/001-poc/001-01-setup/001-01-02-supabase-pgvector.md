@@ -14,20 +14,20 @@ Supabaseプロジェクトを作成し、pgvector拡張を有効化、PoC用テ�
 
 ### Supabaseプロジェクト
 
-- [ ] WHEN 開発者がSupabaseダッシュボードを確認した際
+- [x] WHEN 開発者がSupabaseダッシュボードを確認した際
       GIVEN プロジェクトが作成されている場合
       THEN `recommend-scp-poc` という名前のプロジェクトが存在する
       AND 無料プラン（Free tier）で作成されている
 
 ### pgvector拡張
 
-- [ ] WHEN 開発者がSQL Editorで拡張を確認した際
+- [x] WHEN 開発者がSQL Editorで拡張を確認した際
       GIVEN pgvectorが有効化されている場合
       THEN `SELECT * FROM pg_extension WHERE extname = 'vector'` が結果を返す
 
 ### テーブル作成
 
-- [ ] WHEN 開発者がテーブル一覧を確認した際
+- [x] WHEN 開発者がテーブル一覧を確認した際
       GIVEN マイグレーションが実行されている場合
       THEN 以下のテーブルが存在する：
       - scp_articles
@@ -35,13 +35,13 @@ Supabaseプロジェクトを作成し、pgvector拡張を有効化、PoC用テ�
       - tags
       - article_tags
 
-- [ ] WHEN 開発者がscp_embeddingsテーブルを確認した際
+- [x] WHEN 開発者がscp_embeddingsテーブルを確認した際
       GIVEN テーブルが正しく作成されている場合
       THEN embedding カラムが `vector(1536)` 型である
 
 ### 接続確認
 
-- [ ] WHEN 開発者がpocパッケージから接続を試行した際
+- [x] WHEN 開発者がpocパッケージから接続を試行した際
       GIVEN 環境変数が正しく設定されている場合
       THEN Supabaseクライアントが接続に成功する
       AND テーブルへのCRUD操作が可能である
@@ -115,7 +115,11 @@ SUPABASE_SERVICE_ROLE_KEY=xxx  # バッチ処理用
 
 ## テストケース
 
-- [ ] pgvector拡張が有効化されている
-- [ ] 全テーブルが作成されている
-- [ ] vector(1536) 型のカラムにデータを挿入できる
-- [ ] コサイン類似度検索クエリが実行できる
+- [x] pgvector拡張が有効化されている
+- [x] 全テーブルが作成されている
+- [x] vector(1536) 型のカラムにデータを挿入できる
+- [x] コサイン類似度検索クエリが実行できる
+
+## 実装状況
+
+- **status**: completed

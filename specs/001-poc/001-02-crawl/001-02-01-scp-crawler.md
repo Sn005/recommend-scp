@@ -14,14 +14,14 @@ SCP Data APIから記事データを取得し、ローカル保存およびSupab
 
 ### API接続
 
-- [ ] WHEN 開発者がクローラースクリプトを実行した際
+- [x] WHEN 開発者がクローラースクリプトを実行した際
       GIVEN SCP Data API (https://scp-data.tedivm.com/) が正常に応答する場合
       THEN 指定した件数（デフォルト10件）の記事データを取得する
       AND 取得結果をコンソールに出力する
 
 ### データ構造
 
-- [ ] WHEN 取得データを確認した際
+- [x] WHEN 取得データを確認した際
       GIVEN データが正常に取得できた場合
       THEN 各記事に以下のフィールドが含まれる：
       - id: 記事ID（例: "SCP-173"）
@@ -29,28 +29,28 @@ SCP Data APIから記事データを取得し、ローカル保存およびSupab
       - content: 記事本文（HTML or テキスト）
       - rating: 評価スコア
 
-- [ ] WHEN 記事本文を確認した際
+- [x] WHEN 記事本文を確認した際
       GIVEN コンテンツが取得できた場合
       THEN 本文が500文字以上であること
       AND HTMLタグが適切に処理されていること（プレーンテキスト化 or 保持）
 
 ### ローカル保存
 
-- [ ] WHEN クローラーが正常完了した際
+- [x] WHEN クローラーが正常完了した際
       GIVEN データ取得に成功した場合
       THEN `packages/poc/data/raw/` に JSON ファイルとして保存される
       AND ファイル名が `scp-articles-{timestamp}.json` 形式である
 
 ### Supabase保存
 
-- [ ] WHEN クローラーが正常完了した際
+- [x] WHEN クローラーが正常完了した際
       GIVEN Supabase接続が有効な場合
       THEN scp_articlesテーブルに全記事がupsertされる
       AND 重複実行時に既存データが更新される
 
 ### エラーハンドリング
 
-- [ ] WHEN API接続に失敗した際
+- [x] WHEN API接続に失敗した際
       GIVEN ネットワークエラーが発生した場合
       THEN 適切なエラーメッセージを出力する
       AND リトライオプションを提示する
@@ -113,8 +113,12 @@ pnpm --filter poc run:01-fetch -- --no-db
 
 ## テストケース
 
-- [ ] APIから10件以上の記事が取得できる
-- [ ] 取得データに必要なフィールドが全て含まれる
-- [ ] JSONファイルがdata/raw/に保存される
-- [ ] Supabaseのscp_articlesテーブルにデータが挿入される
-- [ ] 2回実行してもデータが重複しない（upsert動作）
+- [x] APIから10件以上の記事が取得できる
+- [x] 取得データに必要なフィールドが全て含まれる
+- [x] JSONファイルがdata/raw/に保存される
+- [x] Supabaseのscp_articlesテーブルにデータが挿入される
+- [x] 2回実行してもデータが重複しない（upsert動作）
+
+## 実装状況
+
+- **status**: completed
