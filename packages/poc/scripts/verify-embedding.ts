@@ -1,11 +1,9 @@
 #!/usr/bin/env tsx
 /**
- * Embedding Quality Verification Script
+ * Embedding品質検証スクリプト
  * Usage: pnpm --filter poc run:verify-embed [--id SCP-XXX]
  *
- * Verifies that embeddings are suitable for recommendation by:
- * 1. Finding similar articles using cosine similarity
- * 2. Displaying results for human evaluation
+ * コサイン類似度で類似記事を検索し、Embeddingがレコメンドに適しているか検証
  */
 
 import "../src/lib/env";
@@ -36,11 +34,11 @@ function parseArgs(): { articleId: string } {
 }
 
 /**
- * Calculate cosine similarity between two vectors
+ * コサイン類似度を計算
  */
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
-    throw new Error("Vectors must have same length");
+    throw new Error("ベクトルの次元数が一致しません");
   }
 
   let dotProduct = 0;
@@ -63,11 +61,11 @@ async function main(): Promise<void> {
   const { articleId } = parseArgs();
   const supabase = getSupabaseAdmin();
 
-  console.log(`\n🔍 Embedding Quality Verification`);
+  console.log(`\n🔍 Embedding品質検証`);
   console.log(`${"=".repeat(50)}`);
-  console.log(`Query Article: ${articleId}\n`);
+  console.log(`検索対象: ${articleId}\n`);
 
-  // 1. Fetch query article info
+  // 1. 対象記事を取得
   const { data: queryArticle, error: articleError } = await supabase
     .from("scp_articles")
     .select("id, title")
@@ -75,9 +73,9 @@ async function main(): Promise<void> {
     .single();
 
   if (articleError || !queryArticle) {
-    console.error(`❌ Article not found: ${articleId}\n`);
+    console.error(`❌ 記事が見つかりません: ${articleId}\n`);
 
-    // Show available articles
+    // 利用可能な記事一覧を表示
     const { data: availableArticles } = await supabase
       .from("scp_articles")
       .select("id, title")
@@ -85,19 +83,19 @@ async function main(): Promise<void> {
       .limit(20);
 
     if (availableArticles && availableArticles.length > 0) {
-      console.log(`📋 Available articles (showing first 20):\n`);
+      console.log(`📋 利用可能な記事（最初の20件）:\n`);
       availableArticles.forEach((a: Article) => {
         console.log(`  --id ${a.id}  (${a.title})`);
       });
-      console.log(`\nUsage: pnpm --filter poc run:verify-embed -- --id <article_id>\n`);
+      console.log(`\n使用方法: pnpm --filter poc run:verify-embed -- --id <記事ID>\n`);
     }
     process.exit(1);
   }
 
-  console.log(`📄 Query: ${queryArticle.title}`);
+  console.log(`📄 対象記事: ${queryArticle.title}`);
   console.log("");
 
-  // 2. Fetch query embedding
+  // 2. 対象記事のEmbeddingを取得
   const { data: queryEmbedding, error: embeddingError } = await supabase
     .from("scp_embeddings")
     .select("id, embedding")
@@ -105,44 +103,44 @@ async function main(): Promise<void> {
     .single();
 
   if (embeddingError || !queryEmbedding) {
-    console.error(`❌ Embedding not found for: ${articleId}`);
+    console.error(`❌ Embeddingが見つかりません: ${articleId}`);
     process.exit(1);
   }
 
-  // Parse embedding (stored as JSON string or array)
+  // Embeddingをパース（JSON文字列または配列）
   const queryVector: number[] =
     typeof queryEmbedding.embedding === "string"
       ? JSON.parse(queryEmbedding.embedding)
       : queryEmbedding.embedding;
 
-  console.log(`✅ Embedding found (${queryVector.length} dimensions)`);
+  console.log(`✅ Embedding取得完了（${queryVector.length}次元）`);
 
-  // 3. Fetch all embeddings
+  // 3. 全Embeddingを取得
   const { data: allEmbeddings, error: allError } = await supabase
     .from("scp_embeddings")
     .select("id, embedding");
 
   if (allError || !allEmbeddings) {
-    console.error(`❌ Failed to fetch embeddings: ${allError?.message}`);
+    console.error(`❌ Embedding取得失敗: ${allError?.message}`);
     process.exit(1);
   }
 
-  console.log(`📊 Total embeddings: ${allEmbeddings.length}`);
+  console.log(`📊 総Embedding数: ${allEmbeddings.length}`);
 
-  // 4. Fetch all article titles
+  // 4. 全記事タイトルを取得
   const { data: allArticles, error: articlesError } = await supabase
     .from("scp_articles")
     .select("id, title");
 
   if (articlesError || !allArticles) {
-    console.error(`❌ Failed to fetch articles: ${articlesError?.message}`);
+    console.error(`❌ 記事取得失敗: ${articlesError?.message}`);
     process.exit(1);
   }
 
   const titleMap = new Map(allArticles.map((a: Article) => [a.id, a.title]));
 
-  // 5. Calculate similarities
-  console.log(`\n⏳ Calculating similarities...`);
+  // 5. 類似度を計算
+  console.log(`\n⏳ 類似度計算中...`);
 
   const similarities: SimilarArticle[] = allEmbeddings
     .filter((e: Embedding) => e.id !== articleId)
@@ -151,15 +149,15 @@ async function main(): Promise<void> {
         typeof e.embedding === "string" ? JSON.parse(e.embedding) : e.embedding;
       return {
         id: e.id,
-        title: titleMap.get(e.id) ?? "Unknown",
+        title: titleMap.get(e.id) ?? "不明",
         similarity: cosineSimilarity(queryVector, vector),
       };
     })
     .sort((a: SimilarArticle, b: SimilarArticle) => b.similarity - a.similarity);
 
-  // 6. Display TOP 10 results
+  // 6. TOP10を表示
   console.log(`\n${"=".repeat(50)}`);
-  console.log(`🏆 TOP 10 Similar Articles`);
+  console.log(`🏆 類似記事 TOP10`);
   console.log(`${"=".repeat(50)}\n`);
 
   const top10 = similarities.slice(0, 10);
@@ -170,9 +168,9 @@ async function main(): Promise<void> {
     console.log(`${rank}. [${score}%] ${article.id}: ${article.title}`);
   });
 
-  // 7. Statistics
+  // 7. 統計情報
   console.log(`\n${"=".repeat(50)}`);
-  console.log(`📈 Similarity Statistics`);
+  console.log(`📈 類似度統計`);
   console.log(`${"=".repeat(50)}\n`);
 
   const scores = similarities.map((s) => s.similarity);
@@ -180,24 +178,24 @@ async function main(): Promise<void> {
   const maxSimilarity = Math.max(...scores);
   const minSimilarity = Math.min(...scores);
 
-  console.log(`Max:  ${(maxSimilarity * 100).toFixed(2)}%`);
-  console.log(`Min:  ${(minSimilarity * 100).toFixed(2)}%`);
-  console.log(`Avg:  ${(avgSimilarity * 100).toFixed(2)}%`);
+  console.log(`最大: ${(maxSimilarity * 100).toFixed(2)}%`);
+  console.log(`最小: ${(minSimilarity * 100).toFixed(2)}%`);
+  console.log(`平均: ${(avgSimilarity * 100).toFixed(2)}%`);
 
-  // 8. Evaluation guide
+  // 8. 評価ガイド
   console.log(`\n${"=".repeat(50)}`);
-  console.log(`📋 Evaluation Guide`);
+  console.log(`📋 評価ガイド`);
   console.log(`${"=".repeat(50)}\n`);
 
-  console.log(`Check if the similar articles are semantically related:`);
-  console.log(`  - Same genre/category?`);
-  console.log(`  - Similar themes or concepts?`);
-  console.log(`  - Related SCP objects?`);
-  console.log(`\nIf TOP results are relevant → Embeddings are working! ✅`);
-  console.log(`If TOP results are random → Need investigation ⚠️\n`);
+  console.log(`類似記事が意味的に関連しているか確認してください:`);
+  console.log(`  - 同じジャンル・カテゴリか？`);
+  console.log(`  - 似たテーマやコンセプトか？`);
+  console.log(`  - 関連するSCPオブジェクトか？`);
+  console.log(`\nTOP結果が関連している → Embeddingは正常に機能しています ✅`);
+  console.log(`TOP結果がランダム → 調査が必要です ⚠️\n`);
 }
 
 main().catch((error) => {
-  console.error("Error:", error.message);
+  console.error("エラー:", error.message);
   process.exit(1);
 });
