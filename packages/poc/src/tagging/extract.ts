@@ -361,7 +361,7 @@ export async function extractTagsForArticles(
 }
 
 /**
- * Generate markdown report of tagging results
+ * タグ抽出結果のMarkdownレポートを生成
  */
 export function generateTagReport(
   results: TaggingResult[],
@@ -369,36 +369,34 @@ export function generateTagReport(
 ): string {
   const lines: string[] = [];
 
-  lines.push("# SCP Tag Extraction Report");
+  lines.push("# SCPタグ抽出レポート");
   lines.push("");
-  lines.push("## Summary");
+  lines.push("## 概要");
   lines.push("");
-  lines.push(`- Total Articles: ${stats.totalArticles}`);
-  lines.push(`- Success: ${stats.successCount}`);
-  lines.push(`- Errors: ${stats.errorCount}`);
-  lines.push(`- Total Input Tokens: ${stats.totalInputTokens.toLocaleString()}`);
-  lines.push(
-    `- Total Output Tokens: ${stats.totalOutputTokens.toLocaleString()}`
-  );
-  lines.push(`- Estimated Cost: $${stats.estimatedCost.toFixed(4)}`);
+  lines.push(`- 対象記事数: ${stats.totalArticles}`);
+  lines.push(`- 成功: ${stats.successCount}`);
+  lines.push(`- エラー: ${stats.errorCount}`);
+  lines.push(`- 入力トークン数: ${stats.totalInputTokens.toLocaleString()}`);
+  lines.push(`- 出力トークン数: ${stats.totalOutputTokens.toLocaleString()}`);
+  lines.push(`- 推定費用: $${stats.estimatedCost.toFixed(4)}`);
   lines.push("");
 
-  lines.push("## Unique Tags Discovered");
+  lines.push("## 抽出されたユニークタグ");
   lines.push("");
   lines.push(
-    `- Object Classes: ${stats.uniqueTags.object_class.join(", ") || "(none)"}`
+    `- オブジェクトクラス: ${stats.uniqueTags.object_class.join(", ") || "(なし)"}`
   );
-  lines.push(`- Genres: ${stats.uniqueTags.genre.join(", ") || "(none)"}`);
-  lines.push(`- Themes: ${stats.uniqueTags.theme.join(", ") || "(none)"}`);
-  lines.push(`- Formats: ${stats.uniqueTags.format.join(", ") || "(none)"}`);
+  lines.push(`- ジャンル: ${stats.uniqueTags.genre.join(", ") || "(なし)"}`);
+  lines.push(`- テーマ: ${stats.uniqueTags.theme.join(", ") || "(なし)"}`);
+  lines.push(`- フォーマット: ${stats.uniqueTags.format.join(", ") || "(なし)"}`);
   lines.push("");
 
-  lines.push("## Article Tags");
+  lines.push("## 記事別タグ一覧");
   lines.push("");
   lines.push(
-    "| Article | Object Class | Genre | Theme | Format |"
+    "| 記事ID | オブジェクトクラス | ジャンル | テーマ | フォーマット |"
   );
-  lines.push("|---------|--------------|-------|-------|--------|");
+  lines.push("|--------|-------------------|----------|--------|--------------|");
 
   for (const result of results) {
     lines.push(
@@ -408,7 +406,7 @@ export function generateTagReport(
 
   if (stats.errors.length > 0) {
     lines.push("");
-    lines.push("## Errors");
+    lines.push("## エラー");
     lines.push("");
     for (const error of stats.errors) {
       lines.push(`- ${error.articleId}: ${error.error}`);
