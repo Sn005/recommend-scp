@@ -75,7 +75,22 @@ async function main(): Promise<void> {
     .single();
 
   if (articleError || !queryArticle) {
-    console.error(`❌ Article not found: ${articleId}`);
+    console.error(`❌ Article not found: ${articleId}\n`);
+
+    // Show available articles
+    const { data: availableArticles } = await supabase
+      .from("scp_articles")
+      .select("id, title")
+      .order("id")
+      .limit(20);
+
+    if (availableArticles && availableArticles.length > 0) {
+      console.log(`📋 Available articles (showing first 20):\n`);
+      availableArticles.forEach((a: Article) => {
+        console.log(`  --id ${a.id}  (${a.title})`);
+      });
+      console.log(`\nUsage: pnpm --filter poc run:verify-embed -- --id <article_id>\n`);
+    }
     process.exit(1);
   }
 
