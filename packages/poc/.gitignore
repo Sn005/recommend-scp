@@ -1,6 +1,7 @@
 # Data files (generated)
 data/raw/*
 data/processed/*
+data/*.md
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 
