@@ -13,7 +13,8 @@
     "run:02-embed": "tsx scripts/02-embed.ts",
     "run:03-tag": "tsx scripts/03-tag.ts",
     "run:04-search": "tsx scripts/04-search.ts",
-    "run:05-report": "tsx scripts/05-report.ts"
+    "run:05-report": "tsx scripts/05-report.ts",
+    "run:verify-embed": "tsx scripts/verify-embedding.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
