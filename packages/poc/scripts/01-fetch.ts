@@ -56,7 +56,7 @@ const saveToSupabase = async (articles: ScpArticleRaw[]): Promise<number> => {
   });
 
   if (error) {
-    throw new Error(`Supabase upsert failed: ${error.message}`);
+    throw new Error(`Supabaseへの保存に失敗: ${error.message}`);
   }
 
   return records.length;
@@ -65,36 +65,36 @@ const saveToSupabase = async (articles: ScpArticleRaw[]): Promise<number> => {
 const main = async (): Promise<void> => {
   const options = parseArgs(process.argv.slice(2));
 
-  console.log(`\n📥 Fetching SCP articles (limit: ${options.limit})...\n`);
+  console.log(`\n📥 SCP記事を取得中 (上限: ${options.limit}件)...\n`);
 
   try {
     const articles = await fetchScpArticles({ limit: options.limit });
-    console.log(`\n✅ Fetched ${articles.length} articles\n`);
+    console.log(`\n✅ ${articles.length}件の記事を取得しました\n`);
 
-    // Show sample
+    // サンプル表示
     if (articles.length > 0) {
-      console.log("Sample articles:");
+      console.log("サンプル記事:");
       articles.slice(0, 3).forEach((a) => {
-        console.log(`  - ${a.id}: ${a.title} (rating: ${a.rating}, ${a.content.length} chars)`);
+        console.log(`  - ${a.id}: ${a.title} (評価: ${a.rating}, ${a.content.length}文字)`);
       });
       console.log("");
     }
 
-    // Save to local
+    // ローカルに保存
     if (options.saveLocal) {
       const filepath = await saveToLocal(articles);
-      console.log(`💾 Saved to ${filepath}`);
+      console.log(`💾 ローカルに保存しました: ${filepath}`);
     }
 
-    // Save to Supabase
+    // Supabaseに保存
     if (options.saveDb) {
       const count = await saveToSupabase(articles);
-      console.log(`🗄️  Upserted ${count} articles to Supabase`);
+      console.log(`🗄️  Supabaseに${count}件の記事を保存しました`);
     }
 
-    console.log("\n🎉 Done!\n");
+    console.log("\n🎉 完了\n");
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ エラー:", error);
     process.exit(1);
   }
 };

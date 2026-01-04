@@ -43,12 +43,12 @@ async function fetchArticles(articleId: string | null): Promise<ScpArticle[]> {
   const { data, error } = await query;
 
   if (error) {
-    throw new Error(`Failed to fetch articles: ${error.message}`);
+    throw new Error(`記事の取得に失敗: ${error.message}`);
   }
 
   if (!data || data.length === 0) {
     throw new Error(
-      articleId ? `Article not found: ${articleId}` : "No articles found"
+      articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません"
     );
   }
 
@@ -59,7 +59,7 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
   const supabase = getSupabaseAdmin();
 
   for (const result of results) {
-    // Collect all tags for this article
+    // この記事の全タグを収集
     const allTags = [
       { category: "object_class", value: result.tags.object_class },
       ...result.tags.genre.map((v) => ({ category: "genre", value: v })),
@@ -67,10 +67,10 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
       { category: "format", value: result.tags.format },
     ];
 
-    // Upsert tags and get their IDs
+    // タグをupsertしてIDを取得
     const tagIds: number[] = [];
     for (const tag of allTags) {
-      // Insert or get existing tag
+      // 既存タグを検索または新規作成
       const { data: existingTag } = await supabase
         .from("tags")
         .select("id")
@@ -89,7 +89,7 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
 
         if (insertError) {
           console.error(
-            `Failed to insert tag ${tag.category}:${tag.value}: ${insertError.message}`
+            `タグの挿入に失敗 ${tag.category}:${tag.value}: ${insertError.message}`
           );
           continue;
         }
@@ -99,10 +99,10 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
       }
     }
 
-    // Delete existing article_tags for this article
+    // この記事の既存タグリンクを削除
     await supabase.from("article_tags").delete().eq("article_id", result.articleId);
 
-    // Insert new article_tags
+    // 新しいタグリンクを挿入
     if (tagIds.length > 0) {
       const articleTags = tagIds.map((tagId) => ({
         article_id: result.articleId,
@@ -115,7 +115,7 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
 
       if (linkError) {
         console.error(
-          `Failed to link tags for ${result.articleId}: ${linkError.message}`
+          `タグのリンクに失敗 ${result.articleId}: ${linkError.message}`
         );
       }
     }
@@ -123,28 +123,28 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
 }
 
 function printStats(stats: TaggingStats, dryRun: boolean): void {
-  console.log("\n--- Results ---");
-  console.log(`Total articles: ${stats.totalArticles}`);
-  console.log(`Success: ${stats.successCount}`);
-  console.log(`Errors: ${stats.errorCount}`);
+  console.log("\n--- 結果 ---");
+  console.log(`対象記事数: ${stats.totalArticles}`);
+  console.log(`成功: ${stats.successCount}`);
+  console.log(`エラー: ${stats.errorCount}`);
   console.log(
-    `Total input tokens: ${stats.totalInputTokens.toLocaleString()}${dryRun ? " (estimated)" : ""}`
+    `入力トークン数: ${stats.totalInputTokens.toLocaleString()}${dryRun ? " (推定)" : ""}`
   );
   console.log(
-    `Total output tokens: ${stats.totalOutputTokens.toLocaleString()}${dryRun ? " (estimated)" : ""}`
+    `出力トークン数: ${stats.totalOutputTokens.toLocaleString()}${dryRun ? " (推定)" : ""}`
   );
-  console.log(`Estimated cost: $${stats.estimatedCost.toFixed(6)}`);
+  console.log(`推定コスト: $${stats.estimatedCost.toFixed(6)}`);
 
   if (!dryRun) {
-    console.log("\n--- Unique Tags ---");
-    console.log(`Object Classes: ${stats.uniqueTags.object_class.join(", ")}`);
-    console.log(`Genres: ${stats.uniqueTags.genre.join(", ")}`);
-    console.log(`Themes: ${stats.uniqueTags.theme.join(", ")}`);
-    console.log(`Formats: ${stats.uniqueTags.format.join(", ")}`);
+    console.log("\n--- ユニークタグ ---");
+    console.log(`オブジェクトクラス: ${stats.uniqueTags.object_class.join(", ")}`);
+    console.log(`ジャンル: ${stats.uniqueTags.genre.join(", ")}`);
+    console.log(`テーマ: ${stats.uniqueTags.theme.join(", ")}`);
+    console.log(`フォーマット: ${stats.uniqueTags.format.join(", ")}`);
   }
 
   if (stats.errors.length > 0) {
-    console.log("\n--- Errors ---");
+    console.log("\n--- エラー詳細 ---");
     stats.errors.forEach((e) => {
       console.log(`  ${e.articleId}: ${e.error}`);
     });
@@ -154,34 +154,34 @@ function printStats(stats: TaggingStats, dryRun: boolean): void {
 async function main(): Promise<void> {
   const { dryRun, articleId } = parseArgs();
 
-  console.log(`\n🏷️  Extracting tags${dryRun ? " (dry run)" : ""}...`);
+  console.log(`\n🏷️  タグ抽出中${dryRun ? " (ドライラン)" : ""}...`);
   if (articleId) {
-    console.log(`Target article: ${articleId}`);
+    console.log(`対象記事: ${articleId}`);
   }
   console.log("");
 
-  // Fetch articles from Supabase
-  console.log("Fetching articles from Supabase...");
+  // Supabaseから記事を取得
+  console.log("Supabaseから記事を取得中...");
   const articles = await fetchArticles(articleId);
-  console.log(`Found ${articles.length} article(s)`);
+  console.log(`${articles.length}件の記事を取得しました`);
 
-  // Extract tags
+  // タグ抽出
   const { results, stats } = await extractTagsForArticles(articles, {
     dryRun,
     onProgress: (current, total) => {
-      process.stdout.write(`\rProcessing: ${current}/${total}`);
+      process.stdout.write(`\r処理中: ${current}/${total}`);
     },
   });
-  console.log(""); // New line after progress
+  console.log(""); // 改行
 
-  // Save to Supabase (skip for dry run)
+  // Supabaseに保存 (ドライランはスキップ)
   if (!dryRun && results.length > 0) {
-    console.log("\nSaving tags to Supabase...");
+    console.log("\nSupabaseにタグを保存中...");
     await saveTags(results);
-    console.log(`Saved tags for ${results.length} article(s)`);
+    console.log(`${results.length}件の記事のタグを保存しました`);
   }
 
-  // Generate and save report
+  // レポートを生成・保存
   const report = generateTagReport(results, stats);
   const reportPath = join(
     process.cwd(),
@@ -189,15 +189,15 @@ async function main(): Promise<void> {
     `tag-report${dryRun ? "-dry" : ""}.md`
   );
   writeFileSync(reportPath, report);
-  console.log(`\nReport saved to: ${reportPath}`);
+  console.log(`\nレポートを保存しました: ${reportPath}`);
 
-  // Print stats
+  // 統計を表示
   printStats(stats, dryRun);
 
-  console.log("\n✅ Tag extraction complete");
+  console.log("\n✅ タグ抽出完了");
 }
 
 main().catch((error) => {
-  console.error("\n❌ Error:", error.message);
+  console.error("\n❌ エラー:", error.message);
   process.exit(1);
 });

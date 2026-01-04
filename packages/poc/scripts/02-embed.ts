@@ -40,12 +40,12 @@ async function fetchArticles(articleId: string | null): Promise<ScpArticle[]> {
   const { data, error } = await query;
 
   if (error) {
-    throw new Error(`Failed to fetch articles: ${error.message}`);
+    throw new Error(`記事の取得に失敗: ${error.message}`);
   }
 
   if (!data || data.length === 0) {
     throw new Error(
-      articleId ? `Article not found: ${articleId}` : "No articles found"
+      articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません"
     );
   }
 
@@ -55,14 +55,14 @@ async function fetchArticles(articleId: string | null): Promise<ScpArticle[]> {
 async function saveEmbeddings(results: EmbeddingResult[]): Promise<void> {
   const supabase = getSupabaseAdmin();
 
-  // Filter out results with empty embeddings (from dry run)
+  // ドライランの空のembeddingを除外
   const validResults = results.filter((r) => r.embedding.length > 0);
 
   if (validResults.length === 0) {
     return;
   }
 
-  // Upsert embeddings
+  // Embeddingを保存
   const records = validResults.map((r) => ({
     id: r.articleId,
     embedding: JSON.stringify(r.embedding),
@@ -73,22 +73,22 @@ async function saveEmbeddings(results: EmbeddingResult[]): Promise<void> {
   });
 
   if (error) {
-    throw new Error(`Failed to save embeddings: ${error.message}`);
+    throw new Error(`Embeddingの保存に失敗: ${error.message}`);
   }
 }
 
 function printStats(stats: EmbeddingStats, dryRun: boolean): void {
-  console.log("\n--- Results ---");
-  console.log(`Total articles: ${stats.totalArticles}`);
-  console.log(`Success: ${stats.successCount}`);
-  console.log(`Errors: ${stats.errorCount}`);
+  console.log("\n--- 結果 ---");
+  console.log(`対象記事数: ${stats.totalArticles}`);
+  console.log(`成功: ${stats.successCount}`);
+  console.log(`エラー: ${stats.errorCount}`);
   console.log(
-    `Total tokens: ${stats.totalTokens.toLocaleString()}${dryRun ? " (estimated)" : ""}`
+    `総トークン数: ${stats.totalTokens.toLocaleString()}${dryRun ? " (推定)" : ""}`
   );
-  console.log(`Estimated cost: $${stats.estimatedCost.toFixed(6)}`);
+  console.log(`推定コスト: $${stats.estimatedCost.toFixed(6)}`);
 
   if (stats.errors.length > 0) {
-    console.log("\n--- Errors ---");
+    console.log("\n--- エラー詳細 ---");
     stats.errors.forEach((e) => {
       console.log(`  ${e.articleId}: ${e.error}`);
     });
@@ -98,40 +98,40 @@ function printStats(stats: EmbeddingStats, dryRun: boolean): void {
 async function main(): Promise<void> {
   const { dryRun, articleId } = parseArgs();
 
-  console.log(`\nGenerating embeddings${dryRun ? " (dry run)" : ""}...`);
+  console.log(`\n🧠 Embedding生成中${dryRun ? " (ドライラン)" : ""}...`);
   if (articleId) {
-    console.log(`Target article: ${articleId}`);
+    console.log(`対象記事: ${articleId}`);
   }
   console.log("");
 
-  // Fetch articles from Supabase
-  console.log("Fetching articles from Supabase...");
+  // Supabaseから記事を取得
+  console.log("Supabaseから記事を取得中...");
   const articles = await fetchArticles(articleId);
-  console.log(`Found ${articles.length} article(s)`);
+  console.log(`${articles.length}件の記事を取得しました`);
 
-  // Generate embeddings
+  // Embedding生成
   const { results, stats } = await generateEmbeddingsForArticles(articles, {
     dryRun,
     onProgress: (current, total) => {
-      process.stdout.write(`\rProcessing: ${current}/${total}`);
+      process.stdout.write(`\r処理中: ${current}/${total}`);
     },
   });
-  console.log(""); // New line after progress
+  console.log(""); // 改行
 
-  // Save to Supabase (skip for dry run)
+  // Supabaseに保存 (ドライランはスキップ)
   if (!dryRun && results.length > 0) {
-    console.log("\nSaving embeddings to Supabase...");
+    console.log("\nSupabaseにEmbeddingを保存中...");
     await saveEmbeddings(results);
-    console.log(`Saved ${results.length} embedding(s)`);
+    console.log(`${results.length}件のEmbeddingを保存しました`);
   }
 
-  // Print stats
+  // 統計を表示
   printStats(stats, dryRun);
 
-  console.log("\nDone!");
+  console.log("\n🎉 完了");
 }
 
 main().catch((error) => {
-  console.error("\nError:", error.message);
+  console.error("\n❌ エラー:", error.message);
   process.exit(1);
 });

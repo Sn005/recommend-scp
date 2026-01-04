@@ -13,7 +13,7 @@ async function main() {
   const queryId = idIndex !== -1 ? args[idIndex + 1] : "SCP-173";
   const useHybrid = args.includes("--hybrid");
 
-  console.log(`\n🔍 Running ${useHybrid ? "hybrid" : "vector"} search for ${queryId}...\n`);
+  console.log(`\n🔍 ${useHybrid ? "ハイブリッド" : "ベクトル"}検索を実行中 (${queryId})...\n`);
 
   try {
     if (useHybrid) {
@@ -23,13 +23,13 @@ async function main() {
         tag_weight: 0.3,
         limit: 5,
       });
-      console.log(`✅ Found ${results.length} results`);
+      console.log(`✅ ${results.length}件の結果が見つかりました`);
     } else {
       const response = await vectorSearch({ queryId, limit: 5 });
-      console.log(`✅ Found ${response.results.length} results`);
+      console.log(`✅ ${response.results.length}件の結果が見つかりました`);
     }
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ エラー:", error);
     process.exit(1);
   }
 }
