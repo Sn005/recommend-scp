@@ -1,6 +1,6 @@
 /**
- * Hybrid Search
- * Combines embedding similarity and tag matching
+ * ハイブリッド検索
+ * Embedding類似度とタグ一致度を組み合わせた検索
  */
 
 import type { HybridSearchParams, SearchResult, ExtractedTags } from "../types";
@@ -19,7 +19,7 @@ export interface HybridSearchResult extends SearchResult {
 }
 
 /**
- * Calculate Jaccard similarity between two arrays
+ * ジャッカード類似度を計算
  * Jaccard = |A ∩ B| / |A ∪ B|
  */
 export function jaccardSimilarity(a: string[], b: string[]): number {
@@ -36,12 +36,12 @@ export function jaccardSimilarity(a: string[], b: string[]): number {
 }
 
 /**
- * Calculate tag similarity score between query and target tags
- * Returns average of:
- * - object_class: exact match (1.0 or 0.0)
- * - genre: Jaccard similarity
- * - theme: Jaccard similarity
- * - format: exact match (1.0 or 0.0)
+ * クエリとターゲットのタグ類似度スコアを計算
+ * 以下の平均を返す:
+ * - object_class: 完全一致 (1.0 or 0.0)
+ * - genre: ジャッカード類似度
+ * - theme: ジャッカード類似度
+ * - format: 完全一致 (1.0 or 0.0)
  */
 export function calculateTagScore(
   queryTags: ExtractedTags,
@@ -49,24 +49,24 @@ export function calculateTagScore(
 ): number {
   const scores: number[] = [];
 
-  // object_class: exact match
+  // object_class: 完全一致
   scores.push(queryTags.object_class === targetTags.object_class ? 1.0 : 0.0);
 
-  // genre: Jaccard similarity
+  // genre: ジャッカード類似度
   scores.push(jaccardSimilarity(queryTags.genre, targetTags.genre));
 
-  // theme: Jaccard similarity
+  // theme: ジャッカード類似度
   scores.push(jaccardSimilarity(queryTags.theme, targetTags.theme));
 
-  // format: exact match
+  // format: 完全一致
   scores.push(queryTags.format === targetTags.format ? 1.0 : 0.0);
 
-  // Return average
+  // 平均を返す
   return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
 /**
- * Get article tags from database
+ * データベースから記事のタグを取得
  */
 async function getArticleTags(articleId: string): Promise<ExtractedTags> {
   const supabase = getSupabaseAdmin();
@@ -77,7 +77,7 @@ async function getArticleTags(articleId: string): Promise<ExtractedTags> {
     .eq("article_id", articleId);
 
   if (error) {
-    console.warn(`Failed to get tags for ${articleId}: ${error.message}`);
+    console.warn(`タグ取得失敗 (${articleId}): ${error.message}`);
     return {
       object_class: "Other",
       genre: [],
@@ -86,7 +86,7 @@ async function getArticleTags(articleId: string): Promise<ExtractedTags> {
     };
   }
 
-  // Parse tags from joined data
+  // 結合データからタグをパース
   const tags: ExtractedTags = {
     object_class: "Other",
     genre: [],
@@ -118,7 +118,7 @@ async function getArticleTags(articleId: string): Promise<ExtractedTags> {
 }
 
 /**
- * Find matched tags between query and target
+ * クエリとターゲット間で一致したタグを検出
  */
 function findMatchedTags(
   queryTags: ExtractedTags,
@@ -133,7 +133,7 @@ function findMatchedTags(
 }
 
 /**
- * Perform hybrid search combining embedding similarity and tag matching
+ * Embedding類似度とタグ一致度を組み合わせたハイブリッド検索を実行
  */
 export async function hybridSearch(
   params: HybridSearchParams
@@ -145,18 +145,18 @@ export async function hybridSearch(
     limit = 5,
   } = params;
 
-  console.log(`Hybrid search for ${query_id}...`);
+  console.log(`🔀 ハイブリッド検索開始: ${query_id}`);
 
-  // 1. Get vector search candidates (3x limit for reranking)
+  // 1. ベクトル検索で候補を取得（リランキング用に limit の 3 倍）
   const vectorResults = await vectorSearch({
     queryId: query_id,
     limit: limit * 3,
   });
 
-  // 2. Get query article tags
+  // 2. クエリ記事のタグを取得
   const queryTags = await getArticleTags(query_id);
 
-  // 3. Calculate hybrid scores for each candidate
+  // 3. 各候補のハイブリッドスコアを計算
   const scoredResults = await Promise.all(
     vectorResults.results.map(async (candidate) => {
       const targetTags = await getArticleTags(candidate.articleId);
@@ -175,7 +175,7 @@ export async function hybridSearch(
     })
   );
 
-  // 4. Sort by final score and return top results
+  // 4. 最終スコアでソートして上位を返す
   return scoredResults
     .sort((a, b) => b.similarity_score - a.similarity_score)
     .slice(0, limit);

@@ -195,7 +195,7 @@ describe("vectorSearch", () => {
         limit: 5,
       };
 
-      await expect(vectorSearch(params)).rejects.toThrow("Article not found");
+      await expect(vectorSearch(params)).rejects.toThrow("記事が見つかりません");
     });
 
     it("検索エラー時にエラーをスローする", async () => {
@@ -209,7 +209,7 @@ describe("vectorSearch", () => {
         limit: 5,
       };
 
-      await expect(vectorSearch(params)).rejects.toThrow("Search failed");
+      await expect(vectorSearch(params)).rejects.toThrow("検索失敗");
     });
   });
 });

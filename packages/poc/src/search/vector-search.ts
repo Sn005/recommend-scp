@@ -1,6 +1,6 @@
 /**
- * Vector Search
- * Performs cosine similarity search using pgvector
+ * ベクトル検索
+ * pgvectorを使用したコサイン類似度検索
  */
 
 import { getSupabaseAdmin } from "../lib/supabase";
@@ -24,8 +24,8 @@ export interface VectorSearchResponse {
 }
 
 /**
- * Perform vector similarity search using pgvector
- * Uses cosine similarity to find articles similar to the query article
+ * pgvectorを使用したベクトル類似度検索を実行
+ * コサイン類似度でクエリ記事に類似した記事を検索
  */
 export async function vectorSearch(
   params: VectorSearchParams
@@ -35,7 +35,7 @@ export async function vectorSearch(
 
   const supabase = getSupabaseAdmin();
 
-  // Get the query article's title
+  // クエリ記事のタイトルを取得
   const { data: queryArticle, error: articleError } = await supabase
     .from("scp_articles")
     .select("title")
@@ -43,10 +43,10 @@ export async function vectorSearch(
     .single();
 
   if (articleError || !queryArticle) {
-    throw new Error(`Article not found: ${queryId}`);
+    throw new Error(`記事が見つかりません: ${queryId}`);
   }
 
-  // Call the RPC function for similarity search
+  // 類似度検索のRPC関数を呼び出し
   const { data: searchResults, error: searchError } = await supabase.rpc(
     "search_similar_articles",
     {
@@ -56,13 +56,13 @@ export async function vectorSearch(
   );
 
   if (searchError) {
-    throw new Error(`Search failed: ${searchError.message}`);
+    throw new Error(`検索失敗: ${searchError.message}`);
   }
 
   const endTime = performance.now();
   const searchTimeMs = Math.round(endTime - startTime);
 
-  // Map the results to our interface
+  // 結果をインターフェースにマッピング
   const results: VectorSearchResult[] = (searchResults || []).map(
     (row: { id: string; title: string; similarity_score: number }) => ({
       articleId: row.id,
@@ -71,8 +71,8 @@ export async function vectorSearch(
     })
   );
 
-  // Log search time to console (AC requirement)
-  console.log(`🔍 Vector search completed in ${searchTimeMs}ms`);
+  // 検索時間をコンソールに出力（AC要件）
+  console.log(`🔍 ベクトル検索完了: ${searchTimeMs}ms`);
 
   return {
     queryId,
