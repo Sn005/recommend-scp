@@ -7,7 +7,7 @@
 | [001-03](./001-03-embed/001-03-embed.md) | Embedding生成 | completed | 001-02 |
 | [001-04](./001-04-tag/001-04-tag.md) | タグ抽出 | completed | 001-02 |
 | [001-05](./001-05-search/001-05-search.md) | 検索機能 | pending | 001-03, 001-04 |
-| [001-06](./001-06-report/001-06-report.md) | 検証レポート | pending | 001-05 |
+| [001-06](./001-06-report/001-06-report.md) | 検証レポート | completed | 001-05 |
 
 ## 依存関係図
 
