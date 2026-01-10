@@ -7,12 +7,15 @@
  * --sample オプションでサンプルデータを使用します。
  */
 
+import "../src/lib/env";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getSupabaseAdmin } from "../src/lib/supabase";
 import { generateReport, type ReportData } from "../src/report/generate-report";
 import { calculateCost } from "../src/embedding/generate";
 import { calculateTaggingCost } from "../src/tagging/extract";
+import { vectorSearch } from "../src/search/vector-search";
+import { hybridSearch } from "../src/search/hybrid-search";
 
 /** レポート出力先 */
 const REPORT_OUTPUT_PATH = path.resolve(
@@ -71,33 +74,59 @@ async function collectActualData(): Promise<ReportData> {
   const taggingOutputTokens = articleCount * 50; // レスポンス分
   const taggingCost = calculateTaggingCost(taggingInputTokens, taggingOutputTokens, "openai");
 
-  // 検索機能の検証（シンプルなテスト）
+  // 検索機能の検証（実際の検索関数を使用）
   let vectorSearchSuccess = false;
   let hybridSearchSuccess = false;
   let searchTimeMs = 0;
 
-  if (embeddingCount > 0) {
-    const startTime = Date.now();
-    try {
-      const { data: searchResult, error: searchError } = await supabase
-        .rpc("match_scp_embeddings", {
-          query_embedding: JSON.stringify(Array(1536).fill(0)), // ダミーベクトル
-          match_threshold: 0.0,
-          match_count: 5,
-        });
+  if (embeddingCount > 0 && articles && articles.length > 0) {
+    // 最初の記事をクエリとしてベクトル検索をテスト
+    const testQueryId = articles[0].id;
+    console.log(`   🔍 ベクトル検索テスト中 (クエリ: ${testQueryId})...`);
 
-      if (!searchError && searchResult) {
+    try {
+      const vectorResult = await vectorSearch({
+        queryId: testQueryId,
+        limit: 5,
+      });
+
+      if (vectorResult.results.length > 0) {
         vectorSearchSuccess = true;
-        searchTimeMs = Date.now() - startTime;
+        searchTimeMs = vectorResult.searchTimeMs;
+        console.log(`      ✅ ベクトル検索成功 (${vectorResult.results.length}件, ${searchTimeMs}ms)`);
+      } else {
+        console.log("      ⚠️ ベクトル検索: 結果なし（データ不足の可能性）");
       }
-    } catch {
-      // ベクトル検索失敗
+    } catch (error) {
+      console.log(`      ❌ ベクトル検索失敗: ${error}`);
     }
 
     // ハイブリッド検索のテスト
-    if (vectorSearchSuccess && taggedArticleCount > 0) {
-      hybridSearchSuccess = true;
+    if (taggedArticleCount > 0) {
+      console.log(`   🔍 ハイブリッド検索テスト中 (クエリ: ${testQueryId})...`);
+
+      try {
+        const hybridResult = await hybridSearch({
+          query_id: testQueryId,
+          embedding_weight: 0.7,
+          tag_weight: 0.3,
+          limit: 5,
+        });
+
+        if (hybridResult.length > 0) {
+          hybridSearchSuccess = true;
+          console.log(`      ✅ ハイブリッド検索成功 (${hybridResult.length}件)`);
+        } else {
+          console.log("      ⚠️ ハイブリッド検索: 結果なし（データ不足の可能性）");
+        }
+      } catch (error) {
+        console.log(`      ❌ ハイブリッド検索失敗: ${error}`);
+      }
+    } else {
+      console.log("   ⏭️ ハイブリッド検索: タグデータなしのためスキップ");
     }
+  } else {
+    console.log("   ⏭️ 検索テスト: Embeddingデータなしのためスキップ");
   }
 
   return {
