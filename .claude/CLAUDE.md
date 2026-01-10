@@ -222,6 +222,45 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 - `describe` ブロックの説明も日本語を推奨
 - テストの意図が日本語で明確に伝わることを優先
 
+### ログ出力
+
+- **⚠️ 最重要ルール: console.log等のログ出力は必ず日本語で記述する**
+  - 良い例: `console.log("記事を取得中...")`
+  - 悪い例: `console.log("Fetching articles...")`
+- エラーメッセージも日本語で記述
+  - 良い例: `console.error("❌ エラー:", error)`
+  - 悪い例: `console.error("Error:", error)`
+- 進捗表示、結果サマリー、完了メッセージなど全てのコンソール出力が対象
+- 技術的な固有名詞（Supabase, Embedding等）はそのまま使用可
+
 ## 学習記録
 
-（プロジェクト固有の知見をここに蓄積）
+### 本格実装に向けた改善案
+
+#### タグ辞書方式の導入（優先度: 高）
+
+現在のタグ抽出はLLMプロンプトにタグ選択肢をハードコーディングしているが、本格実装では**DBでタグ辞書を管理**する方式を採用する。
+
+**メリット:**
+- 表記揺れ防止（辞書にあるタグのみ許可）
+- 拡張性（新タグはDB追加のみでコード変更不要）
+- 日本語化対応（辞書を日本語に変更するだけ）
+- 同義語管理（`horror` → `ホラー` のマッピング）
+
+**実装案:**
+```sql
+CREATE TABLE tag_dictionary (
+  id SERIAL PRIMARY KEY,
+  category TEXT NOT NULL,  -- 'object_class', 'genre', 'theme', 'format'
+  value TEXT NOT NULL,     -- '安全', 'ホラー' など（日本語）
+  aliases TEXT[],          -- ['Safe', 'safe'] など（同義語）
+  description TEXT,
+  UNIQUE(category, value)
+);
+```
+
+**プロンプト生成:**
+```typescript
+const dictionary = await fetchTagDictionary();
+const prompt = `タグを以下から選択: ${dictionary.genre.join(' | ')}`;
+```

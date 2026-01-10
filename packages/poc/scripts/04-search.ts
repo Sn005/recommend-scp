@@ -30,14 +30,14 @@ function parseArgs() {
 }
 
 async function runVectorSearch(queryId: string, limit: number) {
-  console.log(`\n🔍 Vector Search for "${queryId}" (limit: ${limit})\n`);
+  console.log(`\n🔍 ベクトル検索 "${queryId}" (上限: ${limit}件)\n`);
   console.log("=".repeat(60));
 
   const response = await vectorSearch({ queryId, limit });
 
-  console.log(`\nQuery: ${response.queryTitle} (${response.queryId})`);
-  console.log(`Search Time: ${response.searchTimeMs}ms`);
-  console.log(`\nTop ${response.results.length} Similar Articles:\n`);
+  console.log(`\nクエリ: ${response.queryTitle} (${response.queryId})`);
+  console.log(`検索時間: ${response.searchTimeMs}ms`);
+  console.log(`\n上位${response.results.length}件の類似記事:\n`);
 
   response.results.forEach((result, index) => {
     const score = (result.similarityScore * 100).toFixed(1);
@@ -55,8 +55,8 @@ async function runHybridSearch(
   embeddingWeight: number,
   tagWeight: number
 ) {
-  console.log(`\n🔀 Hybrid Search for "${queryId}"`);
-  console.log(`   Weights: embedding=${embeddingWeight}, tag=${tagWeight}`);
+  console.log(`\n🔀 ハイブリッド検索 "${queryId}"`);
+  console.log(`   重み: embedding=${embeddingWeight}, tag=${tagWeight}`);
   console.log("=".repeat(60));
 
   const results = await hybridSearch({
@@ -66,14 +66,14 @@ async function runHybridSearch(
     limit,
   });
 
-  console.log(`\nTop ${results.length} Results:\n`);
+  console.log(`\n上位${results.length}件の結果:\n`);
 
   results.forEach((result, index) => {
     const finalScore = (result.similarity_score * 100).toFixed(1);
     const embScore = (result.embedding_score * 100).toFixed(1);
     const tagScore = (result.tag_score * 100).toFixed(1);
-    console.log(`  ${index + 1}. [Final: ${finalScore}%] ${result.title} (${result.id})`);
-    console.log(`     Embedding: ${embScore}%, Tag: ${tagScore}%`);
+    console.log(`  ${index + 1}. [最終: ${finalScore}%] ${result.title} (${result.id})`);
+    console.log(`     Embedding: ${embScore}%, タグ: ${tagScore}%`);
   });
 
   console.log("\n" + "=".repeat(60));
@@ -82,7 +82,7 @@ async function runHybridSearch(
 }
 
 async function runComparison(queryId: string, limit: number) {
-  console.log(`\n📊 Comparison: Vector vs Hybrid for "${queryId}"\n`);
+  console.log(`\n📊 比較: ベクトル vs ハイブリッド "${queryId}"\n`);
   console.log("=".repeat(60));
 
   // Run vector search
@@ -96,10 +96,10 @@ async function runComparison(queryId: string, limit: number) {
     limit,
   });
 
-  console.log(`\nQuery: ${vectorResponse.queryTitle} (${queryId})\n`);
+  console.log(`\nクエリ: ${vectorResponse.queryTitle} (${queryId})\n`);
 
   console.log("┌" + "─".repeat(30) + "┬" + "─".repeat(30) + "┐");
-  console.log("│ Vector Only".padEnd(31) + "│ Hybrid (0.7/0.3)".padEnd(31) + "│");
+  console.log("│ ベクトルのみ".padEnd(27) + "│ ハイブリッド (0.7/0.3)".padEnd(27) + "│");
   console.log("├" + "─".repeat(30) + "┼" + "─".repeat(30) + "┤");
 
   const maxLen = Math.max(vectorResponse.results.length, hybridResults.length);
@@ -134,9 +134,9 @@ async function main() {
       await runVectorSearch(queryId, limit);
     }
 
-    console.log("✅ Search completed successfully\n");
+    console.log("✅ 検索完了\n");
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ エラー:", error);
     process.exit(1);
   }
 }
