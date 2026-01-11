@@ -14,33 +14,33 @@ lefthook（npm版）とcommitlintを導入し、コミット時の自動lint/for
 
 ### AC-1: pre-commitフック
 
-- [ ] WHEN `git commit` を実行した際
+- [x] WHEN `git commit` を実行した際
       GIVEN ステージングされたファイルがある場合
       THEN lefthookがpre-commitフックを実行する
       AND ステージングされたファイルのみを対象にlint/formatを実行する
 
 ### AC-2: 自動修正とre-staging
 
-- [ ] WHEN pre-commitフックでlint/formatが実行された際
+- [x] WHEN pre-commitフックでlint/formatが実行された際
       GIVEN 自動修正が行われた場合
       THEN 修正後のファイルが自動的に再ステージングされる
 
 ### AC-3: commit-msgフック
 
-- [ ] WHEN `git commit` でコミットメッセージを入力した際
+- [x] WHEN `git commit` でコミットメッセージを入力した際
       GIVEN Conventional Commits形式でない場合
       THEN コミットをブロックする
       AND 正しい形式の例を表示する
 
 ### AC-4: フックスキップ
 
-- [ ] WHEN `git commit --no-verify` を実行した際
+- [x] WHEN `git commit --no-verify` を実行した際
       THE SYSTEM SHALL フックをスキップする
       AND 緊急時の回避手段を提供する
 
 ### AC-5: CLAUDE.md更新
 
-- [ ] WHERE CLAUDE.mdにおいて
+- [x] WHERE CLAUDE.mdにおいて
       THE SYSTEM SHALL Conventional Commits形式のルールを記載する
       AND AIがコミットメッセージ生成時に参照できるようにする
 
@@ -147,13 +147,13 @@ chore: ESLint設定を追加
 
 ## テストケース
 
-- [ ] `git commit` でlefthookが実行される
-- [ ] ステージングされたファイルのみがlint/formatされる
-- [ ] 自動修正されたファイルが再ステージングされる
-- [ ] `feat: xxx` 形式のコミットメッセージが通る
-- [ ] `invalid message` 形式のコミットメッセージがブロックされる
-- [ ] `git commit --no-verify` でフックがスキップされる
+- [x] `git commit` でlefthookが実行される
+- [x] ステージングされたファイルのみがlint/formatされる
+- [x] 自動修正されたファイルが再ステージングされる
+- [x] `feat: xxx` 形式のコミットメッセージが通る
+- [x] `invalid message` 形式のコミットメッセージがブロックされる
+- [x] `git commit --no-verify` でフックがスキップされる
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
