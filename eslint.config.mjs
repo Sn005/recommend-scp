@@ -31,6 +31,8 @@ export default tseslint.config(
       "supabase/",
       "**/*.js",
       "**/*.mjs",
+      "**/vitest.config.ts",
+      "**/coverage/",
     ],
   },
   // Prettierとの競合回避（必ず最後に配置）
