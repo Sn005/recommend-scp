@@ -13,19 +13,19 @@ ESLint v9をFlat Config形式で設定し、typescript-eslintによる厳密な�
 ## Acceptance Criteria（EARS記法）
 
 ### AC-1: ESLint v9インストール
-- [ ] WHEN `pnpm lint` を実行した際
+- [x] WHEN `pnpm lint` を実行した際
       GIVEN プロジェクトルートで実行した場合
       THEN ESLint v9がFlat Config形式で実行される
       AND TypeScriptファイルが検査される
 
 ### AC-2: 厳密な型チェックルール
-- [ ] WHERE ESLint設定において
+- [x] WHERE ESLint設定において
       IF TypeScriptファイルを検査する場合
       THE SYSTEM SHALL `@typescript-eslint/strict-type-checked` を適用する
       AND `@typescript-eslint/stylistic-type-checked` を適用する
 
 ### AC-3: カスタムルール
-- [ ] WHERE ESLint設定において
+- [x] WHERE ESLint設定において
       THE SYSTEM SHALL 以下のルールを有効化する:
       - `no-console`: warn
       - `@typescript-eslint/no-explicit-any`: error
@@ -34,7 +34,7 @@ ESLint v9をFlat Config形式で設定し、typescript-eslintによる厳密な�
       - `@typescript-eslint/no-floating-promises`: error
 
 ### AC-4: パッケージスクリプト
-- [ ] WHEN ルートの `package.json` を確認した際
+- [x] WHEN ルートの `package.json` を確認した際
       THEN `lint` スクリプトが定義されている
       AND `pnpm lint` でモノレポ全体がlintされる
 
@@ -88,12 +88,12 @@ export default defineConfig(
 
 ## テストケース
 
-- [ ] `pnpm lint` が正常に実行される
-- [ ] `any` 型を使用したコードでエラーが出る
-- [ ] 未使用変数でエラーが出る
-- [ ] floating promiseでエラーが出る
-- [ ] console.logで警告が出る
+- [x] `pnpm lint` が正常に実行される
+- [x] `any` 型を使用したコードでエラーが出る
+- [x] 未使用変数でエラーが出る
+- [x] floating promiseでエラーが出る
+- [x] console.logで警告が出る
 
-## ステータス
+## 実装状況
 
-- **status**: pending
+- **status**: completed
