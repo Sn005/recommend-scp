@@ -85,6 +85,11 @@ PR作成時に以下を必ず実行:
 ```bash
 # 対象specファイルに未チェック項目がないか確認
 grep -n "\- \[ \]" specs/{epic-id}/{story-id}/{subtask-id}.md
+
+# 学習記録の分離基準チェック（閾値超過時は .claude/NOTES.md に分離）
+wc -l .claude/CLAUDE.md  # 300行超で分離
+sed -n '/^## 学習記録/,$p' .claude/CLAUDE.md | wc -l  # 50行超で分離
+sed -n '/^## 学習記録/,$p' .claude/CLAUDE.md | grep -c "^###"  # 5項目超で分離
 ```
 
 **チェック漏れはプロジェクトの品質管理を損なうため、絶対に避けること。**
@@ -234,6 +239,10 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 - 技術的な固有名詞（Supabase, Embedding等）はそのまま使用可
 
 ## 学習記録
+
+> **分離基準**: 以下のいずれかを満たしたら `.claude/NOTES.md` に分離
+> - 学習記録セクション: 50行超 or 5項目超
+> - CLAUDE.md全体: 300行超
 
 ### 本格実装に向けた改善案
 
