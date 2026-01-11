@@ -23,13 +23,13 @@ ESLint/Prettier によるコード品質チェック、lefthook によるコミ�
 
 ## 技術スタック
 
-| ツール | バージョン | 用途 |
-|--------|-----------|------|
-| ESLint | v9.x | Linting（Flat Config） |
-| typescript-eslint | v8.x | TypeScript対応 |
-| Prettier | v3.x | コードフォーマット |
-| lefthook | 最新 | Gitフック管理（npm版） |
-| commitlint | v20.x | コミットメッセージ検証 |
+| ツール            | バージョン | 用途                   |
+| ----------------- | ---------- | ---------------------- |
+| ESLint            | v9.x       | Linting（Flat Config） |
+| typescript-eslint | v8.x       | TypeScript対応         |
+| Prettier          | v3.x       | コードフォーマット     |
+| lefthook          | 最新       | Gitフック管理（npm版） |
+| commitlint        | v20.x      | コミットメッセージ検証 |
 
 ## 関連Story
 

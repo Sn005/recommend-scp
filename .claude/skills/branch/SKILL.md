@@ -57,11 +57,11 @@ impl/{action-id}-{short-description}
 
 ## パラメータ
 
-| パラメータ | 必須 | 説明 | 例 |
-|-----------|------|------|-----|
-| type | Yes | ブランチタイプ | `spec` or `impl` |
-| action-id | Yes | アクションID | `001-01-01` |
-| description | No | 短い説明（省略時は自動生成） | `user-auth` |
+| パラメータ  | 必須 | 説明                         | 例               |
+| ----------- | ---- | ---------------------------- | ---------------- |
+| type        | Yes  | ブランチタイプ               | `spec` or `impl` |
+| action-id   | Yes  | アクションID                 | `001-01-01`      |
+| description | No   | 短い説明（省略時は自動生成） | `user-auth`      |
 
 ## 使用例
 

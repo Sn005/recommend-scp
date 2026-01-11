@@ -49,21 +49,21 @@ completed_at: null
 ## テストケース（ACから導出）
 
 ```typescript
-describe('Prettier設定作成', () => {
-  it('Prettier設定ファイルがルートに存在する', () => {
+describe("Prettier設定作成", () => {
+  it("Prettier設定ファイルがルートに存在する", () => {
     // .prettierrc または prettier.config.js が存在する
-  })
+  });
 
-  it('npm run format でフォーマットが実行される', () => {
+  it("npm run format でフォーマットが実行される", () => {
     // package.json に format スクリプトが定義されている
     // 実行するとファイルがフォーマットされる
-  })
+  });
 
-  it('ESLintとPrettierが競合しない', () => {
+  it("ESLintとPrettierが競合しない", () => {
     // eslint-config-prettier が設定されている
     // lint と format を連続実行してもエラーが出ない
-  })
-})
+  });
+});
 ```
 
 ## 完了確認

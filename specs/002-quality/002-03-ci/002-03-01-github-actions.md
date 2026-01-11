@@ -13,28 +13,33 @@ GitHub ActionsでCIワークフローを設定し、PR時に自動でテスト�
 ## Acceptance Criteria（EARS記法）
 
 ### AC-1: PRトリガーCI
+
 - [ ] WHEN プルリクエストが作成または更新された際
       GIVEN mainブランチへのPRである場合
       THEN CIワークフローが自動実行される
       AND 型チェック、テスト、Lintが実行される
 
 ### AC-2: CI結果の可視化（成功）
+
 - [ ] WHEN CIが完了した際
       GIVEN すべてのチェックが成功した場合
       THEN PRにグリーンチェックが表示される
 
 ### AC-3: CI結果の可視化（失敗）
+
 - [ ] WHEN CIが完了した際
       GIVEN いずれかのチェックが失敗した場合
       THEN PRにレッドXが表示される
       AND 失敗したステップが明示される
 
 ### AC-4: キャッシュ最適化
+
 - [ ] WHILE CIが実行されている間
       THE SYSTEM SHALL pnpmの依存関係をキャッシュする
       AND 2回目以降のビルド時間を短縮する
 
 ### AC-5: テストカバレッジ
+
 - [ ] WHEN CIでテストが実行された際
       THEN カバレッジレポートが生成される
       AND PRコメントまたはサマリーでカバレッジ率が表示される

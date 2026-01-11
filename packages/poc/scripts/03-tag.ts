@@ -25,9 +25,7 @@ function parseArgs(): Args {
   const args = process.argv.slice(2);
   return {
     dryRun: args.includes("--dry-run"),
-    articleId: args.includes("--id")
-      ? args[args.indexOf("--id") + 1] ?? null
-      : null,
+    articleId: args.includes("--id") ? (args[args.indexOf("--id") + 1] ?? null) : null,
   };
 }
 
@@ -47,9 +45,7 @@ async function fetchArticles(articleId: string | null): Promise<ScpArticle[]> {
   }
 
   if (!data || data.length === 0) {
-    throw new Error(
-      articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません"
-    );
+    throw new Error(articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません");
   }
 
   return data as ScpArticle[];
@@ -88,9 +84,7 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
           .single();
 
         if (insertError) {
-          console.error(
-            `タグの挿入に失敗 ${tag.category}:${tag.value}: ${insertError.message}`
-          );
+          console.error(`タグの挿入に失敗 ${tag.category}:${tag.value}: ${insertError.message}`);
           continue;
         }
         if (newTag) {
@@ -109,14 +103,10 @@ async function saveTags(results: TaggingResult[]): Promise<void> {
         tag_id: tagId,
       }));
 
-      const { error: linkError } = await supabase
-        .from("article_tags")
-        .insert(articleTags);
+      const { error: linkError } = await supabase.from("article_tags").insert(articleTags);
 
       if (linkError) {
-        console.error(
-          `タグのリンクに失敗 ${result.articleId}: ${linkError.message}`
-        );
+        console.error(`タグのリンクに失敗 ${result.articleId}: ${linkError.message}`);
       }
     }
   }
@@ -183,11 +173,7 @@ async function main(): Promise<void> {
 
   // レポートを生成・保存
   const report = generateTagReport(results, stats);
-  const reportPath = join(
-    process.cwd(),
-    "data",
-    `tag-report${dryRun ? "-dry" : ""}.md`
-  );
+  const reportPath = join(process.cwd(), "data", `tag-report${dryRun ? "-dry" : ""}.md`);
   writeFileSync(reportPath, report);
   console.log(`\nレポートを保存しました: ${reportPath}`);
 

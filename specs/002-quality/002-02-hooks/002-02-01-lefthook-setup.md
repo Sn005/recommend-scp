@@ -13,28 +13,33 @@ lefthook（npm版）とcommitlintを導入し、コミット時の自動lint/for
 ## Acceptance Criteria（EARS記法）
 
 ### AC-1: pre-commitフック
+
 - [ ] WHEN `git commit` を実行した際
       GIVEN ステージングされたファイルがある場合
       THEN lefthookがpre-commitフックを実行する
       AND ステージングされたファイルのみを対象にlint/formatを実行する
 
 ### AC-2: 自動修正とre-staging
+
 - [ ] WHEN pre-commitフックでlint/formatが実行された際
       GIVEN 自動修正が行われた場合
       THEN 修正後のファイルが自動的に再ステージングされる
 
 ### AC-3: commit-msgフック
+
 - [ ] WHEN `git commit` でコミットメッセージを入力した際
       GIVEN Conventional Commits形式でない場合
       THEN コミットをブロックする
       AND 正しい形式の例を表示する
 
 ### AC-4: フックスキップ
+
 - [ ] WHEN `git commit --no-verify` を実行した際
       THE SYSTEM SHALL フックをスキップする
       AND 緊急時の回避手段を提供する
 
 ### AC-5: CLAUDE.md更新
+
 - [ ] WHERE CLAUDE.mdにおいて
       THE SYSTEM SHALL Conventional Commits形式のルールを記載する
       AND AIがコミットメッセージ生成時に参照できるようにする
@@ -78,14 +83,14 @@ export default {
       2,
       "always",
       [
-        "feat",     // 新機能
-        "fix",      // バグ修正
-        "docs",     // ドキュメント
-        "style",    // フォーマット
+        "feat", // 新機能
+        "fix", // バグ修正
+        "docs", // ドキュメント
+        "style", // フォーマット
         "refactor", // リファクタリング
-        "perf",     // パフォーマンス
-        "test",     // テスト
-        "chore",    // その他
+        "perf", // パフォーマンス
+        "test", // テスト
+        "chore", // その他
       ],
     ],
   },
@@ -104,13 +109,14 @@ pnpm lefthook install
 ## コミットメッセージ規約（Conventional Commits）
 
 コミットメッセージは以下の形式に従うこと：
-
 ```
+
 <type>(<scope>): <description>
 
 [optional body]
 
 [optional footer(s)]
+
 ```
 
 ### type（必須）
@@ -129,11 +135,14 @@ pnpm lefthook install
 
 ### 例
 ```
+
 feat(search): ベクトル検索機能を追加
 fix(tagging): タグ抽出時のnullチェックを修正
 docs: README.mdにセットアップ手順を追記
 chore: ESLint設定を追加
+
 ```
+
 ```
 
 ## テストケース

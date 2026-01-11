@@ -51,9 +51,7 @@ const fetchIndex = async (): Promise<ScpIndex> => {
 /**
  * Fetch content for a specific series
  */
-const fetchSeriesContent = async (
-  seriesFile: string
-): Promise<Record<string, ScpContentItem>> => {
+const fetchSeriesContent = async (seriesFile: string): Promise<Record<string, ScpContentItem>> => {
   const response = await fetch(`${BASE_URL}/content_${seriesFile}.json`);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${seriesFile}: ${response.status}`);
@@ -81,15 +79,10 @@ const htmlToPlainText = (html: string): string =>
 /**
  * Filter and sort articles by rating
  */
-const getTopArticles = (
-  index: ScpIndex,
-  options: CrawlerOptions
-): ScpIndexItem[] =>
+const getTopArticles = (index: ScpIndex, options: CrawlerOptions): ScpIndexItem[] =>
   Object.values(index)
     .filter((item) => {
-      const seriesMatch = options.series.some((s) =>
-        item.content_file.includes(s)
-      );
+      const seriesMatch = options.series.some((s) => item.content_file.includes(s));
       const ratingMatch = item.rating >= options.minRating;
       const isScp = item.scp?.startsWith("SCP-") ?? false;
       return seriesMatch && ratingMatch && isScp;
@@ -100,9 +93,7 @@ const getTopArticles = (
 /**
  * Group articles by content file
  */
-const groupByContentFile = (
-  articles: ScpIndexItem[]
-): Record<string, ScpIndexItem[]> =>
+const groupByContentFile = (articles: ScpIndexItem[]): Record<string, ScpIndexItem[]> =>
   articles.reduce<Record<string, ScpIndexItem[]>>((acc, article) => {
     const file = article.content_file;
     return {
@@ -125,9 +116,7 @@ export const fetchScpArticles = async (
   console.log(`Found ${Object.keys(index).length} items in index`);
 
   const topArticles = getTopArticles(index, opts);
-  console.log(
-    `Selected top ${topArticles.length} articles by rating (min: ${opts.minRating})`
-  );
+  console.log(`Selected top ${topArticles.length} articles by rating (min: ${opts.minRating})`);
 
   const contentFileGroups = groupByContentFile(topArticles);
 
@@ -143,12 +132,14 @@ export const fetchScpArticles = async (
 
         return Object.entries(content)
           .filter(([key]) => itemLinksLower.has(key.toLowerCase()))
-          .map(([, item]): ScpArticleRaw => ({
-            id: item.scp,
-            title: item.title,
-            content: htmlToPlainText(item.raw_content || ""),
-            rating: item.rating,
-          }));
+          .map(
+            ([, item]): ScpArticleRaw => ({
+              id: item.scp,
+              title: item.title,
+              content: htmlToPlainText(item.raw_content || ""),
+              rating: item.rating,
+            })
+          );
       } catch (error) {
         console.error(`Failed to fetch ${contentFile}: ${error}`);
         return [];

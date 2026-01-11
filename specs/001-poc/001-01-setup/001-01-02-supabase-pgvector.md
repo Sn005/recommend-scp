@@ -29,11 +29,7 @@ Supabaseプロジェクトを作成し、pgvector拡張を有効化、PoC用テ�
 
 - [x] WHEN 開発者がテーブル一覧を確認した際
       GIVEN マイグレーションが実行されている場合
-      THEN 以下のテーブルが存在する：
-      - scp_articles
-      - scp_embeddings
-      - tags
-      - article_tags
+      THEN 以下のテーブルが存在する：- scp_articles - scp_embeddings - tags - article_tags
 
 - [x] WHEN 開発者がscp_embeddingsテーブルを確認した際
       GIVEN テーブルが正しく作成されている場合

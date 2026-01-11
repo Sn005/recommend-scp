@@ -123,9 +123,11 @@ function determineJudgment(data: ReportData): "Go" | "No-Go" | "条件付きGo" 
 /**
  * Calculate production cost estimate
  */
-function calculateProductionCost(
-  data: ReportData
-): { embeddingCost: number; taggingCost: number; monthlyOperation: number } {
+function calculateProductionCost(data: ReportData): {
+  embeddingCost: number;
+  taggingCost: number;
+  monthlyOperation: number;
+} {
   const articleCount = data.dataFetch.articleCount || 1;
   const scaleFactor = TOTAL_SCP_ARTICLES / articleCount;
 
@@ -181,9 +183,7 @@ function generateSummarySection(data: ReportData): string {
   lines.push(
     `| ベクトル検索 | ${getStatusEmoji(data.search.vectorSearchSuccess)} | ${data.search.searchTimeMs}ms |`
   );
-  lines.push(
-    `| ハイブリッド検索 | ${getStatusEmoji(data.search.hybridSearchSuccess)} | - |`
-  );
+  lines.push(`| ハイブリッド検索 | ${getStatusEmoji(data.search.hybridSearchSuccess)} | - |`);
   lines.push("");
 
   return lines.join("\n");
@@ -250,12 +250,8 @@ function generateSearchSection(data: ReportData): string {
   lines.push("");
   lines.push("### ベクトル検索 vs ハイブリッド検索");
   lines.push("");
-  lines.push(
-    `- ベクトル検索: ${data.search.vectorSearchSuccess ? "成功" : "失敗"}`
-  );
-  lines.push(
-    `- ハイブリッド検索: ${data.search.hybridSearchSuccess ? "成功" : "失敗"}`
-  );
+  lines.push(`- ベクトル検索: ${data.search.vectorSearchSuccess ? "成功" : "失敗"}`);
+  lines.push(`- ハイブリッド検索: ${data.search.hybridSearchSuccess ? "成功" : "失敗"}`);
   lines.push(`- 検索時間: ${data.search.searchTimeMs}ms`);
   lines.push("");
 
@@ -306,9 +302,7 @@ function generateCostSection(data: ReportData): string {
   lines.push(`| 初期Embedding生成 | ${formatCost(production.embeddingCost)} |`);
   lines.push(`| 初期タグ抽出 | ${formatCost(production.taggingCost)} |`);
   lines.push(`| Supabase利用料 | $${SUPABASE_MONTHLY_COST}/月 |`);
-  lines.push(
-    `| 月間運用（10%更新想定） | ${formatCost(production.monthlyOperation)}/月 |`
-  );
+  lines.push(`| 月間運用（10%更新想定） | ${formatCost(production.monthlyOperation)}/月 |`);
   lines.push("");
 
   return lines.join("\n");

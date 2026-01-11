@@ -49,6 +49,7 @@ specs/{epic-id}/{story-id}/{subtask-id}.md
 ```
 
 **チェック項目:**
+
 - [ ] クラス/関数の行数が50行を超えていないか
 - [ ] メソッド数が7つを超えていないか
 - [ ] 命名が単一の責務を表しているか
@@ -69,6 +70,7 @@ specs/{epic-id}/{story-id}/{subtask-id}.md
 ```
 
 **チェック項目:**
+
 - [ ] 新しいケース追加時に既存コードを変更する必要がないか
 - [ ] switch文が3ケース以上ないか（ある場合はポリモーフィズム検討）
 - [ ] 拡張ポイントが interface で定義されているか
@@ -88,6 +90,7 @@ specs/{epic-id}/{story-id}/{subtask-id}.md
 ```
 
 **チェック項目:**
+
 - [ ] 継承が「is-a」関係を表しているか
 - [ ] サブクラスが親のメソッドを無効化していないか
 - [ ] 継承より合成（composition）が適切ではないか
@@ -107,6 +110,7 @@ specs/{epic-id}/{story-id}/{subtask-id}.md
 ```
 
 **チェック項目:**
+
 - [ ] インターフェースのメソッド数が5つ以下か
 - [ ] 実装クラスが全メソッドを有意義に実装しているか
 - [ ] 空実装や `throw new Error('Not implemented')` がないか
@@ -126,6 +130,7 @@ specs/{epic-id}/{story-id}/{subtask-id}.md
 ```
 
 **チェック項目:**
+
 - [ ] コンストラクタで具象クラスをnewしていないか
 - [ ] 外部依存（DB, API, ファイルシステム）が注入可能か
 - [ ] 上位モジュールが下位モジュールに依存していないか
@@ -153,6 +158,7 @@ class UserService {
 ```
 
 **チェック項目:**
+
 - [ ] 外部依存がコンストラクタ経由で注入されているか
 - [ ] インターフェースを使用しているか
 - [ ] デフォルト値を持つ場合も、テスト時に差し替え可能か
@@ -164,7 +170,7 @@ class UserService {
 function processData() {
   const data = globalState.data; // グローバル状態参照
   const now = new Date(); // 現在時刻依存
-  fs.writeFileSync('output.txt', data); // ファイルI/O
+  fs.writeFileSync("output.txt", data); // ファイルI/O
 }
 
 // ✅ 純粋関数、テスト容易
@@ -174,6 +180,7 @@ function processData(data: Input, timestamp: Date): Output {
 ```
 
 **チェック項目:**
+
 - [ ] グローバル状態への依存がないか
 - [ ] 現在時刻・乱数が外部から注入可能か
 - [ ] I/O操作が分離されているか
@@ -182,9 +189,9 @@ function processData(data: Input, timestamp: Date): Output {
 
 ```typescript
 // ❌ モック困難
-import { sendEmail } from './email-service';
+import { sendEmail } from "./email-service";
 function notifyUser(userId: string) {
-  sendEmail(userId, 'Hello'); // 直接呼び出し
+  sendEmail(userId, "Hello"); // 直接呼び出し
 }
 
 // ✅ モック容易
@@ -192,11 +199,12 @@ function notifyUser(
   userId: string,
   emailService: IEmailService // インターフェース注入
 ) {
-  emailService.send(userId, 'Hello');
+  emailService.send(userId, "Hello");
 }
 ```
 
 **チェック項目:**
+
 - [ ] 外部サービス呼び出しがモック可能か
 - [ ] ファイルシステム操作がモック可能か
 - [ ] ネットワーク通信がモック可能か
@@ -204,6 +212,7 @@ function notifyUser(
 #### テスト独立性
 
 **チェック項目:**
+
 - [ ] テスト間で状態が共有されていないか
 - [ ] テストの実行順序に依存していないか
 - [ ] 外部環境（DB, ファイル）に依存していないか
@@ -215,17 +224,18 @@ function notifyUser(
 
 プロジェクト固有ルール（`.claude/CLAUDE.md` より）:
 
-| ルール | チェック内容 |
-|--------|-------------|
-| import文 | `.js` 拡張子を使用していないか |
-| 変数 | `let` より `const` を優先しているか |
-| ループ | `for` より `map/filter/reduce` を使用しているか |
-| 環境変数 | `src/lib/env.ts` 経由でアクセスしているか |
-| 型 | `any` 型を避けているか |
+| ルール   | チェック内容                                    |
+| -------- | ----------------------------------------------- |
+| import文 | `.js` 拡張子を使用していないか                  |
+| 変数     | `let` より `const` を優先しているか             |
+| ループ   | `for` より `map/filter/reduce` を使用しているか |
+| 環境変数 | `src/lib/env.ts` 経由でアクセスしているか       |
+| 型       | `any` 型を避けているか                          |
 
 #### ESLint 最新版 厳格ルール（必須）
 
 以下の設定をクリアすること:
+
 - `@typescript-eslint/strict-type-checked`
 - `@typescript-eslint/stylistic-type-checked`
 
@@ -233,10 +243,13 @@ function notifyUser(
 
 ```typescript
 // ❌ 違反例
-const x: any = getValue();           // @typescript-eslint/no-explicit-any
-const y = value!;                    // @typescript-eslint/no-non-null-assertion
-async function f() { doSomething(); } // @typescript-eslint/no-floating-promises
-if (maybeString) {}                  // @typescript-eslint/strict-boolean-expressions
+const x: any = getValue(); // @typescript-eslint/no-explicit-any
+const y = value!; // @typescript-eslint/no-non-null-assertion
+async function f() {
+  doSomething();
+} // @typescript-eslint/no-floating-promises
+if (maybeString) {
+} // @typescript-eslint/strict-boolean-expressions
 const arr = [1, 2, 3];
 arr.forEach(async (n) => await process(n)); // @typescript-eslint/no-misused-promises
 
@@ -244,11 +257,13 @@ arr.forEach(async (n) => await process(n)); // @typescript-eslint/no-misused-pro
 const x: string = getValue();
 const y = value ?? defaultValue;
 await doSomething();
-if (maybeString !== undefined && maybeString !== '') {}
+if (maybeString !== undefined && maybeString !== "") {
+}
 await Promise.all(arr.map((n) => process(n)));
 ```
 
 **必須チェック項目:**
+
 - [ ] `any` 型が使われていないか（`no-explicit-any`）
 - [ ] 非nullアサーション `!` が使われていないか（`no-non-null-assertion`）
 - [ ] Promiseが適切にawait/catchされているか（`no-floating-promises`）
@@ -264,23 +279,25 @@ await Promise.all(arr.map((n) => process(n)));
 
 ```typescript
 // ❌ 違反例
-const obj = { 'key': value };        // quote-props
-array.indexOf(item) !== -1;          // @typescript-eslint/prefer-includes
+const obj = { key: value }; // quote-props
+array.indexOf(item) !== -1; // @typescript-eslint/prefer-includes
 for (let i = 0; i < arr.length; i++) {} // @typescript-eslint/prefer-for-of
-str.indexOf('x') === 0;              // @typescript-eslint/prefer-string-starts-ends-with
-const f = function() {};             // @typescript-eslint/prefer-function-type
-arr.filter(x => x).length > 0;       // @typescript-eslint/prefer-some
+str.indexOf("x") === 0; // @typescript-eslint/prefer-string-starts-ends-with
+const f = function () {}; // @typescript-eslint/prefer-function-type
+arr.filter((x) => x).length > 0; // @typescript-eslint/prefer-some
 
 // ✅ 準拠例
 const obj = { key: value };
 array.includes(item);
-for (const item of arr) {}
-str.startsWith('x');
+for (const item of arr) {
+}
+str.startsWith("x");
 const f = () => {};
-arr.some(x => x);
+arr.some((x) => x);
 ```
 
 **必須チェック項目:**
+
 - [ ] `includes()` を使用しているか（`prefer-includes`）
 - [ ] `for-of` を使用しているか（`prefer-for-of`）
 - [ ] `startsWith/endsWith` を使用しているか（`prefer-string-starts-ends-with`）
@@ -293,19 +310,20 @@ arr.some(x => x);
 
 ```typescript
 // ❌ 違反例
-eval('code');                        // no-eval
-new Function('return this');         // no-new-func
-console.log('debug');                // no-console
+eval("code"); // no-eval
+new Function("return this"); // no-new-func
+console.log("debug"); // no-console
 // @ts-ignore                        // @typescript-eslint/ban-ts-comment
 // eslint-disable-next-line          // 例外なしの無効化
 
 // ✅ 準拠例
 // 安全な代替手段を使用
-logger.debug('debug');               // 専用ロガー使用
+logger.debug("debug"); // 専用ロガー使用
 // @ts-expect-error: 理由を記載      // 理由付きなら許可
 ```
 
 **禁止事項:**
+
 - [ ] `eval()` が使われていないか
 - [ ] `new Function()` が使われていないか
 - [ ] `console.log` がプロダクションコードにないか
@@ -350,6 +368,7 @@ TDDサイクルが守られているか:
 ```
 
 **テストのアンチパターン検出:**
+
 - [ ] テスト内で複数のことを検証していないか（1テスト1アサート原則）
 - [ ] テストが実装の詳細に依存していないか
 - [ ] マジックナンバーが使われていないか
@@ -368,70 +387,75 @@ TDDサイクルが守られているか:
 
 ## 出力フォーマット
 
-```markdown
+````markdown
 ## コードレビュー結果
 
 ### 対象
-- ブランチ: impl/{subtask-id}-*
+
+- ブランチ: impl/{subtask-id}-\*
 - 対象Subtask: specs/{epic-id}/{story-id}/{subtask-id}.md
 
 ### AC適合性チェック
 
-| AC | 実装 | テスト | 状態 |
-|----|------|--------|------|
-| AC1: ... | ✅ | ✅ | OK |
-| AC2: ... | ✅ | ⚠️ | テスト不足 |
+| AC       | 実装 | テスト | 状態       |
+| -------- | ---- | ------ | ---------- |
+| AC1: ... | ✅   | ✅     | OK         |
+| AC2: ... | ✅   | ⚠️     | テスト不足 |
 
 ### SOLID原則チェック
 
-| 原則 | 評価 | 指摘事項 |
-|------|------|----------|
-| S: 単一責任 | ✅/⚠️/❌ | ... |
-| O: 開放閉鎖 | ✅/⚠️/❌ | ... |
-| L: リスコフ置換 | ✅/⚠️/❌ | ... |
-| I: インターフェース分離 | ✅/⚠️/❌ | ... |
-| D: 依存性逆転 | ✅/⚠️/❌ | ... |
+| 原則                    | 評価     | 指摘事項 |
+| ----------------------- | -------- | -------- |
+| S: 単一責任             | ✅/⚠️/❌ | ...      |
+| O: 開放閉鎖             | ✅/⚠️/❌ | ...      |
+| L: リスコフ置換         | ✅/⚠️/❌ | ...      |
+| I: インターフェース分離 | ✅/⚠️/❌ | ...      |
+| D: 依存性逆転           | ✅/⚠️/❌ | ...      |
 
 ### テスタビリティチェック
 
-| 観点 | 評価 | 指摘事項 |
-|------|------|----------|
-| 依存性注入 | ✅/⚠️/❌ | ... |
-| 純粋関数 | ✅/⚠️/❌ | ... |
-| モック可能性 | ✅/⚠️/❌ | ... |
-| テスト独立性 | ✅/⚠️/❌ | ... |
+| 観点         | 評価     | 指摘事項 |
+| ------------ | -------- | -------- |
+| 依存性注入   | ✅/⚠️/❌ | ...      |
+| 純粋関数     | ✅/⚠️/❌ | ...      |
+| モック可能性 | ✅/⚠️/❌ | ...      |
+| テスト独立性 | ✅/⚠️/❌ | ...      |
 
 ### ESLint厳格チェック
 
-| カテゴリ | 評価 | 違反数 | 主な指摘 |
-|---------|------|--------|----------|
-| strict-type-checked | ✅/❌ | X件 | no-explicit-any, no-floating-promises... |
-| stylistic-type-checked | ✅/❌ | X件 | prefer-nullish-coalescing... |
-| 禁止パターン | ✅/❌ | X件 | no-console, ban-ts-comment... |
+| カテゴリ               | 評価  | 違反数 | 主な指摘                                 |
+| ---------------------- | ----- | ------ | ---------------------------------------- |
+| strict-type-checked    | ✅/❌ | X件    | no-explicit-any, no-floating-promises... |
+| stylistic-type-checked | ✅/❌ | X件    | prefer-nullish-coalescing...             |
+| 禁止パターン           | ✅/❌ | X件    | no-console, ban-ts-comment...            |
 
 ```bash
 # 実行結果
 npm run lint -- --max-warnings 0
 # X errors, Y warnings
 ```
+````
 
 ### その他の品質
 
-| 観点 | 評価 | コメント |
-|------|------|----------|
-| セキュリティ | ✅/⚠️/❌ | ... |
-| テスト品質 | ✅/⚠️/❌ | ... |
-| パフォーマンス | ✅/⚠️/❌ | ... |
+| 観点           | 評価     | コメント |
+| -------------- | -------- | -------- |
+| セキュリティ   | ✅/⚠️/❌ | ...      |
+| テスト品質     | ✅/⚠️/❌ | ...      |
+| パフォーマンス | ✅/⚠️/❌ | ...      |
 
 ### 詳細指摘
 
 #### Critical（マージ不可）
+
 - [ ] ファイル:行番号 - SOLID原則違反/テスタビリティ欠如の詳細
 
 #### High（修正推奨）
+
 - [ ] ファイル:行番号 - 指摘内容
 
 #### Medium（改善提案）
+
 - [ ] ファイル:行番号 - 指摘内容
 
 ### リファクタリング提案
@@ -447,17 +471,21 @@ npm run lint -- --max-warnings 0
 ```
 
 ### 良い点
+
 - ...
 
 ### 総合判定
+
 🟢 APPROVE / 🟡 APPROVE WITH COMMENTS / 🔴 REQUEST CHANGES
 
 **🔴 REQUEST CHANGES となる条件（1つでも該当すればマージ不可）:**
+
 - SOLID原則違反が1つでもある
 - テスタビリティ欠如がある
 - ESLint エラーが1件でもある（`--max-warnings 0` でエラー）
 - セキュリティ上の問題がある
-```
+
+````
 
 ## テスト実行
 
@@ -472,7 +500,7 @@ npm run typecheck
 
 # リント
 npm run lint
-```
+````
 
 ## 参照ドキュメント
 

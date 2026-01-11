@@ -23,11 +23,7 @@ SCP Data APIから記事データを取得し、ローカル保存およびSupab
 
 - [x] WHEN 取得データを確認した際
       GIVEN データが正常に取得できた場合
-      THEN 各記事に以下のフィールドが含まれる：
-      - id: 記事ID（例: "SCP-173"）
-      - title: 記事タイトル
-      - content: 記事本文（HTML or テキスト）
-      - rating: 評価スコア
+      THEN 各記事に以下のフィールドが含まれる：- id: 記事ID（例: "SCP-173"）- title: 記事タイトル - content: 記事本文（HTML or テキスト）- rating: 評価スコア
 
 - [x] WHEN 記事本文を確認した際
       GIVEN コンテンツが取得できた場合
@@ -81,21 +77,19 @@ GET /data/scp/items/{id}.json  # 例: /data/scp/items/173.json
 // src/crawler/fetch-scp.ts
 
 export interface ScpArticleRaw {
-  id: string;          // "SCP-173"
+  id: string; // "SCP-173"
   title: string;
   content: string;
   rating: number;
 }
 
 export interface CrawlerOptions {
-  limit: number;       // 取得件数 (default: 10)
-  saveLocal: boolean;  // ローカル保存 (default: true)
-  saveDb: boolean;     // Supabase保存 (default: true)
+  limit: number; // 取得件数 (default: 10)
+  saveLocal: boolean; // ローカル保存 (default: true)
+  saveDb: boolean; // Supabase保存 (default: true)
 }
 
-export async function fetchScpArticles(
-  options?: Partial<CrawlerOptions>
-): Promise<ScpArticleRaw[]>;
+export async function fetchScpArticles(options?: Partial<CrawlerOptions>): Promise<ScpArticleRaw[]>;
 ```
 
 ### スクリプト実行

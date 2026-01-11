@@ -13,29 +13,28 @@ Prettierを導入してコードフォーマットを自動化し、ESLintとの
 ## Acceptance Criteria（EARS記法）
 
 ### AC-1: Prettierフォーマット
-- [ ] WHEN `pnpm format` を実行した際
+
+- [x] WHEN `pnpm format` を実行した際
       GIVEN プロジェクトルートで実行した場合
       THEN Prettierがすべての対象ファイルをフォーマットする
 
 ### AC-2: フォーマットチェック
-- [ ] WHEN `pnpm format:check` を実行した際
+
+- [x] WHEN `pnpm format:check` を実行した際
       GIVEN フォーマット違反がある場合
       THEN 違反ファイルが一覧表示される
       AND 終了コード1で終了する
 
 ### AC-3: ESLint競合回避
-- [ ] WHERE ESLint設定において
+
+- [x] WHERE ESLint設定において
       THE SYSTEM SHALL `eslint-config-prettier` を使用する
       AND PrettierとESLintのルール競合を防止する
 
 ### AC-4: 対象ファイル
-- [ ] WHERE Prettier設定において
-      THE SYSTEM SHALL 以下のファイル形式を対象とする:
-      - TypeScript (.ts, .tsx)
-      - JavaScript (.js, .jsx, .mjs)
-      - JSON (.json)
-      - Markdown (.md)
-      - YAML (.yml, .yaml)
+
+- [x] WHERE Prettier設定において
+      THE SYSTEM SHALL 以下のファイル形式を対象とする: - TypeScript (.ts, .tsx) - JavaScript (.js, .jsx, .mjs) - JSON (.json) - Markdown (.md) - YAML (.yml, .yaml)
 
 ## 技術設計
 
@@ -91,11 +90,11 @@ pnpm-lock.yaml
 
 ## テストケース
 
-- [ ] `pnpm format` が正常に実行される
-- [ ] `pnpm format:check` でフォーマット違反を検出できる
-- [ ] ESLintとPrettierを同時実行してもエラーにならない
-- [ ] .prettierignoreに指定したファイルがフォーマット対象外になる
+- [x] `pnpm format` が正常に実行される
+- [x] `pnpm format:check` でフォーマット違反を検出できる
+- [x] ESLintとPrettierを同時実行してもエラーにならない
+- [x] .prettierignoreに指定したファイルがフォーマット対象外になる
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed

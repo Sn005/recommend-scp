@@ -29,7 +29,7 @@ function parseArgs(): { articleId: string } {
   const args = process.argv.slice(2);
   const idIndex = args.indexOf("--id");
   return {
-    articleId: idIndex !== -1 ? args[idIndex + 1] ?? "SCP-173" : "SCP-173",
+    articleId: idIndex !== -1 ? (args[idIndex + 1] ?? "SCP-173") : "SCP-173",
   };
 }
 

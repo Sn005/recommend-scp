@@ -29,9 +29,7 @@ Embedding類似度とタグ一致度を組み合わせたハイブリッド検�
 - [x] WHEN ハイブリッドスコアを計算する際
       GIVEN 各スコアが計算済みの場合
       THEN 以下の式で最終スコアを算出する：
-      ```
-      final_score = embedding_weight * embedding_score + tag_weight * tag_score
-      ```
+      `    final_score = embedding_weight * embedding_score + tag_weight * tag_score`
       AND tag_score は「一致タグ数 / 全タグ数」で計算する
 
 ### 比較検証
@@ -45,11 +43,7 @@ Embedding類似度とタグ一致度を組み合わせたハイブリッド検�
 
 - [x] WHEN タグ一致度を計算する際
       GIVEN クエリ記事とターゲット記事のタグがある場合
-      THEN 以下のカテゴリ別に一致を計算する：
-      - object_class: 完全一致で1.0、不一致で0.0
-      - genre: ジャッカード類似度（共通 / 和集合）
-      - theme: ジャッカード類似度
-      - format: 完全一致で1.0、不一致で0.0
+      THEN 以下のカテゴリ別に一致を計算する：- object_class: 完全一致で1.0、不一致で0.0 - genre: ジャッカード類似度（共通 / 和集合）- theme: ジャッカード類似度 - format: 完全一致で1.0、不一致で0.0
       AND 全カテゴリの平均をtag_scoreとする
 
 ## 設計
@@ -61,9 +55,9 @@ Embedding類似度とタグ一致度を組み合わせたハイブリッド検�
 
 export interface HybridSearchParams {
   queryId: string;
-  embeddingWeight?: number;  // default: 0.7
-  tagWeight?: number;        // default: 0.3
-  limit?: number;            // default: 5
+  embeddingWeight?: number; // default: 0.7
+  tagWeight?: number; // default: 0.3
+  limit?: number; // default: 5
 }
 
 export interface HybridSearchResult {
@@ -74,17 +68,14 @@ export interface HybridSearchResult {
   tagScore: number;
   matchedTags: {
     object_class: boolean;
-    genre: string[];      // 一致したジャンル
-    theme: string[];      // 一致したテーマ
+    genre: string[]; // 一致したジャンル
+    theme: string[]; // 一致したテーマ
     format: boolean;
   };
 }
 
 // タグスコア計算
-function calculateTagScore(
-  queryTags: ExtractedTags,
-  targetTags: ExtractedTags
-): number {
+function calculateTagScore(queryTags: ExtractedTags, targetTags: ExtractedTags): number {
   const scores: number[] = [];
 
   // object_class: 完全一致
@@ -106,7 +97,7 @@ function calculateTagScore(
 function jaccardSimilarity(a: string[], b: string[]): number {
   const setA = new Set(a);
   const setB = new Set(b);
-  const intersection = [...setA].filter(x => setB.has(x)).length;
+  const intersection = [...setA].filter((x) => setB.has(x)).length;
   const union = new Set([...setA, ...setB]).size;
   return union === 0 ? 0 : intersection / union;
 }
@@ -129,9 +120,7 @@ async function hybridSearch(params: HybridSearchParams): Promise<HybridSearchRes
     candidates.results.map(async (candidate) => {
       const targetTags = await getArticleTags(candidate.articleId);
       const tagScore = calculateTagScore(queryTags, targetTags);
-      const finalScore =
-        embeddingWeight * candidate.similarityScore +
-        tagWeight * tagScore;
+      const finalScore = embeddingWeight * candidate.similarityScore + tagWeight * tagScore;
 
       return {
         ...candidate,
@@ -143,9 +132,7 @@ async function hybridSearch(params: HybridSearchParams): Promise<HybridSearchRes
   );
 
   // 4. 最終スコアでソートして上位を返す
-  return scoredCandidates
-    .sort((a, b) => b.finalScore - a.finalScore)
-    .slice(0, limit);
+  return scoredCandidates.sort((a, b) => b.finalScore - a.finalScore).slice(0, limit);
 }
 ```
 
@@ -172,4 +159,5 @@ pnpm --filter poc run:04-search -- --compare --id SCP-173
 - [x] 検索時間が2秒以内である
 
 ## 実装状況
+
 - **status**: completed

@@ -43,10 +43,7 @@ export function jaccardSimilarity(a: string[], b: string[]): number {
  * - theme: ジャッカード類似度
  * - format: 完全一致 (1.0 or 0.0)
  */
-export function calculateTagScore(
-  queryTags: ExtractedTags,
-  targetTags: ExtractedTags
-): number {
+export function calculateTagScore(queryTags: ExtractedTags, targetTags: ExtractedTags): number {
   const scores: number[] = [];
 
   // object_class: 完全一致
@@ -135,15 +132,8 @@ function findMatchedTags(
 /**
  * Embedding類似度とタグ一致度を組み合わせたハイブリッド検索を実行
  */
-export async function hybridSearch(
-  params: HybridSearchParams
-): Promise<HybridSearchResult[]> {
-  const {
-    query_id,
-    embedding_weight = 0.7,
-    tag_weight = 0.3,
-    limit = 5,
-  } = params;
+export async function hybridSearch(params: HybridSearchParams): Promise<HybridSearchResult[]> {
+  const { query_id, embedding_weight = 0.7, tag_weight = 0.3, limit = 5 } = params;
 
   console.log(`🔀 ハイブリッド検索開始: ${query_id}`);
 
@@ -161,8 +151,7 @@ export async function hybridSearch(
     vectorResults.results.map(async (candidate) => {
       const targetTags = await getArticleTags(candidate.articleId);
       const tagScore = calculateTagScore(queryTags, targetTags);
-      const finalScore =
-        embedding_weight * candidate.similarityScore + tag_weight * tagScore;
+      const finalScore = embedding_weight * candidate.similarityScore + tag_weight * tagScore;
 
       return {
         id: candidate.articleId,
@@ -176,7 +165,5 @@ export async function hybridSearch(
   );
 
   // 4. 最終スコアでソートして上位を返す
-  return scoredResults
-    .sort((a, b) => b.similarity_score - a.similarity_score)
-    .slice(0, limit);
+  return scoredResults.sort((a, b) => b.similarity_score - a.similarity_score).slice(0, limit);
 }

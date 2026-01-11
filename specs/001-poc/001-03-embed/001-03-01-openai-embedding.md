@@ -61,7 +61,7 @@ OpenAI text-embedding-3-small を使用してSCP記事をベクトル化し、Su
 ```typescript
 // src/embedding/generate.ts
 
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -69,7 +69,7 @@ const openai = new OpenAI({
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: "text-embedding-3-small",
     input: text,
   });
 
@@ -87,7 +87,7 @@ export interface EmbeddingStats {
   successCount: number;
   errorCount: number;
   totalTokens: number;
-  estimatedCost: number;  // USD
+  estimatedCost: number; // USD
 }
 ```
 
@@ -96,21 +96,21 @@ export interface EmbeddingStats {
 ```typescript
 export function preprocessContent(content: string): string {
   // HTMLタグ除去
-  const text = content.replace(/<[^>]*>/g, '');
+  const text = content.replace(/<[^>]*>/g, "");
 
   // 空白正規化
-  const normalized = text.replace(/\s+/g, ' ').trim();
+  const normalized = text.replace(/\s+/g, " ").trim();
 
   // 最大8000トークン程度に制限（安全マージン）
   // text-embedding-3-smallの最大入力は8191トークン
-  return normalized.slice(0, 30000);  // 約8000トークン相当
+  return normalized.slice(0, 30000); // 約8000トークン相当
 }
 ```
 
 ### コスト計算
 
 ```typescript
-const COST_PER_MILLION_TOKENS = 0.02;  // USD
+const COST_PER_MILLION_TOKENS = 0.02; // USD
 
 export function calculateCost(totalTokens: number): number {
   return (totalTokens / 1_000_000) * COST_PER_MILLION_TOKENS;

@@ -115,17 +115,9 @@ export function parseTagResponse(response: string): ExtractedTags {
   const parsed = JSON.parse(cleaned);
 
   // Ensure arrays for genre and theme (handle single string case)
-  const genre = Array.isArray(parsed.genre)
-    ? parsed.genre
-    : parsed.genre
-      ? [parsed.genre]
-      : [];
+  const genre = Array.isArray(parsed.genre) ? parsed.genre : parsed.genre ? [parsed.genre] : [];
 
-  const theme = Array.isArray(parsed.theme)
-    ? parsed.theme
-    : parsed.theme
-      ? [parsed.theme]
-      : [];
+  const theme = Array.isArray(parsed.theme) ? parsed.theme : parsed.theme ? [parsed.theme] : [];
 
   return {
     object_class: parsed.object_class || "Other",
@@ -143,10 +135,8 @@ export function calculateTaggingCost(
   outputTokens: number,
   provider: "openai" | "claude"
 ): number {
-  const inputCost =
-    (inputTokens / 1_000_000) * COST_PER_MILLION_TOKENS_INPUT[provider];
-  const outputCost =
-    (outputTokens / 1_000_000) * COST_PER_MILLION_TOKENS_OUTPUT[provider];
+  const inputCost = (inputTokens / 1_000_000) * COST_PER_MILLION_TOKENS_INPUT[provider];
+  const outputCost = (outputTokens / 1_000_000) * COST_PER_MILLION_TOKENS_OUTPUT[provider];
   return inputCost + outputCost;
 }
 
@@ -227,10 +217,7 @@ export async function extractTagsWithOpenAI(
  * Extract tags for a single article (main entry point)
  * Provider selection based on TAGGING_LLM_PROVIDER env var
  */
-export async function extractTags(
-  articleId: string,
-  content: string
-): Promise<ExtractedTags> {
+export async function extractTags(articleId: string, content: string): Promise<ExtractedTags> {
   const provider = env.TAGGING_LLM_PROVIDER as "openai" | "claude";
 
   if (provider === "claude") {
@@ -268,9 +255,7 @@ export async function extractTagsForArticles(
   };
 
   const openai = dryRun ? undefined : createOpenAIClient();
-  const provider = (env.TAGGING_LLM_PROVIDER || "openai") as
-    | "openai"
-    | "claude";
+  const provider = (env.TAGGING_LLM_PROVIDER || "openai") as "openai" | "claude";
 
   // Process in batches
   for (let i = 0; i < articles.length; i += BATCH_SIZE) {
@@ -282,8 +267,7 @@ export async function extractTagsForArticles(
           // Estimate token count (rough approximation: 1 token per 4 chars)
           const preprocessed = preprocessContent(article.content);
           const estimatedInputTokens =
-            Math.ceil(preprocessed.length / 4) +
-            Math.ceil(EXTRACTION_PROMPT.length / 4);
+            Math.ceil(preprocessed.length / 4) + Math.ceil(EXTRACTION_PROMPT.length / 4);
           const estimatedOutputTokens = 50; // JSON response ~50 tokens
 
           totalInputTokens += estimatedInputTokens;
@@ -301,11 +285,7 @@ export async function extractTagsForArticles(
             outputTokens: estimatedOutputTokens,
           });
         } else {
-          const result = await extractTagsWithOpenAI(
-            article.id,
-            article.content,
-            openai
-          );
+          const result = await extractTagsWithOpenAI(article.id, article.content, openai);
 
           totalInputTokens += result.inputTokens;
           totalOutputTokens += result.outputTokens;
@@ -320,8 +300,7 @@ export async function extractTagsForArticles(
 
         onProgress?.(results.length + errors.length, articles.length);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Error processing ${article.id}: ${errorMessage}`);
         errors.push({
           articleId: article.id,
@@ -343,11 +322,7 @@ export async function extractTagsForArticles(
     errorCount: errors.length,
     totalInputTokens,
     totalOutputTokens,
-    estimatedCost: calculateTaggingCost(
-      totalInputTokens,
-      totalOutputTokens,
-      provider
-    ),
+    estimatedCost: calculateTaggingCost(totalInputTokens, totalOutputTokens, provider),
     uniqueTags: {
       object_class: Array.from(uniqueTags.object_class),
       genre: Array.from(uniqueTags.genre),
@@ -363,10 +338,7 @@ export async function extractTagsForArticles(
 /**
  * タグ抽出結果のMarkdownレポートを生成
  */
-export function generateTagReport(
-  results: TaggingResult[],
-  stats: TaggingStats
-): string {
+export function generateTagReport(results: TaggingResult[], stats: TaggingStats): string {
   const lines: string[] = [];
 
   lines.push("# SCPタグ抽出レポート");
@@ -383,9 +355,7 @@ export function generateTagReport(
 
   lines.push("## 抽出されたユニークタグ");
   lines.push("");
-  lines.push(
-    `- オブジェクトクラス: ${stats.uniqueTags.object_class.join(", ") || "(なし)"}`
-  );
+  lines.push(`- オブジェクトクラス: ${stats.uniqueTags.object_class.join(", ") || "(なし)"}`);
   lines.push(`- ジャンル: ${stats.uniqueTags.genre.join(", ") || "(なし)"}`);
   lines.push(`- テーマ: ${stats.uniqueTags.theme.join(", ") || "(なし)"}`);
   lines.push(`- フォーマット: ${stats.uniqueTags.format.join(", ") || "(なし)"}`);
@@ -393,9 +363,7 @@ export function generateTagReport(
 
   lines.push("## 記事別タグ一覧");
   lines.push("");
-  lines.push(
-    "| 記事ID | オブジェクトクラス | ジャンル | テーマ | フォーマット |"
-  );
+  lines.push("| 記事ID | オブジェクトクラス | ジャンル | テーマ | フォーマット |");
   lines.push("|--------|-------------------|----------|--------|--------------|");
 
   for (const result of results) {
