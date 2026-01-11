@@ -70,10 +70,7 @@ async function main() {
 
       if (extError) {
         // Alternative check: try to access embeddings table with vector type
-        const { error: tableError } = await supabase
-          .from("scp_embeddings")
-          .select("id")
-          .limit(1);
+        const { error: tableError } = await supabase.from("scp_embeddings").select("id").limit(1);
 
         if (tableError && tableError.code === "42P01") {
           throw new Error("Table scp_embeddings not found - run migration first");

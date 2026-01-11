@@ -27,9 +27,7 @@ export interface VectorSearchResponse {
  * pgvectorを使用したベクトル類似度検索を実行
  * コサイン類似度でクエリ記事に類似した記事を検索
  */
-export async function vectorSearch(
-  params: VectorSearchParams
-): Promise<VectorSearchResponse> {
+export async function vectorSearch(params: VectorSearchParams): Promise<VectorSearchResponse> {
   const { queryId, limit = 5 } = params;
   const startTime = performance.now();
 

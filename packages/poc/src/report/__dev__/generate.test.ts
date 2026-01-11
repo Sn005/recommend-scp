@@ -4,11 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  generateReport,
-  createMockReportData,
-  type ReportData,
-} from "../generate-report";
+import { generateReport, createMockReportData, type ReportData } from "../generate-report";
 
 describe("generateReport", () => {
   beforeEach(() => {
@@ -290,7 +286,12 @@ describe("generateReport", () => {
     it("部分成功時は条件付きGo判定となる", async () => {
       const mockData: ReportData = {
         dataFetch: { success: true, articleCount: 10, avgContentLength: 5000 },
-        embedding: { success: true, tokenCount: 50000, cost: 0.001, timeSeconds: 30 },
+        embedding: {
+          success: true,
+          tokenCount: 50000,
+          cost: 0.001,
+          timeSeconds: 30,
+        },
         tagging: { success: true, tokenCount: 10000, cost: 0.0015 },
         search: {
           vectorSearchSuccess: true,

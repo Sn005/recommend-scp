@@ -21,10 +21,7 @@ pgvectorのコサイン類似度検索を使用して、指定した記事に類
 
 - [x] WHEN 検索結果を確認した際
       GIVEN 結果が返された場合
-      THEN 各結果に以下が含まれる：
-      - article_id
-      - title
-      - similarity_score（0-1）
+      THEN 各結果に以下が含まれる：- article_id - title - similarity_score（0-1）
       AND クエリ記事自身は結果から除外される
 
 ### パフォーマンス
@@ -65,7 +62,7 @@ LIMIT $limit;
 
 export interface VectorSearchParams {
   queryId: string;
-  limit?: number;  // default: 5
+  limit?: number; // default: 5
 }
 
 export interface VectorSearchResult {
@@ -81,9 +78,7 @@ export interface VectorSearchResponse {
   searchTimeMs: number;
 }
 
-export async function vectorSearch(
-  params: VectorSearchParams
-): Promise<VectorSearchResponse>;
+export async function vectorSearch(params: VectorSearchParams): Promise<VectorSearchResponse>;
 ```
 
 ### Supabase RPC
@@ -147,4 +142,5 @@ pnpm --filter poc run:04-search -- --all
 - [x] 結果が「感覚的に類似」している（主観評価）
 
 ## 実装状況
+
 - **status**: completed

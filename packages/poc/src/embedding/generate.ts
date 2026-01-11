@@ -174,10 +174,7 @@ export async function generateEmbeddingsForArticles(
             tokenCount: estimatedTokens,
           });
         } else {
-          const { embedding, tokenCount } = await generateEmbedding(
-            article.content,
-            openai
-          );
+          const { embedding, tokenCount } = await generateEmbedding(article.content, openai);
 
           totalTokens += tokenCount;
           results.push({
@@ -189,8 +186,7 @@ export async function generateEmbeddingsForArticles(
 
         onProgress?.(results.length + errors.length, articles.length);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`Error processing ${article.id}: ${errorMessage}`);
         errors.push({
           articleId: article.id,

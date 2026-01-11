@@ -36,10 +36,10 @@
 
 ### 使い分け
 
-| ワークフロー | 用途 | 入力 | 出力 |
-|-------------|------|------|------|
-| `/spec` | 新機能の仕様策定 | 自然言語の要件 | EPIC/Story/Subtaskファイル |
-| `spec-workflow` | 仕様に基づく実装 | Subtaskファイル | テスト済みコード |
+| ワークフロー    | 用途             | 入力            | 出力                       |
+| --------------- | ---------------- | --------------- | -------------------------- |
+| `/spec`         | 新機能の仕様策定 | 自然言語の要件  | EPIC/Story/Subtaskファイル |
+| `spec-workflow` | 仕様に基づく実装 | Subtaskファイル | テスト済みコード           |
 
 ---
 
@@ -257,22 +257,22 @@ AC: 「ユーザー認証APIを実装すること」
 
 ### 読み込むファイル
 
-| タイミング | ファイル |
-|-----------|----------|
-| Subtask開始時 | `specs/{epic-id}/{story-id}/{subtask-id}.md` |
-| 参照が必要な時 | `specs/{epic-id}/{story-id}/{story-id}.md`, `specs/{epic-id}/{epic-id}.md` |
-| ワークフロー確認時 | `.ai/WORKFLOW.md` |
+| タイミング         | ファイル                                                                   |
+| ------------------ | -------------------------------------------------------------------------- |
+| Subtask開始時      | `specs/{epic-id}/{story-id}/{subtask-id}.md`                               |
+| 参照が必要な時     | `specs/{epic-id}/{story-id}/{story-id}.md`, `specs/{epic-id}/{epic-id}.md` |
+| ワークフロー確認時 | `.ai/WORKFLOW.md`                                                          |
 
 ### 更新するファイル
 
-| タイミング | ファイル | 更新内容 |
-|-----------|----------|----------|
-| 完了時 | `specs/{epic-id}/{story-id}/{subtask-id}.md` | status, completed_at, ACチェック |
-| **完了時** ⚠️ | `specs/{epic-id}/{story-id}/subtask-list.md` | **ステータス列を `completed` に更新** |
-| 全Subtask完了時 | `specs/{epic-id}/{story-id}/{story-id}.md` | status, completed_at |
-| **全Subtask完了時** ⚠️ | `specs/{epic-id}/story-list.md` | **ステータス列を `completed` に更新** |
-| 全Story完了時 | `specs/{epic-id}/{epic-id}.md` | status, completed_at |
-| **全Story完了時** ⚠️ | `specs/epic-list.md` | **ステータス列を `completed` に更新** |
+| タイミング             | ファイル                                     | 更新内容                              |
+| ---------------------- | -------------------------------------------- | ------------------------------------- |
+| 完了時                 | `specs/{epic-id}/{story-id}/{subtask-id}.md` | status, completed_at, ACチェック      |
+| **完了時** ⚠️          | `specs/{epic-id}/{story-id}/subtask-list.md` | **ステータス列を `completed` に更新** |
+| 全Subtask完了時        | `specs/{epic-id}/{story-id}/{story-id}.md`   | status, completed_at                  |
+| **全Subtask完了時** ⚠️ | `specs/{epic-id}/story-list.md`              | **ステータス列を `completed` に更新** |
+| 全Story完了時          | `specs/{epic-id}/{epic-id}.md`               | status, completed_at                  |
+| **全Story完了時** ⚠️   | `specs/epic-list.md`                         | **ステータス列を `completed` に更新** |
 
 ---
 

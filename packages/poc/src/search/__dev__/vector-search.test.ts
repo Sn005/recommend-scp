@@ -4,10 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
-import {
-  vectorSearch,
-  VectorSearchParams,
-} from "../vector-search";
+import { vectorSearch, VectorSearchParams } from "../vector-search";
 import { getSupabaseAdmin } from "../../lib/supabase";
 
 // Supabaseクライアントのモック
@@ -21,7 +18,11 @@ const mockSearchResults = [
   { id: "SCP-106", title: "SCP-106 - The Old Man", similarity_score: 0.88 },
   { id: "SCP-087", title: "SCP-087 - The Stairwell", similarity_score: 0.85 },
   { id: "SCP-049", title: "SCP-049 - Plague Doctor", similarity_score: 0.82 },
-  { id: "SCP-682", title: "SCP-682 - Hard-to-Destroy Reptile", similarity_score: 0.79 },
+  {
+    id: "SCP-682",
+    title: "SCP-682 - Hard-to-Destroy Reptile",
+    similarity_score: 0.79,
+  },
 ];
 
 const mockQueryArticle = {
@@ -109,9 +110,7 @@ describe("vectorSearch", () => {
 
       const response = await vectorSearch(params);
 
-      const selfIncluded = response.results.some(
-        (r) => r.articleId === params.queryId
-      );
+      const selfIncluded = response.results.some((r) => r.articleId === params.queryId);
       expect(selfIncluded).toBe(false);
     });
 

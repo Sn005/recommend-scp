@@ -13,27 +13,26 @@ ESLint v9をFlat Config形式で設定し、typescript-eslintによる厳密な�
 ## Acceptance Criteria（EARS記法）
 
 ### AC-1: ESLint v9インストール
+
 - [x] WHEN `pnpm lint` を実行した際
       GIVEN プロジェクトルートで実行した場合
       THEN ESLint v9がFlat Config形式で実行される
       AND TypeScriptファイルが検査される
 
 ### AC-2: 厳密な型チェックルール
+
 - [x] WHERE ESLint設定において
       IF TypeScriptファイルを検査する場合
       THE SYSTEM SHALL `@typescript-eslint/strict-type-checked` を適用する
       AND `@typescript-eslint/stylistic-type-checked` を適用する
 
 ### AC-3: カスタムルール
+
 - [x] WHERE ESLint設定において
-      THE SYSTEM SHALL 以下のルールを有効化する:
-      - `no-console`: warn
-      - `@typescript-eslint/no-explicit-any`: error
-      - `@typescript-eslint/no-unused-vars`: error
-      - `@typescript-eslint/consistent-type-imports`: error
-      - `@typescript-eslint/no-floating-promises`: error
+      THE SYSTEM SHALL 以下のルールを有効化する: - `no-console`: warn - `@typescript-eslint/no-explicit-any`: error - `@typescript-eslint/no-unused-vars`: error - `@typescript-eslint/consistent-type-imports`: error - `@typescript-eslint/no-floating-promises`: error
 
 ### AC-4: パッケージスクリプト
+
 - [x] WHEN ルートの `package.json` を確認した際
       THEN `lint` スクリプトが定義されている
       AND `pnpm lint` でモノレポ全体がlintされる

@@ -18,10 +18,7 @@ import { vectorSearch } from "../src/search/vector-search";
 import { hybridSearch } from "../src/search/hybrid-search";
 
 /** レポート出力先 */
-const REPORT_OUTPUT_PATH = path.resolve(
-  import.meta.dirname,
-  "../../../docs/poc-report.md"
-);
+const REPORT_OUTPUT_PATH = path.resolve(import.meta.dirname, "../../../docs/poc-report.md");
 
 /**
  * Supabaseから実際のデータを収集
@@ -39,9 +36,10 @@ async function collectActualData(): Promise<ReportData> {
   }
 
   const articleCount = articles?.length ?? 0;
-  const avgContentLength = articleCount > 0
-    ? Math.round(articles.reduce((sum, a) => sum + a.content.length, 0) / articleCount)
-    : 0;
+  const avgContentLength =
+    articleCount > 0
+      ? Math.round(articles.reduce((sum, a) => sum + a.content.length, 0) / articleCount)
+      : 0;
 
   // Embeddingデータを取得
   const { data: embeddings, error: embeddingsError } = await supabase
@@ -54,9 +52,10 @@ async function collectActualData(): Promise<ReportData> {
 
   const embeddingCount = embeddings?.length ?? 0;
   // トークン数を推定（1文字≒0.25トークン）
-  const estimatedTokens = articleCount > 0
-    ? Math.round(articles.reduce((sum, a) => sum + a.content.length, 0) * 0.25)
-    : 0;
+  const estimatedTokens =
+    articleCount > 0
+      ? Math.round(articles.reduce((sum, a) => sum + a.content.length, 0) * 0.25)
+      : 0;
   const embeddingCost = calculateCost(estimatedTokens);
 
   // タグデータを取得
@@ -68,7 +67,7 @@ async function collectActualData(): Promise<ReportData> {
     throw new Error(`タグデータの取得に失敗: ${tagsError.message}`);
   }
 
-  const taggedArticleCount = new Set(articleTags?.map(t => t.article_id) ?? []).size;
+  const taggedArticleCount = new Set(articleTags?.map((t) => t.article_id) ?? []).size;
   // タグ抽出のトークン数を推定
   const taggingInputTokens = estimatedTokens + articleCount * 500; // プロンプト分
   const taggingOutputTokens = articleCount * 50; // レスポンス分
@@ -93,7 +92,9 @@ async function collectActualData(): Promise<ReportData> {
       if (vectorResult.results.length > 0) {
         vectorSearchSuccess = true;
         searchTimeMs = vectorResult.searchTimeMs;
-        console.log(`      ✅ ベクトル検索成功 (${vectorResult.results.length}件, ${searchTimeMs}ms)`);
+        console.log(
+          `      ✅ ベクトル検索成功 (${vectorResult.results.length}件, ${searchTimeMs}ms)`
+        );
       } else {
         console.log("      ⚠️ ベクトル検索: 結果なし（データ不足の可能性）");
       }

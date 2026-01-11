@@ -122,8 +122,7 @@ async function runComparison(queryId: string, limit: number) {
 }
 
 async function main() {
-  const { queryId, limit, useHybrid, compare, embeddingWeight, tagWeight } =
-    parseArgs();
+  const { queryId, limit, useHybrid, compare, embeddingWeight, tagWeight } = parseArgs();
 
   try {
     if (compare) {

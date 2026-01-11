@@ -27,11 +27,31 @@ const mockVectorResults = {
   queryId: "SCP-173",
   queryTitle: "SCP-173 - The Sculpture",
   results: [
-    { articleId: "SCP-096", title: "SCP-096 - The Shy Guy", similarityScore: 0.92 },
-    { articleId: "SCP-106", title: "SCP-106 - The Old Man", similarityScore: 0.88 },
-    { articleId: "SCP-087", title: "SCP-087 - The Stairwell", similarityScore: 0.85 },
-    { articleId: "SCP-049", title: "SCP-049 - Plague Doctor", similarityScore: 0.82 },
-    { articleId: "SCP-682", title: "SCP-682 - Hard-to-Destroy Reptile", similarityScore: 0.79 },
+    {
+      articleId: "SCP-096",
+      title: "SCP-096 - The Shy Guy",
+      similarityScore: 0.92,
+    },
+    {
+      articleId: "SCP-106",
+      title: "SCP-106 - The Old Man",
+      similarityScore: 0.88,
+    },
+    {
+      articleId: "SCP-087",
+      title: "SCP-087 - The Stairwell",
+      similarityScore: 0.85,
+    },
+    {
+      articleId: "SCP-049",
+      title: "SCP-049 - Plague Doctor",
+      similarityScore: 0.82,
+    },
+    {
+      articleId: "SCP-682",
+      title: "SCP-682 - Hard-to-Destroy Reptile",
+      similarityScore: 0.79,
+    },
   ],
   searchTimeMs: 50,
 };
@@ -169,8 +189,12 @@ describe("hybridSearch", () => {
             // タグデータをarticle_tags形式で返す
             const tagData = [
               { tags: { category: "object_class", value: tags.object_class } },
-              ...tags.genre.map((g: string) => ({ tags: { category: "genre", value: g } })),
-              ...tags.theme.map((t: string) => ({ tags: { category: "theme", value: t } })),
+              ...tags.genre.map((g: string) => ({
+                tags: { category: "genre", value: g },
+              })),
+              ...tags.theme.map((t: string) => ({
+                tags: { category: "theme", value: t },
+              })),
               { tags: { category: "format", value: tags.format } },
             ];
             return { data: tagData, error: null };
@@ -237,8 +261,7 @@ describe("hybridSearch", () => {
 
       // スコアが重みに基づいて計算されていることを確認
       results.forEach((result) => {
-        const expectedScore =
-          0.7 * result.embedding_score + 0.3 * result.tag_score;
+        const expectedScore = 0.7 * result.embedding_score + 0.3 * result.tag_score;
         expect(result.similarity_score).toBeCloseTo(expectedScore, 5);
       });
     });
@@ -254,8 +277,7 @@ describe("hybridSearch", () => {
       const results = await hybridSearch(params);
 
       results.forEach((result) => {
-        const expectedScore =
-          0.5 * result.embedding_score + 0.5 * result.tag_score;
+        const expectedScore = 0.5 * result.embedding_score + 0.5 * result.tag_score;
         expect(result.similarity_score).toBeCloseTo(expectedScore, 5);
       });
     });
@@ -305,9 +327,7 @@ describe("hybridSearch", () => {
       const results = await hybridSearch(params);
 
       for (let i = 1; i < results.length; i++) {
-        expect(results[i - 1].similarity_score).toBeGreaterThanOrEqual(
-          results[i].similarity_score
-        );
+        expect(results[i - 1].similarity_score).toBeGreaterThanOrEqual(results[i].similarity_score);
       }
     });
   });

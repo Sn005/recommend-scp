@@ -28,30 +28,23 @@ Turborepo + pnpm でモノレポを構成し、PoC用パッケージを作成す
 - [x] WHEN 開発者がpocパッケージの構成を確認した際
       GIVEN パッケージが正しく作成されている場合
       THEN 以下のディレクトリ構成が存在する：
-      ```
-      packages/poc/
-      ├── src/
-      │   ├── crawler/
-      │   ├── embedding/
-      │   ├── tagging/
-      │   ├── search/
-      │   └── report/
-      ├── scripts/
-      ├── data/          # .gitignore対象
-      ├── package.json
-      └── tsconfig.json
-      ```
+      `    packages/poc/
+├── src/
+│   ├── crawler/
+│   ├── embedding/
+│   ├── tagging/
+│   ├── search/
+│   └── report/
+├── scripts/
+├── data/          # .gitignore対象
+├── package.json
+└── tsconfig.json`
 
 ### 依存パッケージ
 
 - [x] WHEN pocパッケージのpackage.jsonを確認した際
       GIVEN 依存関係が設定されている場合
-      THEN 以下のパッケージが含まれる：
-      - typescript
-      - tsx (TypeScript実行)
-      - @supabase/supabase-js
-      - openai
-      - zod (バリデーション)
+      THEN 以下のパッケージが含まれる：- typescript - tsx (TypeScript実行) - @supabase/supabase-js - openai - zod (バリデーション)
 
 ## 設計
 

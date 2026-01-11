@@ -22,9 +22,7 @@ function parseArgs(): Args {
   const args = process.argv.slice(2);
   return {
     dryRun: args.includes("--dry-run"),
-    articleId: args.includes("--id")
-      ? args[args.indexOf("--id") + 1] ?? null
-      : null,
+    articleId: args.includes("--id") ? (args[args.indexOf("--id") + 1] ?? null) : null,
   };
 }
 
@@ -44,9 +42,7 @@ async function fetchArticles(articleId: string | null): Promise<ScpArticle[]> {
   }
 
   if (!data || data.length === 0) {
-    throw new Error(
-      articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません"
-    );
+    throw new Error(articleId ? `記事が見つかりません: ${articleId}` : "記事が見つかりません");
   }
 
   return data as ScpArticle[];
@@ -82,9 +78,7 @@ function printStats(stats: EmbeddingStats, dryRun: boolean): void {
   console.log(`対象記事数: ${stats.totalArticles}`);
   console.log(`成功: ${stats.successCount}`);
   console.log(`エラー: ${stats.errorCount}`);
-  console.log(
-    `総トークン数: ${stats.totalTokens.toLocaleString()}${dryRun ? " (推定)" : ""}`
-  );
+  console.log(`総トークン数: ${stats.totalTokens.toLocaleString()}${dryRun ? " (推定)" : ""}`);
   console.log(`推定コスト: $${stats.estimatedCost.toFixed(6)}`);
 
   if (stats.errors.length > 0) {

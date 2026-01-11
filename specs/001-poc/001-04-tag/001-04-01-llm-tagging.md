@@ -17,11 +17,7 @@ LLM（Claude or GPT）を使用してSCP記事から構造化されたタグを�
 - [x] WHEN 開発者がタグ抽出スクリプトを実行した際
       GIVEN scp_articlesテーブルにデータが存在する場合
       THEN 各記事に対してLLMを呼び出す
-      AND 以下のカテゴリのタグを抽出する：
-      - object_class: Safe, Euclid, Keter, Thaumiel, Neutralized, その他
-      - genre: horror, sci-fi, fantasy, comedy, tragedy, その他（複数可）
-      - theme: cognition, reality-bending, extradimensional, biological, mechanical, その他（複数可）
-      - format: standard, exploration-log, interview, experiment-log, その他
+      AND 以下のカテゴリのタグを抽出する：- object_class: Safe, Euclid, Keter, Thaumiel, Neutralized, その他 - genre: horror, sci-fi, fantasy, comedy, tragedy, その他（複数可）- theme: cognition, reality-bending, extradimensional, biological, mechanical, その他（複数可）- format: standard, exploration-log, interview, experiment-log, その他
 
 - [x] WHEN タグ抽出結果を確認した際
       GIVEN LLMが応答した場合
@@ -120,7 +116,7 @@ export interface TaggingStats {
 
 ```typescript
 // 環境変数でプロバイダーを切り替え
-const TAGGING_PROVIDER = process.env.TAGGING_LLM_PROVIDER || 'claude';
+const TAGGING_PROVIDER = process.env.TAGGING_LLM_PROVIDER || "claude";
 
 // Claude (Anthropic)
 // - claude-3-haiku: 安価で高速

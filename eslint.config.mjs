@@ -1,6 +1,7 @@
 // @ts-check
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -31,5 +32,7 @@ export default tseslint.config(
       "**/*.js",
       "**/*.mjs",
     ],
-  }
+  },
+  // Prettierとの競合回避（必ず最後に配置）
+  eslintConfigPrettier
 );

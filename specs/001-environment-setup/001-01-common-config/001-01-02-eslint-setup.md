@@ -54,25 +54,25 @@ completed_at: null
 ## テストケース（ACから導出）
 
 ```typescript
-describe('ESLint設定作成', () => {
-  it('ESLint設定ファイルがルートに存在する', () => {
+describe("ESLint設定作成", () => {
+  it("ESLint設定ファイルがルートに存在する", () => {
     // eslint.config.js または .eslintrc.* が存在する
-  })
+  });
 
-  it('TypeScriptのルールが有効になっている', () => {
+  it("TypeScriptのルールが有効になっている", () => {
     // @typescript-eslint プラグインが設定されている
     // .ts, .tsx ファイルが対象になっている
-  })
+  });
 
-  it('npm run lint で全ファイルがチェックされる', () => {
+  it("npm run lint で全ファイルがチェックされる", () => {
     // package.json に lint スクリプトが定義されている
     // 実行すると全対象ファイルがチェックされる
-  })
+  });
 
-  it('エラーがない状態で完了する', () => {
+  it("エラーがない状態で完了する", () => {
     // lint 実行時にエラーが発生しない
-  })
-})
+  });
+});
 ```
 
 ## 完了確認
