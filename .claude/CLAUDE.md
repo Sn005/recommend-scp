@@ -384,3 +384,25 @@ CREATE TABLE tag_dictionary (
 const dictionary = await fetchTagDictionary();
 const prompt = `タグを以下から選択: ${dictionary.genre.join(" | ")}`;
 ```
+
+#### 多言語支部対応の拡張性設計（優先度: 中）
+
+EPIC-003（データパイプライン本番化）では、将来の多言語支部対応（KO, CN, FR等）を見据えた拡張性を担保する。
+
+**設計方針:**
+
+| 項目 | 拡張性担保の方法 |
+|------|------------------|
+| 言語マスタ | `supported_languages` テーブルで管理。新言語は1行INSERT |
+| 記事テーブル | `scp_articles.lang` は TEXT型で任意言語コード対応 |
+| クローラー | `BranchCrawler` インターフェースで抽象化。支部別実装を差し替え可能 |
+| タグ辞書 | `tag_localizations` テーブルで言語別ローカライズを分離管理 |
+
+**新言語追加時の作業:**
+
+1. `supported_languages` に1行追加
+2. 新しい `XxxCrawler` クラス実装（〜200行）
+3. `tag_localizations` にローカライズ追加
+4. パイプライン設定で `lang: 'xx'` 指定
+
+**見積もり:** 1-2日程度で新言語対応可能
