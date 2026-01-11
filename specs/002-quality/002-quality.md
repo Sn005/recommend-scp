@@ -39,6 +39,6 @@ ESLint/Prettier によるコード品質チェック、lefthook によるコミ�
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **開始日**: -
 - **完了日**: -
