@@ -31,8 +31,11 @@ coverage/
 *.log
 logs/
 
-## local-docs
-.local-docs/
-
 ## poc data
 packages/poc/data
+
+# Turbo
+.turbo/
+
+# local document
+/.local-docs

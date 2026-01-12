@@ -51,10 +51,10 @@ ACがEARS記法で記述されている場合、テストケース導出を効�
 // AND ダッシュボードにリダイレクトする
 
 // テストケースへの変換:
-describe('ログイン', () => {
-  it('有効な認証情報でJWTトークンが発行される', () => {
+describe("ログイン", () => {
+  it("有効な認証情報でJWTトークンが発行される", () => {
     // GIVEN: 前提条件をセットアップ
-    const credentials = { email: 'valid@example.com', password: 'validPass' };
+    const credentials = { email: "valid@example.com", password: "validPass" };
 
     // WHEN: トリガーを実行
     const result = login(credentials);
@@ -63,7 +63,7 @@ describe('ログイン', () => {
     expect(result.token).toBeDefined();
   });
 
-  it('成功時にダッシュボードへリダイレクトする', () => {
+  it("成功時にダッシュボードへリダイレクトする", () => {
     // AND条件のテスト
   });
 });
@@ -81,20 +81,20 @@ describe('ログイン', () => {
 
 ```typescript
 // 1. Subtaskファイルを読み込む
-const subtaskFile = await read(`specs/{epic-id}/{story-id}/{subtask-id}.md`)
+const subtaskFile = await read(`specs/{epic-id}/{story-id}/{subtask-id}.md`);
 
 // 2. ACを確認
-const acceptanceCriteria = parseAC(subtaskFile)
+const acceptanceCriteria = parseAC(subtaskFile);
 
 // 3. ユーザーストーリーを確認
-const userStory = parseUserStory(subtaskFile)
+const userStory = parseUserStory(subtaskFile);
 
 // 4. ユーザーに確認
 await ask(`以下のACで実装を進めます。よろしいですか？
-${acceptanceCriteria.map(ac => `- ${ac}`).join('\n')}`)
+${acceptanceCriteria.map((ac) => `- ${ac}`).join("\n")}`);
 
 // 5. テストケースを導出
-const testCases = deriveTestCases(acceptanceCriteria)
+const testCases = deriveTestCases(acceptanceCriteria);
 ```
 
 ### Phase 2: TDD実装
@@ -102,49 +102,49 @@ const testCases = deriveTestCases(acceptanceCriteria)
 ```typescript
 // 🔴 Red: テストを先に書く
 describe(subtaskTitle, () => {
-  acceptanceCriteria.forEach(ac => {
+  acceptanceCriteria.forEach((ac) => {
     it(ac, async () => {
       // ACからテストケースを導出
-    })
-  })
-})
+    });
+  });
+});
 
 // テストが失敗することを確認
-await runTests() // Expected: FAIL
+await runTests(); // Expected: FAIL
 
 // 🟢 Green: 最小限の実装
 // ACを満たす最小限のコードを実装
-await runTests() // Expected: PASS
+await runTests(); // Expected: PASS
 
 // 🔵 Refactor: コード改善
 // テストを保ちながら改善
-await runTests() // Expected: PASS
+await runTests(); // Expected: PASS
 ```
 
 ### Phase 3: 完了時（必須フロー）
 
 ```typescript
 // 1. AC全項目をチェック
-acceptanceCriteria.forEach(ac => {
-  console.log(`✅ ${ac}`)
-})
+acceptanceCriteria.forEach((ac) => {
+  console.log(`✅ ${ac}`);
+});
 
 // 2. テストが全て通過していることを確認
-await runTests() // All tests pass
+await runTests(); // All tests pass
 
 // 3. ステータス更新
 await updateSubtaskFile({
-  status: 'completed',
-  completed_at: new Date().toISOString()
-})
+  status: "completed",
+  completed_at: new Date().toISOString(),
+});
 
 // 4. 親Storyの確認
 if (allSubtasksCompleted(storyId)) {
-  await updateStoryFile({ status: 'completed' })
+  await updateStoryFile({ status: "completed" });
 }
 
 // 5. 次のSubtaskを提示
-console.log(`次のSubtask: ${getNextSubtask()}`)
+console.log(`次のSubtask: ${getNextSubtask()}`);
 ```
 
 ## スコープ判断
@@ -169,15 +169,15 @@ if (isOutOfScope(request)) {
   ご依頼いただいた「${request}」は、現在のSubtaskのACに含まれていません。
 
   現在のAC:
-  ${currentAC.map(ac => `- ${ac}`).join('\n')}
+  ${currentAC.map((ac) => `- ${ac}`).join("\n")}
 
   対応案:
   1. 現在のSubtaskでは実装しない
   2. 別のSubtaskとして提案
 
-  どちらを選択しますか？`
+  どちらを選択しますか？`;
 
-  await ask(response)
+  await ask(response);
 }
 ```
 
@@ -215,7 +215,7 @@ if (isACAmbiguous(ac)) {
   「${suggestedAC}」
 
   この明確化で進めてよいですか？
-  `)
+  `);
 }
 ```
 

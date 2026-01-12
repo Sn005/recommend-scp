@@ -21,10 +21,10 @@ SDDワークフロー用のブランチを作成します。
 
 ## ブランチ命名規則
 
-| タイプ | フォーマット | 例 |
-|--------|-------------|-----|
-| spec | `spec/{action-id}-{desc}` | `spec/001-01-01-user-auth` |
-| impl | `impl/{action-id}-{desc}` | `impl/001-01-01-user-auth` |
+| タイプ | フォーマット              | 例                         |
+| ------ | ------------------------- | -------------------------- |
+| spec   | `spec/{action-id}-{desc}` | `spec/001-01-01-user-auth` |
+| impl   | `impl/{action-id}-{desc}` | `impl/001-01-01-user-auth` |
 
 ## 例
 
