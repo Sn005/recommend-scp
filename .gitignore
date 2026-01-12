@@ -39,3 +39,8 @@ packages/poc/data
 
 # local document
 /.local-docs
+
+
+# Supabase Local
+supabase/.branches/
+supabase/.temp/
