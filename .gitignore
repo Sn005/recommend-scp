@@ -31,6 +31,9 @@ coverage/
 *.log
 logs/
 
+## poc data
+packages/poc/data
+
 # Turbo
 .turbo/
 
