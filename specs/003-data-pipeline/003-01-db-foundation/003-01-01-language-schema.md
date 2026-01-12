@@ -14,42 +14,30 @@
 
 ### 言語マスタテーブル
 
-- [ ] WHEN マイグレーションを実行した際
+- [x] WHEN マイグレーションを実行した際
       GIVEN Supabaseに接続できる場合
       THEN `supported_languages` テーブルが作成される
-      AND 以下のカラムが含まれる：
-        - `code` (TEXT, PRIMARY KEY): 言語コード（'en', 'ja'等）
-        - `name` (TEXT): 言語名
-        - `wiki_url` (TEXT): WikiのベースURL
-        - `crawler_type` (TEXT): 'api' または 'scraping'
-        - `is_active` (BOOLEAN): 有効/無効フラグ
-        - `priority` (INTEGER): 処理優先度
+      AND 以下のカラムが含まれる：- `code` (TEXT, PRIMARY KEY): 言語コード（'en', 'ja'等）- `name` (TEXT): 言語名 - `wiki_url` (TEXT): WikiのベースURL - `crawler_type` (TEXT): 'api' または 'scraping' - `is_active` (BOOLEAN): 有効/無効フラグ - `priority` (INTEGER): 処理優先度
 
-- [ ] WHEN 言語マスタに初期データを投入する際
+- [x] WHEN 言語マスタに初期データを投入する際
       GIVEN テーブルが存在する場合
       THEN EN（English）が `is_active: true` で登録される
       AND JA（日本語）が `is_active: false` で登録される
 
 ### 記事テーブル拡張
 
-- [ ] WHEN 記事テーブルを拡張した際
+- [x] WHEN 記事テーブルを拡張した際
       GIVEN 既存の `scp_articles` テーブルがある場合
-      THEN 以下のカラムが追加される：
-        - `lang` (TEXT, DEFAULT 'en'): 言語コード
-        - `source_updated_at` (TIMESTAMPTZ): ソース更新日時
-        - `is_deleted` (BOOLEAN, DEFAULT false): 削除フラグ
-        - `embedding_status` (TEXT, DEFAULT 'pending'): Embedding処理状態
-        - `tagging_status` (TEXT, DEFAULT 'pending'): タグ抽出処理状態
-        - `last_processed_at` (TIMESTAMPTZ): 最終処理日時
+      THEN 以下のカラムが追加される：- `lang` (TEXT, DEFAULT 'en'): 言語コード - `source_updated_at` (TIMESTAMPTZ): ソース更新日時 - `is_deleted` (BOOLEAN, DEFAULT false): 削除フラグ - `embedding_status` (TEXT, DEFAULT 'pending'): Embedding処理状態 - `tagging_status` (TEXT, DEFAULT 'pending'): タグ抽出処理状態 - `last_processed_at` (TIMESTAMPTZ): 最終処理日時
 
-- [ ] WHEN 既存データをマイグレーションする際
+- [x] WHEN 既存データをマイグレーションする際
       GIVEN 既存の記事データがある場合
       THEN 全ての既存記事の `lang` が 'en' に設定される
       AND `embedding_status` は既存embedding有無で 'completed' または 'pending' に設定される
 
 ### インデックス
 
-- [ ] WHEN インデックスを作成した際
+- [x] WHEN インデックスを作成した際
       GIVEN テーブルが存在する場合
       THEN `scp_articles(lang)` にインデックスが作成される
       AND `scp_articles(embedding_status)` にインデックスが作成される
@@ -100,9 +88,15 @@ CREATE INDEX idx_scp_articles_is_deleted ON scp_articles(is_deleted) WHERE is_de
 
 ## テストケース
 
-- [ ] `supported_languages` テーブルが正常に作成される
-- [ ] EN/JAの初期データが正しく投入される
-- [ ] `scp_articles` に新カラムが追加される
-- [ ] 既存データのマイグレーションが正常に完了する
-- [ ] 各インデックスが作成される
-- [ ] 無効な `embedding_status` 値でINSERTするとエラーになる
+- [x] `supported_languages` テーブルが正常に作成される
+- [x] EN/JAの初期データが正しく投入される
+- [x] `scp_articles` に新カラムが追加される
+- [x] 既存データのマイグレーションが正常に完了する
+- [x] 各インデックスが作成される
+- [x] 無効な `embedding_status` 値でINSERTするとエラーになる
+
+## 実装状況
+
+- **status**: completed
+- **マイグレーションファイル**: `supabase/migrations/20250112000001_language_schema.sql`
+- **テストファイル**: `packages/poc/src/migrations/__dev__/003-01-01-language-schema.test.ts`
