@@ -18,10 +18,7 @@
 - [ ] WHEN クローラーモジュールを実装する際
       GIVEN 抽象化が必要な場合
       THEN `BranchCrawler` インターフェースを定義する
-      AND 以下のメソッドを含む：
-        - `fetchArticleList(): Promise<ArticleIndex[]>`
-        - `fetchArticleContent(id: string): Promise<ArticleContent>`
-        - `getLastModified(id: string): Promise<Date | null>`
+      AND 以下のメソッドを含む：- `fetchArticleList(): Promise<ArticleIndex[]>` - `fetchArticleContent(id: string): Promise<ArticleContent>` - `getLastModified(id: string): Promise<Date | null>`
 
 - [ ] WHEN インターフェースを定義した際
       GIVEN 言語情報が必要な場合
@@ -56,10 +53,10 @@
 // packages/poc/src/crawler/types.ts
 
 export interface ArticleIndex {
-  id: string;           // 'SCP-173'
-  title: string;        // 'The Sculpture'
-  url: string;          // 'https://scp-wiki.wikidot.com/scp-173'
-  series: string;       // 'series-1'
+  id: string; // 'SCP-173'
+  title: string; // 'The Sculpture'
+  url: string; // 'https://scp-wiki.wikidot.com/scp-173'
+  series: string; // 'series-1'
 }
 
 export interface ArticleContent {
@@ -70,18 +67,18 @@ export interface ArticleContent {
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
-  sourceHash?: string;  // コンテンツハッシュ（差分検出用）
+  sourceHash?: string; // コンテンツハッシュ（差分検出用）
 }
 
 export interface CrawlProgress {
-  phase: 'fetch_index' | 'fetch_content' | 'save_db';
+  phase: "fetch_index" | "fetch_content" | "save_db";
   current: number;
   total: number;
 }
 
 export interface BranchCrawler {
   readonly lang: string;
-  readonly crawlerType: 'api' | 'scraping';
+  readonly crawlerType: "api" | "scraping";
 
   fetchArticleList(): Promise<ArticleIndex[]>;
   fetchArticleContent(id: string): Promise<ArticleContent>;
@@ -94,8 +91,8 @@ export interface BranchCrawler {
 ```typescript
 // packages/poc/src/crawler/factory.ts
 
-import { BranchCrawler } from './types';
-import { EnglishCrawler } from './english-crawler';
+import { BranchCrawler } from "./types";
+import { EnglishCrawler } from "./english-crawler";
 // import { JapaneseCrawler } from './japanese-crawler';  // 将来追加
 
 const crawlers: Record<string, new () => BranchCrawler> = {
@@ -107,7 +104,9 @@ export class CrawlerFactory {
   static create(lang: string): BranchCrawler {
     const CrawlerClass = crawlers[lang];
     if (!CrawlerClass) {
-      throw new Error(`Unsupported language: ${lang}. Supported: ${Object.keys(crawlers).join(', ')}`);
+      throw new Error(
+        `Unsupported language: ${lang}. Supported: ${Object.keys(crawlers).join(", ")}`
+      );
     }
     return new CrawlerClass();
   }

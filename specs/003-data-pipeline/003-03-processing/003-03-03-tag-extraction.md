@@ -69,9 +69,9 @@ PoCのタグ抽出を本番運用向けに拡張する。
 // packages/poc/src/tagging/batch-processor.ts
 
 export interface BatchTaggingOptions {
-  batchSize?: number;        // デフォルト: 5
-  costLimit?: number;        // USD上限（オプション）
-  dryRun?: boolean;          // ドライランモード
+  batchSize?: number; // デフォルト: 5
+  costLimit?: number; // USD上限（オプション）
+  dryRun?: boolean; // ドライランモード
   onProgress?: (progress: TaggingProgress) => void;
 }
 
@@ -91,7 +91,7 @@ export interface BatchTaggingResult {
   totalTokens: number;
   actualCost: number;
   duration: number;
-  unknownTags: UnknownTag[];  // 正規化できなかったタグ
+  unknownTags: UnknownTag[]; // 正規化できなかったタグ
   errors: TaggingError[];
 }
 
@@ -153,14 +153,14 @@ export class BatchTaggingProcessor {
     // object_class
     if (rawTags.object_class) {
       result.object_class = await this.tagDictionaryManager.normalize(
-        'object_class',
+        "object_class",
         rawTags.object_class
       );
     }
 
     // genre（複数）
     for (const tag of rawTags.genre || []) {
-      const normalized = await this.tagDictionaryManager.normalize('genre', tag);
+      const normalized = await this.tagDictionaryManager.normalize("genre", tag);
       if (normalized) result.genre.push(normalized);
     }
 

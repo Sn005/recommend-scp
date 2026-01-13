@@ -47,12 +47,7 @@
 
 - [ ] WHEN 差分クロールが完了した際
       GIVEN 処理が正常に完了した場合
-      THEN 以下の統計を出力する：
-        - 新規追加件数
-        - 更新件数
-        - 削除件数
-        - 変更なし件数
-        - 処理時間
+      THEN 以下の統計を出力する：- 新規追加件数 - 更新件数 - 削除件数 - 変更なし件数 - 処理時間
 
 ### 最適化
 
@@ -99,7 +94,7 @@ export interface DiffCrawlOptions {
 }
 
 export interface DiffProgress {
-  phase: 'fetch_index' | 'compare' | 'fetch_content' | 'save';
+  phase: "fetch_index" | "compare" | "fetch_content" | "save";
   current: number;
   total: number;
 }
@@ -110,7 +105,7 @@ export interface DiffCrawlResult {
   deletedCount: number;
   unchangedCount: number;
   errors: CrawlError[];
-  duration: number;  // ミリ秒
+  duration: number; // ミリ秒
 }
 
 export interface CrawlError {
@@ -123,13 +118,10 @@ export interface CrawlError {
 ### ハッシュ計算
 
 ```typescript
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
 
 export function computeContentHash(content: string): string {
-  return createHash('sha256')
-    .update(content)
-    .digest('hex')
-    .slice(0, 16);  // 先頭16文字
+  return createHash("sha256").update(content).digest("hex").slice(0, 16); // 先頭16文字
 }
 ```
 
@@ -162,8 +154,8 @@ export async function detectChanges(
   }
 
   // DBにあるがAPIにない記事（削除）
-  const apiIds = new Set(apiArticles.map(a => a.id));
-  const deletedIds = [...dbArticles.keys()].filter(id => !apiIds.has(id));
+  const apiIds = new Set(apiArticles.map((a) => a.id));
+  const deletedIds = [...dbArticles.keys()].filter((id) => !apiIds.has(id));
 
   return { newArticles, updatedArticles, deletedIds, unchangedIds };
 }

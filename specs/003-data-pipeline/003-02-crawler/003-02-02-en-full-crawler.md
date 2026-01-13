@@ -73,20 +73,28 @@ SCP Data APIを使用してEN全記事（series-1〜8+）を取得するクロ�
 ```typescript
 // packages/poc/src/crawler/english-crawler.ts
 
-import { BranchCrawler, ArticleIndex, ArticleContent } from './types';
+import { BranchCrawler, ArticleIndex, ArticleContent } from "./types";
 
-const SCP_DATA_API_BASE = 'https://api.crom.avn.sh';
+const SCP_DATA_API_BASE = "https://api.crom.avn.sh";
 const BATCH_SIZE = 10;
 const BATCH_DELAY_MS = 1000;
 const MAX_RETRIES = 3;
 
 export class EnglishCrawler implements BranchCrawler {
-  readonly lang = 'en';
-  readonly crawlerType = 'api' as const;
+  readonly lang = "en";
+  readonly crawlerType = "api" as const;
 
   async fetchArticleList(): Promise<ArticleIndex[]> {
-    const series = ['series-1', 'series-2', 'series-3', 'series-4',
-                    'series-5', 'series-6', 'series-7', 'series-8'];
+    const series = [
+      "series-1",
+      "series-2",
+      "series-3",
+      "series-4",
+      "series-5",
+      "series-6",
+      "series-7",
+      "series-8",
+    ];
     const articles: ArticleIndex[] = [];
 
     for (const s of series) {
@@ -111,9 +119,9 @@ export class EnglishCrawler implements BranchCrawler {
 
 ```typescript
 export interface FullCrawlOptions {
-  resumeFromCheckpoint?: string;  // チェックポイントID
-  series?: string[];              // 対象シリーズ（デフォルト: 全シリーズ）
-  batchSize?: number;             // バッチサイズ（デフォルト: 10）
+  resumeFromCheckpoint?: string; // チェックポイントID
+  series?: string[]; // 対象シリーズ（デフォルト: 全シリーズ）
+  batchSize?: number; // バッチサイズ（デフォルト: 10）
   onProgress?: (progress: CrawlProgress) => void;
   onCheckpoint?: (checkpoint: Checkpoint) => void;
 }

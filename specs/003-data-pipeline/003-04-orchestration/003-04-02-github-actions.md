@@ -39,11 +39,7 @@ GitHub Actionsを使用してパイプラインを定期実行するワークフ
 
 - [ ] WHEN ワークフローが実行される際
       GIVEN 環境変数が必要な場合
-      THEN GitHub Secretsから以下を取得する：
-        - SUPABASE_URL
-        - SUPABASE_SERVICE_ROLE_KEY
-        - OPENAI_API_KEY
-        - NOTIFY_EMAIL（通知用）
+      THEN GitHub Secretsから以下を取得する：- SUPABASE_URL - SUPABASE_SERVICE_ROLE_KEY - OPENAI_API_KEY - NOTIFY_EMAIL（通知用）
 
 ### タイムアウト
 
@@ -70,14 +66,14 @@ name: Data Pipeline
 on:
   schedule:
     # 毎週日曜 3:00 JST (土曜 18:00 UTC)
-    - cron: '0 18 * * 6'
+    - cron: "0 18 * * 6"
 
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Pipeline mode'
+        description: "Pipeline mode"
         required: true
-        default: 'diff'
+        default: "diff"
         type: choice
         options:
           - diff
@@ -85,16 +81,16 @@ on:
           - embedding
           - tagging
       dry_run:
-        description: 'Dry run (no API calls)'
+        description: "Dry run (no API calls)"
         type: boolean
         default: false
       cost_limit:
-        description: 'Cost limit in USD (optional)'
+        description: "Cost limit in USD (optional)"
         type: string
-        default: ''
+        default: ""
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
 
 jobs:
   pipeline:
@@ -115,7 +111,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -184,15 +180,15 @@ jobs:
 
 ### 必要なSecrets
 
-| Secret名 | 説明 |
-|----------|------|
-| `SUPABASE_URL` | SupabaseプロジェクトのURL |
+| Secret名                    | 説明                       |
+| --------------------------- | -------------------------- |
+| `SUPABASE_URL`              | SupabaseプロジェクトのURL  |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabaseサービスロールキー |
-| `OPENAI_API_KEY` | OpenAI APIキー |
-| `MAIL_SERVER` | SMTPサーバーアドレス |
-| `MAIL_USERNAME` | SMTPユーザー名 |
-| `MAIL_PASSWORD` | SMTPパスワード |
-| `NOTIFY_EMAIL` | 通知先メールアドレス |
+| `OPENAI_API_KEY`            | OpenAI APIキー             |
+| `MAIL_SERVER`               | SMTPサーバーアドレス       |
+| `MAIL_USERNAME`             | SMTPユーザー名             |
+| `MAIL_PASSWORD`             | SMTPパスワード             |
+| `NOTIFY_EMAIL`              | 通知先メールアドレス       |
 
 ## テストケース
 
