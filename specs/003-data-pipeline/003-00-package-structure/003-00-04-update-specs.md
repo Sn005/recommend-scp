@@ -16,7 +16,7 @@
 
 ### 含む
 
-- 003系specファイル（12ファイル）のパス参照更新
+- 003系specファイル（13ファイル）のパス参照更新
 - EPIC-003のメインspec（003-data-pipeline.md）の成果物セクション更新
 
 ### 含まない
@@ -77,7 +77,7 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ## 対象ファイル一覧
 
-### 更新対象（12ファイル）
+### 更新対象（13ファイル）
 
 | ファイル | 主な変更箇所 |
 |----------|--------------|
@@ -92,6 +92,7 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 | `003-03-processing/003-03-02-tag-dictionary-manager.md` | 実装ファイルパス |
 | `003-03-processing/003-03-03-tag-extraction.md` | 実装ファイルパス |
 | `003-04-orchestration/003-04-01-orchestrator.md` | 実装ファイルパス |
+| `003-04-orchestration/003-04-02-github-actions.md` | `--filter poc` → `--filter pipeline` |
 | `003-04-orchestration/003-04-03-notification-retry.md` | 実装ファイルパス |
 
 ### 更新しない（7ファイル）

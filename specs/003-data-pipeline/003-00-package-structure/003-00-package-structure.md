@@ -140,7 +140,7 @@ import type { ScpArticleRaw } from "@recommend-scp/shared/types";
 - [ ] WHEN 003系specのパスを修正する際
       GIVEN `packages/poc` への参照が存在する場合
       THEN 適切なパッケージ（shared または pipeline）への参照に変更される
-      AND 12ファイルすべてが更新される
+      AND 13ファイルすべてが更新される
 
 ## 関連Subtask
 
