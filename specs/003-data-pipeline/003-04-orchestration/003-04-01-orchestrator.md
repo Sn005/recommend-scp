@@ -80,7 +80,7 @@
 ### インターフェース
 
 ```typescript
-// packages/poc/src/pipeline/orchestrator.ts
+// packages/pipeline/src/orchestrator/orchestrator.ts
 
 export type PipelineMode = "full" | "diff" | "embedding" | "tagging";
 
@@ -187,22 +187,22 @@ export class PipelineOrchestrator {
 
 ```bash
 # フルパイプライン
-pnpm --filter poc pipeline:run --mode=full
+pnpm --filter pipeline run --mode=full
 
 # 差分更新
-pnpm --filter poc pipeline:run --mode=diff
+pnpm --filter pipeline run --mode=diff
 
 # Embeddingのみ
-pnpm --filter poc pipeline:run --mode=embedding
+pnpm --filter pipeline run --mode=embedding
 
 # コスト上限付き
-pnpm --filter poc pipeline:run --mode=diff --cost-limit=5
+pnpm --filter pipeline run --mode=diff --cost-limit=5
 
 # ドライラン
-pnpm --filter poc pipeline:run --mode=full --dry-run
+pnpm --filter pipeline run --mode=full --dry-run
 
 # 前回実行から再開
-pnpm --filter poc pipeline:run --resume=<run-id>
+pnpm --filter pipeline run --resume=<run-id>
 ```
 
 ### 出力例

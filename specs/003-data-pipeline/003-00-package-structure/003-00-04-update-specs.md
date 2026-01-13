@@ -16,7 +16,7 @@
 
 ### 含む
 
-- 003系specファイル（12ファイル）のパス参照更新
+- 003系specファイル（13ファイル）のパス参照更新
 - EPIC-003のメインspec（003-data-pipeline.md）の成果物セクション更新
 
 ### 含まない
@@ -37,12 +37,24 @@
       THEN `packages/pipeline/src/crawler/` に変更される
 
 - [ ] WHEN 003系specファイルを更新する際
-      GIVEN `packages/poc/src/embedding/` への参照がある場合
-      THEN `packages/shared/src/embedding/` に変更される
+      GIVEN `packages/poc/src/embedding/generate.ts` への参照がある場合
+      THEN `packages/shared/src/embedding/generate.ts` に変更される（純粋ロジック）
 
 - [ ] WHEN 003系specファイルを更新する際
-      GIVEN `packages/poc/src/tagging/` への参照がある場合
-      THEN `packages/shared/src/tagging/` に変更される
+      GIVEN `packages/poc/src/embedding/batch-processor.ts` への参照がある場合
+      THEN `packages/pipeline/src/processing/batch-embedding.ts` に変更される（バッチ処理）
+
+- [ ] WHEN 003系specファイルを更新する際
+      GIVEN `packages/poc/src/tagging/extract.ts` への参照がある場合
+      THEN `packages/shared/src/tagging/extract.ts` に変更される（純粋ロジック）
+
+- [ ] WHEN 003系specファイルを更新する際
+      GIVEN `packages/poc/src/tagging/tag-dictionary-manager.ts` への参照がある場合
+      THEN `packages/shared/src/tagging/tag-dictionary-manager.ts` に変更される（共通処理）
+
+- [ ] WHEN 003系specファイルを更新する際
+      GIVEN `packages/poc/src/tagging/batch-processor.ts` への参照がある場合
+      THEN `packages/pipeline/src/processing/batch-tagging.ts` に変更される（バッチ処理）
 
 - [ ] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/search/` への参照がある場合
@@ -77,7 +89,7 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ## 対象ファイル一覧
 
-### 更新対象（12ファイル）
+### 更新対象（13ファイル）
 
 | ファイル | 主な変更箇所 |
 |----------|--------------|
@@ -92,6 +104,7 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 | `003-03-processing/003-03-02-tag-dictionary-manager.md` | 実装ファイルパス |
 | `003-03-processing/003-03-03-tag-extraction.md` | 実装ファイルパス |
 | `003-04-orchestration/003-04-01-orchestrator.md` | 実装ファイルパス |
+| `003-04-orchestration/003-04-02-github-actions.md` | `--filter poc` → `--filter pipeline` |
 | `003-04-orchestration/003-04-03-notification-retry.md` | 実装ファイルパス |
 
 ### 更新しない（7ファイル）
@@ -108,16 +121,32 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ## パス変換ルール
 
+### pipelineパッケージ（パイプライン固有処理）
+
 | 旧パス | 新パス | 理由 |
 |--------|--------|------|
 | `packages/poc/src/crawler/` | `packages/pipeline/src/crawler/` | パイプライン固有 |
 | `packages/poc/src/migrations/` | `packages/pipeline/src/migrations/` | パイプライン固有 |
 | `packages/poc/src/pipeline/` | `packages/pipeline/src/orchestrator/` | パイプライン固有（名称変更） |
-| `packages/poc/src/embedding/` | `packages/shared/src/embedding/` | 共通処理 |
-| `packages/poc/src/tagging/` | `packages/shared/src/tagging/` | 共通処理 |
-| `packages/poc/src/search/` | `packages/shared/src/search/` | 共通処理 |
+| `packages/poc/src/embedding/batch-processor.ts` | `packages/pipeline/src/processing/batch-embedding.ts` | バッチ処理（DBステータス管理含む） |
+| `packages/poc/src/tagging/batch-processor.ts` | `packages/pipeline/src/processing/batch-tagging.ts` | バッチ処理（DBステータス管理含む） |
+
+### sharedパッケージ（共通の純粋ロジック）
+
+| 旧パス | 新パス | 理由 |
+|--------|--------|------|
+| `packages/poc/src/embedding/generate.ts` | `packages/shared/src/embedding/generate.ts` | 純粋なEmbedding生成ロジック |
+| `packages/poc/src/tagging/extract.ts` | `packages/shared/src/tagging/extract.ts` | 純粋なタグ抽出ロジック |
+| `packages/poc/src/tagging/tag-dictionary-manager.ts` | `packages/shared/src/tagging/tag-dictionary-manager.ts` | タグ辞書管理（共通） |
+| `packages/poc/src/search/` | `packages/shared/src/search/` | 検索機能（共通） |
 | `packages/poc/src/lib/` | `packages/shared/src/lib/` | 共通基盤 |
 | `packages/poc/src/types.ts` | `packages/shared/src/types.ts` | 共通型定義 |
+
+### CLIコマンド
+
+| 旧コマンド | 新コマンド | 理由 |
+|-----------|-----------|------|
+| `pnpm --filter poc pipeline:run` | `pnpm --filter pipeline run` | パッケージ変更 |
 
 ## テストケース
 

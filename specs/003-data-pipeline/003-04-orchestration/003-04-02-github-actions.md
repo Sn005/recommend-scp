@@ -127,7 +127,7 @@ jobs:
           DRY_RUN="${{ inputs.dry_run && '--dry-run' || '' }}"
           COST_LIMIT="${{ inputs.cost_limit && format('--cost-limit={0}', inputs.cost_limit) || '' }}"
 
-          pnpm --filter poc pipeline:run \
+          pnpm --filter pipeline run \
             --mode=$MODE \
             $DRY_RUN \
             $COST_LIMIT \

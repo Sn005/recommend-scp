@@ -67,7 +67,7 @@
 ### リトライ処理
 
 ```typescript
-// packages/poc/src/pipeline/retry-processor.ts
+// packages/pipeline/src/orchestrator/retry-processor.ts
 
 export interface RetryProcessorOptions {
   batchSize?: number; // デフォルト: 10
@@ -142,7 +142,7 @@ export class RetryProcessor {
 ### 通知サービス
 
 ```typescript
-// packages/poc/src/pipeline/notification-service.ts
+// packages/pipeline/src/orchestrator/notification-service.ts
 
 export interface NotificationConfig {
   enabled: boolean;
