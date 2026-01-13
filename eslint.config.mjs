@@ -33,7 +33,7 @@ export default tseslint.config(
       "**/*.mjs",
       "**/vitest.config.ts",
       "**/coverage/",
-      "packages/poc/scripts/",
+      "packages/poc/",
     ],
   },
   // Prettierとの競合回避（必ず最後に配置）
