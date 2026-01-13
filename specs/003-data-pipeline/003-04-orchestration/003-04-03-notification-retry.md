@@ -41,22 +41,14 @@
 
 - [ ] WHEN 次回リトライ時刻を計算した際
       GIVEN リトライ回数に応じて
-      THEN 以下の遅延を設定する：
-        - 1回目失敗: 1時間後
-        - 2回目失敗: 4時間後
-        - 3回目失敗: 16時間後
+      THEN 以下の遅延を設定する：- 1回目失敗: 1時間後 - 2回目失敗: 4時間後 - 3回目失敗: 16時間後
 
 ### 実行サマリー通知
 
 - [ ] WHEN パイプライン実行が完了した際
       GIVEN 通知設定が有効な場合
       THEN 実行サマリーをメールで送信する
-      AND 以下の情報を含む：
-        - 実行モード
-        - 処理件数（成功/失敗）
-        - コスト
-        - 実行時間
-        - エラーがある場合はエラーサマリー
+      AND 以下の情報を含む：- 実行モード - 処理件数（成功/失敗）- コスト - 実行時間 - エラーがある場合はエラーサマリー
 
 - [ ] WHEN 失敗件数が閾値を超えた際
       GIVEN 失敗率が10%を超えた場合
@@ -78,19 +70,19 @@
 // packages/poc/src/pipeline/retry-processor.ts
 
 export interface RetryProcessorOptions {
-  batchSize?: number;        // デフォルト: 10
-  maxRetries?: number;       // デフォルト: 3
+  batchSize?: number; // デフォルト: 10
+  maxRetries?: number; // デフォルト: 3
 }
 
 export interface RetryResult {
   processed: number;
   succeeded: number;
   failed: number;
-  exhausted: number;         // 最大リトライ到達
+  exhausted: number; // 最大リトライ到達
 }
 
 export class RetryProcessor {
-  private readonly BACKOFF_BASE_HOURS = 1;  // 1時間
+  private readonly BACKOFF_BASE_HOURS = 1; // 1時間
 
   async processRetryQueue(options: RetryProcessorOptions = {}): Promise<RetryResult> {
     const pendingRetries = await this.getPendingRetries();
@@ -105,7 +97,7 @@ export class RetryProcessor {
       result.processed++;
 
       try {
-        if (retry.task_type === 'embedding') {
+        if (retry.task_type === "embedding") {
           await this.retryEmbedding(retry.article_id);
         } else {
           await this.retryTagging(retry.article_id);
@@ -114,7 +106,6 @@ export class RetryProcessor {
         // 成功: キューから削除
         await this.removeFromQueue(retry.id);
         result.succeeded++;
-
       } catch (error) {
         // 失敗: リトライカウント更新
         const newRetryCount = retry.retry_count + 1;
@@ -156,13 +147,13 @@ export class RetryProcessor {
 export interface NotificationConfig {
   enabled: boolean;
   email?: string;
-  warningThreshold?: number;  // 失敗率% (デフォルト: 10)
+  warningThreshold?: number; // 失敗率% (デフォルト: 10)
 }
 
 export interface PipelineSummary {
   runId: string;
   mode: string;
-  status: 'completed' | 'failed';
+  status: "completed" | "failed";
   stats: PipelineStats;
   errors: PipelineError[];
 }
@@ -183,8 +174,8 @@ export class NotificationService {
   }
 
   private buildSubject(summary: PipelineSummary, isWarning: boolean): string {
-    const prefix = isWarning ? '[WARNING] ' : '';
-    const status = summary.status === 'completed' ? 'Success' : 'FAILED';
+    const prefix = isWarning ? "[WARNING] " : "";
+    const status = summary.status === "completed" ? "Success" : "FAILED";
     return `${prefix}[SCP Pipeline] ${status} - ${summary.mode}`;
   }
 
@@ -200,7 +191,7 @@ SCP Data Pipeline 実行結果
 📊 処理統計:
 ${this.formatStats(summary.stats)}
 
-${summary.errors.length > 0 ? this.formatErrors(summary.errors) : ''}
+${summary.errors.length > 0 ? this.formatErrors(summary.errors) : ""}
 
 詳細: ${this.getRunUrl(summary.runId)}
     `.trim();

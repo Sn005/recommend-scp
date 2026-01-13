@@ -60,7 +60,7 @@ LLMプロンプトへのハードコーディングを排除し、DBベースで
 ```typescript
 // packages/poc/src/tagging/tag-dictionary-manager.ts
 
-export type TagCategory = 'object_class' | 'genre' | 'theme' | 'format';
+export type TagCategory = "object_class" | "genre" | "theme" | "format";
 
 export interface TagEntry {
   id: number;
@@ -98,7 +98,7 @@ export class TagDictionaryManagerImpl implements TagDictionaryManager {
   private cache: Map<string, { data: TagDictionary; expiresAt: Date }> = new Map();
   private readonly CACHE_TTL_MS = 60 * 60 * 1000; // 1時間
 
-  async getDictionary(lang = 'en'): Promise<TagDictionary> {
+  async getDictionary(lang = "en"): Promise<TagDictionary> {
     const cached = this.cache.get(lang);
     if (cached && cached.expiresAt > new Date()) {
       return cached.data;
@@ -112,11 +112,7 @@ export class TagDictionaryManagerImpl implements TagDictionaryManager {
     return dictionary;
   }
 
-  async normalize(
-    category: TagCategory,
-    rawTag: string,
-    lang = 'en'
-  ): Promise<string | null> {
+  async normalize(category: TagCategory, rawTag: string, lang = "en"): Promise<string | null> {
     const dictionary = await this.getDictionary(lang);
     const entries = dictionary[category];
 
@@ -128,7 +124,7 @@ export class TagDictionaryManagerImpl implements TagDictionaryManager {
         return entry.canonicalValue;
       }
       // 同義語でマッチ
-      if (entry.aliases.some(a => a.toLowerCase() === normalized)) {
+      if (entry.aliases.some((a) => a.toLowerCase() === normalized)) {
         return entry.canonicalValue;
       }
     }
@@ -137,23 +133,23 @@ export class TagDictionaryManagerImpl implements TagDictionaryManager {
     return null;
   }
 
-  async generatePromptChoices(lang = 'en'): Promise<string> {
+  async generatePromptChoices(lang = "en"): Promise<string> {
     const dictionary = await this.getDictionary(lang);
 
     return `
 You must select tags from the following options only:
 
 object_class (choose ONE):
-${dictionary.object_class.map(t => t.localizedValue).join(' | ')}
+${dictionary.object_class.map((t) => t.localizedValue).join(" | ")}
 
 genre (choose 1-3):
-${dictionary.genre.map(t => t.localizedValue).join(' | ')}
+${dictionary.genre.map((t) => t.localizedValue).join(" | ")}
 
 theme (choose 1-5):
-${dictionary.theme.map(t => t.localizedValue).join(' | ')}
+${dictionary.theme.map((t) => t.localizedValue).join(" | ")}
 
 format (choose ONE):
-${dictionary.format.map(t => t.localizedValue).join(' | ')}
+${dictionary.format.map((t) => t.localizedValue).join(" | ")}
 `.trim();
   }
 }
@@ -165,11 +161,11 @@ ${dictionary.format.map(t => t.localizedValue).join(' | ')}
 const manager = new TagDictionaryManagerImpl();
 
 // プロンプト生成
-const choices = await manager.generatePromptChoices('en');
+const choices = await manager.generatePromptChoices("en");
 const prompt = `${SYSTEM_PROMPT}\n\n${choices}\n\nArticle:\n${content}`;
 
 // LLM出力の正規化
-const normalized = await manager.normalize('object_class', 'safe', 'en');
+const normalized = await manager.normalize("object_class", "safe", "en");
 // => 'SAFE'
 ```
 

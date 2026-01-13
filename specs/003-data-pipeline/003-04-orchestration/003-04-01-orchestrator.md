@@ -82,25 +82,25 @@
 ```typescript
 // packages/poc/src/pipeline/orchestrator.ts
 
-export type PipelineMode = 'full' | 'diff' | 'embedding' | 'tagging';
+export type PipelineMode = "full" | "diff" | "embedding" | "tagging";
 
 export interface PipelineConfig {
   mode: PipelineMode;
-  lang?: string;              // デフォルト: 'en'
-  costLimit?: number;         // USD上限
-  dryRun?: boolean;           // ドライランモード
-  resumeFromRun?: string;     // 再開する実行ID
+  lang?: string; // デフォルト: 'en'
+  costLimit?: number; // USD上限
+  dryRun?: boolean; // ドライランモード
+  resumeFromRun?: string; // 再開する実行ID
 }
 
 export interface PipelineResult {
   runId: string;
   mode: PipelineMode;
-  status: 'completed' | 'failed';
+  status: "completed" | "failed";
   crawl?: CrawlResult;
   embedding?: BatchEmbeddingResult;
   tagging?: BatchTaggingResult;
   totalCost: number;
-  duration: number;           // ミリ秒
+  duration: number; // ミリ秒
   error?: string;
 }
 

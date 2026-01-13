@@ -92,7 +92,7 @@ async function getArticleTags(articleId: string): Promise<ExtractedTags> {
   };
 
   for (const row of data || []) {
-    const tagData = row.tags as { category: string; value: string } | null;
+    const tagData = row.tags as unknown as { category: string; value: string } | null;
     if (!tagData) continue;
 
     switch (tagData.category) {

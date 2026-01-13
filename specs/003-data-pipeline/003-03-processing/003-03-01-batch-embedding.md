@@ -70,9 +70,9 @@
 // packages/poc/src/embedding/batch-processor.ts
 
 export interface BatchEmbeddingOptions {
-  batchSize?: number;        // デフォルト: 10
-  costLimit?: number;        // USD上限（オプション）
-  dryRun?: boolean;          // ドライランモード
+  batchSize?: number; // デフォルト: 10
+  costLimit?: number; // USD上限（オプション）
+  dryRun?: boolean; // ドライランモード
   onProgress?: (progress: EmbeddingProgress) => void;
 }
 
@@ -83,7 +83,7 @@ export interface EmbeddingProgress {
   failed: number;
   currentTokens: number;
   estimatedCost: number;
-  estimatedTimeRemaining: number;  // 秒
+  estimatedTimeRemaining: number; // 秒
 }
 
 export interface BatchEmbeddingResult {
@@ -92,7 +92,7 @@ export interface BatchEmbeddingResult {
   failed: number;
   totalTokens: number;
   actualCost: number;
-  duration: number;  // ミリ秒
+  duration: number; // ミリ秒
   errors: EmbeddingError[];
 }
 ```
