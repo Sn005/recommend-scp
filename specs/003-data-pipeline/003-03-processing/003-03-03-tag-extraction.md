@@ -66,7 +66,7 @@ PoCのタグ抽出を本番運用向けに拡張する。
 ### インターフェース
 
 ```typescript
-// packages/poc/src/tagging/batch-processor.ts
+// packages/pipeline/src/processing/batch-tagging.ts
 
 export interface BatchTaggingOptions {
   batchSize?: number; // デフォルト: 5

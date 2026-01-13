@@ -49,14 +49,17 @@ EPIC-001（PoC）完了後、EPIC-003（データパイプライン本番化）�
 
 ```
 packages/
-├── shared/                 # 共通基盤 + 再利用可能な処理
+├── shared/                 # 共通基盤 + 再利用可能な純粋ロジック
 │   ├── package.json        # @recommend-scp/shared
 │   ├── tsconfig.json
 │   └── src/
 │       ├── lib/            # env.ts, supabase.ts
 │       ├── types.ts        # 共通型定義
-│       ├── embedding/      # Embedding生成（003, 004で使用）
-│       ├── tagging/        # タグ抽出（003, 004で使用）
+│       ├── embedding/      # Embedding生成の純粋ロジック（003, 004で使用）
+│       │   └── generate.ts
+│       ├── tagging/        # タグ抽出の純粋ロジック（003, 004で使用）
+│       │   ├── extract.ts
+│       │   └── tag-dictionary-manager.ts
 │       └── search/         # 検索機能（004, 005, 006で使用）
 │
 ├── poc/                    # PoC（EPIC-001成果物）
@@ -71,9 +74,27 @@ packages/
     ├── tsconfig.json
     └── src/
         ├── crawler/        # クローラー（003-02で実装）
+        ├── processing/     # バッチ処理（003-03で実装）
+        │   ├── batch-embedding.ts    # DBステータス管理含むバッチ処理
+        │   └── batch-tagging.ts      # DBステータス管理含むバッチ処理
         ├── orchestrator/   # 実行管理（003-04で実装）
+        │   ├── orchestrator.ts
+        │   ├── retry-processor.ts
+        │   └── notification-service.ts
         └── migrations/     # DBスキーマテスト
 ```
+
+### 設計方針: shared vs pipeline の責務分離
+
+| パッケージ | 責務 | 含むもの |
+|-----------|------|---------|
+| **shared** | 純粋なビジネスロジック | Embedding生成関数、タグ抽出関数、タグ辞書マネージャー、検索関数 |
+| **pipeline** | パイプライン固有の処理 | バッチ処理（DBステータス管理、チェックポイント、リトライ連携）、クローラー、オーケストレーター |
+
+**理由:**
+- sharedはEPIC-004（推薦）、005（API）、006（フロントエンド）で再利用される
+- バッチ処理はパイプライン固有のDB操作（ステータス管理、リトライキュー）を含むため分離
+- EPIC-004ではリアルタイム処理を行う可能性があり、バッチ処理の再利用は限定的
 
 ### 依存関係
 
@@ -119,13 +140,16 @@ import type { ScpArticleRaw } from "@recommend-scp/shared/types";
 ### コード移行
 
 - [ ] WHEN 共通コードをsharedに移行する際
-      GIVEN `packages/poc/src/lib/`, `types.ts`, `embedding/`, `tagging/`, `search/` が存在する場合
+      GIVEN `packages/poc/src/lib/`, `types.ts`, `search/` が存在する場合
       THEN これらが `packages/shared/src/` に移動される
+      AND `embedding/generate.ts`, `tagging/extract.ts`, `tagging/tag-dictionary-manager.ts` の純粋ロジックが移動される
       AND 全テストが通過する
 
 - [ ] WHEN パイプライン固有コードをpipelineに移行する際
       GIVEN `packages/poc/src/crawler/`, `migrations/` が存在する場合
       THEN これらが `packages/pipeline/src/` に移動される
+      AND バッチ処理は `packages/pipeline/src/processing/` に配置される
+      AND オーケストレーター関連は `packages/pipeline/src/orchestrator/` に配置される
       AND 全テストが通過する
 
 ### PoC参照更新

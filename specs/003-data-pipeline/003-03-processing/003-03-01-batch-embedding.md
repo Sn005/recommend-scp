@@ -67,7 +67,7 @@
 ### インターフェース
 
 ```typescript
-// packages/poc/src/embedding/batch-processor.ts
+// packages/pipeline/src/processing/batch-embedding.ts
 
 export interface BatchEmbeddingOptions {
   batchSize?: number; // デフォルト: 10

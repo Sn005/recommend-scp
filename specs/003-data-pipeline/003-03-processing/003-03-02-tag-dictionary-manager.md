@@ -58,7 +58,7 @@ LLMプロンプトへのハードコーディングを排除し、DBベースで
 ### インターフェース
 
 ```typescript
-// packages/poc/src/tagging/tag-dictionary-manager.ts
+// packages/shared/src/tagging/tag-dictionary-manager.ts
 
 export type TagCategory = "object_class" | "genre" | "theme" | "format";
 
