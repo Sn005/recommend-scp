@@ -4,16 +4,25 @@
 
 ## 概要
 
-本プロジェクトはpnpm workspaceを使用したモノレポ構成です。以下の3つのパッケージで構成されます。
+本プロジェクトはpnpm workspaceを使用したモノレポ構成です。
 
 ```
-packages/
-├── shared/     # 共通基盤 + 再利用可能な純粋ロジック
-├── poc/        # PoC（EPIC-001成果物）
-└── pipeline/   # データパイプライン（EPIC-003成果物）
+recommend-scp/
+├── apps/                   # アプリケーション（将来）
+│   ├── web/                # Next.js Webアプリ（EPIC-006）
+│   └── api-server/         # Hono APIサーバー（EPIC-005）
+├── packages/               # 共有パッケージ
+│   ├── shared/             # 共通基盤 + 純粋ロジック
+│   ├── poc/                # PoC（EPIC-001成果物）
+│   ├── pipeline/           # データパイプライン（EPIC-003成果物）
+│   └── recommend/          # 推薦エンジン（EPIC-004、将来）
+└── supabase/               # DBマイグレーション
+    └── migrations/
 ```
 
-## パッケージ詳細
+---
+
+## 現在のパッケージ（実装済み/進行中）
 
 ### @recommend-scp/shared
 
@@ -109,19 +118,135 @@ packages/pipeline/
             └── 003-01-03-pipeline-tables.test.ts
 ```
 
+---
+
+## 将来のパッケージ（計画中）
+
+### @recommend-scp/recommend（EPIC-004: 推薦ロジック）
+
+**責務:** 推薦エンジンのコアロジック
+
+ε-greedy推薦、ユーザー履歴追跡、A/Bテスト基盤を実装予定。
+
+```
+packages/recommend/
+├── package.json        # @recommend-scp/recommend
+├── tsconfig.json
+└── src/
+    ├── index.ts
+    ├── engine/         # 推薦エンジン
+    │   ├── epsilon-greedy.ts   # ε-greedy アルゴリズム
+    │   ├── collaborative.ts    # 協調フィルタリング
+    │   └── hybrid.ts           # ハイブリッド推薦
+    ├── user/           # ユーザー関連
+    │   ├── history.ts          # スワイプ履歴管理
+    │   └── profile.ts          # ユーザープロファイル
+    └── ab-test/        # A/Bテスト基盤
+        └── experiment.ts
+```
+
+**主な機能:**
+- ハイブリッド推薦（Embedding + タグ + 協調フィルタリング）
+- 探索と活用のバランス（80%活用 / 20%探索）
+- セレンディピティ枠（連続5記事類似 → 冒険枠）
+
+---
+
+### apps/api-server（EPIC-005: バックエンドAPI）
+
+**責務:** RESTエンドポイントの提供
+
+Honoを使用した高パフォーマンスAPIサーバー。
+
+```
+apps/api-server/
+├── package.json        # @recommend-scp/api-server
+├── tsconfig.json
+└── src/
+    ├── index.ts        # エントリポイント
+    ├── routes/         # ルート定義
+    │   ├── search.ts       # 検索API
+    │   ├── recommend.ts    # 推薦API
+    │   ├── feedback.ts     # フィードバック収集API
+    │   └── user.ts         # ユーザーAPI
+    ├── middleware/     # ミドルウェア
+    │   ├── auth.ts         # 認証
+    │   ├── rate-limit.ts   # レート制限
+    │   └── cors.ts         # CORS
+    └── services/       # サービス層
+        └── ...
+```
+
+**主なエンドポイント:**
+| メソッド | パス | 説明 |
+|---------|------|------|
+| GET | `/api/search` | ハイブリッド検索 |
+| GET | `/api/recommend` | 推薦記事取得 |
+| POST | `/api/feedback` | スワイプフィードバック |
+| GET | `/api/user/profile` | ユーザープロファイル |
+
+---
+
+### apps/web（EPIC-006: フロントエンドUI）
+
+**責務:** ユーザー向けWebアプリケーション
+
+Next.js App Routerを使用したスワイプ形式UIアプリ。
+
+```
+apps/web/
+├── package.json        # @recommend-scp/web
+├── next.config.js
+├── tsconfig.json
+└── src/
+    ├── app/            # App Router
+    │   ├── layout.tsx
+    │   ├── page.tsx        # ホーム（スワイプUI）
+    │   ├── search/         # 検索画面
+    │   ├── article/[id]/   # 記事詳細
+    │   └── profile/        # プロファイル
+    ├── components/     # UIコンポーネント
+    │   ├── swipe/          # スワイプカード
+    │   ├── article/        # 記事表示
+    │   └── common/         # 共通UI
+    ├── hooks/          # カスタムフック
+    └── lib/            # ユーティリティ
+```
+
+**主な画面:**
+- **ホーム**: スワイプ形式レコメンド（Tinder風UI）
+- **検索**: キーワード・タグ検索
+- **記事詳細**: SCP記事全文表示
+- **プロファイル**: 履歴・お気に入り管理
+
+---
+
 ## 依存関係
 
 ```mermaid
 graph TB
-    POC[packages/poc] --> SHARED[packages/shared]
-    PIPELINE[packages/pipeline] --> SHARED
-
-    subgraph "将来のEPIC"
-        RECOMMEND[packages/recommend<br>EPIC-004] --> SHARED
-        API[packages/api<br>EPIC-005] --> SHARED
-        FRONTEND[packages/frontend<br>EPIC-006] --> SHARED
+    subgraph "apps（アプリケーション）"
+        WEB[apps/web<br>Next.js]
+        API[apps/api-server<br>Hono]
     end
+
+    subgraph "packages（共有パッケージ）"
+        SHARED[packages/shared<br>共通基盤]
+        PIPELINE[packages/pipeline<br>パイプライン]
+        RECOMMEND[packages/recommend<br>推薦エンジン]
+        POC[packages/poc<br>PoC]
+    end
+
+    WEB --> API
+    WEB --> SHARED
+    API --> SHARED
+    API --> RECOMMEND
+    RECOMMEND --> SHARED
+    PIPELINE --> SHARED
+    POC --> SHARED
 ```
+
+---
 
 ## 設計方針: shared vs pipeline の責務分離
 
@@ -163,7 +288,21 @@ pnpm --filter shared type-check
 pnpm --filter pipeline type-check
 ```
 
+## 技術スタック
+
+| 項目 | 選定 | 理由 |
+|------|------|------|
+| 言語 | TypeScript | 型安全性 |
+| モノレポ | pnpm workspace | 高速、ディスク効率 |
+| Webアプリ | Next.js App Router | SSR/SSG対応 |
+| APIサーバー | Hono | 高パフォーマンス |
+| DB / Auth | Supabase | PostgreSQL + RLS |
+| ベクトルDB | Supabase pgvector | 統合管理 |
+| テスト | Vitest | 高速 |
+
 ## 関連ドキュメント
 
+- [プロダクト構想書](./product-concept.md)
+- [EPIC一覧](../specs/epic-list.md)
 - [EPIC-003: データパイプライン本番化](../specs/003-data-pipeline/003-data-pipeline.md)
 - [Story-003-00: パッケージ構造整備](../specs/003-data-pipeline/003-00-package-structure/003-00-package-structure.md)
