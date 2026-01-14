@@ -1,0 +1,29 @@
+{
+  "name": "@recommend-scp/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./lib/env": "./src/lib/env.ts",
+    "./lib/supabase": "./src/lib/supabase.ts",
+    "./types": "./src/types.ts",
+    "./embedding": "./src/embedding/index.ts",
+    "./tagging": "./src/tagging/index.ts",
+    "./search": "./src/search/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.0.16"
+  }
+}

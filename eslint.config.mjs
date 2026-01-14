@@ -34,6 +34,7 @@ export default tseslint.config(
       "**/vitest.config.ts",
       "**/coverage/",
       "packages/poc/",
+      "packages/shared/", // 003-00-03でpoc移行時に解除
     ],
   },
   // Prettierとの競合回避（必ず最後に配置）

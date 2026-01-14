@@ -35,13 +35,13 @@
 
 ### パッケージ設定
 
-- [ ] WHEN package.jsonを作成する際
+- [x] WHEN package.jsonを作成する際
       GIVEN pnpm workspaceを使用している場合
       THEN name が `@recommend-scp/shared` である
       AND 必要な dependencies が定義されている（openai, @supabase/supabase-js, dotenv）
       AND exports フィールドでサブパスexportが定義されている
 
-- [ ] WHEN tsconfig.jsonを作成する際
+- [x] WHEN tsconfig.jsonを作成する際
       GIVEN TypeScript 5.x を使用している場合
       THEN moduleResolution が "Bundler" である
       AND target が "ES2022" である
@@ -49,47 +49,47 @@
 
 ### コード移行
 
-- [ ] WHEN lib/env.ts を移行する際
+- [x] WHEN lib/env.ts を移行する際
       GIVEN 環境変数の検証ロジックが含まれる場合
       THEN `packages/shared/src/lib/env.ts` に配置される
       AND 既存のexportインターフェースが維持される
 
-- [ ] WHEN lib/supabase.ts を移行する際
+- [x] WHEN lib/supabase.ts を移行する際
       GIVEN Supabaseクライアント生成関数が含まれる場合
       THEN `packages/shared/src/lib/supabase.ts` に配置される
       AND createSupabaseClient, createSupabaseAdmin, getSupabaseAdmin がexportされる
 
-- [ ] WHEN types.ts を移行する際
+- [x] WHEN types.ts を移行する際
       GIVEN 共通の型定義が含まれる場合
       THEN `packages/shared/src/types.ts` に配置される
       AND 全ての型がre-exportされる
 
-- [ ] WHEN embedding/ を移行する際
+- [x] WHEN embedding/ を移行する際
       GIVEN Embedding生成ロジックとテストが含まれる場合
       THEN `packages/shared/src/embedding/` に配置される
       AND 全テストが通過する
 
-- [ ] WHEN tagging/ を移行する際
+- [x] WHEN tagging/ を移行する際
       GIVEN タグ抽出ロジックとテストが含まれる場合
       THEN `packages/shared/src/tagging/` に配置される
       AND 全テストが通過する
 
-- [ ] WHEN search/ を移行する際
+- [x] WHEN search/ を移行する際
       GIVEN 検索ロジックとテストが含まれる場合
       THEN `packages/shared/src/search/` に配置される
       AND 全テストが通過する
 
 ### 検証
 
-- [ ] WHEN pnpm install を実行する際
+- [x] WHEN pnpm install を実行する際
       GIVEN packages/shared/ が存在する場合
       THEN エラーなく完了する
 
-- [ ] WHEN pnpm --filter shared test を実行する際
+- [x] WHEN pnpm --filter shared test を実行する際
       GIVEN 全テストファイルが移行されている場合
       THEN 全テストが通過する
 
-- [ ] WHEN pnpm --filter shared type-check を実行する際
+- [x] WHEN pnpm --filter shared type-check を実行する際
       GIVEN TypeScript設定が正しい場合
       THEN 型エラーがない
 
@@ -158,8 +158,15 @@ packages/shared/
 
 ## テストケース
 
-- [ ] sharedパッケージのpnpm installが成功する
-- [ ] sharedパッケージの全テストが通過する
-- [ ] sharedパッケージの型チェックが通過する
+- [x] sharedパッケージのpnpm installが成功する
+- [x] sharedパッケージの全テストが通過する
+- [x] sharedパッケージの型チェックが通過する
 - [ ] 他パッケージから `@recommend-scp/shared/lib/env` でimportできる
 - [ ] 他パッケージから `@recommend-scp/shared/types` でimportできる
+
+## 実装状況
+
+- **status**: completed
+- **実装日**: 2026-01-14
+- **テスト結果**: 20 tests passed
+- **型チェック**: OK
