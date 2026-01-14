@@ -8,7 +8,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:supabase": "tsx scripts/test-supabase.ts",
     "run:01-fetch": "tsx scripts/01-fetch.ts",
     "run:02-embed": "tsx scripts/02-embed.ts",
