@@ -72,9 +72,7 @@
 
 - [ ] WHEN 003-data-pipeline.md を更新する際
       GIVEN 成果物セクションに `packages/poc` への参照がある場合
-      THEN 以下のように更新される:
-      - `packages/poc/src/crawler/` → `packages/pipeline/src/crawler/`
-      - `packages/poc/src/pipeline/` → `packages/pipeline/src/orchestrator/`
+      THEN 以下のように更新される: - `packages/poc/src/crawler/` → `packages/pipeline/src/crawler/` - `packages/poc/src/pipeline/` → `packages/pipeline/src/orchestrator/`
 
 ### 検証
 
@@ -91,21 +89,21 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ### 更新対象（13ファイル）
 
-| ファイル | 主な変更箇所 |
-|----------|--------------|
-| `003-data-pipeline.md` | 成果物セクション |
-| `003-01-db-foundation/003-01-01-language-schema.md` | テストファイルパス |
-| `003-01-db-foundation/003-01-02-tag-dictionary.md` | テストファイルパス |
-| `003-01-db-foundation/003-01-03-pipeline-tables.md` | テストファイルパス |
-| `003-02-crawler/003-02-01-crawler-abstraction.md` | 実装ファイルパス |
-| `003-02-crawler/003-02-02-en-full-crawler.md` | 実装ファイルパス |
-| `003-02-crawler/003-02-03-diff-update.md` | 実装ファイルパス |
-| `003-03-processing/003-03-01-batch-embedding.md` | 実装ファイルパス |
-| `003-03-processing/003-03-02-tag-dictionary-manager.md` | 実装ファイルパス |
-| `003-03-processing/003-03-03-tag-extraction.md` | 実装ファイルパス |
-| `003-04-orchestration/003-04-01-orchestrator.md` | 実装ファイルパス |
-| `003-04-orchestration/003-04-02-github-actions.md` | `--filter poc` → `--filter pipeline` |
-| `003-04-orchestration/003-04-03-notification-retry.md` | 実装ファイルパス |
+| ファイル                                                | 主な変更箇所                         |
+| ------------------------------------------------------- | ------------------------------------ |
+| `003-data-pipeline.md`                                  | 成果物セクション                     |
+| `003-01-db-foundation/003-01-01-language-schema.md`     | テストファイルパス                   |
+| `003-01-db-foundation/003-01-02-tag-dictionary.md`      | テストファイルパス                   |
+| `003-01-db-foundation/003-01-03-pipeline-tables.md`     | テストファイルパス                   |
+| `003-02-crawler/003-02-01-crawler-abstraction.md`       | 実装ファイルパス                     |
+| `003-02-crawler/003-02-02-en-full-crawler.md`           | 実装ファイルパス                     |
+| `003-02-crawler/003-02-03-diff-update.md`               | 実装ファイルパス                     |
+| `003-03-processing/003-03-01-batch-embedding.md`        | 実装ファイルパス                     |
+| `003-03-processing/003-03-02-tag-dictionary-manager.md` | 実装ファイルパス                     |
+| `003-03-processing/003-03-03-tag-extraction.md`         | 実装ファイルパス                     |
+| `003-04-orchestration/003-04-01-orchestrator.md`        | 実装ファイルパス                     |
+| `003-04-orchestration/003-04-02-github-actions.md`      | `--filter poc` → `--filter pipeline` |
+| `003-04-orchestration/003-04-03-notification-retry.md`  | 実装ファイルパス                     |
 
 ### 更新しない（7ファイル）
 
@@ -123,29 +121,29 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ### pipelineパッケージ（パイプライン固有処理）
 
-| 旧パス | 新パス | 理由 |
-|--------|--------|------|
-| `packages/poc/src/crawler/` | `packages/pipeline/src/crawler/` | パイプライン固有 |
-| `packages/poc/src/migrations/` | `packages/pipeline/src/migrations/` | パイプライン固有 |
-| `packages/poc/src/pipeline/` | `packages/pipeline/src/orchestrator/` | パイプライン固有（名称変更） |
+| 旧パス                                          | 新パス                                                | 理由                               |
+| ----------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| `packages/poc/src/crawler/`                     | `packages/pipeline/src/crawler/`                      | パイプライン固有                   |
+| `packages/poc/src/migrations/`                  | `packages/pipeline/src/migrations/`                   | パイプライン固有                   |
+| `packages/poc/src/pipeline/`                    | `packages/pipeline/src/orchestrator/`                 | パイプライン固有（名称変更）       |
 | `packages/poc/src/embedding/batch-processor.ts` | `packages/pipeline/src/processing/batch-embedding.ts` | バッチ処理（DBステータス管理含む） |
-| `packages/poc/src/tagging/batch-processor.ts` | `packages/pipeline/src/processing/batch-tagging.ts` | バッチ処理（DBステータス管理含む） |
+| `packages/poc/src/tagging/batch-processor.ts`   | `packages/pipeline/src/processing/batch-tagging.ts`   | バッチ処理（DBステータス管理含む） |
 
 ### sharedパッケージ（共通の純粋ロジック）
 
-| 旧パス | 新パス | 理由 |
-|--------|--------|------|
-| `packages/poc/src/embedding/generate.ts` | `packages/shared/src/embedding/generate.ts` | 純粋なEmbedding生成ロジック |
-| `packages/poc/src/tagging/extract.ts` | `packages/shared/src/tagging/extract.ts` | 純粋なタグ抽出ロジック |
-| `packages/poc/src/tagging/tag-dictionary-manager.ts` | `packages/shared/src/tagging/tag-dictionary-manager.ts` | タグ辞書管理（共通） |
-| `packages/poc/src/search/` | `packages/shared/src/search/` | 検索機能（共通） |
-| `packages/poc/src/lib/` | `packages/shared/src/lib/` | 共通基盤 |
-| `packages/poc/src/types.ts` | `packages/shared/src/types.ts` | 共通型定義 |
+| 旧パス                                               | 新パス                                                  | 理由                        |
+| ---------------------------------------------------- | ------------------------------------------------------- | --------------------------- |
+| `packages/poc/src/embedding/generate.ts`             | `packages/shared/src/embedding/generate.ts`             | 純粋なEmbedding生成ロジック |
+| `packages/poc/src/tagging/extract.ts`                | `packages/shared/src/tagging/extract.ts`                | 純粋なタグ抽出ロジック      |
+| `packages/poc/src/tagging/tag-dictionary-manager.ts` | `packages/shared/src/tagging/tag-dictionary-manager.ts` | タグ辞書管理（共通）        |
+| `packages/poc/src/search/`                           | `packages/shared/src/search/`                           | 検索機能（共通）            |
+| `packages/poc/src/lib/`                              | `packages/shared/src/lib/`                              | 共通基盤                    |
+| `packages/poc/src/types.ts`                          | `packages/shared/src/types.ts`                          | 共通型定義                  |
 
 ### CLIコマンド
 
-| 旧コマンド | 新コマンド | 理由 |
-|-----------|-----------|------|
+| 旧コマンド                       | 新コマンド                   | 理由           |
+| -------------------------------- | ---------------------------- | -------------- |
 | `pnpm --filter poc pipeline:run` | `pnpm --filter pipeline run` | パッケージ変更 |
 
 ## テストケース
