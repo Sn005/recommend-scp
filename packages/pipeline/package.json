@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./crawler": "./src/crawler/fetch-scp.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",

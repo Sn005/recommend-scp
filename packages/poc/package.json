@@ -1,12 +1,12 @@
 {
   "name": "@recommend-scp/poc",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx src/index.ts",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:supabase": "tsx scripts/test-supabase.ts",
@@ -18,10 +18,8 @@
     "run:verify-embed": "tsx scripts/verify-embedding.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.47.10",
-    "dotenv": "^16.4.7",
-    "openai": "^4.77.0",
-    "zod": "^3.24.1"
+    "@recommend-scp/shared": "workspace:*",
+    "@recommend-scp/pipeline": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

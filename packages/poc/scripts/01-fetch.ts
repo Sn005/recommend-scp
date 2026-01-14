@@ -4,13 +4,13 @@
  * Usage: pnpm --filter poc run:01-fetch [--limit N] [--no-db] [--no-local]
  */
 
-import "../src/lib/env";
+import "@recommend-scp/shared/lib/env";
 import { mkdir, writeFile } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { fetchScpArticles } from "../src/crawler/fetch-scp";
-import { createSupabaseAdmin } from "../src/lib/supabase";
-import type { ScpArticleRaw } from "../src/types";
+import { fetchScpArticles } from "@recommend-scp/pipeline/crawler";
+import { createSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
+import type { ScpArticleRaw } from "@recommend-scp/shared/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

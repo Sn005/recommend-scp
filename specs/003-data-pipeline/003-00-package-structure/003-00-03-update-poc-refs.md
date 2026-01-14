@@ -35,40 +35,40 @@
 
 ### package.json更新
 
-- [ ] WHEN package.jsonを更新する際
+- [x] WHEN package.jsonを更新する際
       GIVEN pocパッケージが存在する場合
       THEN dependencies に `@recommend-scp/shared` が追加される
       AND 不要になった直接依存（openai等）が削除される
 
 ### import文更新
 
-- [ ] WHEN scripts/01-fetch.ts を更新する際
+- [x] WHEN scripts/01-fetch.ts を更新する際
       GIVEN `../src/` への相対パス参照がある場合
       THEN `@recommend-scp/shared` または `@recommend-scp/pipeline` への参照に変更される
 
-- [ ] WHEN scripts/02-embed.ts を更新する際
+- [x] WHEN scripts/02-embed.ts を更新する際
       GIVEN embedding生成関数を参照している場合
       THEN `@recommend-scp/shared/embedding` からimportするよう変更される
 
-- [ ] WHEN scripts/03-tag.ts を更新する際
+- [x] WHEN scripts/03-tag.ts を更新する際
       GIVEN タグ抽出関数を参照している場合
       THEN `@recommend-scp/shared/tagging` からimportするよう変更される
 
-- [ ] WHEN scripts/04-search.ts を更新する際
+- [x] WHEN scripts/04-search.ts を更新する際
       GIVEN 検索関数を参照している場合
       THEN `@recommend-scp/shared/search` からimportするよう変更される
 
-- [ ] WHEN scripts/05-report.ts を更新する際
+- [x] WHEN scripts/05-report.ts を更新する際
       GIVEN レポート生成関数を参照している場合
       THEN `../src/report/` への相対パス参照が維持される（poc固有機能のため）
 
-- [ ] WHEN src/report/ 内のファイルを更新する際
+- [x] WHEN src/report/ 内のファイルを更新する際
       GIVEN 共通型やライブラリを参照している場合
       THEN `@recommend-scp/shared` への参照に変更される
 
 ### 不要ファイル削除
 
-- [ ] WHEN 移行完了後にクリーンアップする際
+- [x] WHEN 移行完了後にクリーンアップする際
       GIVEN shared/pipelineに移行済みのファイルがある場合
       THEN `packages/poc/src/lib/` が削除される
       AND `packages/poc/src/types.ts` が削除される
@@ -80,11 +80,11 @@
 
 ### 検証
 
-- [ ] WHEN pnpm --filter poc test を実行する際
+- [x] WHEN pnpm --filter poc test を実行する際
       GIVEN 全参照が更新されている場合
       THEN 全テストが通過する
 
-- [ ] WHEN pnpm --filter poc run:01-fetch を実行する際
+- [x] WHEN pnpm --filter poc run:01-fetch を実行する際
       GIVEN 環境変数が設定されている場合
       THEN スクリプトがエラーなく実行できる（実際のAPI呼び出しは不要）
 
@@ -163,11 +163,16 @@ import { createSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 
 ## テストケース
 
-- [ ] pocパッケージのpnpm installが成功する
-- [ ] pocパッケージの全テストが通過する
-- [ ] pocパッケージの型チェックが通過する
-- [ ] scripts/01-fetch.ts が構文エラーなく読み込める
-- [ ] scripts/02-embed.ts が構文エラーなく読み込める
-- [ ] scripts/03-tag.ts が構文エラーなく読み込める
-- [ ] scripts/04-search.ts が構文エラーなく読み込める
-- [ ] scripts/05-report.ts が構文エラーなく読み込める
+- [x] pocパッケージのpnpm installが成功する
+- [x] pocパッケージの全テストが通過する
+- [x] pocパッケージの型チェックが通過する
+- [x] scripts/01-fetch.ts が構文エラーなく読み込める
+- [x] scripts/02-embed.ts が構文エラーなく読み込める
+- [x] scripts/03-tag.ts が構文エラーなく読み込める
+- [x] scripts/04-search.ts が構文エラーなく読み込める
+- [x] scripts/05-report.ts が構文エラーなく読み込める
+
+## 実装状況
+
+- **status**: completed
+- **completed_at**: 2026-01-14
