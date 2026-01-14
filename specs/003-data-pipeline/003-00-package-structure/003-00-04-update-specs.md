@@ -32,51 +32,51 @@
 
 ### パス参照更新
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/crawler/` への参照がある場合
       THEN `packages/pipeline/src/crawler/` に変更される
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/embedding/generate.ts` への参照がある場合
       THEN `packages/shared/src/embedding/generate.ts` に変更される（純粋ロジック）
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/embedding/batch-processor.ts` への参照がある場合
       THEN `packages/pipeline/src/processing/batch-embedding.ts` に変更される（バッチ処理）
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/tagging/extract.ts` への参照がある場合
       THEN `packages/shared/src/tagging/extract.ts` に変更される（純粋ロジック）
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/tagging/tag-dictionary-manager.ts` への参照がある場合
       THEN `packages/shared/src/tagging/tag-dictionary-manager.ts` に変更される（共通処理）
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/tagging/batch-processor.ts` への参照がある場合
       THEN `packages/pipeline/src/processing/batch-tagging.ts` に変更される（バッチ処理）
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/search/` への参照がある場合
       THEN `packages/shared/src/search/` に変更される
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/lib/` への参照がある場合
       THEN `packages/shared/src/lib/` に変更される
 
-- [ ] WHEN 003系specファイルを更新する際
+- [x] WHEN 003系specファイルを更新する際
       GIVEN `packages/poc/src/migrations/` への参照がある場合
       THEN `packages/pipeline/src/migrations/` に変更される
 
 ### EPIC成果物更新
 
-- [ ] WHEN 003-data-pipeline.md を更新する際
+- [x] WHEN 003-data-pipeline.md を更新する際
       GIVEN 成果物セクションに `packages/poc` への参照がある場合
       THEN 以下のように更新される: - `packages/poc/src/crawler/` → `packages/pipeline/src/crawler/` - `packages/poc/src/pipeline/` → `packages/pipeline/src/orchestrator/`
 
 ### 検証
 
-- [ ] WHEN grep で確認する際
+- [x] WHEN grep で確認する際
       GIVEN 003系specディレクトリを検索した場合
       THEN `packages/poc` への参照が0件である
 
@@ -148,6 +148,20 @@ grep -r "packages/poc" specs/003-data-pipeline/ | wc -l
 
 ## テストケース
 
-- [ ] 003系specディレクトリに `packages/poc` への参照が0件である
-- [ ] 各specファイルのパスが実際のファイル配置と一致する
-- [ ] markdownのリンクが壊れていない
+- [x] 003系specディレクトリに `packages/poc` への参照が0件である
+- [x] 各specファイルのパスが実際のファイル配置と一致する
+- [x] markdownのリンクが壊れていない
+
+## 実装状況
+
+- **status**: completed
+- **実装日**: 2026-01-14
+- **更新ファイル**:
+  - `003-data-pipeline.md` - 成果物セクション
+  - `003-01-db-foundation/003-01-01-language-schema.md` - テストファイルパス
+  - `003-01-db-foundation/003-01-02-tag-dictionary.md` - テストファイルパス
+  - `003-01-db-foundation/003-01-03-pipeline-tables.md` - テストファイルパス
+  - `003-02-crawler/003-02-01-crawler-abstraction.md` - 実装ファイルパス
+  - `003-02-crawler/003-02-02-en-full-crawler.md` - 実装ファイルパス
+  - `003-02-crawler/003-02-03-diff-update.md` - 実装ファイルパス
+- **備考**: 003-03系、003-04系は既に正しいパスに更新されていたため変更不要
