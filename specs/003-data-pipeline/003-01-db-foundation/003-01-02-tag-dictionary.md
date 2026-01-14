@@ -120,5 +120,5 @@ WHERE tl.lang = 'en'
 - **status**: completed
 - **実装ファイル**:
   - マイグレーション: `supabase/migrations/20250112000002_tag_dictionary.sql`
-  - テスト: `packages/poc/src/migrations/__dev__/003-01-02-tag-dictionary.test.ts`
+  - テスト: `packages/pipeline/src/migrations/__dev__/003-01-02-tag-dictionary.test.ts`
 - **実装日**: 2026-01-12

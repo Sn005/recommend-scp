@@ -87,6 +87,6 @@ flowchart TB
 ## 成果物
 
 - DBマイグレーションスクリプト
-- 本番用クローラー（`packages/poc/src/crawler/`）
-- パイプラインオーケストレーター（`packages/poc/src/pipeline/`）
+- 本番用クローラー（`packages/pipeline/src/crawler/`）
+- パイプラインオーケストレーター（`packages/pipeline/src/orchestrator/`）
 - GitHub Actions ワークフロー（`.github/workflows/data-pipeline.yml`）

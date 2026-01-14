@@ -99,4 +99,4 @@ CREATE INDEX idx_scp_articles_is_deleted ON scp_articles(is_deleted) WHERE is_de
 
 - **status**: completed
 - **マイグレーションファイル**: `supabase/migrations/20250112000001_language_schema.sql`
-- **テストファイル**: `packages/poc/src/migrations/__dev__/003-01-01-language-schema.test.ts`
+- **テストファイル**: `packages/pipeline/src/migrations/__dev__/003-01-01-language-schema.test.ts`

@@ -71,7 +71,7 @@ SCP Data APIを使用してEN全記事（series-1〜8+）を取得するクロ�
 ### EnglishCrawler 実装
 
 ```typescript
-// packages/poc/src/crawler/english-crawler.ts
+// packages/pipeline/src/crawler/english-crawler.ts
 
 import { BranchCrawler, ArticleIndex, ArticleContent } from "./types";
 

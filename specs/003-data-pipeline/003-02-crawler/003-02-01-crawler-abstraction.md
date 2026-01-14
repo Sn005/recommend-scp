@@ -50,7 +50,7 @@
 ### インターフェース定義
 
 ```typescript
-// packages/poc/src/crawler/types.ts
+// packages/pipeline/src/crawler/types.ts
 
 export interface ArticleIndex {
   id: string; // 'SCP-173'
@@ -89,7 +89,7 @@ export interface BranchCrawler {
 ### Factory 実装
 
 ```typescript
-// packages/poc/src/crawler/factory.ts
+// packages/pipeline/src/crawler/factory.ts
 
 import { BranchCrawler } from "./types";
 import { EnglishCrawler } from "./english-crawler";

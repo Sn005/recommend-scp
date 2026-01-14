@@ -147,4 +147,4 @@ CREATE INDEX idx_retry_queue_task_type ON retry_queue(task_type);
 
 - **status**: completed
 - **マイグレーションファイル**: `supabase/migrations/20250112000003_pipeline_tables.sql`
-- **テストファイル**: `packages/poc/src/migrations/__dev__/003-01-03-pipeline-tables.test.ts`
+- **テストファイル**: `packages/pipeline/src/migrations/__dev__/003-01-03-pipeline-tables.test.ts`

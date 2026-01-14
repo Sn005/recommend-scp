@@ -86,7 +86,7 @@ flowchart TD
 ### インターフェース
 
 ```typescript
-// packages/poc/src/crawler/diff-crawler.ts
+// packages/pipeline/src/crawler/diff-crawler.ts
 
 export interface DiffCrawlOptions {
   lang: string;
