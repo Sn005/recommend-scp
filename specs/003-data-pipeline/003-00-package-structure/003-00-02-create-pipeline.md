@@ -35,40 +35,40 @@
 
 ### パッケージ設定
 
-- [ ] WHEN package.jsonを作成する際
+- [x] WHEN package.jsonを作成する際
       GIVEN pnpm workspaceを使用している場合
       THEN name が `@recommend-scp/pipeline` である
       AND dependencies に `@recommend-scp/shared` が含まれる
 
-- [ ] WHEN tsconfig.jsonを作成する際
+- [x] WHEN tsconfig.jsonを作成する際
       GIVEN TypeScript 5.x を使用している場合
       THEN moduleResolution が "Bundler" である
       AND paths で `@recommend-scp/shared/*` が解決できる
 
 ### コード移行
 
-- [ ] WHEN crawler/ を移行する際
+- [x] WHEN crawler/ を移行する際
       GIVEN SCP Data APIクローラーが含まれる場合
       THEN `packages/pipeline/src/crawler/` に配置される
       AND import文が `@recommend-scp/shared` を参照するよう更新される
 
-- [ ] WHEN migrations/ を移行する際
+- [x] WHEN migrations/ を移行する際
       GIVEN DBスキーマテストが含まれる場合
       THEN `packages/pipeline/src/migrations/` に配置される
       AND import文が `@recommend-scp/shared` を参照するよう更新される
 
 ### 検証
 
-- [ ] WHEN pnpm install を実行する際
+- [x] WHEN pnpm install を実行する際
       GIVEN packages/pipeline/ が存在する場合
       THEN エラーなく完了する
       AND node_modules/@recommend-scp/shared がシンボリックリンクされる
 
-- [ ] WHEN pnpm --filter pipeline test を実行する際
+- [x] WHEN pnpm --filter pipeline test を実行する際
       GIVEN 全テストファイルが移行されている場合
       THEN 全テストが通過する
 
-- [ ] WHEN pnpm --filter pipeline type-check を実行する際
+- [x] WHEN pnpm --filter pipeline type-check を実行する際
       GIVEN TypeScript設定が正しい場合
       THEN 型エラーがない
 
@@ -126,8 +126,12 @@ import type { ScpArticleRaw } from "@recommend-scp/shared/types";
 
 ## テストケース
 
-- [ ] pipelineパッケージのpnpm installが成功する
-- [ ] pipelineパッケージの全テストが通過する
-- [ ] pipelineパッケージの型チェックが通過する
-- [ ] `@recommend-scp/shared` への依存が正しく解決される
-- [ ] crawler/fetch-scp.ts が shared の types を参照できる
+- [x] pipelineパッケージのpnpm installが成功する
+- [x] pipelineパッケージの全テストが通過する
+- [x] pipelineパッケージの型チェックが通過する
+- [x] `@recommend-scp/shared` への依存が正しく解決される
+- [x] crawler/fetch-scp.ts が shared の types を参照できる
+
+## 実装状況
+
+- **status**: completed
