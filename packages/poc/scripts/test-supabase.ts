@@ -11,8 +11,8 @@
  */
 
 // Import env first to load dotenv
-import "../src/lib/env";
-import { createSupabaseAdmin } from "../src/lib/supabase";
+import "@recommend-scp/shared/lib/env";
+import { createSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 
 interface TestResult {
   name: string;

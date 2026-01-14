@@ -57,18 +57,12 @@ importers:
 
   packages/poc:
     dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.47.10
-        version: 2.89.0
-      dotenv:
-        specifier: ^16.4.7
-        version: 16.6.1
-      openai:
-        specifier: ^4.77.0
-        version: 4.104.0(ws@8.18.3)(zod@3.25.76)
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
+      '@recommend-scp/pipeline':
+        specifier: workspace:*
+        version: link:../pipeline
+      '@recommend-scp/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -3239,4 +3233,5 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zod@3.25.76: {}
+  zod@3.25.76:
+    optional: true

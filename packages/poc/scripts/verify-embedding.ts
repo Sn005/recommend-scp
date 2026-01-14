@@ -6,8 +6,8 @@
  * コサイン類似度で類似記事を検索し、Embeddingがレコメンドに適しているか検証
  */
 
-import "../src/lib/env";
-import { getSupabaseAdmin } from "../src/lib/supabase";
+import "@recommend-scp/shared/lib/env";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 
 interface Article {
   id: string;

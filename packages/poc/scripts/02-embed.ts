@@ -4,14 +4,14 @@
  * Usage: pnpm --filter poc run:02-embed [--dry-run] [--id SCP-XXX]
  */
 
-import "../src/lib/env";
-import { getSupabaseAdmin } from "../src/lib/supabase";
+import "@recommend-scp/shared/lib/env";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import {
   generateEmbeddingsForArticles,
   type ScpArticle,
   type EmbeddingResult,
   type EmbeddingStats,
-} from "../src/embedding/generate";
+} from "@recommend-scp/shared/embedding";
 
 interface Args {
   dryRun: boolean;

@@ -4,17 +4,17 @@
  * Usage: pnpm --filter poc run:03-tag [--dry-run] [--id SCP-XXX]
  */
 
-import "../src/lib/env";
+import "@recommend-scp/shared/lib/env";
 import { writeFileSync } from "fs";
 import { join } from "path";
-import { getSupabaseAdmin } from "../src/lib/supabase";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import {
   extractTagsForArticles,
   generateTagReport,
   type ScpArticle,
   type TaggingResult,
   type TaggingStats,
-} from "../src/tagging/extract";
+} from "@recommend-scp/shared/tagging";
 
 interface Args {
   dryRun: boolean;

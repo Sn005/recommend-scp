@@ -7,9 +7,8 @@
  *   pnpm --filter poc run:04-search --compare --id SCP-XXX
  */
 
-import "../src/lib/env";
-import { vectorSearch } from "../src/search/vector-search";
-import { hybridSearch } from "../src/search/hybrid-search";
+import "@recommend-scp/shared/lib/env";
+import { vectorSearch, hybridSearch } from "@recommend-scp/shared/search";
 
 function parseArgs() {
   const args = process.argv.slice(2);

@@ -7,15 +7,14 @@
  * --sample オプションでサンプルデータを使用します。
  */
 
-import "../src/lib/env";
+import "@recommend-scp/shared/lib/env";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getSupabaseAdmin } from "../src/lib/supabase";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import { generateReport, type ReportData } from "../src/report/generate-report";
-import { calculateCost } from "../src/embedding/generate";
-import { calculateTaggingCost } from "../src/tagging/extract";
-import { vectorSearch } from "../src/search/vector-search";
-import { hybridSearch } from "../src/search/hybrid-search";
+import { calculateCost } from "@recommend-scp/shared/embedding";
+import { calculateTaggingCost } from "@recommend-scp/shared/tagging";
+import { vectorSearch, hybridSearch } from "@recommend-scp/shared/search";
 
 /** レポート出力先 */
 const REPORT_OUTPUT_PATH = path.resolve(import.meta.dirname, "../../../docs/poc-report.md");
