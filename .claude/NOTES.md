@@ -248,3 +248,149 @@ EPIC-003（データパイプライン本番化）では、将来の多言語支
 4. パイプライン設定で `lang: 'xx'` 指定
 
 **見積もり:** 1-2日程度で新言語対応可能
+
+---
+
+## EPIC-004: ユーザー嗜好データのストレージ設計
+
+> **参照タイミング:** EPIC-004「推薦ロジック実装」の仕様策定時
+
+### 背景・要件
+
+- ユーザー登録なしで使いたい（ゲスト利用）
+- 嗜好データはローカルに保存
+- Web PWA → Capacitor への移行を予定
+
+### プラットフォーム計画
+
+```
+Phase 1: Web PWA（ローカル保存のみ）
+Phase 2: Capacitor でネイティブアプリ化
+Phase 3: オプションでサーバー同期（アカウント作成時）
+```
+
+### 推奨ストレージ方式: IndexedDB + 抽象化レイヤー
+
+```
+┌────────────────────────────────────────────────┐
+│           Storage Abstraction Layer            │
+│  ┌──────────────────────────────────────────┐  │
+│  │      PreferenceStorage interface         │  │
+│  └──────────────────────────────────────────┘  │
+│         ↓                    ↓                 │
+│  ┌─────────────┐      ┌─────────────────┐     │
+│  │  IndexedDB  │      │ @capacitor/     │     │
+│  │  (PWA)      │      │ preferences     │     │
+│  └─────────────┘      └─────────────────┘     │
+└────────────────────────────────────────────────┘
+```
+
+**選定理由:**
+
+- IndexedDB は PWA でも Capacitor でもそのまま動作
+- 抽象化レイヤーを挟めば後から SQLite 等への移行も容易
+- Capacitor の `@capacitor/preferences` は軽量データ向け
+
+### データモデル案
+
+```typescript
+/** ユーザー嗜好データ（ローカル保存） */
+interface UserPreference {
+  visitorId: string; // 匿名ID（UUID）
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 閲覧履歴 */
+interface ViewHistory {
+  visitorId: string;
+  articleId: string; // "scp-173" など
+  viewedAt: string;
+  duration?: number; // 滞在時間（秒）
+}
+
+/** フィードバック */
+interface Feedback {
+  visitorId: string;
+  articleId: string;
+  type: "like" | "dislike" | "bookmark" | "skip";
+  createdAt: string;
+}
+
+/** 計算された嗜好プロファイル */
+interface PreferenceProfile {
+  visitorId: string;
+  tagWeights: Record<string, number>; // { "ホラー": 0.8, "安全": 0.3 }
+  objectClassPreference: Record<string, number>;
+  updatedAt: string;
+}
+
+/** レコメンド履歴（重複防止・ε-greedy用） */
+interface RecommendationLog {
+  visitorId: string;
+  articleId: string;
+  recommendedAt: string;
+  source: "similar" | "explore" | "popular";
+  clicked: boolean;
+}
+```
+
+### IndexedDB スキーマ設計
+
+```typescript
+const DB_NAME = "scp-recommend";
+const DB_VERSION = 1;
+
+const stores = {
+  preferences: {
+    keyPath: "visitorId",
+  },
+  viewHistory: {
+    keyPath: "id", // `${visitorId}_${articleId}_${timestamp}`
+    indexes: [
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byArticle", keyPath: "articleId" },
+      { name: "byDate", keyPath: "viewedAt" },
+    ],
+  },
+  feedback: {
+    keyPath: "id", // `${visitorId}_${articleId}`
+    indexes: [
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byType", keyPath: "type" },
+    ],
+  },
+  recommendationLog: {
+    keyPath: "id",
+    indexes: [
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byDate", keyPath: "recommendedAt" },
+    ],
+  },
+};
+```
+
+### 容量見積もり
+
+| データ           | 1件あたり | 想定件数 | 合計   |
+| ---------------- | --------- | -------- | ------ |
+| 閲覧履歴         | ~100B     | 1,000件  | ~100KB |
+| フィードバック   | ~80B      | 500件    | ~40KB  |
+| レコメンド履歴   | ~120B     | 2,000件  | ~240KB |
+| 嗜好プロファイル | ~2KB      | 1件      | ~2KB   |
+
+**合計: ~400KB**（localStorage/IndexedDB の制限内で余裕）
+
+### 実装フェーズ
+
+| Phase | 内容                   | ストレージ                      |
+| ----- | ---------------------- | ------------------------------- |
+| 1     | PWA（ローカルのみ）    | IndexedDB + 匿名UUID            |
+| 2     | Capacitor 移行         | 同じ IndexedDB コードが動作     |
+| 3     | 同期機能（オプション） | Supabase にアカウント連携で同期 |
+
+### 関連する実装タスク
+
+- `packages/shared/src/storage/` にストレージ抽象化レイヤー実装
+- `packages/shared/src/types/preference.ts` に型定義
+- ε-greedy 推薦ロジックとの統合（EPIC-004）

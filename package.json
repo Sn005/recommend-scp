@@ -11,7 +11,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\"",
     "type-check": "turbo run type-check",
     "test": "turbo run test",
-    "test:coverage": "turbo run test:coverage"
+    "test:coverage": "turbo run test:coverage",
+    "postinstall": "lefthook install"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.3.1",
