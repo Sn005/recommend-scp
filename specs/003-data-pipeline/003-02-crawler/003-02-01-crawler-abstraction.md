@@ -15,31 +15,31 @@
 
 ### BranchCrawler インターフェース
 
-- [ ] WHEN クローラーモジュールを実装する際
+- [x] WHEN クローラーモジュールを実装する際
       GIVEN 抽象化が必要な場合
       THEN `BranchCrawler` インターフェースを定義する
       AND 以下のメソッドを含む：- `fetchArticleList(): Promise<ArticleIndex[]>` - `fetchArticleContent(id: string): Promise<ArticleContent>` - `getLastModified(id: string): Promise<Date | null>`
 
-- [ ] WHEN インターフェースを定義した際
+- [x] WHEN インターフェースを定義した際
       GIVEN 言語情報が必要な場合
       THEN `readonly lang: string` プロパティを含む
       AND `readonly crawlerType: 'api' | 'scraping'` プロパティを含む
 
 ### Factory パターン
 
-- [ ] WHEN クローラーインスタンスを取得する際
+- [x] WHEN クローラーインスタンスを取得する際
       GIVEN 言語コードが指定された場合
       THEN `CrawlerFactory.create(lang)` で適切なクローラーが返される
       AND 'en' の場合は `EnglishCrawler` が返される
 
-- [ ] WHEN 未対応の言語が指定された際
+- [x] WHEN 未対応の言語が指定された際
       GIVEN 対応するクローラーがない場合
       THEN エラーがスローされる
       AND エラーメッセージに未対応言語が含まれる
 
 ### 型定義
 
-- [ ] WHEN 型定義を作成した際
+- [x] WHEN 型定義を作成した際
       GIVEN クローラーで使用する型が必要な場合
       THEN `ArticleIndex` 型を定義する（id, title, url, series）
       AND `ArticleContent` 型を定義する（id, title, content, rating, tags, createdAt, updatedAt）
@@ -119,8 +119,19 @@ export class CrawlerFactory {
 
 ## テストケース
 
-- [ ] `BranchCrawler` インターフェースに必要なメソッドが定義されている
-- [ ] `CrawlerFactory.create('en')` で `EnglishCrawler` が返される
-- [ ] `CrawlerFactory.create('xx')` で未対応言語エラーがスローされる
-- [ ] `CrawlerFactory.getSupportedLanguages()` で対応言語一覧が取得できる
-- [ ] `ArticleIndex`, `ArticleContent` 型が正しく定義されている
+- [x] `BranchCrawler` インターフェースに必要なメソッドが定義されている
+- [x] `CrawlerFactory.create('en')` で `EnglishCrawler` が返される
+- [x] `CrawlerFactory.create('xx')` で未対応言語エラーがスローされる
+- [x] `CrawlerFactory.getSupportedLanguages()` で対応言語一覧が取得できる
+- [x] `ArticleIndex`, `ArticleContent` 型が正しく定義されている
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**:
+  - `packages/pipeline/src/crawler/types.ts` - 型定義
+  - `packages/pipeline/src/crawler/factory.ts` - CrawlerFactory
+  - `packages/pipeline/src/crawler/english-crawler.ts` - EnglishCrawler
+- **テストファイル**:
+  - `packages/pipeline/src/crawler/__dev__/types.test.ts` - 型定義テスト（10件）
+  - `packages/pipeline/src/crawler/__dev__/factory.test.ts` - ファクトリーテスト（8件）
