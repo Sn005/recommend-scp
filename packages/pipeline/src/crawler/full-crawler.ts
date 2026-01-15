@@ -11,6 +11,7 @@ import { RateLimiter } from "./utils/rate-limiter";
 import { CheckpointManager } from "./utils/checkpoint-manager";
 import type { SupabaseClient } from "./utils/db-saver";
 import { DbSaver } from "./utils/db-saver";
+import { createLogger, type Logger } from "./utils/logger";
 import type {
   ArticleIndex,
   BranchCrawler,
@@ -26,6 +27,10 @@ export interface FullCrawlerOptions extends FullCrawlOptions {
   supabaseClient?: SupabaseClient;
   /** カスタムクローラー（テスト用） */
   crawler?: BranchCrawler;
+  /** カスタムロガー（テスト用） */
+  logger?: Logger;
+  /** ログ出力を無効化 */
+  silent?: boolean;
 }
 
 /** デフォルト設定 */
@@ -45,6 +50,7 @@ export class FullCrawler {
   private readonly rateLimiter: RateLimiter;
   private readonly checkpointManager: CheckpointManager;
   private readonly dbSaver: DbSaver | null;
+  private readonly logger: Logger;
   private readonly options: Required<
     Pick<FullCrawlerOptions, "batchSize" | "checkpointInterval" | "dryRun">
   > &
@@ -59,12 +65,14 @@ export class FullCrawler {
     // カスタムクローラーがあればそれを使用、なければEnglishCrawlerを作成
     this.crawler = options.crawler ?? new EnglishCrawler();
 
+    // ロガーの設定
+    this.logger = options.logger ?? createLogger({ prefix: "[Crawler]", silent: options.silent });
+
     this.rateLimiter = new RateLimiter({
       batchSize: this.options.batchSize,
       batchDelayMs: this.options.batchSize ? 1000 : 1000,
       onRateLimit: (seconds) => {
-        // eslint-disable-next-line no-console
-        console.log(`⏳ レート制限: ${String(seconds)}秒待機中...`);
+        this.logger.info(`⏳ レート制限: ${String(seconds)}秒待機中...`);
       },
     });
 
@@ -72,8 +80,7 @@ export class FullCrawler {
       interval: this.options.checkpointInterval,
       onCheckpoint: (checkpoint) => {
         this.options.onCheckpoint?.(checkpoint);
-        // eslint-disable-next-line no-console
-        console.log(`💾 チェックポイント保存: ${checkpoint.lastProcessedId}`);
+        this.logger.info(`💾 チェックポイント保存: ${checkpoint.lastProcessedId}`);
       },
     });
 
@@ -82,8 +89,7 @@ export class FullCrawler {
       this.dbSaver = new DbSaver(this.options.supabaseClient, {
         lang: "en",
         onError: (id, error) => {
-          // eslint-disable-next-line no-console
-          console.error(`❌ DB保存エラー (${id}): ${error.message}`);
+          this.logger.error(`❌ DB保存エラー (${id}): ${error.message}`);
         },
       });
     } else {
@@ -95,20 +101,17 @@ export class FullCrawler {
    * 全記事一覧を取得
    */
   async fetchAllArticles(): Promise<ArticleIndex[]> {
-    // eslint-disable-next-line no-console
-    console.log("📥 記事一覧を取得中...");
+    this.logger.info("📥 記事一覧を取得中...");
 
     const articles = await this.crawler.fetchArticleList();
 
-    // eslint-disable-next-line no-console
-    console.log(`📋 ${String(articles.length)}件の記事を発見`);
+    this.logger.info(`📋 ${String(articles.length)}件の記事を発見`);
 
     // 重複チェック
     const ids = articles.map((a) => a.id);
     const uniqueIds = new Set(ids);
     if (ids.length !== uniqueIds.size) {
-      // eslint-disable-next-line no-console
-      console.warn(`⚠️ ${String(ids.length - uniqueIds.size)}件の重複を検出`);
+      this.logger.warn(`⚠️ ${String(ids.length - uniqueIds.size)}件の重複を検出`);
     }
 
     return articles;
@@ -120,11 +123,9 @@ export class FullCrawler {
   async runFullCrawl(): Promise<CrawlResult> {
     const startTime = Date.now();
 
-    // eslint-disable-next-line no-console
-    console.log("🚀 EN全記事クロール開始");
+    this.logger.info("🚀 EN全記事クロール開始");
     if (this.options.dryRun) {
-      // eslint-disable-next-line no-console
-      console.log("⚠️ ドライランモード（DBに保存しません）");
+      this.logger.info("⚠️ ドライランモード（DBに保存しません）");
     }
 
     // 記事一覧取得
@@ -137,8 +138,7 @@ export class FullCrawler {
     );
 
     if (resumeIndex > 0) {
-      // eslint-disable-next-line no-console
-      console.log(`📍 ${String(resumeIndex)}件目から再開`);
+      this.logger.info(`📍 ${String(resumeIndex)}件目から再開`);
     }
 
     const articlesToProcess = articles.slice(resumeIndex);
@@ -167,8 +167,7 @@ export class FullCrawler {
     let processedCount = resumeIndex;
     let lastCheckpoint: Checkpoint | undefined;
 
-    // eslint-disable-next-line no-console
-    console.log(`📖 本文取得開始: ${String(totalCount)}件`);
+    this.logger.info(`📖 本文取得開始: ${String(totalCount)}件`);
 
     await this.rateLimiter.processInBatches(
       articlesToProcess,
@@ -178,8 +177,9 @@ export class FullCrawler {
           const content = await fetchWithRetry(() => this.crawler.fetchArticleContent(article.id), {
             maxRetries: 3,
             onRetry: (attempt, error) => {
-              // eslint-disable-next-line no-console
-              console.warn(`⚠️ リトライ ${String(attempt)}/3: ${article.id} - ${error.message}`);
+              this.logger.warn(
+                `⚠️ リトライ ${String(attempt)}/3: ${article.id} - ${error.message}`
+              );
             },
           });
 
@@ -192,8 +192,7 @@ export class FullCrawler {
         } catch (error) {
           result.failedCount++;
           result.failedIds.push(article.id);
-          // eslint-disable-next-line no-console
-          console.error(
+          this.logger.error(
             `❌ 取得失敗: ${article.id} - ${error instanceof Error ? error.message : String(error)}`
           );
         }
@@ -212,8 +211,7 @@ export class FullCrawler {
       {
         onProgress: (current, total) => {
           if (current % 50 === 0 || current === total) {
-            // eslint-disable-next-line no-console
-            console.log(
+            this.logger.info(
               `📊 進捗: ${String(current)}/${String(total)} (${String(Math.round((current / total) * 100))}%)`
             );
           }
@@ -225,8 +223,7 @@ export class FullCrawler {
     result.durationMs = Date.now() - startTime;
 
     // 完了メッセージ
-    // eslint-disable-next-line no-console
-    console.log(`
+    this.logger.info(`
 ✅ クロール完了
   取得: ${String(totalCount)}件
   成功: ${String(result.successCount)}件

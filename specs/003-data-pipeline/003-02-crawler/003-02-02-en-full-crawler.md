@@ -171,6 +171,7 @@ export interface Checkpoint {
   - `packages/pipeline/src/crawler/utils/rate-limiter.ts` - レート制限
   - `packages/pipeline/src/crawler/utils/checkpoint-manager.ts` - チェックポイント管理
   - `packages/pipeline/src/crawler/utils/db-saver.ts` - DB保存
+  - `packages/pipeline/src/crawler/utils/logger.ts` - ロガーラッパー（pino移行準備）
   - `packages/pipeline/src/crawler/types.ts` - 型定義（追加）
 - **テストファイル**:
   - `packages/pipeline/src/crawler/__dev__/full-crawler.test.ts`
