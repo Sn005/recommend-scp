@@ -67,46 +67,93 @@
       THEN メールが正常に送信される
       AND 送信元・送信先が正しい
 
-## テスト実行手順
+---
 
-### 1. 環境変数の設定
+## Claude Code 自律実行ガイド
+
+このテストは Claude Code が自律的に実行し、結果を更新できるように設計されています。
+
+### テスト定義ファイル
+
+```
+packages/pipeline/
+├── tests/integration/
+│   └── test-cases.json      # テストケース定義（結果もここに記録）
+└── scripts/
+    ├── integration-test.ts      # 個別テスト実行スクリプト
+    └── run-integration-tests.ts # テストランナー（結果自動更新）
+```
+
+### 実行コマンド
 
 ```bash
+# 1. 依存関係のインストール（初回のみ）
+pnpm install
+
+# 2. 環境変数の設定
 cd packages/pipeline
 cp .env.example .env
 # .envを編集して実際の値を設定
+
+# 3. テスト一覧の確認
+pnpm --filter @recommend-scp/pipeline test:integration:list
+
+# 4. 全テスト実行（結果をtest-cases.jsonに自動記録）
+pnpm --filter @recommend-scp/pipeline test:integration
+
+# 5. 特定のテストスイートのみ実行
+pnpm --filter @recommend-scp/pipeline test:integration -- --suite crawler-api
+
+# 6. 特定のテストのみ実行
+pnpm --filter @recommend-scp/pipeline test:integration -- --test crawler-api-001
+
+# 7. specファイルの結果テーブルも更新
+pnpm --filter @recommend-scp/pipeline test:integration -- --update-spec
 ```
 
-### 2. クローラー結合テスト
+### テストケースとコマンドの対応表
 
-```bash
-# ドライラン（API疎通確認のみ、DB保存なし）
-pnpm --filter pipeline test:integration:crawler --dry-run
+| テストID | テスト名 | コマンド |
+|----------|----------|----------|
+| `crawler-api-001` | 記事一覧取得 | `tsx scripts/integration-test.ts --test crawler-list` |
+| `crawler-api-002` | 記事本文取得 | `tsx scripts/integration-test.ts --test crawler-content --id SCP-173` |
+| `crawler-db-001` | 記事INSERT | `tsx scripts/integration-test.ts --test db-insert --limit 1` |
+| `crawler-db-002` | 記事UPSERT | `tsx scripts/integration-test.ts --test db-upsert --limit 1` |
+| `embedding-001` | Embedding生成 | `tsx scripts/integration-test.ts --test embedding-generate --limit 1` |
+| `embedding-002` | EmbeddingDB保存 | `tsx scripts/integration-test.ts --test embedding-save --limit 1` |
+| `tagging-001` | タグ抽出 | `tsx scripts/integration-test.ts --test tagging-extract --limit 1` |
+| `tagging-002` | タグDB保存 | `tsx scripts/integration-test.ts --test tagging-save --limit 1` |
+| `mail-001` | テストメール送信 | `tsx scripts/integration-test.ts --test mail-send` |
 
-# 本番テスト（少数記事でDB保存確認）
-pnpm --filter pipeline test:integration:crawler --limit=10
-```
+### 結果の自動更新
 
-### 3. Embedding結合テスト
+テスト実行後、以下のファイルが自動更新されます：
 
-```bash
-# 少数記事でEmbedding生成テスト
-pnpm --filter pipeline test:integration:embedding --limit=5
-```
+1. **test-cases.json**: 各テストの `status`, `result`, `executedAt` が更新
+2. **このspecファイル**: `--update-spec` オプション使用時、下記の結果テーブルが更新
 
-### 4. タグ抽出結合テスト
+---
 
-```bash
-# 少数記事でタグ抽出テスト
-pnpm --filter pipeline test:integration:tagging --limit=5
-```
+## テスト結果記録
 
-### 5. メール通知テスト
+| テスト項目 | 結果 | 実施日 | 備考 |
+|-----------|------|--------|------|
+| 記事一覧取得 | - | - | - |
+| 記事本文取得 | - | - | - |
+| 記事INSERT | - | - | - |
+| 記事UPSERT | - | - | - |
+| Embedding生成 | - | - | - |
+| EmbeddingDB保存 | - | - | - |
+| タグ抽出 | - | - | - |
+| タグDB保存 | - | - | - |
+| テストメール送信 | - | - | - |
 
-```bash
-# テストメール送信
-pnpm --filter pipeline test:integration:mail
-```
+## 注意事項
+
+- 結合テストは**本番DBを使用する**ため、テストデータの管理に注意
+- OpenAI APIは**課金が発生する**ため、limit指定で少数記事に制限
+- Gmail SMTPは**送信制限**があるため、連続テストを避ける
+- 問題発生時は、まずユニットテストで該当機能を確認してから結合テストを再実行
 
 ## 確認項目チェックリスト
 
@@ -135,26 +182,6 @@ pnpm --filter pipeline test:integration:mail
 - [ ] smtp.gmail.com:587への接続が成功する
 - [ ] アプリパスワードでの認証が成功する
 - [ ] テストメールの送信が成功する
-
-## テスト結果記録
-
-| テスト項目 | 結果 | 実施日 | 備考 |
-|-----------|------|--------|------|
-| クローラーAPI疎通 | - | - | - |
-| クローラーDB保存 | - | - | - |
-| 差分更新 | - | - | - |
-| Embedding生成 | - | - | - |
-| EmbeddingDB保存 | - | - | - |
-| タグ抽出 | - | - | - |
-| タグDB保存 | - | - | - |
-| メール送信 | - | - | - |
-
-## 注意事項
-
-- 結合テストは**本番DBを使用する**ため、テストデータの管理に注意
-- OpenAI APIは**課金が発生する**ため、limit指定で少数記事に制限
-- Gmail SMTPは**送信制限**があるため、連続テストを避ける
-- 問題発生時は、まずユニットテストで該当機能を確認してから結合テストを再実行
 
 ## 関連ドキュメント
 
