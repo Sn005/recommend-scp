@@ -286,6 +286,7 @@ Phase 3: オプションでサーバー同期（アカウント作成時）
 ```
 
 **選定理由:**
+
 - IndexedDB は PWA でも Capacitor でもそのまま動作
 - 抽象化レイヤーを挟めば後から SQLite 等への移行も容易
 - Capacitor の `@capacitor/preferences` は軽量データ向け
@@ -295,7 +296,7 @@ Phase 3: オプションでサーバー同期（アカウント作成時）
 ```typescript
 /** ユーザー嗜好データ（ローカル保存） */
 interface UserPreference {
-  visitorId: string;              // 匿名ID（UUID）
+  visitorId: string; // 匿名ID（UUID）
   createdAt: string;
   updatedAt: string;
 }
@@ -303,23 +304,23 @@ interface UserPreference {
 /** 閲覧履歴 */
 interface ViewHistory {
   visitorId: string;
-  articleId: string;              // "scp-173" など
+  articleId: string; // "scp-173" など
   viewedAt: string;
-  duration?: number;              // 滞在時間（秒）
+  duration?: number; // 滞在時間（秒）
 }
 
 /** フィードバック */
 interface Feedback {
   visitorId: string;
   articleId: string;
-  type: 'like' | 'dislike' | 'bookmark' | 'skip';
+  type: "like" | "dislike" | "bookmark" | "skip";
   createdAt: string;
 }
 
 /** 計算された嗜好プロファイル */
 interface PreferenceProfile {
   visitorId: string;
-  tagWeights: Record<string, number>;  // { "ホラー": 0.8, "安全": 0.3 }
+  tagWeights: Record<string, number>; // { "ホラー": 0.8, "安全": 0.3 }
   objectClassPreference: Record<string, number>;
   updatedAt: string;
 }
@@ -329,7 +330,7 @@ interface RecommendationLog {
   visitorId: string;
   articleId: string;
   recommendedAt: string;
-  source: 'similar' | 'explore' | 'popular';
+  source: "similar" | "explore" | "popular";
   clicked: boolean;
 }
 ```
@@ -337,33 +338,33 @@ interface RecommendationLog {
 ### IndexedDB スキーマ設計
 
 ```typescript
-const DB_NAME = 'scp-recommend';
+const DB_NAME = "scp-recommend";
 const DB_VERSION = 1;
 
 const stores = {
   preferences: {
-    keyPath: 'visitorId',
+    keyPath: "visitorId",
   },
   viewHistory: {
-    keyPath: 'id',  // `${visitorId}_${articleId}_${timestamp}`
+    keyPath: "id", // `${visitorId}_${articleId}_${timestamp}`
     indexes: [
-      { name: 'byVisitor', keyPath: 'visitorId' },
-      { name: 'byArticle', keyPath: 'articleId' },
-      { name: 'byDate', keyPath: 'viewedAt' },
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byArticle", keyPath: "articleId" },
+      { name: "byDate", keyPath: "viewedAt" },
     ],
   },
   feedback: {
-    keyPath: 'id',  // `${visitorId}_${articleId}`
+    keyPath: "id", // `${visitorId}_${articleId}`
     indexes: [
-      { name: 'byVisitor', keyPath: 'visitorId' },
-      { name: 'byType', keyPath: 'type' },
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byType", keyPath: "type" },
     ],
   },
   recommendationLog: {
-    keyPath: 'id',
+    keyPath: "id",
     indexes: [
-      { name: 'byVisitor', keyPath: 'visitorId' },
-      { name: 'byDate', keyPath: 'recommendedAt' },
+      { name: "byVisitor", keyPath: "visitorId" },
+      { name: "byDate", keyPath: "recommendedAt" },
     ],
   },
 };
@@ -371,22 +372,22 @@ const stores = {
 
 ### 容量見積もり
 
-| データ | 1件あたり | 想定件数 | 合計 |
-|--------|----------|---------|------|
-| 閲覧履歴 | ~100B | 1,000件 | ~100KB |
-| フィードバック | ~80B | 500件 | ~40KB |
-| レコメンド履歴 | ~120B | 2,000件 | ~240KB |
-| 嗜好プロファイル | ~2KB | 1件 | ~2KB |
+| データ           | 1件あたり | 想定件数 | 合計   |
+| ---------------- | --------- | -------- | ------ |
+| 閲覧履歴         | ~100B     | 1,000件  | ~100KB |
+| フィードバック   | ~80B      | 500件    | ~40KB  |
+| レコメンド履歴   | ~120B     | 2,000件  | ~240KB |
+| 嗜好プロファイル | ~2KB      | 1件      | ~2KB   |
 
 **合計: ~400KB**（localStorage/IndexedDB の制限内で余裕）
 
 ### 実装フェーズ
 
-| Phase | 内容 | ストレージ |
-|-------|------|-----------|
-| 1 | PWA（ローカルのみ） | IndexedDB + 匿名UUID |
-| 2 | Capacitor 移行 | 同じ IndexedDB コードが動作 |
-| 3 | 同期機能（オプション） | Supabase にアカウント連携で同期 |
+| Phase | 内容                   | ストレージ                      |
+| ----- | ---------------------- | ------------------------------- |
+| 1     | PWA（ローカルのみ）    | IndexedDB + 匿名UUID            |
+| 2     | Capacitor 移行         | 同じ IndexedDB コードが動作     |
+| 3     | 同期機能（オプション） | Supabase にアカウント連携で同期 |
 
 ### 関連する実装タスク
 
