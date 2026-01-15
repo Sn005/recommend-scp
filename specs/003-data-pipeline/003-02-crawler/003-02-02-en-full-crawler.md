@@ -15,51 +15,51 @@ SCP Data APIを使用してEN全記事（series-1〜8+）を取得するクロ�
 
 ### 記事一覧取得
 
-- [ ] WHEN フルクロールを実行した際
+- [x] WHEN フルクロールを実行した際
       GIVEN SCP Data APIが正常に応答する場合
       THEN series-1 から series-8+ までの全記事一覧を取得する
       AND 各記事の id, title, url, series を含む
 
-- [ ] WHEN 記事一覧を取得した際
+- [x] WHEN 記事一覧を取得した際
       GIVEN APIレスポンスがある場合
       THEN 記事数が6000件以上あることを確認する
       AND 重複記事がないことを確認する
 
 ### 記事本文取得
 
-- [ ] WHEN 記事本文を取得した際
+- [x] WHEN 記事本文を取得した際
       GIVEN 記事IDが指定された場合
       THEN 記事のタイトル、本文、評価、タグを取得する
       AND 取得日時を記録する
 
-- [ ] WHEN 本文取得時にエラーが発生した際
+- [x] WHEN 本文取得時にエラーが発生した際
       GIVEN ネットワークエラーまたは404の場合
       THEN エクスポネンシャルバックオフでリトライする（最大3回）
       AND リトライ失敗時はエラーログを出力して次の記事へ進む
 
 ### レート制限対応
 
-- [ ] WHILE 大量のAPI呼び出しを行う際
+- [x] WHILE 大量のAPI呼び出しを行う際
       THE SYSTEM SHALL 各リクエスト間に適切な遅延を挿入する
       AND バッチ単位（10件）ごとに1秒の遅延を設ける
 
-- [ ] WHEN レート制限エラー（429）を受信した際
+- [x] WHEN レート制限エラー（429）を受信した際
       GIVEN Retry-Afterヘッダーがある場合
       THEN 指定された秒数待機してからリトライする
 
 ### チェックポイント
 
-- [ ] WHILE クロール処理が実行中
+- [x] WHILE クロール処理が実行中
       THE SYSTEM SHALL 100件ごとにチェックポイントを保存する
       AND 最後に処理した記事IDと処理件数を記録する
 
-- [ ] WHEN クロールを再開する際
+- [x] WHEN クロールを再開する際
       GIVEN チェックポイントが存在する場合
       THEN チェックポイント以降の記事から処理を再開する
 
 ### DB保存
 
-- [ ] WHEN 記事を保存した際
+- [x] WHEN 記事を保存した際
       GIVEN 正常に取得できた場合
       THEN `scp_articles` テーブルに保存する
       AND `lang: 'en'` を設定する
@@ -153,11 +153,29 @@ export interface Checkpoint {
 
 ## テストケース
 
-- [ ] series-1〜8の記事一覧が取得できる
-- [ ] 記事本文が正しく取得できる
-- [ ] レート制限対応で適切な遅延が挿入される
-- [ ] 429エラー時にリトライされる
-- [ ] チェックポイントが100件ごとに保存される
-- [ ] チェックポイントからの再開が正常に動作する
-- [ ] 取得した記事がDBに保存される
-- [ ] 失敗した記事がリトライキューに追加される
+- [x] series-1〜8の記事一覧が取得できる
+- [x] 記事本文が正しく取得できる
+- [x] レート制限対応で適切な遅延が挿入される
+- [x] 429エラー時にリトライされる
+- [x] チェックポイントが100件ごとに保存される
+- [x] チェックポイントからの再開が正常に動作する
+- [x] 取得した記事がDBに保存される
+- [x] 失敗した記事がリトライキューに追加される
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**:
+  - `packages/pipeline/src/crawler/full-crawler.ts` - フルクローラー統合クラス
+  - `packages/pipeline/src/crawler/utils/retry.ts` - エクスポネンシャルバックオフ
+  - `packages/pipeline/src/crawler/utils/rate-limiter.ts` - レート制限
+  - `packages/pipeline/src/crawler/utils/checkpoint-manager.ts` - チェックポイント管理
+  - `packages/pipeline/src/crawler/utils/db-saver.ts` - DB保存
+  - `packages/pipeline/src/crawler/utils/logger.ts` - ロガーラッパー（pino移行準備）
+  - `packages/pipeline/src/crawler/types.ts` - 型定義（追加）
+- **テストファイル**:
+  - `packages/pipeline/src/crawler/__dev__/full-crawler.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/retry.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/rate-limiter.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/checkpoint-manager.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/db-saver.test.ts`
