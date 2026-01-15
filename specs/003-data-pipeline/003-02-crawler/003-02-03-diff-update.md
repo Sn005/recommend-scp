@@ -15,7 +15,7 @@
 
 ### 新規記事検出
 
-- [ ] WHEN 差分クロールを実行した際
+- [x] WHEN 差分クロールを実行した際
       GIVEN DBに存在しない記事がAPIにある場合
       THEN 新規記事として検出される
       AND DBに新規レコードが作成される
@@ -23,21 +23,21 @@
 
 ### 更新記事検出
 
-- [ ] WHEN 差分クロールを実行した際
+- [x] WHEN 差分クロールを実行した際
       GIVEN DBの記事とAPIの記事で更新日時が異なる場合
       THEN 更新記事として検出される
       AND DBのレコードが更新される
       AND `embedding_status: 'pending'` にリセットされる
       AND `tagging_status: 'pending'` にリセットされる
 
-- [ ] WHEN コンテンツハッシュを比較した際
+- [x] WHEN コンテンツハッシュを比較した際
       GIVEN 本文が変更されている場合
       THEN 更新が必要と判定される
       AND ハッシュが更新される
 
 ### 削除記事検出
 
-- [ ] WHEN 差分クロールを実行した際
+- [x] WHEN 差分クロールを実行した際
       GIVEN DBに存在するがAPIに存在しない記事がある場合
       THEN 削除記事として検出される
       AND `is_deleted: true` フラグが設定される
@@ -45,13 +45,13 @@
 
 ### 差分レポート
 
-- [ ] WHEN 差分クロールが完了した際
+- [x] WHEN 差分クロールが完了した際
       GIVEN 処理が正常に完了した場合
       THEN 以下の統計を出力する：- 新規追加件数 - 更新件数 - 削除件数 - 変更なし件数 - 処理時間
 
 ### 最適化
 
-- [ ] WHILE 差分検出を行う際
+- [x] WHILE 差分検出を行う際
       THE SYSTEM SHALL APIの更新日時フィールドを使用して効率的に検出する
       AND 本文取得は更新が必要な記事のみに限定する
 
@@ -187,11 +187,24 @@ export async function detectChanges(
 
 ## テストケース
 
-- [ ] 新規記事が正しく検出される
-- [ ] 更新記事が正しく検出される（更新日時比較）
-- [ ] 更新記事が正しく検出される（ハッシュ比較）
-- [ ] 削除記事に論理削除フラグが設定される
-- [ ] 変更なし記事はスキップされる
-- [ ] 差分レポートが正しく出力される
-- [ ] 更新時に `embedding_status` がリセットされる
-- [ ] 更新時に `tagging_status` がリセットされる
+- [x] 新規記事が正しく検出される
+- [x] 更新記事が正しく検出される（更新日時比較）
+- [x] 更新記事が正しく検出される（ハッシュ比較）
+- [x] 削除記事に論理削除フラグが設定される
+- [x] 変更なし記事はスキップされる
+- [x] 差分レポートが正しく出力される
+- [x] 更新時に `embedding_status` がリセットされる
+- [x] 更新時に `tagging_status` がリセットされる
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**:
+  - `packages/pipeline/src/crawler/types.ts` - 差分クロール用型定義（DiffCrawlOptions, DiffProgress, DiffCrawlResult等）
+  - `packages/pipeline/src/crawler/utils/content-hash.ts` - SHA-256コンテンツハッシュ計算
+  - `packages/pipeline/src/crawler/diff-crawler.ts` - 差分クローラー（detectChanges, DiffCrawlerクラス）
+  - `packages/pipeline/src/crawler/utils/diff-db-operations.ts` - 差分クロール用DB操作
+- **テストファイル**:
+  - `packages/pipeline/src/crawler/__dev__/diff-crawler.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/content-hash.test.ts`
+  - `packages/pipeline/src/crawler/utils/__dev__/diff-db-operations.test.ts`
