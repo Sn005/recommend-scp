@@ -1,0 +1,132 @@
+{
+  "version": "1.0.0",
+  "description": "003-04-00 コンポーネント結合テスト定義",
+  "testSuites": [
+    {
+      "id": "crawler-api",
+      "name": "クローラーAPI疎通テスト",
+      "description": "SCP Data APIとの接続確認",
+      "prerequisite": ["003-02-02"],
+      "envRequired": [],
+      "tests": [
+        {
+          "id": "crawler-api-001",
+          "name": "記事一覧取得",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test crawler-list",
+          "expectedResult": "記事一覧が取得できる（件数 > 0）",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        },
+        {
+          "id": "crawler-api-002",
+          "name": "記事本文取得",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test crawler-content --id SCP-173",
+          "expectedResult": "SCP-173の本文が取得できる",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        }
+      ]
+    },
+    {
+      "id": "crawler-db",
+      "name": "クローラーDB保存テスト",
+      "description": "Supabaseへの記事保存確認",
+      "prerequisite": ["003-02-02"],
+      "envRequired": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
+      "tests": [
+        {
+          "id": "crawler-db-001",
+          "name": "記事INSERT",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test db-insert --limit 1",
+          "expectedResult": "scp_articlesテーブルに1件保存される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        },
+        {
+          "id": "crawler-db-002",
+          "name": "記事UPSERT（重複実行）",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test db-upsert --limit 1",
+          "expectedResult": "同一記事の再保存でエラーにならない",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        }
+      ]
+    },
+    {
+      "id": "embedding",
+      "name": "Embedding生成テスト",
+      "description": "OpenAI APIでのEmbedding生成確認",
+      "prerequisite": ["003-03-01"],
+      "envRequired": ["OPENAI_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
+      "tests": [
+        {
+          "id": "embedding-001",
+          "name": "Embedding生成",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test embedding-generate --limit 1",
+          "expectedResult": "1536次元のベクトルが生成される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        },
+        {
+          "id": "embedding-002",
+          "name": "EmbeddingDB保存",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test embedding-save --limit 1",
+          "expectedResult": "article_embeddingsテーブルに保存される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        }
+      ]
+    },
+    {
+      "id": "tagging",
+      "name": "タグ抽出テスト",
+      "description": "OpenAI APIでのタグ抽出確認",
+      "prerequisite": ["003-03-03"],
+      "envRequired": ["OPENAI_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
+      "tests": [
+        {
+          "id": "tagging-001",
+          "name": "タグ抽出",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test tagging-extract --limit 1",
+          "expectedResult": "タグ配列が返される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        },
+        {
+          "id": "tagging-002",
+          "name": "タグDB保存",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test tagging-save --limit 1",
+          "expectedResult": "article_tagsテーブルに保存される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        }
+      ]
+    },
+    {
+      "id": "mail",
+      "name": "メール送信テスト",
+      "description": "Gmail SMTPでのメール送信確認",
+      "prerequisite": ["003-04-03"],
+      "envRequired": ["MAIL_SERVER", "MAIL_USERNAME", "MAIL_PASSWORD", "NOTIFY_EMAIL"],
+      "tests": [
+        {
+          "id": "mail-001",
+          "name": "テストメール送信",
+          "command": "pnpm --filter @recommend-scp/pipeline exec tsx scripts/integration-test.ts --test mail-send",
+          "expectedResult": "メールが送信される",
+          "status": "pending",
+          "result": null,
+          "executedAt": null
+        }
+      ]
+    }
+  ]
+}

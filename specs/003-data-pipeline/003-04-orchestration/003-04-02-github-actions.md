@@ -190,6 +190,8 @@ jobs:
 | `MAIL_PASSWORD`             | SMTPパスワード             |
 | `NOTIFY_EMAIL`              | 通知先メールアドレス       |
 
+> 📖 各Secretの取得方法は [環境変数設定手順書](../../../packages/pipeline/docs/env-setup.md) を参照
+
 ## テストケース
 
 - [ ] cronスケジュールが正しく設定されている

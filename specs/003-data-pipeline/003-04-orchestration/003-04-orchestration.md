@@ -22,3 +22,7 @@ GitHub Actionsによる定期実行、通知・リトライ機能を実装する
 - [003-04-01: パイプラインオーケストレーター](./003-04-01-orchestrator.md)
 - [003-04-02: GitHub Actions定期実行](./003-04-02-github-actions.md)
 - [003-04-03: 通知・リトライ機能](./003-04-03-notification-retry.md)
+
+## 環境設定
+
+- [環境変数設定手順書](../../../packages/pipeline/docs/env-setup.md) - 必要な環境変数の一覧と取得方法

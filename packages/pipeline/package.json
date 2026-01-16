@@ -9,13 +9,17 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "tsx scripts/run-integration-tests.ts",
+    "test:integration:list": "tsx scripts/run-integration-tests.ts --list",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@recommend-scp/shared": "workspace:*"
+    "@recommend-scp/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.49.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^4.0.16"
   }
