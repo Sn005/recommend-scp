@@ -89,11 +89,11 @@ async function runTest(testName: string): Promise<TestResult> {
       case "db-upsert":
         return await testDbUpsert(limitValue);
       case "embedding-generate":
-        return testEmbeddingGenerate();
+        return await testEmbeddingGenerate();
       case "embedding-save":
         return testEmbeddingSave();
       case "tagging-extract":
-        return testTaggingExtract();
+        return await testTaggingExtract();
       case "tagging-save":
         return testTaggingSave();
       case "mail-send":
@@ -211,7 +211,7 @@ async function testDbUpsert(limit: number): Promise<TestResult> {
   };
 }
 
-function testEmbeddingGenerate(): TestResult {
+async function testEmbeddingGenerate(): Promise<TestResult> {
   const startTime = Date.now();
 
   if (!process.env.OPENAI_API_KEY) {
@@ -222,10 +222,28 @@ function testEmbeddingGenerate(): TestResult {
     };
   }
 
-  // TODO: 003-03-01実装後に有効化
+  const { generateEmbedding } = await import("@recommend-scp/shared/embedding");
+
+  // テスト用コンテンツ
+  const testContent = `
+    Item #: SCP-173
+    Object Class: Euclid
+    Special Containment Procedures: Item SCP-173 is to be kept in a locked container at all times.
+    Description: Moved to Site-19 1993. Origin is as of yet unknown.
+    It is constructed from concrete and rebar with traces of Krylon brand spray paint.
+    SCP-173 is animate and extremely hostile.
+  `;
+
+  const result = await generateEmbedding(testContent);
+
   return {
-    success: false,
-    message: "003-03-01未実装のためスキップ",
+    success: result.embedding.length === 1536, // text-embedding-3-small は1536次元
+    message: `Embedding生成成功（${String(result.embedding.length)}次元、${String(result.tokenCount)}トークン）`,
+    data: {
+      dimensions: result.embedding.length,
+      tokenCount: result.tokenCount,
+      sampleEmbedding: result.embedding.slice(0, 5), // 最初の5要素のみ表示
+    },
     durationMs: Date.now() - startTime,
   };
 }
@@ -241,13 +259,47 @@ function testEmbeddingSave(): TestResult {
   };
 }
 
-function testTaggingExtract(): TestResult {
+async function testTaggingExtract(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-03-03実装後に有効化
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      success: false,
+      message: "環境変数が未設定: OPENAI_API_KEY",
+      durationMs: Date.now() - startTime,
+    };
+  }
+
+  const { extractTags } = await import("@recommend-scp/shared/tagging");
+
+  // テスト用コンテンツ
+  const testContent = `
+    Item #: SCP-173
+    Object Class: Euclid
+    Special Containment Procedures: Item SCP-173 is to be kept in a locked container at all times.
+    When personnel must enter SCP-173's container, no fewer than 3 may enter at any time.
+    Description: Moved to Site-19 1993. Origin is as of yet unknown.
+    It is constructed from concrete and rebar with traces of Krylon brand spray paint.
+    SCP-173 is animate and extremely hostile.
+    The object cannot move while within a direct line of sight.
+    Line of sight must not be broken at any time with SCP-173.
+    Personnel must blink one eye at a time while observing it.
+  `;
+
+  const tags = await extractTags("SCP-173", testContent);
+
+  const isValid =
+    tags.object_class !== undefined &&
+    Array.isArray(tags.genre) &&
+    Array.isArray(tags.theme) &&
+    tags.format !== undefined;
+
   return {
-    success: false,
-    message: "003-03-03未実装のためスキップ",
+    success: isValid,
+    message: `タグ抽出成功（オブジェクトクラス: ${tags.object_class}）`,
+    data: {
+      tags,
+    },
     durationMs: Date.now() - startTime,
   };
 }
