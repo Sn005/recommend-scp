@@ -16,6 +16,7 @@
   "dependencies": {
     "@recommend-scp/shared": "workspace:*",
     "@supabase/supabase-js": "^2.49.1",
+    "openai": "^4.77.0",
     "pino": "^10.2.0"
   },
   "devDependencies": {
