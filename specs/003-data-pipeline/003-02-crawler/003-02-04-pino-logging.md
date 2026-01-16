@@ -4,7 +4,7 @@
 
 - **ID**: 003-02-04
 - **名前**: pinoロギング導入
-- **ステータス**: pending
+- **ステータス**: completed
 - **依存**: 003-02-02
 
 ## ユーザーストーリー
@@ -17,36 +17,36 @@
 
 ### pino導入
 
-- [ ] WHEN pipelineパッケージをビルドした際
+- [x] WHEN pipelineパッケージをビルドした際
       THEN pinoがサーバーサイド用ライブラリとして含まれる
       AND クライアントサイド（ブラウザ）では使用されない
 
-- [ ] WHEN ロガーを初期化した際
+- [x] WHEN ロガーを初期化した際
       GIVEN 環境変数 LOG_LEVEL が設定されている場合
       THEN 指定されたレベル（debug/info/warn/error）で動作する
 
 ### 構造化ログ
 
-- [ ] WHEN クロール処理のログを出力した際
+- [x] WHEN クロール処理のログを出力した際
       THEN JSON形式で出力される
       AND timestamp, level, message, context を含む
 
-- [ ] WHEN エラーログを出力した際
+- [x] WHEN エラーログを出力した際
       GIVEN Errorオブジェクトが渡された場合
       THEN スタックトレースも含まれる
 
 ### ラッパー移行
 
-- [ ] WHEN 既存の logger ラッパーを更新した際
+- [x] WHEN 既存の logger ラッパーを更新した際
       THEN createLogger の内部実装がpinoに変更される
       AND 呼び出し側のコードは変更不要
 
-- [ ] WHEN silent オプションを指定した際
+- [x] WHEN silent オプションを指定した際
       THEN ログ出力が無効化される（テスト用）
 
 ### GitHub Actions対応
 
-- [ ] WHEN GitHub Actionsで実行された際
+- [x] WHEN GitHub Actionsで実行された際
       THEN ログがworkflowログに出力される
       AND 重要なログはサマリーにも表示される
 
@@ -66,10 +66,10 @@ packages/pipeline/src/
 ```json
 {
   "dependencies": {
-    "pino": "^9.x"
+    "pino": "^10.x"
   },
   "devDependencies": {
-    "pino-pretty": "^11.x"
+    "pino-pretty": "^13.x"
   }
 }
 ```
@@ -101,11 +101,19 @@ export const createLogger = (options: LoggerOptions = {}): Logger => {
 
 ## テストケース
 
-- [ ] pino経由でログが出力される
-- [ ] ログレベルの設定が機能する
-- [ ] silentモードでログが抑制される
-- [ ] JSON形式で出力される（pino-prettyなし時）
-- [ ] 既存のテストが引き続き通る
+- [x] pino経由でログが出力される
+- [x] ログレベルの設定が機能する
+- [x] silentモードでログが抑制される
+- [x] JSON形式で出力される（pino-prettyなし時）
+- [x] 既存のテストが引き続き通る
+
+## 実装状況
+
+- **status**: completed
+- **完了日**: 2026-01-16
+- **実装ファイル**:
+  - `packages/pipeline/src/crawler/utils/logger.ts` - pinoベースに移行
+  - `packages/pipeline/src/crawler/utils/__dev__/logger.test.ts` - テスト追加
 
 ## 備考
 
