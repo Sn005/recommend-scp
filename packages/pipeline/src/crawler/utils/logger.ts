@@ -1,10 +1,11 @@
 /**
  * ロガーユーティリティ
- * Subtask: 003-02-02
+ * Subtask: 003-02-04
  *
- * 現在はconsole.logのラッパーとして実装。
- * 将来的にpinoに置き換え予定（003-02-04で対応予定）。
+ * pinoベースの構造化ロギング。
+ * GitHub Actions対応（warn/errorは ::warning::/::error:: 形式で出力）。
  */
+import pino from "pino";
 
 /** ログレベル */
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -27,11 +28,51 @@ export interface LoggerOptions {
   silent?: boolean;
 }
 
-const LOG_LEVELS: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
+const VALID_LEVELS: LogLevel[] = ["debug", "info", "warn", "error"];
+
+/**
+ * 環境変数からログレベルを取得
+ */
+const getLogLevelFromEnv = (): LogLevel | undefined => {
+  const envLevel = process.env.LOG_LEVEL?.toLowerCase().trim();
+  if (envLevel && VALID_LEVELS.includes(envLevel as LogLevel)) {
+    return envLevel as LogLevel;
+  }
+  return undefined;
+};
+
+/**
+ * GitHub Actions環境かどうかを判定
+ */
+const isGitHubActions = (): boolean => {
+  return process.env.GITHUB_ACTIONS === "true" || process.env.GITHUB_ACTIONS === "1";
+};
+
+/**
+ * GitHub Actions用のログフォーマッタを作成
+ */
+const createGitHubActionsHook = () => {
+  return {
+    logMethod(inputArgs: Parameters<pino.LogFn>, method: pino.LogFn, level: number) {
+      // 通常のログ出力
+      method.apply(this, inputArgs);
+
+      // warn/errorの場合はGitHub Actions形式でも出力
+      if (level >= 40) {
+        const message =
+          typeof inputArgs[0] === "string"
+            ? inputArgs[0]
+            : typeof inputArgs[1] === "string"
+              ? inputArgs[1]
+              : "";
+
+        if (message) {
+          const prefix = level >= 50 ? "::error::" : "::warning::";
+          process.stdout.write(`${prefix}${message}\n`);
+        }
+      }
+    },
+  };
 };
 
 /**
@@ -39,41 +80,73 @@ const LOG_LEVELS: Record<LogLevel, number> = {
  * @param options ロガーオプション
  */
 export const createLogger = (options: LoggerOptions = {}): Logger => {
-  const { prefix = "", level = "info", silent = false } = options;
+  const { prefix = "", level, silent = false } = options;
 
-  const shouldLog = (targetLevel: LogLevel): boolean => {
-    if (silent) return false;
-    return LOG_LEVELS[targetLevel] >= LOG_LEVELS[level];
+  // レベルの優先順位: オプション > 環境変数 > デフォルト（info）
+  const effectiveLevel = silent ? "silent" : (level ?? getLogLevelFromEnv() ?? "info");
+
+  const pinoOptions: pino.LoggerOptions = {
+    level: effectiveLevel,
   };
 
-  const formatMessage = (message: string): string => {
-    return prefix ? `${prefix} ${message}` : message;
+  // GitHub Actions環境ではhookを追加
+  if (isGitHubActions()) {
+    pinoOptions.hooks = createGitHubActionsHook();
+  }
+
+  const pinoInstance = pino(pinoOptions);
+
+  /**
+   * ログ出力のラッパー
+   * contextオブジェクトとErrorオブジェクトを適切に処理
+   */
+  const log = (pinoMethod: pino.LogFn, message: string, args: unknown[]): void => {
+    // contextオブジェクトを構築
+    const context: Record<string, unknown> = {};
+
+    // prefixがあれば追加
+    if (prefix) {
+      context.prefix = prefix;
+    }
+
+    // 引数を処理
+    for (const arg of args) {
+      if (arg instanceof Error) {
+        // Errorオブジェクトはerrプロパティとして追加
+        context.err = {
+          message: arg.message,
+          stack: arg.stack,
+          name: arg.name,
+          ...Object.fromEntries(
+            Object.entries(arg).filter(([key]) => !["message", "stack", "name"].includes(key))
+          ),
+        };
+      } else if (typeof arg === "object" && arg !== null) {
+        // オブジェクトはcontextにマージ
+        Object.assign(context, arg);
+      }
+    }
+
+    // ログ出力
+    if (Object.keys(context).length > 0) {
+      pinoMethod.call(pinoInstance, context, message);
+    } else {
+      pinoMethod.call(pinoInstance, message);
+    }
   };
 
   return {
     debug: (message: string, ...args: unknown[]) => {
-      if (shouldLog("debug")) {
-        // eslint-disable-next-line no-console
-        console.debug(formatMessage(message), ...args);
-      }
+      log(pinoInstance.debug, message, args);
     },
     info: (message: string, ...args: unknown[]) => {
-      if (shouldLog("info")) {
-        // eslint-disable-next-line no-console
-        console.log(formatMessage(message), ...args);
-      }
+      log(pinoInstance.info, message, args);
     },
     warn: (message: string, ...args: unknown[]) => {
-      if (shouldLog("warn")) {
-        // eslint-disable-next-line no-console
-        console.warn(formatMessage(message), ...args);
-      }
+      log(pinoInstance.warn, message, args);
     },
     error: (message: string, ...args: unknown[]) => {
-      if (shouldLog("error")) {
-        // eslint-disable-next-line no-console
-        console.error(formatMessage(message), ...args);
-      }
+      log(pinoInstance.error, message, args);
     },
   };
 };
