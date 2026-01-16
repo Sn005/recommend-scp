@@ -17,22 +17,22 @@
 
 ### コア環境変数（全Subtask共通）
 
-| 変数名 | 必須 | 用途 | 取得先 |
-|--------|------|------|--------|
-| `SUPABASE_URL` | ✅ | SupabaseプロジェクトURL | Supabase Dashboard |
-| `SUPABASE_ANON_KEY` | ✅ | Supabase匿名キー（公開可） | Supabase Dashboard |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabaseサービスロールキー（秘密） | Supabase Dashboard |
-| `OPENAI_API_KEY` | ✅ | OpenAI API（Embedding/タグ抽出） | OpenAI Dashboard |
+| 変数名                      | 必須 | 用途                               | 取得先             |
+| --------------------------- | ---- | ---------------------------------- | ------------------ |
+| `SUPABASE_URL`              | ✅   | SupabaseプロジェクトURL            | Supabase Dashboard |
+| `SUPABASE_ANON_KEY`         | ✅   | Supabase匿名キー（公開可）         | Supabase Dashboard |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅   | Supabaseサービスロールキー（秘密） | Supabase Dashboard |
+| `OPENAI_API_KEY`            | ✅   | OpenAI API（Embedding/タグ抽出）   | OpenAI Dashboard   |
 
 ### メール通知用環境変数（003-04-02/03で必要）
 
-| 変数名 | 必須 | 用途 | 取得先 |
-|--------|------|------|--------|
-| `MAIL_SERVER` | ✅ | SMTPサーバーアドレス | `smtp.gmail.com`（Gmail使用時） |
-| `MAIL_PORT` | ⚠️ | SMTPポート番号 | `587`（TLS）または `465`（SSL） |
-| `MAIL_USERNAME` | ✅ | SMTPユーザー名 | Gmailアドレス |
-| `MAIL_PASSWORD` | ✅ | SMTPパスワード | **Googleアプリパスワード** |
-| `NOTIFY_EMAIL` | ✅ | 通知先メールアドレス | 任意のメールアドレス |
+| 変数名          | 必須 | 用途                 | 取得先                          |
+| --------------- | ---- | -------------------- | ------------------------------- |
+| `MAIL_SERVER`   | ✅   | SMTPサーバーアドレス | `smtp.gmail.com`（Gmail使用時） |
+| `MAIL_PORT`     | ⚠️   | SMTPポート番号       | `587`（TLS）または `465`（SSL） |
+| `MAIL_USERNAME` | ✅   | SMTPユーザー名       | Gmailアドレス                   |
+| `MAIL_PASSWORD` | ✅   | SMTPパスワード       | **Googleアプリパスワード**      |
+| `NOTIFY_EMAIL`  | ✅   | 通知先メールアドレス | 任意のメールアドレス            |
 
 > ⚠️ **重要**: Gmailの通常パスワードは使用できません。**アプリパスワード**の発行が必要です。
 
@@ -40,15 +40,15 @@
 
 ## Subtask別の必須環境変数
 
-| Subtask | 説明 | 必要な環境変数 |
-|---------|------|----------------|
-| **003-02-02** | EN全記事クローラー | `SUPABASE_*`, `OPENAI_API_KEY` |
-| **003-02-03** | 差分更新クローラー | `SUPABASE_*`, `OPENAI_API_KEY` |
-| **003-03-01** | バッチEmbedding | `SUPABASE_*`, `OPENAI_API_KEY` |
-| **003-03-03** | タグ抽出 | `SUPABASE_*`, `OPENAI_API_KEY` |
-| **003-04-01** | オーケストレーター | `SUPABASE_*`, `OPENAI_API_KEY` |
+| Subtask       | 説明                   | 必要な環境変数                  |
+| ------------- | ---------------------- | ------------------------------- |
+| **003-02-02** | EN全記事クローラー     | `SUPABASE_*`, `OPENAI_API_KEY`  |
+| **003-02-03** | 差分更新クローラー     | `SUPABASE_*`, `OPENAI_API_KEY`  |
+| **003-03-01** | バッチEmbedding        | `SUPABASE_*`, `OPENAI_API_KEY`  |
+| **003-03-03** | タグ抽出               | `SUPABASE_*`, `OPENAI_API_KEY`  |
+| **003-04-01** | オーケストレーター     | `SUPABASE_*`, `OPENAI_API_KEY`  |
 | **003-04-02** | GitHub Actions定期実行 | 全環境変数（コア + メール通知） |
-| **003-04-03** | 通知・リトライ機能 | 全環境変数（コア + メール通知） |
+| **003-04-03** | 通知・リトライ機能     | 全環境変数（コア + メール通知） |
 
 ---
 
@@ -67,15 +67,18 @@
 5. **API** タブをクリック
 
 6. **Project URL** セクション:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ Project URL                                     │
    │ https://xxxxxxxxxxxx.supabase.co    [Copy]      │
    └─────────────────────────────────────────────────┘
    ```
+
    → この値を `SUPABASE_URL` に設定
 
 7. **Project API keys** セクション:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ anon public                                     │
@@ -84,6 +87,7 @@
    │ ⚠️ This key is safe to use in a browser...     │
    └─────────────────────────────────────────────────┘
    ```
+
    → この値を `SUPABASE_ANON_KEY` に設定
 
    ```
@@ -94,9 +98,11 @@
    │ ⚠️ This key has the ability to bypass RLS...   │
    └─────────────────────────────────────────────────┘
    ```
+
    → **[Reveal]** をクリックして表示し、`SUPABASE_SERVICE_ROLE_KEY` に設定
 
 > ⚠️ **セキュリティ注意**: `service_role` キーはRLSをバイパスできる強力なキーです。
+>
 > - 絶対に公開リポジトリにコミットしない
 > - クライアントサイドのコードに含めない
 > - GitHub Secretsなど安全な場所に保管
@@ -115,6 +121,7 @@
    - または直接 **[API Keys](https://platform.openai.com/api-keys)** にアクセス
 
 4. **API keys** ページ:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ API keys                                        │
@@ -130,6 +137,7 @@
 5. **[+ Create new secret key]** をクリック
 
 6. ダイアログで名前を入力（例: `recommend-scp-pipeline`）:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ Create new secret key                           │
@@ -179,6 +187,7 @@ Gmailを使用してメール通知を送信するには、**Googleアプリパ�
 2. 左サイドバー → **セキュリティ** をクリック
 
 3. **「Googleにログインする方法」** セクション:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ Google にログインする方法                        │
@@ -203,6 +212,7 @@ Gmailを使用してメール通知を送信するには、**Googleアプリパ�
 2. 左サイドバー → **セキュリティ** をクリック
 
 3. **「Googleにログインする方法」** セクションで **2段階認証プロセス** をクリック
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ 2段階認証プロセス                               │
@@ -211,15 +221,18 @@ Gmailを使用してメール通知を送信するには、**Googleアプリパ�
    ```
 
 4. ページ下部にスクロールし、**アプリパスワード** をクリック
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ アプリ パスワード                               │
    │ アプリ固有のパスワードを管理します       [>]    │
    └─────────────────────────────────────────────────┘
    ```
+
    - または直接 **[アプリパスワード](https://myaccount.google.com/apppasswords)** にアクセス
 
 5. **アプリを選択** で名前を入力（例: `SCP Pipeline`）:
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ アプリ パスワード                               │
@@ -250,13 +263,13 @@ Gmailを使用してメール通知を送信するには、**Googleアプリパ�
 
 #### Gmail SMTP設定値
 
-| 変数名 | 値 |
-|--------|-----|
-| `MAIL_SERVER` | `smtp.gmail.com` |
-| `MAIL_PORT` | `587`（TLS）または `465`（SSL） |
+| 変数名          | 値                                                  |
+| --------------- | --------------------------------------------------- |
+| `MAIL_SERVER`   | `smtp.gmail.com`                                    |
+| `MAIL_PORT`     | `587`（TLS）または `465`（SSL）                     |
 | `MAIL_USERNAME` | あなたのGmailアドレス（例: `your-email@gmail.com`） |
-| `MAIL_PASSWORD` | 発行したアプリパスワード（16文字、スペースなし） |
-| `NOTIFY_EMAIL` | 通知を受け取るメールアドレス |
+| `MAIL_PASSWORD` | 発行したアプリパスワード（16文字、スペースなし）    |
+| `NOTIFY_EMAIL`  | 通知を受け取るメールアドレス                        |
 
 ---
 
@@ -307,6 +320,7 @@ GitHub Actionsで実行する場合、リポジトリのSecretsに設定しま�
 2. **Settings** タブをクリック
 
 3. 左サイドバー → **Secrets and variables** → **Actions** をクリック
+
    ```
    ┌─────────────────────────────────────────────────┐
    │ Actions secrets and variables                   │
@@ -326,16 +340,16 @@ GitHub Actionsで実行する場合、リポジトリのSecretsに設定しま�
 
 5. 以下のSecretを追加:
 
-| Secret名 | 値 |
-|----------|-----|
-| `SUPABASE_URL` | SupabaseプロジェクトURL |
-| `SUPABASE_ANON_KEY` | Supabase匿名キー |
+| Secret名                    | 値                         |
+| --------------------------- | -------------------------- |
+| `SUPABASE_URL`              | SupabaseプロジェクトURL    |
+| `SUPABASE_ANON_KEY`         | Supabase匿名キー           |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabaseサービスロールキー |
-| `OPENAI_API_KEY` | OpenAI APIキー |
-| `MAIL_SERVER` | `smtp.gmail.com` |
-| `MAIL_USERNAME` | Gmailアドレス |
-| `MAIL_PASSWORD` | Googleアプリパスワード |
-| `NOTIFY_EMAIL` | 通知先メールアドレス |
+| `OPENAI_API_KEY`            | OpenAI APIキー             |
+| `MAIL_SERVER`               | `smtp.gmail.com`           |
+| `MAIL_USERNAME`             | Gmailアドレス              |
+| `MAIL_PASSWORD`             | Googleアプリパスワード     |
+| `NOTIFY_EMAIL`              | 通知先メールアドレス       |
 
 #### ワークフローYAMLでの参照例
 
@@ -402,6 +416,7 @@ await crawler.runFullCrawl();
 **原因**: `.env` ファイルが読み込まれていない、または変数が未設定
 
 **解決策**:
+
 1. `.env` ファイルが `packages/pipeline/` に存在するか確認
 2. 変数名にタイポがないか確認
 3. dotenvが正しくインポートされているか確認
@@ -411,6 +426,7 @@ await crawler.runFullCrawl();
 **原因**: sharedパッケージのenv.tsが検証時に必須としている
 
 **解決策**:
+
 - クローラーのみ使用する場合でも、OpenAI APIキーの設定が必要
 
 ### エラー: 429 Rate Limit
@@ -418,6 +434,7 @@ await crawler.runFullCrawl();
 **原因**: SCP Data APIのレート制限
 
 **解決策**:
+
 - クローラーは自動的にリトライを行います
 - `Retry-After` ヘッダーに従って待機します
 - 頻繁に発生する場合は `batchDelayMs` を増加させてください
@@ -427,6 +444,7 @@ await crawler.runFullCrawl();
 **原因**: 通常のGmailパスワードを使用している、または2段階認証が無効
 
 **解決策**:
+
 1. Googleアカウントで2段階認証を有効にする
 2. アプリパスワードを発行する（上記手順参照）
 3. `MAIL_PASSWORD` にアプリパスワード（16文字、スペースなし）を設定
@@ -436,6 +454,7 @@ await crawler.runFullCrawl();
 **原因**: アプリパスワードが正しく設定されていない
 
 **解決策**:
+
 1. アプリパスワードにスペースが含まれていないか確認
 2. 新しいアプリパスワードを再発行して試す
 

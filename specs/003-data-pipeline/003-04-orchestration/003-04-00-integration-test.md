@@ -113,17 +113,17 @@ pnpm --filter @recommend-scp/pipeline test:integration -- --update-spec
 
 ### テストケースとコマンドの対応表
 
-| テストID | テスト名 | コマンド |
-|----------|----------|----------|
-| `crawler-api-001` | 記事一覧取得 | `tsx scripts/integration-test.ts --test crawler-list` |
-| `crawler-api-002` | 記事本文取得 | `tsx scripts/integration-test.ts --test crawler-content --id SCP-173` |
-| `crawler-db-001` | 記事INSERT | `tsx scripts/integration-test.ts --test db-insert --limit 1` |
-| `crawler-db-002` | 記事UPSERT | `tsx scripts/integration-test.ts --test db-upsert --limit 1` |
-| `embedding-001` | Embedding生成 | `tsx scripts/integration-test.ts --test embedding-generate --limit 1` |
-| `embedding-002` | EmbeddingDB保存 | `tsx scripts/integration-test.ts --test embedding-save --limit 1` |
-| `tagging-001` | タグ抽出 | `tsx scripts/integration-test.ts --test tagging-extract --limit 1` |
-| `tagging-002` | タグDB保存 | `tsx scripts/integration-test.ts --test tagging-save --limit 1` |
-| `mail-001` | テストメール送信 | `tsx scripts/integration-test.ts --test mail-send` |
+| テストID          | テスト名         | コマンド                                                              |
+| ----------------- | ---------------- | --------------------------------------------------------------------- |
+| `crawler-api-001` | 記事一覧取得     | `tsx scripts/integration-test.ts --test crawler-list`                 |
+| `crawler-api-002` | 記事本文取得     | `tsx scripts/integration-test.ts --test crawler-content --id SCP-173` |
+| `crawler-db-001`  | 記事INSERT       | `tsx scripts/integration-test.ts --test db-insert --limit 1`          |
+| `crawler-db-002`  | 記事UPSERT       | `tsx scripts/integration-test.ts --test db-upsert --limit 1`          |
+| `embedding-001`   | Embedding生成    | `tsx scripts/integration-test.ts --test embedding-generate --limit 1` |
+| `embedding-002`   | EmbeddingDB保存  | `tsx scripts/integration-test.ts --test embedding-save --limit 1`     |
+| `tagging-001`     | タグ抽出         | `tsx scripts/integration-test.ts --test tagging-extract --limit 1`    |
+| `tagging-002`     | タグDB保存       | `tsx scripts/integration-test.ts --test tagging-save --limit 1`       |
+| `mail-001`        | テストメール送信 | `tsx scripts/integration-test.ts --test mail-send`                    |
 
 ### 結果の自動更新
 
@@ -136,17 +136,17 @@ pnpm --filter @recommend-scp/pipeline test:integration -- --update-spec
 
 ## テスト結果記録
 
-| テスト項目 | 結果 | 実施日 | 備考 |
-|-----------|------|--------|------|
-| 記事一覧取得 | - | - | - |
-| 記事本文取得 | - | - | - |
-| 記事INSERT | - | - | - |
-| 記事UPSERT | - | - | - |
-| Embedding生成 | - | - | - |
-| EmbeddingDB保存 | - | - | - |
-| タグ抽出 | - | - | - |
-| タグDB保存 | - | - | - |
-| テストメール送信 | - | - | - |
+| テスト項目       | 結果 | 実施日 | 備考 |
+| ---------------- | ---- | ------ | ---- |
+| 記事一覧取得     | -    | -      | -    |
+| 記事本文取得     | -    | -      | -    |
+| 記事INSERT       | -    | -      | -    |
+| 記事UPSERT       | -    | -      | -    |
+| Embedding生成    | -    | -      | -    |
+| EmbeddingDB保存  | -    | -      | -    |
+| タグ抽出         | -    | -      | -    |
+| タグDB保存       | -    | -      | -    |
+| テストメール送信 | -    | -      | -    |
 
 ## 注意事項
 
