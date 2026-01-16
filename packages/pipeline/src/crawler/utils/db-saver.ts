@@ -3,7 +3,17 @@
  * Subtask: 003-02-02
  */
 
+import { createClient } from "@supabase/supabase-js";
 import type { ArticleContent, ArticleForDb } from "../types";
+
+/**
+ * Supabaseクライアントを作成するヘルパー関数
+ * 型安全なクライアント作成をサポート
+ */
+export function createSupabaseClient(url: string, key: string): SupabaseClient {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  return createClient(url, key) as unknown as SupabaseClient;
+}
 
 /** Supabaseクライアントの型（最小限） */
 export interface SupabaseClient {

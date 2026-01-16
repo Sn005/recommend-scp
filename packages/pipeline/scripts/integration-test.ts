@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * 結合テスト実行スクリプト
  * 003-04-00: コンポーネント結合テスト
@@ -38,7 +39,7 @@ const { values } = parseArgs({
   },
 });
 
-if (values.help || !values.test) {
+if (values.help === true || values.test === undefined) {
   console.log(`
 結合テスト実行スクリプト
 
@@ -62,7 +63,7 @@ if (values.help || !values.test) {
   tagging-save       タグ保存テスト
   mail-send          メール送信テスト
   `);
-  process.exit(values.help ? 0 : 1);
+  process.exit(values.help === true ? 0 : 1);
 }
 
 // 結果をJSON形式で出力
@@ -75,25 +76,28 @@ async function runTest(testName: string): Promise<TestResult> {
   const startTime = Date.now();
 
   try {
+    const testId = values.id ?? "SCP-173";
+    const limitValue = parseInt(values.limit, 10);
+
     switch (testName) {
       case "crawler-list":
         return await testCrawlerList();
       case "crawler-content":
-        return await testCrawlerContent(values.id ?? "SCP-173");
+        return await testCrawlerContent(testId);
       case "db-insert":
-        return await testDbInsert(parseInt(values.limit ?? "1", 10));
+        return await testDbInsert(limitValue);
       case "db-upsert":
-        return await testDbUpsert(parseInt(values.limit ?? "1", 10));
+        return await testDbUpsert(limitValue);
       case "embedding-generate":
-        return await testEmbeddingGenerate(parseInt(values.limit ?? "1", 10));
+        return testEmbeddingGenerate();
       case "embedding-save":
-        return await testEmbeddingSave(parseInt(values.limit ?? "1", 10));
+        return testEmbeddingSave();
       case "tagging-extract":
-        return await testTaggingExtract(parseInt(values.limit ?? "1", 10));
+        return testTaggingExtract();
       case "tagging-save":
-        return await testTaggingSave(parseInt(values.limit ?? "1", 10));
+        return testTaggingSave();
       case "mail-send":
-        return await testMailSend();
+        return testMailSend();
       default:
         return {
           success: false,
@@ -162,11 +166,10 @@ async function testDbInsert(limit: number): Promise<TestResult> {
     };
   }
 
-  const { createClient } = await import("@supabase/supabase-js");
   const { EnglishCrawler } = await import("../src/crawler/english-crawler");
-  const { DbSaver } = await import("../src/crawler/utils/db-saver");
+  const { DbSaver, createSupabaseClient } = await import("../src/crawler/utils/db-saver");
 
-  const supabase = createClient(
+  const supabase = createSupabaseClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
@@ -208,7 +211,7 @@ async function testDbUpsert(limit: number): Promise<TestResult> {
   };
 }
 
-async function testEmbeddingGenerate(_limit: number): Promise<TestResult> {
+function testEmbeddingGenerate(): TestResult {
   const startTime = Date.now();
 
   if (!process.env.OPENAI_API_KEY) {
@@ -227,7 +230,7 @@ async function testEmbeddingGenerate(_limit: number): Promise<TestResult> {
   };
 }
 
-async function testEmbeddingSave(_limit: number): Promise<TestResult> {
+function testEmbeddingSave(): TestResult {
   const startTime = Date.now();
 
   // TODO: 003-03-01実装後に有効化
@@ -238,7 +241,7 @@ async function testEmbeddingSave(_limit: number): Promise<TestResult> {
   };
 }
 
-async function testTaggingExtract(_limit: number): Promise<TestResult> {
+function testTaggingExtract(): TestResult {
   const startTime = Date.now();
 
   // TODO: 003-03-03実装後に有効化
@@ -249,7 +252,7 @@ async function testTaggingExtract(_limit: number): Promise<TestResult> {
   };
 }
 
-async function testTaggingSave(_limit: number): Promise<TestResult> {
+function testTaggingSave(): TestResult {
   const startTime = Date.now();
 
   // TODO: 003-03-03実装後に有効化
@@ -260,7 +263,7 @@ async function testTaggingSave(_limit: number): Promise<TestResult> {
   };
 }
 
-async function testMailSend(): Promise<TestResult> {
+function testMailSend(): TestResult {
   const startTime = Date.now();
 
   // TODO: 003-04-03実装後に有効化

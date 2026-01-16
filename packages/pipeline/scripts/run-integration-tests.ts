@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * 結合テストランナー
  * テストケース定義に基づいて自律的にテストを実行し、結果を更新する
@@ -189,8 +190,8 @@ function listTests(config: TestCasesConfig): void {
 }
 
 // メイン処理
-async function main(): Promise<void> {
-  if (values.help) {
+function main(): void {
+  if (values.help === true) {
     console.log(`
 結合テストランナー
 
@@ -210,7 +211,7 @@ async function main(): Promise<void> {
 
   const config = loadTestCases();
 
-  if (values.list) {
+  if (values.list === true) {
     listTests(config);
     return;
   }
@@ -224,7 +225,7 @@ async function main(): Promise<void> {
 
   for (const suite of config.testSuites) {
     // スイートフィルタ
-    if (values.suite && suite.id !== values.suite) continue;
+    if (values.suite !== undefined && suite.id !== values.suite) continue;
 
     console.log(`\n📁 ${suite.name}`);
 
@@ -246,11 +247,11 @@ async function main(): Promise<void> {
 
     for (const test of suite.tests) {
       // テストフィルタ
-      if (values.test && test.id !== values.test) continue;
+      if (values.test !== undefined && test.id !== values.test) continue;
 
       totalTests++;
 
-      if (values["dry-run"]) {
+      if (values["dry-run"] === true) {
         console.log(`  🧪 [DRY-RUN] ${test.name}`);
         console.log(`     コマンド: ${test.command}`);
         continue;
@@ -276,11 +277,11 @@ async function main(): Promise<void> {
     }
   }
 
-  if (!values["dry-run"]) {
+  if (values["dry-run"] !== true) {
     // 結果を保存
     saveTestCases(config);
 
-    if (values["update-spec"]) {
+    if (values["update-spec"] === true) {
       updateSpecFile(config);
     }
 
@@ -300,7 +301,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error: unknown) => {
-  console.error("予期しないエラー:", error);
-  process.exit(1);
-});
+main();
