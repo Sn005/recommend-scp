@@ -14,7 +14,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@recommend-scp/shared": "workspace:*"
+    "@recommend-scp/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.49.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
