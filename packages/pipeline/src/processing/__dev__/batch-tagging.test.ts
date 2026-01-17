@@ -48,7 +48,6 @@ const mockGeneratePromptChoices = vi.fn() as GeneratePromptChoicesMock;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const mockClearCache = vi.fn() as ClearCacheMock;
 
- 
 const mockTagDictionaryManager: TagDictionaryManager = {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   getDictionary: mockGetDictionary,
