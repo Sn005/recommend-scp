@@ -18,3 +18,11 @@ export {
   type TaggingStats,
   type ScpArticle,
 } from "./extract";
+
+export {
+  TagDictionaryManagerImpl,
+  type TagDictionaryManager,
+  type TagDictionary,
+  type TagEntry,
+  type TagCategory,
+} from "./tag-dictionary-manager";
