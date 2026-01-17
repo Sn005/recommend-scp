@@ -16,14 +16,13 @@ import type {
   TagCategory,
 } from "@recommend-scp/shared/tagging";
 
-// モック関数の型定義
-type GetDictionaryMock = Mock<[lang?: string], Promise<TagDictionary>>;
+// モック関数の型定義（vitest v4: Mock<FunctionType>）
+type GetDictionaryMock = Mock<(lang?: string) => Promise<TagDictionary>>;
 type NormalizeMock = Mock<
-  [category: TagCategory, rawTag: string, lang?: string],
-  Promise<string | null>
+  (category: TagCategory, rawTag: string, lang?: string) => Promise<string | null>
 >;
-type GeneratePromptChoicesMock = Mock<[lang?: string], Promise<string>>;
-type ClearCacheMock = Mock<[], void>;
+type GeneratePromptChoicesMock = Mock<(lang?: string) => Promise<string>>;
+type ClearCacheMock = Mock<() => void>;
 
 // モック
 const mockSupabaseClient = {
@@ -39,23 +38,22 @@ const mockOpenAIClient = {
 };
 
 // TagDictionaryManagerのモック（型安全版）
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const mockGetDictionary = vi.fn() as GetDictionaryMock;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const mockNormalize = vi.fn() as NormalizeMock;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const mockGeneratePromptChoices = vi.fn() as GeneratePromptChoicesMock;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 const mockClearCache = vi.fn() as ClearCacheMock;
 
 const mockTagDictionaryManager: TagDictionaryManager = {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   getDictionary: mockGetDictionary,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
   normalize: mockNormalize,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
   generatePromptChoices: mockGeneratePromptChoices,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
   clearCache: mockClearCache,
 };
 
@@ -164,16 +162,16 @@ describe("BatchTaggingProcessor", () => {
     vi.useFakeTimers();
 
     // タグ辞書マネージャーのデフォルトモック設定
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
     mockGetDictionary.mockResolvedValue(createMockDictionary());
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
     mockGeneratePromptChoices.mockResolvedValue(
       `object_class: Safe | Euclid | Keter
 genre: horror | sci-fi
 theme: cognition | biological
 format: standard`
     );
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
     mockNormalize.mockImplementation(
       (_category: TagCategory, rawTag: string): Promise<string | null> => {
         // 小文字化してマッチング
@@ -240,7 +238,6 @@ format: standard`
       });
 
       it("辞書が空の場合でもプロンプトが生成される", async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         mockGeneratePromptChoices.mockResolvedValue(
           `object_class: (no options)
 genre: (no options)
@@ -286,7 +283,6 @@ format: (no options)`
       it("正規化できないタグは警告を出力してスキップする", async () => {
         const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         mockNormalize.mockImplementation(
           (category: TagCategory, rawTag: string): Promise<string | null> => {
             if (rawTag === "unknown-tag") {

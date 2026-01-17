@@ -26,3 +26,5 @@ pre-push:
       run: pnpm format:check
     lint-check:
       run: pnpm lint
+    type-check:
+      run: pnpm type-check
