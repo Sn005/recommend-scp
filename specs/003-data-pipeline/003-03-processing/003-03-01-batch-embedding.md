@@ -15,49 +15,49 @@
 
 ### ステータス管理
 
-- [ ] WHEN バッチ処理を開始した際
+- [x] WHEN バッチ処理を開始した際
       GIVEN 未処理記事がある場合
       THEN `embedding_status: 'pending'` の記事を取得する
       AND 処理開始時に `embedding_status: 'processing'` に更新する
 
-- [ ] WHEN Embedding生成が成功した際
+- [x] WHEN Embedding生成が成功した際
       GIVEN APIが正常に応答した場合
       THEN `embedding_status: 'completed'` に更新する
       AND `last_processed_at` に現在時刻を設定する
       AND embedding ベクトルをDBに保存する
 
-- [ ] WHEN Embedding生成が失敗した際
+- [x] WHEN Embedding生成が失敗した際
       GIVEN 3回のリトライ後も失敗した場合
       THEN `embedding_status: 'error'` に更新する
       AND リトライキューに追加する
 
 ### コスト見積もり
 
-- [ ] WHEN バッチ処理を開始する前に
+- [x] WHEN バッチ処理を開始する前に
       GIVEN 処理対象の記事数がわかる場合
       THEN 予想トークン数を計算する
       AND 予想コスト（USD）を表示する
       AND コスト上限が設定されている場合は超過時に確認プロンプトを表示する
 
-- [ ] WHEN バッチ処理が完了した際
+- [x] WHEN バッチ処理が完了した際
       GIVEN 処理が正常に完了した場合
       THEN 実際のトークン数と実コストを出力する
 
 ### バッチ処理最適化
 
-- [ ] WHILE バッチ処理が実行中
+- [x] WHILE バッチ処理が実行中
       THE SYSTEM SHALL 適切なバッチサイズ（10件）で並列処理する
       AND バッチ間に1秒の遅延を挿入する
       AND レート制限時はエクスポネンシャルバックオフで待機する
 
-- [ ] WHEN 進捗を表示する際
+- [x] WHEN 進捗を表示する際
       GIVEN 処理が進行中の場合
       THEN 処理済み件数/全件数を表示する
       AND 推定残り時間を表示する
 
 ### ドライラン
 
-- [ ] WHEN ドライランモードで実行した際
+- [x] WHEN ドライランモードで実行した際
       GIVEN `dryRun: true` が設定された場合
       THEN API呼び出しを行わない
       AND 推定トークン数とコストのみを計算して出力する
@@ -156,12 +156,19 @@ export class BatchEmbeddingProcessor {
 
 ## テストケース
 
-- [ ] 未処理記事（`embedding_status: 'pending'`）が正しく取得される
-- [ ] 処理開始時にステータスが 'processing' に更新される
-- [ ] 成功時にステータスが 'completed' に更新される
-- [ ] 失敗時にステータスが 'error' に更新される
-- [ ] コスト見積もりが正しく計算される
-- [ ] コスト上限超過時にエラーがスローされる
-- [ ] ドライランモードでAPI呼び出しが行われない
-- [ ] 進捗が正しく表示される
-- [ ] リトライキューに失敗記事が追加される
+- [x] 未処理記事（`embedding_status: 'pending'`）が正しく取得される
+- [x] 処理開始時にステータスが 'processing' に更新される
+- [x] 成功時にステータスが 'completed' に更新される
+- [x] 失敗時にステータスが 'error' に更新される
+- [x] コスト見積もりが正しく計算される
+- [x] コスト上限超過時にエラーがスローされる
+- [x] ドライランモードでAPI呼び出しが行われない
+- [x] 進捗が正しく表示される
+- [x] リトライキューに失敗記事が追加される
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**: `packages/pipeline/src/processing/batch-embedding.ts`
+- **テストファイル**: `packages/pipeline/src/processing/__dev__/batch-embedding.test.ts`
+- **テスト結果**: 34テスト全通過
