@@ -15,48 +15,48 @@ PoCのタグ抽出を本番運用向けに拡張する。
 
 ### タグ辞書連携
 
-- [ ] WHEN タグ抽出プロンプトを生成した際
+- [x] WHEN タグ抽出プロンプトを生成した際
       GIVEN タグ辞書マネージャーが利用可能な場合
       THEN 辞書から動的にタグ選択肢を生成する
       AND ハードコードされた選択肢は使用しない
 
-- [ ] WHEN LLMがタグを出力した際
+- [x] WHEN LLMがタグを出力した際
       GIVEN 抽出結果がある場合
       THEN タグ辞書マネージャーで正規化する
       AND 正規化できないタグは警告を出力してスキップする
 
 ### ステータス管理
 
-- [ ] WHEN タグ抽出処理を開始した際
+- [x] WHEN タグ抽出処理を開始した際
       GIVEN 未処理記事がある場合
       THEN `tagging_status: 'pending'` の記事を取得する
       AND 処理開始時に `tagging_status: 'processing'` に更新する
 
-- [ ] WHEN タグ抽出が成功した際
+- [x] WHEN タグ抽出が成功した際
       GIVEN LLMが正常に応答した場合
       THEN `tagging_status: 'completed'` に更新する
       AND 抽出されたタグを `article_tags` テーブルに保存する
 
-- [ ] WHEN タグ抽出が失敗した際
+- [x] WHEN タグ抽出が失敗した際
       GIVEN 3回のリトライ後も失敗した場合
       THEN `tagging_status: 'error'` に更新する
       AND リトライキューに追加する
 
 ### バッチ処理
 
-- [ ] WHILE バッチ処理が実行中
+- [x] WHILE バッチ処理が実行中
       THE SYSTEM SHALL 適切なバッチサイズ（5件）で順次処理する
       AND バッチ間に適切な遅延を挿入する
       AND 進捗を定期的に出力する
 
-- [ ] WHEN コスト見積もりを行う際
+- [x] WHEN コスト見積もりを行う際
       GIVEN 処理対象の記事数がわかる場合
       THEN 予想トークン数とコストを計算する
       AND gpt-4o-mini の料金で計算する（入力: $0.15/1M, 出力: $0.60/1M）
 
 ### 既存タグの更新
 
-- [ ] WHEN 記事のタグを更新した際
+- [x] WHEN 記事のタグを更新した際
       GIVEN 既存のタグが存在する場合
       THEN 既存の `article_tags` レコードを削除する
       AND 新しいタグで置き換える
@@ -205,13 +205,20 @@ export class BatchTaggingProcessor {
 
 ## テストケース
 
-- [ ] タグ辞書から動的にプロンプトが生成される
-- [ ] 未処理記事（`tagging_status: 'pending'`）が正しく取得される
-- [ ] 処理開始時にステータスが 'processing' に更新される
-- [ ] 成功時にステータスが 'completed' に更新される
-- [ ] 抽出されたタグが正規化される
-- [ ] 正規化されたタグが `article_tags` に保存される
-- [ ] 既存タグが正しく置き換えられる
-- [ ] 未知のタグで警告が出力される
-- [ ] コスト見積もりが正しく計算される
-- [ ] 失敗時にリトライキューに追加される
+- [x] タグ辞書から動的にプロンプトが生成される
+- [x] 未処理記事（`tagging_status: 'pending'`）が正しく取得される
+- [x] 処理開始時にステータスが 'processing' に更新される
+- [x] 成功時にステータスが 'completed' に更新される
+- [x] 抽出されたタグが正規化される
+- [x] 正規化されたタグが `article_tags` に保存される
+- [x] 既存タグが正しく置き換えられる
+- [x] 未知のタグで警告が出力される
+- [x] コスト見積もりが正しく計算される
+- [x] 失敗時にリトライキューに追加される
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**: `packages/pipeline/src/processing/batch-tagging.ts`
+- **テストファイル**: `packages/pipeline/src/processing/__dev__/batch-tagging.test.ts`
+- **テスト結果**: 43件全て通過

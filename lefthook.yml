@@ -17,3 +17,14 @@ commit-msg:
   commands:
     commitlint:
       run: pnpm commitlint --edit {1}
+
+# プッシュ前に全体チェック（CIエラー防止）
+pre-push:
+  parallel: true
+  commands:
+    format-check:
+      run: pnpm format:check
+    lint-check:
+      run: pnpm lint
+    type-check:
+      run: pnpm type-check
