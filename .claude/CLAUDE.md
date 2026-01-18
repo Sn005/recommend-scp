@@ -20,6 +20,10 @@ EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行
 └── skills/
     └── spec-workflow/  # 自動発動ワークフローSkill
 
+docs/                   # 技術ドキュメント
+└── adr/                # Architecture Decision Records
+    └── 005-env-strategy.md  # 環境変数戦略
+
 specs/                  # 仕様書本体
 ├── epic-list.md        # EPIC一覧
 └── {epic-id}/
@@ -243,9 +247,14 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 
 ### 環境変数
 
-- **dotenvは `src/lib/env.ts` で一元管理**: 環境変数の読み込みと検証は env.ts に集約
-- スクリプトのエントリポイントでは `import "../src/lib/env"` を最初にインポート
-- `process.env` への直接アクセスではなく、`env` オブジェクト経由でアクセス
+> 詳細: [ADR-005: モノレポ環境変数戦略](../docs/adr/005-env-strategy.md)
+
+- **ルートの `.env` で一元管理**: 環境変数はリポジトリルートの `.env` に配置
+- **`env.ts` 経由でアクセス**: `packages/shared/src/lib/env.ts` の `env` オブジェクトを使用
+- **`process.env` 直接参照は禁止**: ESLint ルール `n/no-process-env` でエラー
+  - 良い例: `import { env } from "@recommend-scp/shared"; env.SUPABASE_URL`
+  - 悪い例: `process.env.SUPABASE_URL` → ESLint エラー
+- **例外**: `env.ts` / `env.client.ts` / `vitest.config.ts` 内では `process.env` アクセス可
 
 ### TypeScript
 
