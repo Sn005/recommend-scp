@@ -475,7 +475,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
     describe("CHECK制約", () => {
       it("task_type が無効な値の場合、INSERT でエラーになる", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -491,7 +490,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
 
       it("有効な task_type 値（embedding）で INSERT できる", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -510,7 +508,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
 
       it("有効な task_type 値（tagging）で INSERT できる", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -538,7 +535,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
     describe("UNIQUE制約", () => {
       it("(article_id, task_type) の重複で INSERT するとエラーになる", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -583,7 +579,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
 
       it("scp_articles に存在する article_id で INSERT できる", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -611,7 +606,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
     describe("デフォルト値", () => {
       it("retry_count のデフォルト値が 0 である", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -637,7 +631,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
 
       it("max_retries のデフォルト値が 3 である", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }
@@ -663,7 +656,6 @@ describe("Subtask-003-01-03: パイプライン実行管理テーブル", () => 
 
       it("created_at が自動で現在時刻に設定される", async () => {
         if (!testArticleId) {
-          // eslint-disable-next-line no-console
           console.log("テスト用記事がないためスキップ");
           return;
         }

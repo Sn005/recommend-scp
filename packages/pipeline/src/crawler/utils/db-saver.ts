@@ -11,7 +11,6 @@ import type { ArticleContent, ArticleForDb } from "../types";
  * 型安全なクライアント作成をサポート
  */
 export function createSupabaseClient(url: string, key: string): SupabaseClient {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   return createClient(url, key) as unknown as SupabaseClient;
 }
 
