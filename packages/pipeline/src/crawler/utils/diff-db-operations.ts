@@ -6,6 +6,9 @@
 import type { ArticleContent, DbArticle } from "../types";
 import type { DbOperations } from "../diff-crawler";
 import { computeContentHash } from "./content-hash";
+import { createLogger } from "./logger";
+
+const logger = createLogger({ prefix: "[DiffDB]" });
 
 /** 拡張Supabaseクライアント型 */
 export interface ExtendedSupabaseClient {
@@ -59,8 +62,7 @@ export class DiffDbOperations implements DbOperations {
       .order("article_id", { ascending: true });
 
     if (error) {
-      // eslint-disable-next-line no-console
-      console.error(`既存記事の取得に失敗: ${error.message}`);
+      logger.error(`既存記事の取得に失敗: ${error.message}`);
       return [];
     }
 

@@ -286,7 +286,6 @@ format: (no options)`
         mockNormalize.mockImplementation(
           (category: TagCategory, rawTag: string): Promise<string | null> => {
             if (rawTag === "unknown-tag") {
-              // eslint-disable-next-line no-console
               console.warn(`⚠️ 未知のタグ: ${category}/${rawTag}`);
               return Promise.resolve(null);
             }

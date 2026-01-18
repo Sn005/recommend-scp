@@ -15,11 +15,27 @@ export default tseslint.config(
       },
     },
     rules: {
-      "no-console": "warn",
+      // console.log禁止: pinoベースのloggerを使用すること
+      // packages/pipeline/src/crawler/utils/logger.ts の createLogger を使用
+      "no-console": "error",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-floating-promises": "error",
+    },
+  },
+  // CLIスクリプトではconsole使用を許可
+  {
+    files: ["**/scripts/**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  // テストファイルではconsole使用を許可（スキップメッセージ等）
+  {
+    files: ["**/__dev__/**/*.test.ts", "**/*.test.ts"],
+    rules: {
+      "no-console": "off",
     },
   },
   {

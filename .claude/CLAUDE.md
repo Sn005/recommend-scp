@@ -263,13 +263,22 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 
 ### ログ出力
 
-- **⚠️ 最重要ルール: console.log等のログ出力は必ず日本語で記述する**
-  - 良い例: `console.log("記事を取得中...")`
-  - 悪い例: `console.log("Fetching articles...")`
-- エラーメッセージも日本語で記述
-  - 良い例: `console.error("❌ エラー:", error)`
-  - 悪い例: `console.error("Error:", error)`
-- 進捗表示、結果サマリー、完了メッセージなど全てのコンソール出力が対象
+- **⚠️ 最重要ルール: `console.log` 禁止 → `createLogger` を使用**
+  - `packages/pipeline/src/crawler/utils/logger.ts` の `createLogger` を必ず使用
+  - ESLintで `no-console: "error"` が設定されており、違反するとビルドエラー
+  - 良い例:
+    ```typescript
+    import { createLogger } from "./crawler/utils/logger";
+    const logger = createLogger({ prefix: "[MyModule]" });
+    logger.info("記事を取得中...");
+    logger.error("取得に失敗:", error);
+    ```
+  - 悪い例:
+    ```typescript
+    console.log("記事を取得中..."); // ESLintエラー
+    ```
+- **例外: `scripts/` ディレクトリ内のCLIスクリプトでは `console` 使用可**
+- ログメッセージは日本語で記述
 - 技術的な固有名詞（Supabase, Embedding等）はそのまま使用可
 
 ## コミットメッセージ規約（Conventional Commits）
