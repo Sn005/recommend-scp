@@ -21,12 +21,12 @@
 
 ### 検討した選択肢
 
-| 選択肢 | 概要 | 採否 | 理由 |
-|--------|------|------|------|
-| A. パッケージ毎に .env | 各パッケージに `.env` を配置 | ❌ | 変数重複、同期コスト |
-| B. dotenv-cli | ルートの `.env` を dotenv-cli で読み込み | ❌ | 全スクリプトにプレフィックス必要 |
-| C. find-up | ルートの `.env` を find-up で自動探索 | ✅ | どこから実行しても動作 |
-| D. T3 Env | Zod による型安全なバリデーション | 保留 | .env 読み込みは別途必要。将来検討 |
+| 選択肢                 | 概要                                     | 採否 | 理由                              |
+| ---------------------- | ---------------------------------------- | ---- | --------------------------------- |
+| A. パッケージ毎に .env | 各パッケージに `.env` を配置             | ❌   | 変数重複、同期コスト              |
+| B. dotenv-cli          | ルートの `.env` を dotenv-cli で読み込み | ❌   | 全スクリプトにプレフィックス必要  |
+| C. find-up             | ルートの `.env` を find-up で自動探索    | ✅   | どこから実行しても動作            |
+| D. T3 Env              | Zod による型安全なバリデーション         | 保留 | .env 読み込みは別途必要。将来検討 |
 
 ## 受入条件（white-box）
 
@@ -151,7 +151,7 @@ export default tseslint.config(
     rules: {
       "n/no-process-env": "off",
     },
-  },
+  }
 );
 ```
 
@@ -167,20 +167,20 @@ pnpm add find-up --filter @recommend-scp/shared
 
 ## 環境変数一覧
 
-| 変数名 | 必須 | 用途 | 使用パッケージ |
-|--------|------|------|---------------|
-| `SUPABASE_URL` | ✅ | Supabase プロジェクト URL | shared, pipeline |
-| `SUPABASE_ANON_KEY` | ✅ | Supabase 匿名キー | shared |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase サービスロールキー | shared, pipeline |
-| `OPENAI_API_KEY` | ✅ | OpenAI API キー | shared, pipeline |
-| `TAGGING_LLM_PROVIDER` | ❌ | タグ付け LLM プロバイダー（default: openai） | pipeline |
+| 変数名                      | 必須 | 用途                                         | 使用パッケージ   |
+| --------------------------- | ---- | -------------------------------------------- | ---------------- |
+| `SUPABASE_URL`              | ✅   | Supabase プロジェクト URL                    | shared, pipeline |
+| `SUPABASE_ANON_KEY`         | ✅   | Supabase 匿名キー                            | shared           |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅   | Supabase サービスロールキー                  | shared, pipeline |
+| `OPENAI_API_KEY`            | ✅   | OpenAI API キー                              | shared, pipeline |
+| `TAGGING_LLM_PROVIDER`      | ❌   | タグ付け LLM プロバイダー（default: openai） | pipeline         |
 
 ### 将来追加予定（Next.js 用）
 
-| 変数名 | 必須 | 用途 |
-|--------|------|------|
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | クライアント用 Supabase URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | クライアント用匿名キー |
+| 変数名                          | 必須 | 用途                        |
+| ------------------------------- | ---- | --------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | ✅   | クライアント用 Supabase URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅   | クライアント用匿名キー      |
 
 ## 使用方法
 
