@@ -2,6 +2,7 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
+import nodePlugin from "eslint-plugin-n";
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -14,6 +15,9 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    plugins: {
+      n: nodePlugin,
+    },
     rules: {
       // console.log禁止: pinoベースのloggerを使用すること
       // packages/pipeline/src/crawler/utils/logger.ts の createLogger を使用
@@ -22,6 +26,9 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-floating-promises": "error",
+      // process.env直接参照禁止: env.ts経由でアクセスすること
+      // packages/shared/src/lib/env.ts の env オブジェクトを使用
+      "n/no-process-env": "error",
     },
   },
   // CLIスクリプトではconsole使用を許可
@@ -31,11 +38,33 @@ export default tseslint.config(
       "no-console": "off",
     },
   },
-  // テストファイルではconsole使用を許可（スキップメッセージ等）
+  // テストファイルではconsole使用とprocess.env操作を許可
   {
     files: ["**/__dev__/**/*.test.ts", "**/*.test.ts"],
     rules: {
       "no-console": "off",
+      "n/no-process-env": "off",
+    },
+  },
+  // env.ts, env.client.ts, vitest.config.tsでは process.env アクセスを許可
+  {
+    files: ["**/src/lib/env.ts", "**/src/lib/env.client.ts", "**/vitest.config.ts"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
+  // logger.tsではLOG_LEVEL, GITHUB_ACTIONSの参照を許可
+  {
+    files: ["**/src/crawler/utils/logger.ts"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
+  // run-integration-tests.tsはexecSyncで環境変数を渡すため許可
+  {
+    files: ["**/scripts/run-integration-tests.ts"],
+    rules: {
+      "n/no-process-env": "off",
     },
   },
   {

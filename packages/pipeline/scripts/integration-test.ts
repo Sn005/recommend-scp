@@ -18,6 +18,7 @@
  */
 
 import { parseArgs } from "node:util";
+import { env } from "@recommend-scp/shared/lib/env";
 
 // テスト結果の型定義
 interface TestResult {
@@ -156,22 +157,11 @@ async function testCrawlerContent(id: string): Promise<TestResult> {
 async function testDbInsert(limit: number): Promise<TestResult> {
   const startTime = Date.now();
 
-  // 環境変数チェック
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return {
-      success: false,
-      message: "環境変数が未設定: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY",
-      durationMs: Date.now() - startTime,
-    };
-  }
-
   const { EnglishCrawler } = await import("../src/crawler/english-crawler");
   const { DbSaver, createSupabaseClient } = await import("../src/crawler/utils/db-saver");
 
-  const supabase = createSupabaseClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  // env.tsのgetterが未設定時にエラーをスロー
+  const supabase = createSupabaseClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
   const crawler = new EnglishCrawler();
   const dbSaver = new DbSaver(supabase, { lang: "en" });
@@ -213,15 +203,8 @@ async function testDbUpsert(limit: number): Promise<TestResult> {
 function testEmbeddingGenerate(): TestResult {
   const startTime = Date.now();
 
-  if (!process.env.OPENAI_API_KEY) {
-    return {
-      success: false,
-      message: "環境変数が未設定: OPENAI_API_KEY",
-      durationMs: Date.now() - startTime,
-    };
-  }
-
   // TODO: 003-03-01実装後に有効化
+  // env.OPENAI_API_KEY で未設定時はエラーをスロー
   return {
     success: false,
     message: "003-03-01未実装のためスキップ",
