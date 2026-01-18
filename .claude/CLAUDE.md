@@ -20,10 +20,6 @@ EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行
 └── skills/
     └── spec-workflow/  # 自動発動ワークフローSkill
 
-docs/                   # 技術ドキュメント
-└── adr/                # Architecture Decision Records
-    └── 005-env-strategy.md  # 環境変数戦略
-
 specs/                  # 仕様書本体
 ├── epic-list.md        # EPIC一覧
 └── {epic-id}/
@@ -247,7 +243,7 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 
 ### 環境変数
 
-> 詳細: [ADR-005: モノレポ環境変数戦略](../docs/adr/005-env-strategy.md)
+> 詳細: [001-01-05: モノレポ環境変数戦略](../specs/001-environment-setup/001-01-common-config/001-01-05-env-strategy.md)
 
 - **ルートの `.env` で一元管理**: 環境変数はリポジトリルートの `.env` に配置
 - **`env.ts` 経由でアクセス**: `packages/shared/src/lib/env.ts` の `env` オブジェクトを使用
