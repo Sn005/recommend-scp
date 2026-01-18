@@ -4,6 +4,9 @@
  */
 
 import type { ScpArticleRaw } from "@recommend-scp/shared/types";
+import { createLogger } from "./utils/logger";
+
+const logger = createLogger({ prefix: "[Crawler]" });
 
 const BASE_URL = "https://scp-data.tedivm.com/data/scp/items";
 
@@ -110,17 +113,14 @@ export const fetchScpArticles = async (
 ): Promise<ScpArticleRaw[]> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
-  // eslint-disable-next-line no-console
-  console.log("SCPインデックスを取得中...");
+  logger.info("SCPインデックスを取得中...");
   const index = await fetchIndex();
 
   const indexCount = Object.keys(index).length;
-  // eslint-disable-next-line no-console
-  console.log(`インデックスに${String(indexCount)}件のアイテムを発見`);
+  logger.info(`インデックスに${String(indexCount)}件のアイテムを発見`);
 
   const topArticles = getTopArticles(index, opts);
-  // eslint-disable-next-line no-console
-  console.log(
+  logger.info(
     `レーティング上位${String(topArticles.length)}件を選択 (最小: ${String(opts.minRating)})`
   );
 
@@ -129,8 +129,7 @@ export const fetchScpArticles = async (
   const articlePromises = Object.entries(contentFileGroups).map(
     async ([contentFile, items]): Promise<ScpArticleRaw[]> => {
       const seriesName = contentFile.replace("content_", "").replace(".json", "");
-      // eslint-disable-next-line no-console
-      console.log(`${contentFile}からコンテンツを取得中...`);
+      logger.info(`${contentFile}からコンテンツを取得中...`);
 
       try {
         const content = await fetchSeriesContent(seriesName);
@@ -148,8 +147,7 @@ export const fetchScpArticles = async (
             })
           );
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error(`${contentFile}の取得に失敗: ${String(error)}`);
+        logger.error(`${contentFile}の取得に失敗: ${String(error)}`);
         return [];
       }
     }
