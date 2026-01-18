@@ -7,6 +7,7 @@
     "./crawler": "./src/crawler/fetch-scp.ts"
   },
   "scripts": {
+    "pipeline": "tsx scripts/run-pipeline.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "tsx scripts/run-integration-tests.ts",

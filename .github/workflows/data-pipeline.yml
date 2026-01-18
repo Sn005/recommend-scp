@@ -1,0 +1,130 @@
+# GitHub Actions Data Pipeline
+# Subtask: 003-04-02
+#
+# パイプラインを定期実行するワークフロー。
+# 週次cron、手動トリガー、secrets管理を含む。
+
+name: Data Pipeline
+
+on:
+  schedule:
+    # 毎週日曜 3:00 JST (土曜 18:00 UTC)
+    - cron: "0 18 * * 6"
+
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Pipeline mode"
+        required: true
+        default: "diff"
+        type: choice
+        options:
+          - diff
+          - full
+          - embedding
+          - tagging
+      dry_run:
+        description: "Dry run (no API calls)"
+        type: boolean
+        default: false
+      cost_limit:
+        description: "Cost limit in USD (optional)"
+        type: string
+        default: ""
+
+env:
+  NODE_VERSION: "20"
+
+# 同時実行を防ぐ
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    name: Run Data Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pipeline
+        id: pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          MODE="${{ inputs.mode || 'diff' }}"
+          DRY_RUN="${{ inputs.dry_run == 'true' && '--dry-run' || '' }}"
+          COST_LIMIT="${{ inputs.cost_limit != '' && format('--cost-limit={0}', inputs.cost_limit) || '' }}"
+
+          echo "🚀 Running pipeline with mode: $MODE"
+          echo "   Dry run: ${{ inputs.dry_run || 'false' }}"
+          echo "   Cost limit: ${{ inputs.cost_limit || 'none' }}"
+
+          pnpm --filter pipeline run pipeline \
+            --mode="$MODE" \
+            $DRY_RUN \
+            $COST_LIMIT \
+            2>&1 | tee pipeline.log
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs-${{ github.run_id }}
+          path: pipeline.log
+          retention-days: 7
+
+      - name: Send success notification
+        if: success() && vars.ENABLE_EMAIL_NOTIFICATIONS == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[SCP Pipeline] Success - ${{ inputs.mode || 'diff' }}"
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: noreply@scp-pipeline.example.com
+          body: |
+            Pipeline completed successfully!
+
+            Mode: ${{ inputs.mode || 'diff' }}
+            Dry Run: ${{ inputs.dry_run || 'false' }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Send failure notification
+        if: failure() && vars.ENABLE_EMAIL_NOTIFICATIONS == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[SCP Pipeline] FAILED - ${{ inputs.mode || 'diff' }}"
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: noreply@scp-pipeline.example.com
+          body: |
+            Pipeline failed!
+
+            Mode: ${{ inputs.mode || 'diff' }}
+            Dry Run: ${{ inputs.dry_run || 'false' }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Please check the logs for details.
