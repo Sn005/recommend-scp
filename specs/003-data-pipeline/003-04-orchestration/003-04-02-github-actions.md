@@ -15,42 +15,42 @@ GitHub Actionsを使用してパイプラインを定期実行するワークフ
 
 ### 定期実行
 
-- [ ] WHEN 週次スケジュールがトリガーされた際
+- [x] WHEN 週次スケジュールがトリガーされた際
       GIVEN 毎週日曜 3:00 JST（土曜 18:00 UTC）の場合
       THEN 差分クロールパイプラインが自動実行される
 
-- [ ] WHEN ワークフローが完了した際
+- [x] WHEN ワークフローが完了した際
       GIVEN 正常に完了した場合
       THEN 成功ステータスがGitHub上に表示される
       AND 実行ログが保存される
 
 ### 手動トリガー
 
-- [ ] WHEN 手動でワークフローを実行した際
+- [x] WHEN 手動でワークフローを実行した際
       GIVEN workflow_dispatch が使用された場合
       THEN モード選択（diff/full/embedding/tagging）が可能
       AND ドライランオプションが選択可能
 
-- [ ] WHEN フルクロールモードが選択された際
+- [x] WHEN フルクロールモードが選択された際
       GIVEN `mode: 'full'` が指定された場合
       THEN フルクロールパイプラインが実行される
 
 ### Secrets管理
 
-- [ ] WHEN ワークフローが実行される際
+- [x] WHEN ワークフローが実行される際
       GIVEN 環境変数が必要な場合
       THEN GitHub Secretsから以下を取得する：- SUPABASE_URL - SUPABASE_SERVICE_ROLE_KEY - OPENAI_API_KEY - NOTIFY_EMAIL（通知用）
 
 ### タイムアウト
 
-- [ ] WHEN ワークフローが長時間実行された際
+- [x] WHEN ワークフローが長時間実行された際
       GIVEN 60分を超過した場合
       THEN ジョブがタイムアウトする
       AND 失敗通知が送信される
 
 ### アーティファクト
 
-- [ ] WHEN ワークフローが完了した際
+- [x] WHEN ワークフローが完了した際
       GIVEN 実行ログがある場合
       THEN 実行ログをアーティファクトとして保存する
       AND 7日間保持する
@@ -194,12 +194,20 @@ jobs:
 
 ## テストケース
 
-- [ ] cronスケジュールが正しく設定されている
-- [ ] 手動トリガーでモード選択ができる
-- [ ] ドライランオプションが機能する
-- [ ] Secretsから環境変数が正しく設定される
-- [ ] パイプラインコマンドが実行される
-- [ ] 実行ログがアーティファクトとして保存される
-- [ ] 成功時にメール通知が送信される
-- [ ] 失敗時にメール通知が送信される
-- [ ] 60分でタイムアウトする
+- [x] cronスケジュールが正しく設定されている
+- [x] 手動トリガーでモード選択ができる
+- [x] ドライランオプションが機能する
+- [x] Secretsから環境変数が正しく設定される
+- [x] パイプラインコマンドが実行される
+- [x] 実行ログがアーティファクトとして保存される
+- [x] 成功時にメール通知が送信される
+- [x] 失敗時にメール通知が送信される
+- [x] 60分でタイムアウトする
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**:
+  - `.github/workflows/data-pipeline.yml` - GitHub Actionsワークフロー
+  - `packages/pipeline/scripts/run-pipeline.ts` - CLIエントリポイント
+  - `packages/pipeline/package.json` - pipelineスクリプト追加
