@@ -89,15 +89,15 @@ async function runTest(testName: string): Promise<TestResult> {
       case "db-upsert":
         return await testDbUpsert(limitValue);
       case "embedding-generate":
-        return testEmbeddingGenerate();
+        return await testEmbeddingGenerate();
       case "embedding-save":
-        return testEmbeddingSave();
+        return await testEmbeddingSave();
       case "tagging-extract":
-        return testTaggingExtract();
+        return await testTaggingExtract();
       case "tagging-save":
-        return testTaggingSave();
+        return await testTaggingSave();
       case "mail-send":
-        return testMailSend();
+        return await testMailSend();
       default:
         return {
           success: false,
@@ -200,58 +200,247 @@ async function testDbUpsert(limit: number): Promise<TestResult> {
   };
 }
 
-function testEmbeddingGenerate(): TestResult {
+async function testEmbeddingGenerate(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-03-01実装後に有効化
-  // env.OPENAI_API_KEY で未設定時はエラーをスロー
+  const OpenAI = (await import("openai")).default;
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
+  // テスト用の短いコンテンツでEmbedding生成
+  const testContent = "SCP-173 is a sculpture that moves when not observed.";
+  const response = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: testContent,
+  });
+
+  const embedding = response.data[0].embedding;
+  const success = embedding.length === 1536;
+
   return {
-    success: false,
-    message: "003-03-01未実装のためスキップ",
+    success,
+    message: success ? `Embedding生成成功（${String(embedding.length)}次元）` : "Embedding生成失敗",
+    data: {
+      dimensions: embedding.length,
+      tokens: response.usage.total_tokens,
+    },
     durationMs: Date.now() - startTime,
   };
 }
 
-function testEmbeddingSave(): TestResult {
+async function testEmbeddingSave(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-03-01実装後に有効化
+  const { createClient } = await import("@supabase/supabase-js");
+  const OpenAI = (await import("openai")).default;
+
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
+  // テスト用記事を取得
+  const { data: article } = await supabase
+    .from("scp_articles")
+    .select("article_id, content")
+    .limit(1)
+    .single();
+
+  if (!article) {
+    return {
+      success: false,
+      message: "テスト用記事が見つかりません",
+      durationMs: Date.now() - startTime,
+    };
+  }
+
+  const articleId = article.article_id as string;
+  const articleContent = article.content as string;
+
+  // Embedding生成
+  const content = articleContent.slice(0, 8000);
+  const response = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: content,
+  });
+
+  const embedding = response.data[0].embedding;
+
+  // DB保存（scp_embeddingsテーブル）
+  const { error } = await supabase.from("scp_embeddings").upsert(
+    {
+      article_id: articleId,
+      embedding,
+    },
+    { onConflict: "article_id" }
+  );
+
+  if (error) {
+    return {
+      success: false,
+      message: `EmbeddingDB保存失敗: ${error.message}`,
+      data: { articleId },
+      durationMs: Date.now() - startTime,
+    };
+  }
+
   return {
-    success: false,
-    message: "003-03-01未実装のためスキップ",
+    success: true,
+    message: `EmbeddingDB保存成功（${articleId}）`,
+    data: { articleId },
     durationMs: Date.now() - startTime,
   };
 }
 
-function testTaggingExtract(): TestResult {
+async function testTaggingExtract(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-03-03実装後に有効化
+  const OpenAI = (await import("openai")).default;
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+
+  // テスト用の短いコンテンツでタグ抽出
+  const testContent = `SCP-173 is a Euclid-class anomaly.
+    It is a concrete sculpture that can only move when unobserved.
+    Containment requires constant visual observation.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: `Extract tags from this SCP article as JSON:
+        {
+          "object_class": "Safe|Euclid|Keter|Other",
+          "genre": ["horror", "mystery", etc],
+          "theme": ["autonomous", "sculpture", etc]
+        }
+
+        Article:
+        ${testContent}`,
+      },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 200,
+  });
+
+  const responseText = response.choices[0]?.message?.content ?? "";
+  const tags = JSON.parse(responseText) as Record<string, unknown>;
+  const success = "object_class" in tags;
+
   return {
-    success: false,
-    message: "003-03-03未実装のためスキップ",
+    success,
+    message: success ? `タグ抽出成功` : "タグ抽出失敗",
+    data: { tags },
     durationMs: Date.now() - startTime,
   };
 }
 
-function testTaggingSave(): TestResult {
+async function testTaggingSave(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-03-03実装後に有効化
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // テスト用記事を取得
+  const { data: article } = await supabase
+    .from("scp_articles")
+    .select("article_id")
+    .limit(1)
+    .single();
+
+  if (!article) {
+    return {
+      success: false,
+      message: "テスト用記事が見つかりません",
+      durationMs: Date.now() - startTime,
+    };
+  }
+
+  const articleId = article.article_id as string;
+
+  // tagsテーブルにテストタグを作成
+  const { data: tag } = await supabase
+    .from("tags")
+    .upsert({ category: "object_class", value: "Euclid" }, { onConflict: "category,value" })
+    .select("id")
+    .single();
+
+  if (!tag) {
+    return {
+      success: false,
+      message: "タグ作成に失敗",
+      durationMs: Date.now() - startTime,
+    };
+  }
+
+  const tagId = (tag as { id: number }).id;
+
+  // article_tagsテーブルに保存
+  const { error } = await supabase.from("article_tags").upsert(
+    {
+      article_id: articleId,
+      tag_id: tagId,
+    },
+    { onConflict: "article_id,tag_id" }
+  );
+
+  if (error) {
+    return {
+      success: false,
+      message: `タグDB保存失敗: ${error.message}`,
+      data: { articleId, tagId },
+      durationMs: Date.now() - startTime,
+    };
+  }
+
   return {
-    success: false,
-    message: "003-03-03未実装のためスキップ",
+    success: true,
+    message: `タグDB保存成功（${articleId}）`,
+    data: { articleId, tagId },
     durationMs: Date.now() - startTime,
   };
 }
 
-function testMailSend(): TestResult {
+async function testMailSend(): Promise<TestResult> {
   const startTime = Date.now();
 
-  // TODO: 003-04-03実装後に有効化
+  const { NotificationService } = await import("../src/orchestrator/notification-service");
+
+  // モックメーラーでテスト
+  const sentEmails: { to: string; subject: string; body: string }[] = [];
+  const mockMailer = {
+    send: (options: {
+      to: string;
+      subject: string;
+      body: string;
+    }): Promise<{ success: boolean }> => {
+      sentEmails.push(options);
+      return Promise.resolve({ success: true });
+    },
+  };
+
+  const notificationService = new NotificationService({
+    enabled: true,
+    email: "test@example.com",
+    mailer: mockMailer,
+  });
+
+  await notificationService.sendPipelineSummary({
+    runId: "test-run-id",
+    mode: "integration-test",
+    status: "completed",
+    stats: {
+      totalCost: 0.01,
+      duration: 1000,
+      embedding: { processed: 10, succeeded: 9, failed: 1, cost: 0.005 },
+      tagging: { processed: 10, succeeded: 10, failed: 0, cost: 0.005 },
+    },
+    errors: [],
+  });
+
+  const success = sentEmails.length > 0;
+
   return {
-    success: false,
-    message: "003-04-03未実装のためスキップ",
+    success,
+    message: success ? "メール送信テスト成功（モック）" : "メール送信テスト失敗",
+    data: sentEmails[0],
     durationMs: Date.now() - startTime,
   };
 }
