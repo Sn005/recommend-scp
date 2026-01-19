@@ -39,11 +39,13 @@ export default tseslint.config(
     },
   },
   // テストファイルではconsole使用とprocess.env操作を許可
+  // また、テストの可読性のためtype assertion styleを緩和
   {
     files: ["**/__dev__/**/*.test.ts", "**/*.test.ts"],
     rules: {
       "no-console": "off",
       "n/no-process-env": "off",
+      "@typescript-eslint/non-nullable-type-assertion-style": "off",
     },
   },
   // env.ts, env.client.ts, vitest.config.tsでは process.env アクセスを許可
