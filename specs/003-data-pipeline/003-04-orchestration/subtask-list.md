@@ -5,4 +5,4 @@
 | [003-04-00](./003-04-00-integration-test.md)   | コンポーネント結合テスト       | pending    | 003-02-03, 003-03-01, 003-03-03 |
 | [003-04-01](./003-04-01-orchestrator.md)       | パイプラインオーケストレーター | completed  | 003-04-00                       |
 | [003-04-02](./003-04-02-github-actions.md)     | GitHub Actions定期実行         | completed  | 003-04-01                       |
-| [003-04-03](./003-04-03-notification-retry.md) | 通知・リトライ機能             | pending    | 003-04-01                       |
+| [003-04-03](./003-04-03-notification-retry.md) | 通知・リトライ機能             | completed  | 003-04-01                       |

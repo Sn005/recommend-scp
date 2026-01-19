@@ -15,23 +15,23 @@
 
 ### リトライキュー処理
 
-- [ ] WHEN リトライ処理を実行した際
+- [x] WHEN リトライ処理を実行した際
       GIVEN リトライキューに記事がある場合
       THEN `next_retry_at <= 現在時刻` の記事を取得する
       AND 該当タスク（embedding/tagging）を再実行する
 
-- [ ] WHEN リトライが成功した際
+- [x] WHEN リトライが成功した際
       GIVEN 処理が正常に完了した場合
       THEN リトライキューからレコードを削除する
       AND 記事のステータスを 'completed' に更新する
 
-- [ ] WHEN リトライが失敗した際
+- [x] WHEN リトライが失敗した際
       GIVEN 処理が再度失敗した場合
       THEN `retry_count` をインクリメントする
       AND `next_retry_at` をエクスポネンシャルバックオフで更新する
       AND `last_error` にエラーメッセージを保存する
 
-- [ ] WHEN 最大リトライ回数に達した際
+- [x] WHEN 最大リトライ回数に達した際
       GIVEN `retry_count >= max_retries` の場合
       THEN リトライキューからレコードを削除する
       AND 記事のステータスを 'error' のまま維持する
@@ -39,25 +39,25 @@
 
 ### エクスポネンシャルバックオフ
 
-- [ ] WHEN 次回リトライ時刻を計算した際
+- [x] WHEN 次回リトライ時刻を計算した際
       GIVEN リトライ回数に応じて
       THEN 以下の遅延を設定する：- 1回目失敗: 1時間後 - 2回目失敗: 4時間後 - 3回目失敗: 16時間後
 
 ### 実行サマリー通知
 
-- [ ] WHEN パイプライン実行が完了した際
+- [x] WHEN パイプライン実行が完了した際
       GIVEN 通知設定が有効な場合
       THEN 実行サマリーをメールで送信する
       AND 以下の情報を含む：- 実行モード - 処理件数（成功/失敗）- コスト - 実行時間 - エラーがある場合はエラーサマリー
 
-- [ ] WHEN 失敗件数が閾値を超えた際
+- [x] WHEN 失敗件数が閾値を超えた際
       GIVEN 失敗率が10%を超えた場合
       THEN 警告レベルの通知を送信する
       AND 件名に "[WARNING]" を付加する
 
 ### リトライレポート
 
-- [ ] WHEN リトライ処理が完了した際
+- [x] WHEN リトライ処理が完了した際
       GIVEN リトライキューに処理した記事がある場合
       THEN リトライ結果のレポートを出力する
       AND 成功/失敗/最大リトライ到達の件数を表示する
@@ -226,11 +226,22 @@ ${summary.errors.length > 0 ? this.formatErrors(summary.errors) : ""}
 
 ## テストケース
 
-- [ ] リトライキューから対象記事が取得される
-- [ ] リトライ成功時にキューからレコードが削除される
-- [ ] リトライ失敗時にカウントがインクリメントされる
-- [ ] エクスポネンシャルバックオフで次回時刻が計算される
-- [ ] 最大リトライ到達時にキューから削除される
-- [ ] 実行サマリーがメールで送信される
-- [ ] 失敗率が閾値を超えると警告通知になる
-- [ ] リトライレポートが正しく出力される
+- [x] リトライキューから対象記事が取得される
+- [x] リトライ成功時にキューからレコードが削除される
+- [x] リトライ失敗時にカウントがインクリメントされる
+- [x] エクスポネンシャルバックオフで次回時刻が計算される
+- [x] 最大リトライ到達時にキューから削除される
+- [x] 実行サマリーがメールで送信される
+- [x] 失敗率が閾値を超えると警告通知になる
+- [x] リトライレポートが正しく出力される
+
+## 実装状況
+
+- **status**: completed
+- **実装ファイル**:
+  - `packages/pipeline/src/orchestrator/retry-processor.ts` - リトライプロセッサ
+  - `packages/pipeline/src/orchestrator/notification-service.ts` - 通知サービス
+  - `packages/pipeline/src/orchestrator/index.ts` - エクスポート
+- **テストファイル**:
+  - `packages/pipeline/src/orchestrator/__dev__/retry-processor.test.ts` (20テスト)
+  - `packages/pipeline/src/orchestrator/__dev__/notification-service.test.ts` (16テスト)

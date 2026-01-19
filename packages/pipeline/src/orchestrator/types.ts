@@ -97,3 +97,18 @@ export interface PipelineCostEstimate {
   tagging: TaggingCostEstimate;
   totalCost: number;
 }
+
+/** 通知設定 */
+export interface NotificationConfig {
+  enabled: boolean;
+  email?: string;
+  warningThreshold?: number; // 失敗率% (デフォルト: 10)
+}
+
+/** リトライ結果 */
+export interface RetryResult {
+  processed: number;
+  succeeded: number;
+  failed: number;
+  exhausted: number;
+}
