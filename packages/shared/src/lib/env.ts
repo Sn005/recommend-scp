@@ -1,19 +1,40 @@
 /**
- * Environment variable loader
- * Import this module first in entry scripts to ensure dotenv is loaded
+ * 環境変数ローダー
+ * Subtask: 001-01-05
+ *
+ * モノレポルートの .env を find-up で探索して読み込む。
+ * CI 環境: secrets が既に process.env に設定済み → スキップ
+ * ローカル: pnpm-workspace.yaml を目印にルートを探索
  */
 
 import { config } from "dotenv";
-import { fileURLToPath } from "url";
+import { findUpSync } from "find-up";
 import { dirname, join } from "path";
 
-// Load .env file from package root
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-config({ path: join(__dirname, "../../.env") });
+/**
+ * モノレポルートの .env を探索して読み込む
+ * - CI 環境: secrets が既に process.env に設定済み → スキップ
+ * - ローカル: pnpm-workspace.yaml を目印にルートを探索
+ */
+const loadEnv = (): void => {
+  const workspaceFile = findUpSync("pnpm-workspace.yaml");
+  if (workspaceFile) {
+    const envPath = join(dirname(workspaceFile), ".env");
+    // override: false で既存の環境変数（CI secrets）を優先
+    config({ path: envPath, override: false });
+  }
+};
+
+loadEnv();
 
 /**
- * Environment configuration with validation
+ * 環境変数アクセサ（検証付き）
+ *
+ * 使用例:
+ * ```typescript
+ * import { env } from "@recommend-scp/shared";
+ * const url = env.SUPABASE_URL;
+ * ```
  */
 export const env = {
   get SUPABASE_URL(): string {
@@ -36,17 +57,19 @@ export const env = {
     if (!value) throw new Error("OPENAI_API_KEY is not set");
     return value;
   },
+  /** オプション: デフォルト値あり */
   get TAGGING_LLM_PROVIDER(): string {
     return process.env.TAGGING_LLM_PROVIDER ?? "openai";
   },
 };
 
 /**
- * Validate all required environment variables
+ * 全ての必須環境変数を検証
  */
 export function validateEnv(): void {
   // Access each required property to trigger validation
   void env.SUPABASE_URL;
   void env.SUPABASE_ANON_KEY;
   void env.SUPABASE_SERVICE_ROLE_KEY;
+  void env.OPENAI_API_KEY;
 }

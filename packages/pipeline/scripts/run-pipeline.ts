@@ -32,6 +32,7 @@ import { BatchEmbeddingProcessor } from "../src/processing/batch-embedding";
 import { BatchTaggingProcessor } from "../src/processing/batch-tagging";
 import type { SupabaseClient as FullCrawlerSupabaseClient } from "../src/crawler/utils/db-saver";
 import { TagDictionaryManagerImpl } from "@recommend-scp/shared/tagging";
+import { env } from "@recommend-scp/shared/lib/env";
 import { createLogger } from "../src/crawler/utils/logger";
 
 // ロガー初期化
@@ -77,13 +78,15 @@ if (values.help === true) {
   process.exit(0);
 }
 
-// 環境変数チェック
+// 環境変数チェック（env.tsのgetterが未設定時にエラーをスロー）
 function checkEnvVars(): void {
-  const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "OPENAI_API_KEY"];
-  const missing = required.filter((key) => !process.env[key]);
-
-  if (missing.length > 0) {
-    logger.error(`環境変数が未設定: ${missing.join(", ")}`);
+  try {
+    // 各getterにアクセスして検証
+    void env.SUPABASE_URL;
+    void env.SUPABASE_SERVICE_ROLE_KEY;
+    void env.OPENAI_API_KEY;
+  } catch (error) {
+    logger.error(`環境変数エラー: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 }
@@ -104,11 +107,8 @@ async function main(): Promise<void> {
   checkEnvVars();
 
   // checkEnvVarsで環境変数の存在を確認済み
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("環境変数が設定されていません");
-  }
+  const supabaseUrl = env.SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
   const mode = validateMode(values.mode);
   const dryRun = values["dry-run"];
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
 
   // OpenAIクライアント初期化
   const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: env.OPENAI_API_KEY,
   });
 
   // 依存関係の初期化

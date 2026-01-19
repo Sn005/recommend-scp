@@ -2,7 +2,7 @@
 
 - **Subtask ID**: 001-01-05
 - **Story**: [001-01 共通設定整備](./001-01-common-config.md)
-- **ステータス**: pending
+- **ステータス**: completed
 - **依存**: なし
 
 ## ユーザーストーリー
@@ -32,30 +32,34 @@
 
 ### AC1: ルートに .env を配置
 
-- [ ] リポジトリルートに `.env` ファイルを配置する設計とする
-- [ ] `.env.example` をルートに作成し、必要な変数をドキュメント化
+- [x] リポジトリルートに `.env` ファイルを配置する設計とする
+- [x] `.env.example` をルートに作成し、必要な変数をドキュメント化
 
 ### AC2: env.ts を find-up 方式に改修
 
-- [ ] `find-up` パッケージを `@recommend-scp/shared` に追加
-- [ ] `env.ts` で `pnpm-workspace.yaml` を目印にモノレポルートを探索
-- [ ] `override: false` で既存の環境変数（CI secrets）を優先
+- [x] `find-up` パッケージを `@recommend-scp/shared` に追加
+- [x] `env.ts` で `pnpm-workspace.yaml` を目印にモノレポルートを探索
+- [x] `override: false` で既存の環境変数（CI secrets）を優先
 
 ### AC3: ESLint で process.env 直接参照を禁止
 
-- [ ] `eslint-plugin-n` をルートの devDependencies に追加
-- [ ] `n/no-process-env` ルールを `error` として設定
-- [ ] 例外ファイルを設定: `env.ts`, `env.client.ts`, `vitest.config.ts`
+- [x] `eslint-plugin-n` をルートの devDependencies に追加
+- [x] `n/no-process-env` ルールを `error` として設定
+- [x] 例外ファイルを設定: `env.ts`, `env.client.ts`, `vitest.config.ts`
 
 ### AC4: 既存コードを env オブジェクト経由に移行
 
-- [ ] `integration-test.ts` の `process.env` 参照を `env` オブジェクト経由に変更
-- [ ] その他 `process.env` 直接参照があれば修正
+- [x] `integration-test.ts` の `process.env` 参照を `env` オブジェクト経由に変更
+- [x] その他 `process.env` 直接参照があれば修正
 
 ### AC5: ドキュメント整備
 
-- [ ] CLAUDE.md に環境変数ルールを記載
-- [ ] 環境変数一覧を本 Subtask に記載
+- [x] CLAUDE.md に環境変数ルールを記載
+- [x] 環境変数一覧を本 Subtask に記載
+
+## 実装状況
+
+- **status**: completed
 
 ## 技術仕様
 
@@ -208,11 +212,11 @@ CI では secrets が直接 `process.env` に注入されるため、`.env` フ�
 
 ## テストケース
 
-- [ ] `pnpm --filter pipeline run test` がルートの `.env` を読み込む
-- [ ] `cd packages/pipeline && pnpm test` がルートの `.env` を読み込む
-- [ ] CI 環境（.env なし）で secrets から環境変数を取得できる
-- [ ] `process.env.SUPABASE_URL` を直接参照すると ESLint エラー
-- [ ] `env.ts` 内では `process.env` アクセスが許可される
+- [x] `pnpm --filter pipeline run test` がルートの `.env` を読み込む
+- [x] `cd packages/pipeline && pnpm test` がルートの `.env` を読み込む
+- [x] CI 環境（.env なし）で secrets から環境変数を取得できる
+- [x] `process.env.SUPABASE_URL` を直接参照すると ESLint エラー
+- [x] `env.ts` 内では `process.env` アクセスが許可される
 
 ## 参考資料
 
