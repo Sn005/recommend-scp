@@ -241,7 +241,7 @@ export class BatchEmbeddingProcessor {
       updateData.last_processed_at = lastProcessedAt;
     }
 
-    await this.supabase.from("scp_articles").update(updateData).eq("id", articleId);
+    await this.supabase.from("scp_articles").update(updateData).eq("article_id", articleId);
   }
 
   /**
