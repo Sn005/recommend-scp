@@ -1,0 +1,93 @@
+name: Database Migration
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate:
+    name: Run Database Migration
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase Project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      # PR時: ドライラン（検証のみ）
+      - name: Dry Run Migration (PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "## Migration Dry Run" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pending Migrations" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          # ドライラン実行（実際には適用しない）
+          supabase db push --dry-run 2>&1 | tee -a $GITHUB_STEP_SUMMARY
+
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> This is a **dry run**. Migrations will be applied on merge to main." >> $GITHUB_STEP_SUMMARY
+
+      # main push時: 実際にマイグレーション実行
+      - name: Run Migration (Push to main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: migrate
+        run: |
+          echo "## Database Migration Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # マイグレーション実行
+          set +e
+          OUTPUT=$(supabase db push 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          # 結果をSummaryに出力
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "### ✅ Migration Successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Migration Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the error details above and fix the migration." >> $GITHUB_STEP_SUMMARY
+            exit $EXIT_CODE
+          fi
+
+      - name: Migration Summary
+        if: always() && github.event_name == 'push'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
