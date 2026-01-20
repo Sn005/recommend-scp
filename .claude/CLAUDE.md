@@ -39,11 +39,11 @@ specs/                  # 仕様書本体
 
 **以下のキーワードが含まれる場合、MUST で該当Skillを発動すること。直接実装を始めてはならない。**
 
-| キーワード                                       | 発動するSkill   | 発動方法          |
-| ------------------------------------------------ | --------------- | ----------------- |
-| 「実装して」「開発して」「作成して」             | `spec-workflow` | Skill tool で発動 |
-| Subtask IDへの言及（例: 002-01-01）              | `spec-workflow` | Skill tool で発動 |
-| 「仕様を策定して」「specを作成して」             | `spec`          | Skill tool で発動 |
+| キーワード                                          | 発動するSkill   | 発動方法          |
+| --------------------------------------------------- | --------------- | ----------------- |
+| 「実装して」「開発して」「作成して」                | `spec-workflow` | Skill tool で発動 |
+| Subtask IDへの言及（例: 002-01-01）                 | `spec-workflow` | Skill tool で発動 |
+| 「仕様を策定して」「specを作成して」                | `spec`          | Skill tool で発動 |
 | 「暗黙知を言語化して」「clarifyして」「明確化して」 | `clarify`       | Skill tool で発動 |
 
 **サブエージェント使用タイミング（MUST）:**
@@ -158,13 +158,16 @@ sed -n '/^## 学習記録/,$p' .claude/CLAUDE.md | grep -c "^###"  # 5項目超�
 各Skillは以下のキーワードで自動発動します：
 
 **`clarify` Skill（暗黙知抽出）:**
+
 - 「暗黙知を言語化して」「clarifyして」「明確化して」
 - 「仕様策定の前に」「specの前に」
 
 **`spec` Skill（仕様策定）:**
+
 - 「仕様を策定して」「specを作成して」
 
 **`spec-workflow` Skill（実装）:**
+
 - 実装して、作成して、開発して
 - Subtask開始、Story開始
 - EPIC、Story、Subtaskへの言及
