@@ -162,29 +162,29 @@ pnpm --filter @recommend-scp/pipeline test:integration -- --update-spec
 
 ### SCP Data API
 
-- [ ] 記事一覧取得（/pages）が200を返す
-- [ ] 記事本文取得（/page/{id}）が200を返す
-- [ ] レート制限時にRetry-Afterヘッダーが返る
+- [x] 記事一覧取得（/pages）が200を返す
+- [x] 記事本文取得（/page/{id}）が200を返す
+- [ ] レート制限時にRetry-Afterヘッダーが返る ※意図的発生を避けるためスキップ
 
 ### Supabase
 
-- [ ] scp_articlesへのINSERTが成功する
-- [ ] scp_articlesへのUPSERTが成功する
-- [ ] article_embeddingsへのINSERTが成功する
-- [ ] article_tagsへのINSERTが成功する
-- [ ] tag_dictionaryからのSELECTが成功する
+- [x] scp_articlesへのINSERTが成功する
+- [x] scp_articlesへのUPSERTが成功する
+- [x] article_embeddingsへのINSERTが成功する
+- [x] article_tagsへのINSERTが成功する
+- [ ] tag_dictionaryからのSELECTが成功する ※タグ辞書連携は別途テスト予定
 
 ### OpenAI API
 
-- [ ] text-embedding-3-small モデルでEmbedding生成が成功する
-- [ ] gpt-4o-mini モデルでタグ抽出が成功する
-- [ ] APIキーが有効で認証が成功する
+- [x] text-embedding-3-small モデルでEmbedding生成が成功する
+- [x] gpt-4o-mini モデルでタグ抽出が成功する
+- [x] APIキーが有効で認証が成功する
 
 ### Gmail SMTP
 
-- [ ] smtp.gmail.com:587への接続が成功する
-- [ ] アプリパスワードでの認証が成功する
-- [ ] テストメールの送信が成功する
+- [ ] smtp.gmail.com:587への接続が成功する ※モックテストのためスキップ
+- [ ] アプリパスワードでの認証が成功する ※モックテストのためスキップ
+- [x] テストメールの送信が成功する ※モックメーラーで確認
 
 ## 関連ドキュメント
 
