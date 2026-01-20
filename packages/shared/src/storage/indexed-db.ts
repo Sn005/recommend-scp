@@ -130,8 +130,12 @@ export class IndexedDBStorage implements PreferenceStorage {
     return this.withStore(STORE_NAMES.preferences, "readonly", (store) => {
       return new Promise((resolve, reject) => {
         const request = store.get(visitorId);
-        request.onsuccess = () => resolve(request.result ?? null);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve(request.result ?? null);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -143,8 +147,12 @@ export class IndexedDBStorage implements PreferenceStorage {
     return this.withStore(STORE_NAMES.preferences, "readwrite", (store) => {
       return new Promise((resolve, reject) => {
         const request = store.put(profile);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -169,7 +177,9 @@ export class IndexedDBStorage implements PreferenceStorage {
             resolve(results);
           }
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -181,8 +191,12 @@ export class IndexedDBStorage implements PreferenceStorage {
     return this.withStore(STORE_NAMES.viewHistory, "readwrite", (store) => {
       return new Promise((resolve, reject) => {
         const request = store.add(history);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -195,8 +209,12 @@ export class IndexedDBStorage implements PreferenceStorage {
       return new Promise((resolve, reject) => {
         const index = store.index("byVisitor");
         const request = index.getAll(visitorId);
-        request.onsuccess = () => resolve(request.result ?? []);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve(request.result ?? []);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -204,16 +222,17 @@ export class IndexedDBStorage implements PreferenceStorage {
   /**
    * 特定記事へのフィードバックを取得
    */
-  async getFeedbackByArticle(
-    visitorId: string,
-    articleId: string
-  ): Promise<Feedback | null> {
+  async getFeedbackByArticle(visitorId: string, articleId: string): Promise<Feedback | null> {
     const feedbackId = `${visitorId}_${articleId}`;
     return this.withStore(STORE_NAMES.feedback, "readonly", (store) => {
       return new Promise((resolve, reject) => {
         const request = store.get(feedbackId);
-        request.onsuccess = () => resolve(request.result ?? null);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve(request.result ?? null);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -226,8 +245,12 @@ export class IndexedDBStorage implements PreferenceStorage {
       return new Promise((resolve, reject) => {
         // putを使用して上書きを許可
         const request = store.put(feedback);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -235,10 +258,7 @@ export class IndexedDBStorage implements PreferenceStorage {
   /**
    * 推薦ログを取得
    */
-  async getRecommendationLog(
-    visitorId: string,
-    limit?: number
-  ): Promise<RecommendationLog[]> {
+  async getRecommendationLog(visitorId: string, limit?: number): Promise<RecommendationLog[]> {
     return this.withStore(STORE_NAMES.recommendationLog, "readonly", (store) => {
       return new Promise((resolve, reject) => {
         const index = store.index("byVisitor");
@@ -255,7 +275,9 @@ export class IndexedDBStorage implements PreferenceStorage {
             resolve(results);
           }
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -267,8 +289,12 @@ export class IndexedDBStorage implements PreferenceStorage {
     return this.withStore(STORE_NAMES.recommendationLog, "readwrite", (store) => {
       return new Promise((resolve, reject) => {
         const request = store.add(log);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
       });
     });
   }
@@ -278,9 +304,7 @@ export class IndexedDBStorage implements PreferenceStorage {
    */
   async getDislikedArticleIds(visitorId: string): Promise<string[]> {
     const feedbacks = await this.getFeedback(visitorId);
-    return feedbacks
-      .filter((f) => f.type === "dislike")
-      .map((f) => f.articleId);
+    return feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId);
   }
 
   /**

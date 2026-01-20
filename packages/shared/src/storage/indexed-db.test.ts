@@ -7,12 +7,7 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { IndexedDBStorage } from "./indexed-db";
-import type {
-  PreferenceProfile,
-  ViewHistory,
-  Feedback,
-  RecommendationLog,
-} from "./types";
+import type { PreferenceProfile, ViewHistory, Feedback, RecommendationLog } from "./types";
 
 describe("004-01-02: IndexedDB実装", () => {
   let storage: IndexedDBStorage;
@@ -20,7 +15,7 @@ describe("004-01-02: IndexedDB実装", () => {
   beforeEach(async () => {
     // 各テスト前にDBをクリーンアップ
     const dbs = await indexedDB.databases();
-    for (const db of dbs as Array<{ name?: string }>) {
+    for (const db of dbs as { name?: string }[]) {
       if (db.name) {
         indexedDB.deleteDatabase(db.name);
       }
@@ -42,7 +37,7 @@ describe("004-01-02: IndexedDB実装", () => {
       await storage.initialize();
 
       // Assert
-      const dbs = await indexedDB.databases() as Array<{ name?: string; version?: number }>;
+      const dbs = (await indexedDB.databases()) as { name?: string; version?: number }[];
       const targetDb = dbs.find((db) => db.name === "scp-recommend");
       expect(targetDb).toBeDefined();
       expect(targetDb?.version).toBe(1);
@@ -503,9 +498,7 @@ describe("004-01-02: IndexedDB実装", () => {
       const testStorage = new IndexedDBStorage();
 
       // Act & Assert
-      await expect(testStorage.initialize()).rejects.toThrow(
-        "IndexedDB is not available"
-      );
+      await expect(testStorage.initialize()).rejects.toThrow("IndexedDB is not available");
 
       // Cleanup
       (globalThis as Record<string, unknown>).indexedDB = originalIndexedDB;
