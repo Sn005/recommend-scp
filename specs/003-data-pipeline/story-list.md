@@ -6,4 +6,4 @@
 | [003-01](./003-01-db-foundation/003-01-db-foundation.md)         | DB基盤拡張                       | completed  | 言語マスタ、タグ辞書、パイプライン管理テーブルの追加 |
 | [003-02](./003-02-crawler/003-02-crawler.md)                     | クローラー本番化                 | completed  | 抽象化レイヤー、EN全記事クロール、差分更新           |
 | [003-03](./003-03-processing/003-03-processing.md)               | Embedding/タグ処理本番化         | completed  | バッチ処理、タグ辞書マネージャー、ステータス管理     |
-| [003-04](./003-04-orchestration/003-04-orchestration.md)         | パイプラインオーケストレーション | pending    | 統合実行、GitHub Actions、通知・リトライ             |
+| [003-04](./003-04-orchestration/003-04-orchestration.md)         | パイプラインオーケストレーション | completed  | 統合実行、GitHub Actions、通知・リトライ             |
