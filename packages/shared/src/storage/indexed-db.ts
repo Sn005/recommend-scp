@@ -308,6 +308,15 @@ export class IndexedDBStorage implements PreferenceStorage {
   }
 
   /**
+   * 記事のタグ情報を取得
+   *
+   * IndexedDBには記事タグを保存していないためnullを返す。
+   */
+  async getArticleTags(_articleId: string): Promise<string[] | null> {
+    return null;
+  }
+
+  /**
    * オブジェクトストアを使用した操作のヘルパー
    */
   private async withStore<T>(
