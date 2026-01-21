@@ -510,7 +510,7 @@ describe("004-01-02: IndexedDB実装", () => {
       await storage.initialize();
     });
 
-    it("getArticleTagsは現時点ではnullを返す（サーバーから取得する前提）", async () => {
+    it("getArticleTagsはnullを返す", async () => {
       // Act
       const tags = await storage.getArticleTags("scp-173");
 
