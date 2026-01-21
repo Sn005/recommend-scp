@@ -5,7 +5,7 @@
 | [004-01-01](./004-01-01.md) | ストレージ抽象化レイヤー | PreferenceStorageインターフェース | completed  | -         |
 | [004-01-02](./004-01-02.md) | IndexedDB実装            | IndexedDBStorageクラス            | completed  | 004-01-01 |
 | [004-01-03](./004-01-03.md) | 嗜好プロファイル計算     | PreferenceProfilerクラス          | completed  | 004-01-02 |
-| [004-01-04](./004-01-04.md) | 記事タグ取得実装         | SupabaseTagStorage + Composite    | pending    | 004-01-01 |
+| [004-01-04](./004-01-04.md) | 記事タグ取得実装         | SupabaseTagStorage + Composite    | completed  | 004-01-01 |
 
 ## 依存関係図
 
