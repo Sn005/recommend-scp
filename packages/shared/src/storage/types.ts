@@ -79,6 +79,13 @@ export interface PreferenceStorage {
    * @returns Dislike済み記事IDの配列
    */
   getDislikedArticleIds(visitorId: string): Promise<string[]>;
+
+  /**
+   * 記事のタグ情報を取得
+   * @param articleId 記事ID
+   * @returns タグの配列。記事が存在しない場合はnull
+   */
+  getArticleTags(articleId: string): Promise<string[] | null>;
 }
 
 /**
