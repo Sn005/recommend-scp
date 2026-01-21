@@ -9,7 +9,8 @@
     "./types": "./src/types.ts",
     "./embedding": "./src/embedding/index.ts",
     "./tagging": "./src/tagging/index.ts",
-    "./search": "./src/search/index.ts"
+    "./search": "./src/search/index.ts",
+    "./onboarding": "./src/onboarding/index.ts"
   },
   "scripts": {
     "test": "vitest run",
