@@ -308,6 +308,18 @@ export class IndexedDBStorage implements PreferenceStorage {
   }
 
   /**
+   * 記事のタグ情報を取得
+   *
+   * 現時点ではクライアント側に記事タグのキャッシュを持たないため、
+   * 常にnullを返す。記事タグはサーバー（Supabase）から取得する前提。
+   * 将来的にオフライン対応が必要な場合はキャッシュ機能を追加する。
+   */
+  async getArticleTags(_articleId: string): Promise<string[] | null> {
+    // TODO: 将来的にarticleTagsストアを追加してキャッシュ対応
+    return null;
+  }
+
+  /**
    * オブジェクトストアを使用した操作のヘルパー
    */
   private async withStore<T>(

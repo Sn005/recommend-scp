@@ -505,6 +505,20 @@ describe("004-01-02: IndexedDB実装", () => {
     });
   });
 
+  describe("記事タグ取得", () => {
+    beforeEach(async () => {
+      await storage.initialize();
+    });
+
+    it("getArticleTagsは現時点ではnullを返す（サーバーから取得する前提）", async () => {
+      // Act
+      const tags = await storage.getArticleTags("scp-173");
+
+      // Assert
+      expect(tags).toBeNull();
+    });
+  });
+
   describe("推薦ログ", () => {
     beforeEach(async () => {
       await storage.initialize();
