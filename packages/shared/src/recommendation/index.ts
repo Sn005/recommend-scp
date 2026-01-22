@@ -4,3 +4,4 @@
  */
 
 export { PreferenceProfiler } from "./profiler";
+export { SignalProcessor } from "./signal-processor";
