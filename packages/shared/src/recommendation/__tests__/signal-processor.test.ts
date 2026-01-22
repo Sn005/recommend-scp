@@ -39,7 +39,13 @@ class MockPreferenceStorage implements PreferenceStorage {
 
   async addViewHistory(history: ViewHistory): Promise<void> {
     const existing = this.viewHistories.get(history.visitorId) ?? [];
-    existing.push(history);
+    // 同じIDの履歴があれば上書き（updateViewDuration用）
+    const index = existing.findIndex((h) => h.id === history.id);
+    if (index >= 0) {
+      existing[index] = history;
+    } else {
+      existing.push(history);
+    }
     this.viewHistories.set(history.visitorId, existing);
   }
 
@@ -337,6 +343,229 @@ describe("SignalProcessor", () => {
       expect(feedbacks[0].createdAt).toBeDefined();
       // ISO 8601形式であることを確認
       expect(new Date(feedbacks[0].createdAt).toISOString()).toBe(feedbacks[0].createdAt);
+    });
+  });
+
+  // ============================================================
+  // 004-04-02: 閲覧履歴・読了シグナル処理
+  // ============================================================
+
+  describe("AC1: WHEN ユーザーが記事を開いた際", () => {
+    it("THEN ViewHistoryレコードがストレージに保存される", async () => {
+      // Act
+      await processor.recordView(visitorId, "scp-001");
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories).toHaveLength(1);
+      expect(histories[0].visitorId).toBe(visitorId);
+      expect(histories[0].articleId).toBe("scp-001");
+    });
+
+    it("AND viewedAtにタイムスタンプが記録される", async () => {
+      // Arrange
+      const beforeTime = new Date().toISOString();
+
+      // Act
+      await processor.recordView(visitorId, "scp-001");
+
+      // Assert
+      const afterTime = new Date().toISOString();
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories[0].viewedAt).toBeDefined();
+      expect(histories[0].viewedAt >= beforeTime).toBe(true);
+      expect(histories[0].viewedAt <= afterTime).toBe(true);
+    });
+
+    it("AND IDは ${visitorId}_${articleId}_${timestamp} 形式で生成される", async () => {
+      // Act
+      await processor.recordView(visitorId, "scp-001");
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories[0].id).toMatch(new RegExp(`^${visitorId}_scp-001_\\d+$`));
+    });
+  });
+
+  describe("AC2: WHEN ユーザーが記事を最後まで読んだ（Likeなし）際", () => {
+    it("THEN その記事のタグに対する重みが +0.3 増加する", async () => {
+      // Arrange: 閲覧履歴を追加（読了状態: duration >= 60秒）
+      storage.setArticleTags("scp-001", ["horror"]);
+      await processor.recordView(visitorId, "scp-001", 120); // 2分閲覧
+
+      // Act: 読了完了を記録
+      const profile = await processor.recordReadComplete(visitorId, "scp-001");
+
+      // Assert: 正規化後の重みが1.0になる（読了の0.3のみ → max=0.3 → 1.0に正規化）
+      expect(profile.tagWeights["horror"]).toBe(1.0);
+    });
+
+    it("AND プロファイルが再計算・保存される", async () => {
+      // Arrange
+      storage.setArticleTags("scp-001", ["horror"]);
+      await processor.recordView(visitorId, "scp-001", 120);
+      const saveProfileSpy = vi.spyOn(storage, "saveProfile");
+
+      // Act
+      await processor.recordReadComplete(visitorId, "scp-001");
+
+      // Assert
+      expect(saveProfileSpy).toHaveBeenCalled();
+      const savedProfile = await storage.getProfile(visitorId);
+      expect(savedProfile).not.toBeNull();
+    });
+
+    it("読了（Likeなし）の重みはLikeより低い（0.3 vs 1.0）", async () => {
+      // Arrange: scp-001をLike、scp-002を読了のみ
+      storage.setArticleTags("scp-001", ["horror"]);
+      storage.setArticleTags("scp-002", ["surreal"]);
+      await processor.recordView(visitorId, "scp-002", 120);
+
+      // Act
+      await processor.recordFeedback(visitorId, "scp-001", "like");
+      const profile = await processor.recordReadComplete(visitorId, "scp-002");
+
+      // Assert: horror=1.0(Like), surreal=0.3 → 正規化後 horror=1.0, surreal=0.3
+      expect(profile.tagWeights["horror"]).toBe(1.0);
+      expect(profile.tagWeights["surreal"]).toBeCloseTo(0.3, 5);
+    });
+
+    it("Like済み記事の読了は追加の重みが付かない", async () => {
+      // Arrange: 記事をLike済み
+      storage.setArticleTags("scp-001", ["horror"]);
+      await processor.recordFeedback(visitorId, "scp-001", "like");
+      await processor.recordView(visitorId, "scp-001", 120);
+
+      // 別の記事をLike（比較用）
+      storage.setArticleTags("scp-002", ["surreal"]);
+      await processor.recordFeedback(visitorId, "scp-002", "like");
+
+      // Act: 読了完了を記録（Like済み）
+      const profile = await processor.recordReadComplete(visitorId, "scp-001");
+
+      // Assert: 両方1.0（読了の+0.3は加算されない）
+      expect(profile.tagWeights["horror"]).toBe(1.0);
+      expect(profile.tagWeights["surreal"]).toBe(1.0);
+    });
+
+    it("Dislike済み記事の読了は追加の重みが付かない", async () => {
+      // Arrange
+      storage.setArticleTags("scp-001", ["horror"]);
+      await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      await processor.recordView(visitorId, "scp-001", 120);
+
+      // Act
+      const profile = await processor.recordReadComplete(visitorId, "scp-001");
+
+      // Assert: horrorの重みは0
+      expect(profile.tagWeights["horror"]).toBeUndefined();
+    });
+  });
+
+  describe("AC3: WHEN 閲覧履歴を取得する際", () => {
+    it("THEN visitorIdでフィルタリングできる", async () => {
+      // Arrange: 異なるvisitorの閲覧履歴
+      await processor.recordView(visitorId, "scp-001");
+      await processor.recordView("other-visitor", "scp-002");
+
+      // Act
+      const histories = await processor.getViewHistory(visitorId);
+
+      // Assert
+      expect(histories).toHaveLength(1);
+      expect(histories[0].articleId).toBe("scp-001");
+    });
+
+    it("AND 日付順でソートされる（新しい順）", async () => {
+      // Arrange: 複数の閲覧履歴を追加
+      await processor.recordView(visitorId, "scp-001");
+      await new Promise((resolve) => setTimeout(resolve, 10)); // 少し待つ
+      await processor.recordView(visitorId, "scp-002");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await processor.recordView(visitorId, "scp-003");
+
+      // Act
+      const histories = await processor.getViewHistory(visitorId);
+
+      // Assert: 新しい順にソートされている
+      expect(histories).toHaveLength(3);
+      expect(histories[0].articleId).toBe("scp-003");
+      expect(histories[1].articleId).toBe("scp-002");
+      expect(histories[2].articleId).toBe("scp-001");
+    });
+
+    it("取得件数を制限できる", async () => {
+      // Arrange
+      await processor.recordView(visitorId, "scp-001");
+      await processor.recordView(visitorId, "scp-002");
+      await processor.recordView(visitorId, "scp-003");
+
+      // Act
+      const histories = await processor.getViewHistory(visitorId, 2);
+
+      // Assert
+      expect(histories).toHaveLength(2);
+    });
+  });
+
+  describe("AC4: WHERE 閲覧履歴 IF 滞在時間が記録可能な場合", () => {
+    it("THE SYSTEM SHALL durationフィールドに秒数を保存する", async () => {
+      // Act
+      await processor.recordView(visitorId, "scp-001", 180);
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories[0].duration).toBe(180);
+    });
+
+    it("durationが指定されない場合はundefinedのまま", async () => {
+      // Act
+      await processor.recordView(visitorId, "scp-001");
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories[0].duration).toBeUndefined();
+    });
+
+    it("後からdurationを更新できる（updateViewDuration）", async () => {
+      // Arrange: まず閲覧を記録
+      await processor.recordView(visitorId, "scp-001");
+
+      // Act: 後からdurationを更新
+      await processor.updateViewDuration(visitorId, "scp-001", 300);
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories[0].duration).toBe(300);
+    });
+  });
+
+  describe("閲覧履歴のエッジケース", () => {
+    it("recordView: visitorIdが空の場合はエラーをスローする", async () => {
+      await expect(processor.recordView("", "scp-001")).rejects.toThrow();
+    });
+
+    it("recordView: articleIdが空の場合はエラーをスローする", async () => {
+      await expect(processor.recordView(visitorId, "")).rejects.toThrow();
+    });
+
+    it("recordReadComplete: visitorIdが空の場合はエラーをスローする", async () => {
+      await expect(processor.recordReadComplete("", "scp-001")).rejects.toThrow();
+    });
+
+    it("recordReadComplete: articleIdが空の場合はエラーをスローする", async () => {
+      await expect(processor.recordReadComplete(visitorId, "")).rejects.toThrow();
+    });
+
+    it("同じ記事を複数回閲覧した場合、履歴は複数件保存される", async () => {
+      // Act: 異なるタイムスタンプになるよう少し待機
+      await processor.recordView(visitorId, "scp-001");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      await processor.recordView(visitorId, "scp-001");
+
+      // Assert
+      const histories = await storage.getViewHistory(visitorId);
+      expect(histories).toHaveLength(2);
     });
   });
 });

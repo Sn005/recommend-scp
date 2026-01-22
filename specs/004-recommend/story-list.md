@@ -5,7 +5,7 @@
 | [004-01](./004-01-recommend-foundation/004-01.md) | 推薦基盤         | ストレージ・IndexedDB・嗜好計算    | completed  | -      |
 | [004-02](./004-02-recommend-engine/004-02.md)     | 推薦エンジン     | コア推薦ロジック・セレンディピティ | pending    | 004-01 |
 | [004-03](./004-03-onboarding/004-03.md)           | オンボーディング | スターターパック・初期プロファイル | completed  | 004-01 |
-| [004-04](./004-04-signal-processing/004-04.md)    | シグナル処理     | Like/Dislike・閲覧履歴             | pending    | 004-01 |
+| [004-04](./004-04-signal-processing/004-04.md)    | シグナル処理     | Like/Dislike・閲覧履歴             | completed  | 004-01 |
 
 ## 依存関係図
 
