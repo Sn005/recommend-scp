@@ -40,7 +40,7 @@ describe("004-01-02: IndexedDB実装", () => {
       const dbs = (await indexedDB.databases()) as { name?: string; version?: number }[];
       const targetDb = dbs.find((db) => db.name === "scp-recommend");
       expect(targetDb).toBeDefined();
-      expect(targetDb?.version).toBe(1);
+      expect(targetDb?.version).toBe(2);
     });
 
     it("初期化時に全てのオブジェクトストアが作成される", async () => {

@@ -89,6 +89,18 @@ class MockPreferenceStorage implements PreferenceStorage {
     return this.articleTags.get(articleId) ?? null;
   }
 
+  async getFavorites(_visitorId: string): Promise<import("../../storage/types").Favorite[]> {
+    return [];
+  }
+
+  async addFavorite(_favorite: import("../../storage/types").Favorite): Promise<void> {
+    // no-op for this mock
+  }
+
+  async removeFavorite(_visitorId: string, _articleId: string): Promise<void> {
+    // no-op for this mock
+  }
+
   // テスト用ヘルパーメソッド
   setArticleTags(articleId: string, tags: string[]): void {
     this.articleTags.set(articleId, tags);
