@@ -10,6 +10,7 @@ import type {
   ViewHistory,
   Feedback,
   RecommendationLog,
+  Favorite,
 } from "./types";
 import type { SupabaseTagStorage } from "./supabase-tag-storage";
 
@@ -125,5 +126,31 @@ export class CompositeStorage implements PreferenceStorage {
    */
   getArticleTags(articleId: string): Promise<string[] | null> {
     return this.tagStorage.getArticleTags(articleId);
+  }
+
+  /**
+   * お気に入り一覧を取得
+   * @param visitorId 訪問者ID
+   * @returns お気に入りの配列（追加日時降順）
+   */
+  getFavorites(visitorId: string): Promise<Favorite[]> {
+    return this.localStorage.getFavorites(visitorId);
+  }
+
+  /**
+   * お気に入りを追加
+   * @param favorite 追加するお気に入り
+   */
+  addFavorite(favorite: Favorite): Promise<void> {
+    return this.localStorage.addFavorite(favorite);
+  }
+
+  /**
+   * お気に入りを解除
+   * @param visitorId 訪問者ID
+   * @param articleId 記事ID
+   */
+  removeFavorite(visitorId: string, articleId: string): Promise<void> {
+    return this.localStorage.removeFavorite(visitorId, articleId);
   }
 }

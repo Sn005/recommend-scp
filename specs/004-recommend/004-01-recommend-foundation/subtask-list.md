@@ -7,7 +7,7 @@
 | [004-01-03](./004-01-03.md) | 嗜好プロファイル計算     | PreferenceProfilerクラス          | completed  | 004-01-02 |
 | [004-01-04](./004-01-04.md) | 記事タグ取得実装         | SupabaseTagStorage + Composite    | completed  | 004-01-01 |
 | [004-01-05](./004-01-05.md) | 嗜好ベクトル計算         | preferenceEmbedding計算           | pending    | 004-01-03 |
-| [004-01-06](./004-01-06.md) | お気に入り機能           | Favorite保存・取得                | pending    | 004-01-02 |
+| [004-01-06](./004-01-06.md) | お気に入り機能           | Favorite保存・取得                | completed  | 004-01-02 |
 
 ## 依存関係図
 

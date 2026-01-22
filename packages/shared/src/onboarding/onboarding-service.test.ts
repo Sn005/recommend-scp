@@ -31,6 +31,9 @@ function createMockStorage(): PreferenceStorage {
     addRecommendationLog: vi.fn().mockResolvedValue(undefined),
     getDislikedArticleIds: vi.fn().mockResolvedValue([]),
     getArticleTags: vi.fn().mockResolvedValue(null),
+    getFavorites: vi.fn().mockResolvedValue([]),
+    addFavorite: vi.fn().mockResolvedValue(undefined),
+    removeFavorite: vi.fn().mockResolvedValue(undefined),
   };
 }
 

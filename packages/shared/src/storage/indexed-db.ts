@@ -10,16 +10,18 @@ import type {
   ViewHistory,
   Feedback,
   RecommendationLog,
+  Favorite,
 } from "./types";
 
 const DB_NAME = "scp-recommend";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORE_NAMES = {
   preferences: "preferences",
   viewHistory: "viewHistory",
   feedback: "feedback",
   recommendationLog: "recommendationLog",
+  favorites: "favorites",
 } as const;
 
 /**
@@ -86,6 +88,14 @@ export class IndexedDBStorage implements PreferenceStorage {
           });
           recLogStore.createIndex("byVisitor", "visitorId", { unique: false });
           recLogStore.createIndex("byDate", "recommendedAt", { unique: false });
+        }
+
+        // favorites ストア
+        if (!db.objectStoreNames.contains(STORE_NAMES.favorites)) {
+          const favoritesStore = db.createObjectStore(STORE_NAMES.favorites, {
+            keyPath: "id",
+          });
+          favoritesStore.createIndex("byVisitor", "visitorId", { unique: false });
         }
       };
     });
@@ -314,6 +324,64 @@ export class IndexedDBStorage implements PreferenceStorage {
    */
   async getArticleTags(_articleId: string): Promise<string[] | null> {
     return null;
+  }
+
+  /**
+   * お気に入り一覧を取得
+   */
+  async getFavorites(visitorId: string): Promise<Favorite[]> {
+    return this.withStore(STORE_NAMES.favorites, "readonly", (store) => {
+      return new Promise((resolve, reject) => {
+        const index = store.index("byVisitor");
+        const request = index.getAll(visitorId);
+
+        request.onsuccess = () => {
+          const results = request.result as Favorite[];
+          // addedAtで降順ソート（最新が先）
+          results.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+          resolve(results);
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    });
+  }
+
+  /**
+   * お気に入りを追加（同じ記事への既存お気に入りは上書き）
+   */
+  async addFavorite(favorite: Favorite): Promise<void> {
+    return this.withStore(STORE_NAMES.favorites, "readwrite", (store) => {
+      return new Promise((resolve, reject) => {
+        // putを使用してupsert（存在する場合は更新）
+        const request = store.put(favorite);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    });
+  }
+
+  /**
+   * お気に入りを解除
+   */
+  async removeFavorite(visitorId: string, articleId: string): Promise<void> {
+    return this.withStore(STORE_NAMES.favorites, "readwrite", (store) => {
+      return new Promise((resolve, reject) => {
+        const id = `${visitorId}_${articleId}`;
+        const request = store.delete(id);
+        request.onsuccess = () => {
+          resolve();
+        };
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+    });
   }
 
   /**
