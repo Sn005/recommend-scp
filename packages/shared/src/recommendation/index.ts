@@ -5,3 +5,10 @@
 
 export { PreferenceProfiler } from "./profiler";
 export { SignalProcessor } from "./signal-processor";
+export {
+  calculatePreferenceVector,
+  computeWeightedAverage,
+  DEFAULT_SIGNAL_WEIGHTS,
+  type SignalWeights,
+  type PreferenceVectorInput,
+} from "./preference-vector";
