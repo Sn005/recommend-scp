@@ -12,3 +12,9 @@ export {
   type SignalWeights,
   type PreferenceVectorInput,
 } from "./preference-vector";
+
+export {
+  RecommendationEngine,
+  type RecommendedArticle,
+  type RecommendationEngineConfig,
+} from "./engine";

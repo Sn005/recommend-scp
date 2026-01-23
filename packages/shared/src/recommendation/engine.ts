@@ -1,70 +1,66 @@
-# Subtask 004-02-01: 推薦エンジンコア
+/**
+ * @file 推薦エンジンコア
+ * @description Embeddingベースの嗜好ベクトルを使用した推薦エンジン
+ * @see specs/004-recommend/004-02-recommend-engine/004-02-01.md
+ */
 
-## 概要
+import type { PreferenceStorage, PreferenceProfile, ViewHistory, Feedback } from "../storage/types";
+import type { VectorSearchClient } from "../search/vector-search-client";
+import { calculatePreferenceVector, type PreferenceVectorInput } from "./preference-vector";
 
-推薦ロジックのコアとなる`RecommendationEngine`クラスを実装する。**Embeddingベースの嗜好ベクトル**を使用してコサイン類似度で推薦候補を取得し、既読・Dislike済み記事を除外する。
-
-## ステータス
-
-- **status**: completed
-
-## ユーザーストーリー
-
-**As a** 推薦システム
-**I want** ユーザーの嗜好ベクトルに基づいて記事を推薦できる
-**So that** パーソナライズされた高精度な推薦を提供できる
-
-## Acceptance Criteria（EARS記法）
-
-- [x] WHEN 推薦をリクエストした際
-      GIVEN ユーザーの嗜好ベクトル（preferenceEmbedding）が存在する場合
-      THEN 嗜好ベクトルとのコサイン類似度が高い記事を取得する
-      AND 類似度降順でソートして返却する
-
-- [x] WHEN 推薦候補を返す際
-      THEN 既読記事（viewHistory）を除外する
-      AND Dislike済み記事を除外する
-      AND お気に入り済み記事を除外する
-
-- [x] WHEN 推薦をリクエストした際
-      GIVEN 嗜好ベクトルが存在しない場合
-      THEN オンボーディング未完了エラーをスローする
-
-- [x] WHEN 推薦をリクエストした際
-      THEN 即座に嗜好ベクトルを再計算する（即時反映）
-      AND 最新の行動履歴が推薦に反映される
-
-- [x] WHERE RecommendationEngine
-      THE SYSTEM SHALL 以下のメソッドを提供する: - getRecommendations(visitorId, limit): 推薦記事リストを取得 - recordView(visitorId, articleId): 閲覧を記録 - recordFeedback(visitorId, articleId, type): フィードバックを記録
-
-## 技術設計
-
-### クラス設計
-
-```typescript
-// packages/shared/src/recommendation/engine.ts
-
+/**
+ * 推薦記事
+ */
 export interface RecommendedArticle {
+  /** 記事ID */
   id: string;
+  /** 記事タイトル */
   title: string;
+  /** コサイン類似度スコア */
   similarityScore: number;
+  /** 推薦ソース */
   source: "preference" | "serendipity";
 }
 
+/**
+ * 推薦エンジン設定
+ */
 export interface RecommendationEngineConfig {
   /** 推薦取得時に嗜好ベクトルを再計算するか（デフォルト: true） */
   recalculateOnRequest: boolean;
 }
 
+/**
+ * デフォルト設定
+ */
+const DEFAULT_CONFIG: RecommendationEngineConfig = {
+  recalculateOnRequest: true,
+};
+
+/**
+ * 推薦エンジン
+ *
+ * ユーザーの嗜好ベクトル（preferenceEmbedding）に基づいて
+ * コサイン類似度で推薦候補を取得し、既読・Dislike済み記事を除外する。
+ */
 export class RecommendationEngine {
+  private readonly config: RecommendationEngineConfig;
+
   constructor(
-    private storage: PreferenceStorage,
-    private vectorSearch: VectorSearchClient,
-    private config: RecommendationEngineConfig = { recalculateOnRequest: true }
-  ) {}
+    private readonly storage: PreferenceStorage,
+    private readonly vectorSearch: VectorSearchClient,
+    config: Partial<RecommendationEngineConfig> = {}
+  ) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+  }
 
   /**
    * 推薦記事を取得
+   *
+   * @param visitorId 訪問者ID
+   * @param limit 取得件数上限（デフォルト: 10）
+   * @returns 推薦記事リスト（類似度降順）
+   * @throws オンボーディング未完了の場合
    */
   async getRecommendations(visitorId: string, limit: number = 10): Promise<RecommendedArticle[]> {
     // 嗜好ベクトルを再計算（即時反映）
@@ -97,6 +93,9 @@ export class RecommendationEngine {
 
   /**
    * 閲覧を記録
+   *
+   * @param visitorId 訪問者ID
+   * @param articleId 記事ID
    */
   async recordView(visitorId: string, articleId: string): Promise<void> {
     await this.storage.addViewHistory({
@@ -109,6 +108,10 @@ export class RecommendationEngine {
 
   /**
    * フィードバックを記録
+   *
+   * @param visitorId 訪問者ID
+   * @param articleId 記事ID
+   * @param type フィードバック種別（like/dislike）
    */
   async recordFeedback(
     visitorId: string,
@@ -126,6 +129,11 @@ export class RecommendationEngine {
 
   /**
    * 除外対象のIDを取得
+   *
+   * 既読・Dislike済み・お気に入り済みの記事IDを収集する。
+   *
+   * @param visitorId 訪問者ID
+   * @returns 除外対象の記事ID配列
    */
   private async getExcludedIds(visitorId: string): Promise<string[]> {
     const [viewHistory, disliked, favorites] = await Promise.all([
@@ -142,6 +150,11 @@ export class RecommendationEngine {
 
   /**
    * 嗜好ベクトルを再計算
+   *
+   * 最新の行動履歴（Like/Dislike/お気に入り/閲覧）に基づいて
+   * 嗜好ベクトルを再計算し、プロファイルを更新する。
+   *
+   * @param visitorId 訪問者ID
    */
   private async recalculatePreferenceVector(visitorId: string): Promise<void> {
     const [feedbacks, viewHistories, favorites] = await Promise.all([
@@ -175,6 +188,12 @@ export class RecommendationEngine {
 
   /**
    * Like/Dislikeなしの読了記事IDを取得
+   *
+   * フィードバック（Like/Dislike）がなく、閲覧のみの記事を抽出する。
+   *
+   * @param feedbacks フィードバック配列
+   * @param viewHistories 閲覧履歴配列
+   * @returns Like/Dislikeなしの閲覧記事ID配列
    */
   private getViewedOnlyArticleIds(feedbacks: Feedback[], viewHistories: ViewHistory[]): string[] {
     const feedbackArticleIds = new Set(feedbacks.map((f) => f.articleId));
@@ -183,73 +202,3 @@ export class RecommendationEngine {
     return [...viewedArticleIds].filter((id) => !feedbackArticleIds.has(id));
   }
 }
-```
-
-### VectorSearchClient インターフェース
-
-```typescript
-// packages/shared/src/search/vector-search-client.ts
-
-export interface VectorSearchResult {
-  id: string;
-  title: string;
-  similarity: number;
-}
-
-export interface VectorSearchParams {
-  queryVector: number[];
-  excludeIds?: string[];
-  limit: number;
-  minSimilarity?: number;
-  maxSimilarity?: number;
-}
-
-export interface VectorSearchClient {
-  /**
-   * ベクトル類似度検索
-   */
-  searchByEmbedding(params: VectorSearchParams): Promise<VectorSearchResult[]>;
-
-  /**
-   * 記事のEmbeddingを取得
-   */
-  getEmbedding(articleId: string): Promise<number[] | null>;
-}
-```
-
-### データフロー
-
-```mermaid
-flowchart TB
-    A[推薦リクエスト] --> B[嗜好ベクトル再計算]
-    B --> C{preferenceEmbedding存在?}
-    C -->|No| D[エラー: オンボーディング未完了]
-    C -->|Yes| E[除外ID取得]
-    E --> F[コサイン類似度検索]
-    F --> G[類似度降順ソート]
-    G --> H[推薦結果返却]
-```
-
-## テストケース
-
-- [x] 嗜好ベクトルが存在する場合、類似度の高い記事リストが返る
-- [x] 嗜好ベクトルが存在しない場合、エラーがスローされる
-- [x] 既読記事が除外される
-- [x] Dislike済み記事が除外される
-- [x] お気に入り済み記事が除外される
-- [x] 推薦リクエスト時に嗜好ベクトルが再計算される
-- [x] recordViewで閲覧履歴が保存される
-- [x] recordFeedbackでフィードバックが保存される
-
-## 成果物
-
-- `packages/shared/src/recommendation/engine.ts`
-- `packages/shared/src/recommendation/__tests__/engine.test.ts`
-- `packages/shared/src/search/vector-search-client.ts`
-
-## 依存関係
-
-- 004-01-03: 嗜好プロファイル計算
-- 004-01-05: 嗜好ベクトル計算
-- 004-01-06: お気に入り機能
-- 004-03-02: 初期プロファイル構築
