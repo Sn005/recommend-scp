@@ -16,3 +16,9 @@ export {
   type HybridSearchResult,
   type HybridSearchParams,
 } from "./hybrid-search";
+
+export {
+  type VectorSearchClient,
+  type VectorSearchParams as VectorSearchClientParams,
+  type VectorSearchResult as VectorSearchClientResult,
+} from "./vector-search-client";
