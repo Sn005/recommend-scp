@@ -10,7 +10,7 @@
 | [004](./004-recommend/004-recommend.md)         | 推薦ロジック実装         | ハイブリッド推薦・80/20セレンディピティ・オンボーディング | completed   |
 | [005](./005-backend-api/005-backend-api.md)     | バックエンドAPI          | 検索・推薦・フィードバック収集のRESTエンドポイント        | planned     |
 | [006](./006-frontend/006-frontend.md)           | フロントエンドUI         | 検索画面・推薦表示・記事詳細ビュー                        | planned     |
-| [007](./007-infra/007-infra.md)                 | インフラ・デプロイ       | 本番環境構築・CI/CD・シークレット管理                     | in_progress |
+| [007](./007-infra/007-infra.md)                 | インフラ・デプロイ       | 本番環境構築・CI/CD・シークレット管理                     | completed   |
 | [008](./008-observability/008-observability.md) | 運用・監視               | ログ収集・エラー監視・パフォーマンスダッシュボード        | planned     |
 | [009](./009-security/009-security.md)           | セキュリティ強化         | レート制限・CORS・入力バリデーション                      | planned     |
 
