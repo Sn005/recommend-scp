@@ -300,6 +300,15 @@ SDDワークフローの各フェーズで、専門サブエージェントを�
 - ログメッセージは日本語で記述
 - 技術的な固有名詞（Supabase, Embedding等）はそのまま使用可
 
+### コミット前の必須アクション
+
+- **⚠️ 最重要ルール: コミット前に必ず `pnpm format` を実行する**
+  - Claude Code環境ではlefthookのgitフックが動作しないため、手動でフォーマットを実行する必要がある
+  - 実行コマンド: `pnpm format` または `pnpm prettier --write <対象ファイル>`
+  - フォーマット対象: `**/*.{ts,tsx,js,jsx,json,md,yaml,yml}`
+- フォーマットを忘れるとCIで `format:check` が失敗する
+- 特に `.claude/skills/**/*.md` ファイルを編集した場合は要注意
+
 ## コミットメッセージ規約（Conventional Commits）
 
 コミットメッセージは以下の形式に従うこと：
