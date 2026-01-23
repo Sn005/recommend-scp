@@ -71,8 +71,9 @@ export class RecommendationEngine {
   /**
    * 推薦記事を取得
    *
-   * 80/20の確率で好み推薦（Exploitation）とセレンディピティ推薦（Exploration）を
-   * 切り替える。セレンディピティ推薦では隣接領域と未探索ジャンルをハイブリッドで提供する。
+   * 連続類似検出を優先し、それ以外は80/20の確率で好み推薦（Exploitation）と
+   * セレンディピティ推薦（Exploration）を切り替える。
+   * セレンディピティ推薦では隣接領域と未探索ジャンルをハイブリッドで提供する。
    *
    * @param visitorId 訪問者ID
    * @param limit 取得件数上限（デフォルト: 10）
@@ -93,6 +94,12 @@ export class RecommendationEngine {
     // 除外対象を取得
     const excludedIds = await this.getExcludedIds(visitorId);
 
+    // 連続類似検出（80/20判定より優先）
+    const forceSerendipity = await this.shouldForceSerendipity(visitorId);
+    if (forceSerendipity) {
+      return this.getSerendipityRecommendations(profile, excludedIds, limit);
+    }
+
     // 80/20 判定: explorationRateの確率でセレンディピティ推薦
     const isSerendipity = Math.random() < this.serendipityConfig.explorationRate;
 
@@ -101,6 +108,49 @@ export class RecommendationEngine {
     } else {
       return this.getPreferenceRecommendations(profile, excludedIds, limit);
     }
+  }
+
+  /**
+   * 連続類似検出
+   *
+   * 直近5件の推薦が全て "preference" の場合、冒険枠を強制する。
+   *
+   * @param visitorId 訪問者ID
+   * @returns 冒険枠を強制すべきかどうか
+   */
+  private async shouldForceSerendipity(visitorId: string): Promise<boolean> {
+    const recentLogs = await this.storage.getRecommendationLog(visitorId, 5);
+
+    if (recentLogs.length < 5) {
+      return false;
+    }
+
+    // 直近5件が全て "preference" かチェック
+    const allPreference = recentLogs.every((log) => log.source === "preference");
+
+    return allPreference;
+  }
+
+  /**
+   * 推薦ログを記録
+   *
+   * @param visitorId 訪問者ID
+   * @param articleId 記事ID
+   * @param source 推薦ソース（preference/serendipity）
+   */
+  async recordRecommendation(
+    visitorId: string,
+    articleId: string,
+    source: "preference" | "serendipity"
+  ): Promise<void> {
+    await this.storage.addRecommendationLog({
+      id: `${visitorId}_${articleId}_${Date.now()}`,
+      visitorId,
+      articleId,
+      recommendedAt: new Date().toISOString(),
+      source,
+      clicked: false,
+    });
   }
 
   /**
