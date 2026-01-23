@@ -33,6 +33,20 @@ export interface VectorSearchParams {
 }
 
 /**
+ * 未探索タグ検索パラメータ
+ */
+export interface UnexploredTagsSearchParams {
+  /** ユーザーが既に触れたタグ */
+  exploredTags: string[];
+  /** 除外する記事ID */
+  excludeIds?: string[];
+  /** 取得件数上限 */
+  limit: number;
+  /** ソート基準 */
+  orderBy: "rating" | "random";
+}
+
+/**
  * ベクトル検索クライアントインターフェース
  *
  * 推薦エンジンがベクトル類似度検索を実行するための抽象化レイヤー。
@@ -57,4 +71,15 @@ export interface VectorSearchClient {
    * @returns Embeddingベクトル。記事が存在しないまたはEmbeddingがない場合はnull
    */
   getEmbedding(articleId: string): Promise<number[] | null>;
+
+  /**
+   * 未探索タグを持つ記事を検索
+   *
+   * ユーザーがまだ触れていないタグを持つ記事を、
+   * 人気度（rating）またはランダム順で取得する。
+   *
+   * @param params 検索パラメータ
+   * @returns 検索結果
+   */
+  searchByUnexploredTags(params: UnexploredTagsSearchParams): Promise<VectorSearchResult[]>;
 }

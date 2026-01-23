@@ -21,4 +21,5 @@ export {
   type VectorSearchClient,
   type VectorSearchParams as VectorSearchClientParams,
   type VectorSearchResult as VectorSearchClientResult,
+  type UnexploredTagsSearchParams,
 } from "./vector-search-client";

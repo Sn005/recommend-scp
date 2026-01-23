@@ -44,6 +44,7 @@ function createMockVectorSearch(overrides: Partial<VectorSearchClient> = {}): Ve
   return {
     searchByEmbedding: vi.fn().mockResolvedValue([]),
     getEmbedding: vi.fn().mockResolvedValue(null),
+    searchByUnexploredTags: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
 }
@@ -91,8 +92,10 @@ describe("RecommendationEngine", () => {
         getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
       });
 
+      // explorationRate=0で常に好み推薦（テストの安定性確保）
       const engine = new RecommendationEngine(storage, vectorSearch, {
         recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
       });
       const recommendations = await engine.getRecommendations(visitorId, 10);
 
@@ -344,6 +347,110 @@ describe("RecommendationEngine", () => {
       expect(storage.addFeedback).toHaveBeenCalledWith(
         expect.objectContaining({
           id: "visitor-123_article-123",
+        })
+      );
+    });
+  });
+
+  describe("セレンディピティ統合", () => {
+    it("explorationRate=0の場合、常に好み推薦が返る", async () => {
+      const mockResults: VectorSearchResult[] = [
+        { id: "article-1", title: "記事1", similarity: 0.95 },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0].source).toBe("preference");
+    });
+
+    it("explorationRate=1の場合、常にセレンディピティが返る", async () => {
+      const adjacentResults: VectorSearchResult[] = [
+        { id: "adjacent-1", title: "隣接1", similarity: 0.5 },
+      ];
+
+      const viewHistory: ViewHistory[] = [
+        { id: "v1", visitorId, articleId: "viewed-article", viewedAt: "2024-01-01T00:00:00.000Z" },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue(viewHistory),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        getArticleTags: vi.fn().mockResolvedValue(["ホラー"]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(adjacentResults),
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 1 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0].source).toBe("serendipity");
+    });
+
+    it("セレンディピティ時にgetExploredTagsが呼ばれる", async () => {
+      const viewHistory: ViewHistory[] = [
+        { id: "v1", visitorId, articleId: "article-1", viewedAt: "2024-01-01T00:00:00.000Z" },
+        { id: "v2", visitorId, articleId: "article-2", viewedAt: "2024-01-02T00:00:00.000Z" },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue(viewHistory),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        getArticleTags: vi
+          .fn()
+          .mockResolvedValueOnce(["ホラー", "Keter"])
+          .mockResolvedValueOnce(["ミステリー"]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 1 },
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // getArticleTagsが閲覧履歴の記事ごとに呼ばれる
+      expect(storage.getArticleTags).toHaveBeenCalledWith("article-1");
+      expect(storage.getArticleTags).toHaveBeenCalledWith("article-2");
+
+      // 収集したタグがsearchByUnexploredTagsに渡される
+      expect(vectorSearch.searchByUnexploredTags).toHaveBeenCalledWith(
+        expect.objectContaining({
+          exploredTags: expect.arrayContaining(["ホラー", "Keter", "ミステリー"]),
         })
       );
     });
