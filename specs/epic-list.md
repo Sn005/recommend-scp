@@ -7,7 +7,7 @@
 | [001](./001-poc/001-poc.md)                     | 技術検証（PoC）          | SCP推薦システムの技術的実現可能性を検証                   | completed   |
 | [002](./002-quality/002-quality.md)             | 開発環境品質基盤         | ESLint/Prettier/lefthook/CI環境を整備                     | completed   |
 | [003](./003-data-pipeline/003-data-pipeline.md) | データパイプライン本番化 | 全記事クロール・差分更新・タグ辞書DB管理                  | completed   |
-| [004](./004-recommend/004-recommend.md)         | 推薦ロジック実装         | ハイブリッド推薦・80/20セレンディピティ・オンボーディング | in_progress |
+| [004](./004-recommend/004-recommend.md)         | 推薦ロジック実装         | ハイブリッド推薦・80/20セレンディピティ・オンボーディング | completed   |
 | [005](./005-backend-api/005-backend-api.md)     | バックエンドAPI          | 検索・推薦・フィードバック収集のRESTエンドポイント        | planned     |
 | [006](./006-frontend/006-frontend.md)           | フロントエンドUI         | 検索画面・推薦表示・記事詳細ビュー                        | planned     |
 | [007](./007-infra/007-infra.md)                 | インフラ・デプロイ       | 本番環境構築・CI/CD・シークレット管理                     | in_progress |
