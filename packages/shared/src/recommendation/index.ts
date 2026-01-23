@@ -18,3 +18,11 @@ export {
   type RecommendedArticle,
   type RecommendationEngineConfig,
 } from "./engine";
+
+export {
+  getSerendipityArticles,
+  getAdjacentArticles,
+  getUnexploredArticles,
+  DEFAULT_SERENDIPITY_CONFIG,
+  type SerendipityConfig,
+} from "./serendipity";

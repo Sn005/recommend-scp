@@ -2,11 +2,17 @@
  * @file 推薦エンジンコア
  * @description Embeddingベースの嗜好ベクトルを使用した推薦エンジン
  * @see specs/004-recommend/004-02-recommend-engine/004-02-01.md
+ * @see specs/004-recommend/004-02-recommend-engine/004-02-02.md
  */
 
 import type { PreferenceStorage, PreferenceProfile, ViewHistory, Feedback } from "../storage/types";
 import type { VectorSearchClient } from "../search/vector-search-client";
 import { calculatePreferenceVector, type PreferenceVectorInput } from "./preference-vector";
+import {
+  getSerendipityArticles,
+  DEFAULT_SERENDIPITY_CONFIG,
+  type SerendipityConfig,
+} from "./serendipity";
 
 /**
  * 推薦記事
@@ -28,6 +34,8 @@ export interface RecommendedArticle {
 export interface RecommendationEngineConfig {
   /** 推薦取得時に嗜好ベクトルを再計算するか（デフォルト: true） */
   recalculateOnRequest: boolean;
+  /** セレンディピティ設定（省略時はデフォルト設定を使用） */
+  serendipity?: Partial<SerendipityConfig>;
 }
 
 /**
@@ -42,9 +50,11 @@ const DEFAULT_CONFIG: RecommendationEngineConfig = {
  *
  * ユーザーの嗜好ベクトル（preferenceEmbedding）に基づいて
  * コサイン類似度で推薦候補を取得し、既読・Dislike済み記事を除外する。
+ * 80/20の確率で好み推薦とセレンディピティ推薦を切り替える。
  */
 export class RecommendationEngine {
   private readonly config: RecommendationEngineConfig;
+  private readonly serendipityConfig: SerendipityConfig;
 
   constructor(
     private readonly storage: PreferenceStorage,
@@ -52,10 +62,17 @@ export class RecommendationEngine {
     config: Partial<RecommendationEngineConfig> = {}
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    this.serendipityConfig = {
+      ...DEFAULT_SERENDIPITY_CONFIG,
+      ...config.serendipity,
+    };
   }
 
   /**
    * 推薦記事を取得
+   *
+   * 80/20の確率で好み推薦（Exploitation）とセレンディピティ推薦（Exploration）を
+   * 切り替える。セレンディピティ推薦では隣接領域と未探索ジャンルをハイブリッドで提供する。
    *
    * @param visitorId 訪問者ID
    * @param limit 取得件数上限（デフォルト: 10）
@@ -76,9 +93,32 @@ export class RecommendationEngine {
     // 除外対象を取得
     const excludedIds = await this.getExcludedIds(visitorId);
 
+    // 80/20 判定: explorationRateの確率でセレンディピティ推薦
+    const isSerendipity = Math.random() < this.serendipityConfig.explorationRate;
+
+    if (isSerendipity) {
+      return this.getSerendipityRecommendations(profile, excludedIds, limit);
+    } else {
+      return this.getPreferenceRecommendations(profile, excludedIds, limit);
+    }
+  }
+
+  /**
+   * 好み推薦（Exploitation）を取得
+   *
+   * @param profile ユーザープロファイル
+   * @param excludedIds 除外する記事ID
+   * @param limit 取得件数上限
+   * @returns 好み推薦記事リスト
+   */
+  private async getPreferenceRecommendations(
+    profile: PreferenceProfile,
+    excludedIds: string[],
+    limit: number
+  ): Promise<RecommendedArticle[]> {
     // Embeddingベースの類似度検索
     const results = await this.vectorSearch.searchByEmbedding({
-      queryVector: profile.preferenceEmbedding,
+      queryVector: profile.preferenceEmbedding!,
       excludeIds: excludedIds,
       limit,
     });
@@ -89,6 +129,49 @@ export class RecommendationEngine {
       similarityScore: r.similarity,
       source: "preference" as const,
     }));
+  }
+
+  /**
+   * セレンディピティ推薦（Exploration）を取得
+   *
+   * @param profile ユーザープロファイル
+   * @param excludedIds 除外する記事ID
+   * @param limit 取得件数上限
+   * @returns セレンディピティ推薦記事リスト
+   */
+  private async getSerendipityRecommendations(
+    profile: PreferenceProfile,
+    excludedIds: string[],
+    limit: number
+  ): Promise<RecommendedArticle[]> {
+    const exploredTags = await this.getExploredTags(profile.visitorId);
+
+    return getSerendipityArticles(
+      profile.preferenceEmbedding!,
+      excludedIds,
+      exploredTags,
+      this.vectorSearch,
+      this.serendipityConfig,
+      limit
+    );
+  }
+
+  /**
+   * ユーザーが既に触れたタグを取得
+   *
+   * @param visitorId 訪問者ID
+   * @returns ユーザーが触れたタグの配列（重複排除済み）
+   */
+  private async getExploredTags(visitorId: string): Promise<string[]> {
+    const viewHistory = await this.storage.getViewHistory(visitorId);
+
+    // 並列で全記事のタグを取得
+    const tagArrays = await Promise.all(
+      viewHistory.map((vh) => this.storage.getArticleTags(vh.articleId))
+    );
+
+    const allTags = tagArrays.flatMap((tags) => tags ?? []);
+    return [...new Set(allTags)];
   }
 
   /**
