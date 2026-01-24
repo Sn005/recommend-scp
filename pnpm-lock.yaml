@@ -42,6 +42,37 @@ importers:
         specifier: ^8.52.0
         version: 8.52.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
+  apps/api-server:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.14.3
+        version: 1.19.9(hono@4.11.5)
+      '@recommend-scp/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      hono:
+        specifier: ^4.7.10
+        version: 4.11.5
+      pino:
+        specifier: ^10.2.0
+        version: 10.2.0
+      zod:
+        specifier: ^3.25.2
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.3
+        version: 22.19.3
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@22.19.3)(jiti@2.6.1)(tsx@4.21.0)
+
   packages/pipeline:
     dependencies:
       '@recommend-scp/shared':
@@ -415,6 +446,12 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@hono/node-server@1.19.9':
+    resolution: {integrity: sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1150,6 +1187,10 @@ packages:
 
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
+
+  hono@4.11.5:
+    resolution: {integrity: sha512-WemPi9/WfyMwZs+ZUXdiwcCh9Y+m7L+8vki9MzDw3jJ+W9Lc+12HGsd368Qc1vZi1xwW8BWMMsnK5efYKPdt4g==}
+    engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
@@ -2143,6 +2184,10 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
+  '@hono/node-server@1.19.9(hono@4.11.5)':
+    dependencies:
+      hono: 4.11.5
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -2921,6 +2966,8 @@ snapshots:
 
   help-me@5.0.0: {}
 
+  hono@4.11.5: {}
+
   html-escaper@2.0.2: {}
 
   humanize-ms@1.2.1:
@@ -3545,5 +3592,4 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zod@3.25.76:
-    optional: true
+  zod@3.25.76: {}
