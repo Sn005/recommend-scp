@@ -18,31 +18,31 @@ Claude Codeは実装時に必ずこのガイドラインに従うこと。
 
 ### ファイル・ディレクトリ
 
-| 対象 | 規則 | 例 |
-|------|------|-----|
-| ディレクトリ | kebab-case | `api-server/`, `api-types/` |
-| TypeScriptファイル | kebab-case | `visitor-service.ts` |
-| テストファイル | `*.test.ts` | `service.test.ts` |
-| 型定義ファイル | `types.ts` | `domains/recommend/types.ts` |
+| 対象               | 規則        | 例                           |
+| ------------------ | ----------- | ---------------------------- |
+| ディレクトリ       | kebab-case  | `api-server/`, `api-types/`  |
+| TypeScriptファイル | kebab-case  | `visitor-service.ts`         |
+| テストファイル     | `*.test.ts` | `service.test.ts`            |
+| 型定義ファイル     | `types.ts`  | `domains/recommend/types.ts` |
 
 ### コード内
 
-| 対象 | 規則 | 例 |
-|------|------|-----|
-| 変数・関数 | camelCase | `getVisitorById`, `visitorId` |
-| 型・インターフェース | PascalCase | `Visitor`, `RecommendRequest` |
-| 定数 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| DBカラム | snake_case | `visitor_id`, `created_at` |
+| 対象                 | 規則             | 例                            |
+| -------------------- | ---------------- | ----------------------------- |
+| 変数・関数           | camelCase        | `getVisitorById`, `visitorId` |
+| 型・インターフェース | PascalCase       | `Visitor`, `RecommendRequest` |
+| 定数                 | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT`             |
+| DBカラム             | snake_case       | `visitor_id`, `created_at`    |
 
 ### 命名の意図を明確に
 
 ```typescript
 // Good
-const activeVisitors = visitors.filter(v => v.isActive);
+const activeVisitors = visitors.filter((v) => v.isActive);
 const recommendedArticles = await getRecommendations(visitorId);
 
 // Bad
-const data = visitors.filter(v => v.isActive);
+const data = visitors.filter((v) => v.isActive);
 const result = await getRecommendations(visitorId);
 ```
 
@@ -77,16 +77,12 @@ import { RecommendService } from "./service";
 
 const app = new Hono();
 
-app.post(
-  "/",
-  zValidator("json", recommendRequestSchema),
-  async (c) => {
-    const body = c.req.valid("json");
-    const service = new RecommendService();
-    const result = await service.getRecommendations(body);
-    return c.json(result);
-  }
-);
+app.post("/", zValidator("json", recommendRequestSchema), async (c) => {
+  const body = c.req.valid("json");
+  const service = new RecommendService();
+  const result = await service.getRecommendations(body);
+  return c.json(result);
+});
 
 export default app;
 ```
@@ -117,9 +113,7 @@ export class RecommendService {
     this.repository = repository ?? new VisitorRepository();
   }
 
-  getRecommendations = async (
-    request: RecommendRequest
-  ): Promise<RecommendResponse> => {
+  getRecommendations = async (request: RecommendRequest): Promise<RecommendResponse> => {
     const visitor = await this.repository.findByVisitorId(request.visitorId);
     if (!visitor) {
       throw new NotFoundError("Visitor not found");
@@ -165,10 +159,7 @@ export class VisitorRepository {
     };
   };
 
-  searchSimilarArticles = async (
-    vector: number[],
-    limit: number
-  ): Promise<Article[]> => {
+  searchSimilarArticles = async (vector: number[], limit: number): Promise<Article[]> => {
     const { data, error } = await supabase.rpc("search_similar_articles", {
       query_vector: vector,
       match_count: limit,
@@ -331,8 +322,7 @@ const getVisitor = async (id: string): Promise<Visitor> => {
   // ...
 };
 
-const processArticles = (articles: Article[]): ProcessedArticle[] =>
-  articles.map(transformArticle);
+const processArticles = (articles: Article[]): ProcessedArticle[] => articles.map(transformArticle);
 
 // Bad - function宣言は使わない
 function getVisitor(id: string): Promise<Visitor> {
@@ -344,7 +334,7 @@ function getVisitor(id: string): Promise<Visitor> {
 
 ```typescript
 // Good
-const activeVisitors = visitors.filter(v => v.isActive);
+const activeVisitors = visitors.filter((v) => v.isActive);
 const updatedVisitor = { ...visitor, lastAccess: new Date() };
 
 // Bad - 再代入
@@ -474,9 +464,7 @@ describe("RecommendService", () => {
         visitorId: "visitor-123",
         preferenceVector: [0.1, 0.2],
       }),
-      searchSimilarArticles: vi.fn().mockResolvedValue([
-        { id: "a1", title: "SCP-001" },
-      ]),
+      searchSimilarArticles: vi.fn().mockResolvedValue([{ id: "a1", title: "SCP-001" }]),
     } as unknown as VisitorRepository;
 
     // DIでモック注入

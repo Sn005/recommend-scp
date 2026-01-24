@@ -11,6 +11,7 @@ recommend-scpは、SCP Foundation記事の推薦システム。
 ハイブリッド推薦（Embedding + タグ）により、ユーザーの嗜好に合った記事を提案する。
 
 **特徴:**
+
 - ユーザー登録不要（ゲスト利用）
 - WebViewで元サイト記事を表示
 - 将来のアカウント連携パスを確保
@@ -19,14 +20,14 @@ recommend-scpは、SCP Foundation記事の推薦システム。
 
 ## 技術スタック
 
-| コンポーネント | 技術 | 選定理由 |
-|---------------|------|---------|
-| 言語 | TypeScript | フロントエンド/バックエンド統一の型安全性 |
-| データベース | Supabase (PostgreSQL + pgvector) | RLS + ベクトル検索 |
-| APIサーバー | Hono (独立サーバー) | 高性能、RPC型共有、フロントエンド分離 |
-| Webフレームワーク | Next.js App Router | Server Components、静的最適化 |
-| モノレポ | Turborepo | 高速ビルド、キャッシュ |
-| ホスティング | Vercel (Web) / Railway (API) | 分離デプロイ、スケール独立 |
+| コンポーネント    | 技術                             | 選定理由                                  |
+| ----------------- | -------------------------------- | ----------------------------------------- |
+| 言語              | TypeScript                       | フロントエンド/バックエンド統一の型安全性 |
+| データベース      | Supabase (PostgreSQL + pgvector) | RLS + ベクトル検索                        |
+| APIサーバー       | Hono (独立サーバー)              | 高性能、RPC型共有、フロントエンド分離     |
+| Webフレームワーク | Next.js App Router               | Server Components、静的最適化             |
+| モノレポ          | Turborepo                        | 高速ビルド、キャッシュ                    |
+| ホスティング      | Vercel (Web) / Railway (API)     | 分離デプロイ、スケール独立                |
 
 ---
 
@@ -124,15 +125,15 @@ export const api = hc<AppType>(process.env.NEXT_PUBLIC_API_URL!);
 
 ### サーバー主導アーキテクチャ
 
-| 処理 | クライアント | サーバー |
-|------|-------------|---------|
-| visitorId生成 | ✅ UUID生成 | - |
-| visitorId保存 | ✅ localStorage | ✅ DB |
-| 嗜好プロファイル | - | ✅ 計算・保存 |
-| 推薦スコア計算 | - | ✅ |
-| ベクトル検索 | - | ✅ |
-| フィードバック記録 | - | ✅ |
-| APIレスポンスキャッシュ | ✅ | - |
+| 処理                    | クライアント    | サーバー      |
+| ----------------------- | --------------- | ------------- |
+| visitorId生成           | ✅ UUID生成     | -             |
+| visitorId保存           | ✅ localStorage | ✅ DB         |
+| 嗜好プロファイル        | -               | ✅ 計算・保存 |
+| 推薦スコア計算          | -               | ✅            |
+| ベクトル検索            | -               | ✅            |
+| フィードバック記録      | -               | ✅            |
+| APIレスポンスキャッシュ | ✅              | -             |
 
 ### データフロー
 
@@ -197,6 +198,7 @@ CREATE TABLE visitors (
 ```
 
 **連携フロー:**
+
 1. 匿名で利用開始（visitor_idのみ）
 2. アカウント作成時にuser_idを紐付け
 3. 複数端末の履歴をマージ
@@ -207,21 +209,21 @@ CREATE TABLE visitors (
 
 ### MVP範囲
 
-| メソッド | パス | 説明 | レスポンス目標 |
-|---------|------|------|---------------|
-| POST | `/visitors` | visitorId登録 | 200ms |
-| GET | `/articles/search` | ベクトル検索 | 200ms |
-| POST | `/recommend` | 推薦取得 | 200ms |
-| POST | `/feedback` | Like/Dislike記録 | 200ms |
-| GET | `/onboarding/packs` | スターターパック一覧 | 200ms |
-| POST | `/onboarding/select` | パック選択・初期化 | 200ms |
+| メソッド | パス                 | 説明                 | レスポンス目標 |
+| -------- | -------------------- | -------------------- | -------------- |
+| POST     | `/visitors`          | visitorId登録        | 200ms          |
+| GET      | `/articles/search`   | ベクトル検索         | 200ms          |
+| POST     | `/recommend`         | 推薦取得             | 200ms          |
+| POST     | `/feedback`          | Like/Dislike記録     | 200ms          |
+| GET      | `/onboarding/packs`  | スターターパック一覧 | 200ms          |
+| POST     | `/onboarding/select` | パック選択・初期化   | 200ms          |
 
 ### 将来対応
 
-| メソッド | パス | 説明 |
-|---------|------|------|
-| POST | `/visitors/link` | アカウント連携 |
-| GET | `/visitors/profile` | 嗜好プロファイル取得 |
+| メソッド | パス                | 説明                 |
+| -------- | ------------------- | -------------------- |
+| POST     | `/visitors/link`    | アカウント連携       |
+| GET      | `/visitors/profile` | 嗜好プロファイル取得 |
 
 ### エラーレスポンス (RFC 7807)
 
@@ -249,11 +251,11 @@ interface ProblemDetails {
 
 ## パフォーマンス要件
 
-| 指標 | 目標値 | 備考 |
-|------|--------|------|
+| 指標          | 目標値        | 備考           |
+| ------------- | ------------- | -------------- |
 | APIレスポンス | **200ms以下** | キャッシュ活用 |
-| ベクトル検索 | 100ms以下 | pgvector HNSW |
-| 推薦計算 | 50ms以下 | 事前計算活用 |
+| ベクトル検索  | 100ms以下     | pgvector HNSW  |
+| 推薦計算      | 50ms以下      | 事前計算活用   |
 
 ### キャッシュ戦略
 
@@ -265,11 +267,11 @@ interface ProblemDetails {
 
 ## テスト戦略
 
-| レベル | 対象 | 必須度 | ツール |
-|--------|------|--------|--------|
-| 単体テスト | service, repository | **必須** | Vitest |
-| 統合テスト | routes (APIエンドポイント) | 必須 | Vitest + supertest |
-| E2Eテスト | AC準拠シナリオ | AC要件に従う | Playwright |
+| レベル     | 対象                       | 必須度       | ツール             |
+| ---------- | -------------------------- | ------------ | ------------------ |
+| 単体テスト | service, repository        | **必須**     | Vitest             |
+| 統合テスト | routes (APIエンドポイント) | 必須         | Vitest + supertest |
+| E2Eテスト  | AC準拠シナリオ             | AC要件に従う | Playwright         |
 
 ### テストファイル配置
 
@@ -294,8 +296,8 @@ const logger = pino({
   level: process.env.LOG_LEVEL || "info",
   transport: {
     target: "pino-pretty",
-    options: { colorize: true }
-  }
+    options: { colorize: true },
+  },
 });
 
 // 使用例
