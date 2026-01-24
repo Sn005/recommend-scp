@@ -68,6 +68,14 @@ export const env = {
     const parsed = parseInt(value, 10);
     return Number.isNaN(parsed) ? 3001 : parsed;
   },
+  /** オプション: ログレベル（デフォルト: info） */
+  get LOG_LEVEL(): string {
+    return process.env.LOG_LEVEL ?? "info";
+  },
+  /** オプション: 実行環境（development / production / test） */
+  get NODE_ENV(): string {
+    return process.env.NODE_ENV ?? "development";
+  },
 };
 
 /**
