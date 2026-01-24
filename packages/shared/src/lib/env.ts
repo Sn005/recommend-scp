@@ -61,6 +61,13 @@ export const env = {
   get TAGGING_LLM_PROVIDER(): string {
     return process.env.TAGGING_LLM_PROVIDER ?? "openai";
   },
+  /** オプション: APIサーバーポート（デフォルト: 3001） */
+  get API_PORT(): number {
+    const value = process.env.API_PORT;
+    if (!value) return 3001;
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? 3001 : parsed;
+  },
 };
 
 /**
