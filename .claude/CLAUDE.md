@@ -11,6 +11,8 @@ EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行
 
 ```
 .ai/                    # 汎用ドキュメント（どのAIでも利用可能）
+├── architecture.md     # アーキテクチャ定義（MUST参照）
+├── coding-guidelines.md # コーディングガイドライン（MUST参照）
 ├── SPEC_FORMAT.md      # 仕様フォーマット定義
 ├── WORKFLOW.md         # ワークフロー定義
 └── PROMPT_TEMPLATE.md  # 他AI用プロンプトテンプレート
@@ -34,6 +36,24 @@ specs/                  # 仕様書本体
 ```
 
 ## Claudeへの指示
+
+### ⚠️ 最重要ルール: アーキテクチャドキュメント参照（MUST）
+
+**EPIC-005（バックエンドAPI）以降の実装時は、必ず以下のドキュメントを参照すること。**
+
+| ドキュメント             | パス                       | 参照タイミング         |
+| ------------------------ | -------------------------- | ---------------------- |
+| アーキテクチャ           | `.ai/architecture.md`      | 実装開始前、設計判断時 |
+| コーディングガイドライン | `.ai/coding-guidelines.md` | コード記述時           |
+
+**特に以下を遵守:**
+
+- Hono APIはドメイン別Colocationパターンで実装
+- Repository層でDB操作を抽象化（直接Supabase禁止）
+- エラーレスポンスはRFC 7807 Problem Details形式
+- ロギングはpino使用（console.log禁止）
+
+---
 
 ### ⚠️ 最重要ルール: Skill/サブエージェント自動発動（MUST）
 
