@@ -4,7 +4,7 @@ import { env } from "@recommend-scp/shared/lib/env";
 const isDevelopment = env.NODE_ENV !== "production";
 
 export const logger: Logger = pino({
-  level: env.LOG_LEVEL || "info",
+  level: env.LOG_LEVEL,
   transport: isDevelopment
     ? {
         target: "pino-pretty",
