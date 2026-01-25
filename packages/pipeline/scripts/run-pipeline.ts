@@ -136,6 +136,8 @@ async function main(): Promise<void> {
   // OpenAIクライアント初期化
   const openai = new OpenAI({
     apiKey: env.OPENAI_API_KEY,
+    timeout: 60 * 1000, // 60秒タイムアウト
+    maxRetries: 2, // リトライ回数を制限
   });
 
   // 依存関係の初期化
