@@ -53,6 +53,9 @@ importers:
       '@recommend-scp/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.89.0
       hono:
         specifier: ^4.7.10
         version: 4.11.5

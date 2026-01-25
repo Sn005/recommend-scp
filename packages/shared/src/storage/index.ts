@@ -10,6 +10,7 @@ export type {
   ViewHistory,
   Feedback,
   RecommendationLog,
+  Favorite,
 } from "./types";
 
 // Implementations
