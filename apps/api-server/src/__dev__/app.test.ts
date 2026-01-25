@@ -1,8 +1,31 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
+
+// Supabaseクライアントをモック
+vi.mock("@recommend-scp/shared/lib/supabase", () => ({
+  getSupabaseClient: vi.fn(),
+}));
+
+import { getSupabaseClient } from "@recommend-scp/shared/lib/supabase";
 import { app } from "../app";
 import type { AppType } from "../app";
 
 describe("Honoアプリケーション", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // 正常なDB接続をモック
+    const mockClient = {
+      from: vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue({
+            data: [{ id: 1 }],
+            error: null,
+          }),
+        }),
+      }),
+    };
+    (getSupabaseClient as Mock).mockReturnValue(mockClient);
+  });
+
   it("Hono インスタンスが export される", () => {
     expect(app).toBeDefined();
     expect(app.fetch).toBeInstanceOf(Function);
