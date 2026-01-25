@@ -76,6 +76,10 @@ export const env = {
   get LOG_LEVEL(): string {
     return process.env.LOG_LEVEL || "info";
   },
+  /** オプション: CORS許可オリジン（カンマ区切り）、未設定時はlocalhost:3000 */
+  get ALLOWED_ORIGINS(): string | undefined {
+    return process.env.ALLOWED_ORIGINS;
+  },
 };
 
 /**
