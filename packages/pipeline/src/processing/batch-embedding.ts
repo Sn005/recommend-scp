@@ -16,7 +16,7 @@ export const COST_PER_MILLION_TOKENS = 0.02;
 const MAX_CONTENT_LENGTH = 30000;
 
 /** デフォルトのバッチサイズ */
-const DEFAULT_BATCH_SIZE = 10;
+const DEFAULT_BATCH_SIZE = 50;
 
 /** バッチ間の遅延（ミリ秒） */
 const BATCH_DELAY_MS = 1000;
@@ -43,7 +43,7 @@ export interface DbArticle {
 
 /** バッチ処理オプション */
 export interface BatchEmbeddingOptions {
-  /** バッチサイズ（デフォルト: 10） */
+  /** バッチサイズ（デフォルト: 50） */
   batchSize?: number;
   /** コスト上限（USD） */
   costLimit?: number;
@@ -150,8 +150,9 @@ export class BatchEmbeddingProcessor {
 
   /**
    * 未処理記事を取得する
+   * @param limit 取得上限（デフォルト: 2000件、1回のGitHub Actions実行で処理可能な件数）
    */
-  async getPendingArticles(limit = 10000): Promise<DbArticle[]> {
+  async getPendingArticles(limit = 2000): Promise<DbArticle[]> {
     const { data, error } = await this.supabase
       .from("scp_articles")
       .select("*")

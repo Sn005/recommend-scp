@@ -44,7 +44,7 @@ jobs:
   pipeline:
     name: Run Data Pipeline
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
