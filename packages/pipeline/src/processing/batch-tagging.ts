@@ -420,9 +420,10 @@ ${preprocessed}
 
   /**
    * ステータスを更新する
+   * @param id - UUID (プライマリキー)
    */
   private async updateStatus(
-    articleId: string,
+    id: string,
     status: DbTaggingArticle["tagging_status"],
     lastTaggedAt?: string
   ): Promise<void> {
@@ -434,7 +435,8 @@ ${preprocessed}
       updateData.last_tagged_at = lastTaggedAt;
     }
 
-    await this.supabase.from("scp_articles").update(updateData).eq("article_id", articleId);
+    // UUIDでマッチング（一意性を保証）
+    await this.supabase.from("scp_articles").update(updateData).eq("id", id);
   }
 
   /**
@@ -601,8 +603,8 @@ ${preprocessed}
 
       for (const article of batch) {
         try {
-          // ステータスをprocessingに更新
-          await this.updateStatus(article.article_id, "processing");
+          // ステータスをprocessingに更新（UUIDで一意に特定）
+          await this.updateStatus(article.id, "processing");
 
           // タグ抽出
           const { rawTags, inputTokens, outputTokens } = await this.extractTagsWithRetry(
@@ -613,7 +615,7 @@ ${preprocessed}
           totalInputTokens += inputTokens;
           totalOutputTokens += outputTokens;
 
-          // タグ正規化
+          // タグ正規化（article_idはログ・エラー報告用）
           const { normalized, unknownTags: articleUnknownTags } = await this.normalizeTags(
             article.article_id,
             rawTags,
@@ -622,11 +624,11 @@ ${preprocessed}
 
           unknownTags.push(...articleUnknownTags);
 
-          // タグ保存
+          // タグ保存（article_tagsテーブルはarticle_idで関連付け）
           await this.saveTags(article.article_id, normalized);
 
           // 成功時の更新
-          await this.updateStatus(article.article_id, "completed", new Date().toISOString());
+          await this.updateStatus(article.id, "completed", new Date().toISOString());
 
           succeeded++;
         } catch (error) {
@@ -635,7 +637,7 @@ ${preprocessed}
           failed++;
 
           // エラー時の更新
-          await this.updateStatus(article.article_id, "error");
+          await this.updateStatus(article.id, "error");
           await this.addToRetryQueue(article.article_id, errorMessage);
         }
 
