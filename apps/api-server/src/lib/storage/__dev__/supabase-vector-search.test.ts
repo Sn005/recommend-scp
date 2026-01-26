@@ -10,6 +10,48 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseVectorSearch } from "../supabase-vector-search";
 
+/**
+ * モックレスポンス型
+ * テスト用にシンプルな型定義
+ */
+interface MockResponse<T> {
+  data: T;
+  error: MockError | null;
+  count: null;
+  status: number;
+  statusText: string;
+}
+
+interface MockError {
+  name: string;
+  message: string;
+  details: string;
+  hint: string;
+  code: string;
+}
+
+/**
+ * PostgrestSingleResponse互換のモックレスポンスを作成
+ */
+const createMockRpcResponse = <T>(data: T, error: MockError | null = null): MockResponse<T> => ({
+  data,
+  error,
+  count: null,
+  status: error !== null ? 400 : 200,
+  statusText: error !== null ? "Bad Request" : "OK",
+});
+
+/**
+ * PostgrestError互換のモックエラーを作成
+ */
+const createMockPostgrestError = (message: string): MockError => ({
+  name: "PostgrestError",
+  message,
+  details: "",
+  hint: "",
+  code: "ERROR",
+});
+
 describe("SupabaseVectorSearch", () => {
   let mockSupabase: SupabaseClient;
   let vectorSearch: SupabaseVectorSearch;
@@ -35,10 +77,7 @@ describe("SupabaseVectorSearch", () => {
           { id: "scp-096", title: "The Shy Guy", similarity: 0.87 },
         ];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         const result = await vectorSearch.searchByEmbedding({
@@ -69,10 +108,7 @@ describe("SupabaseVectorSearch", () => {
           { id: "scp-682", title: "Hard-to-Destroy Reptile", similarity: 0.75 },
         ];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         const result = await vectorSearch.searchByEmbedding({
@@ -89,10 +125,7 @@ describe("SupabaseVectorSearch", () => {
         // Arrange
         const mockData = [{ id: "scp-096", title: "The Shy Guy", similarity: 0.87 }];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         const result = await vectorSearch.searchByEmbedding({
@@ -113,10 +146,7 @@ describe("SupabaseVectorSearch", () => {
         // Arrange
         const mockData = [{ id: "scp-173", title: "The Sculpture", similarity: 0.95 }];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -134,10 +164,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("maxSimilarityフィルタが動作する", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -157,10 +184,7 @@ describe("SupabaseVectorSearch", () => {
     describe("エッジケース", () => {
       it("excludeIdsが空配列の場合、デフォルト値[]が渡される", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -178,10 +202,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("excludeIdsがundefinedの場合、デフォルト値[]が渡される", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -198,10 +219,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("minSimilarityがundefinedの場合、デフォルト値0が渡される", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -218,10 +236,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("maxSimilarityがundefinedの場合、デフォルト値1が渡される", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByEmbedding({
@@ -238,10 +253,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("検索結果が0件の場合、空配列を返す", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         const result = await vectorSearch.searchByEmbedding({
@@ -255,10 +267,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("dataがnullの場合、空配列を返す", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: null,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(null) as never);
 
         // Act
         const result = await vectorSearch.searchByEmbedding({
@@ -274,11 +283,10 @@ describe("SupabaseVectorSearch", () => {
     describe("異常系", () => {
       it("RPC関数がエラーを返した場合、例外をthrowする", async () => {
         // Arrange
-        const mockError = new Error("RPC function error");
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: null,
-          error: mockError,
-        });
+        const mockError = createMockPostgrestError("RPC function error");
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(
+          createMockRpcResponse(null, mockError) as never
+        );
 
         // Act & Assert
         await expect(
@@ -361,7 +369,7 @@ describe("SupabaseVectorSearch", () => {
     describe("異常系", () => {
       it("クエリがエラーを返した場合、nullを返す", async () => {
         // Arrange
-        const mockChain = createMockChain(null, new Error("Database error"));
+        const mockChain = createMockChain(null, createMockPostgrestError("Database error"));
         vi.mocked(mockSupabase.from).mockReturnValue(mockChain as never);
 
         // Act
@@ -385,10 +393,7 @@ describe("SupabaseVectorSearch", () => {
           { id: "scp-096", title: "The Shy Guy" },
         ];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         const result = await vectorSearch.searchByUnexploredTags({
@@ -405,10 +410,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("orderBy=ratingでソートされる", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByUnexploredTags({
@@ -426,10 +428,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("orderBy=randomでランダム順になる", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByUnexploredTags({
@@ -447,10 +446,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("excludeIdsが動作する", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByUnexploredTags({
@@ -471,10 +467,7 @@ describe("SupabaseVectorSearch", () => {
     describe("エッジケース", () => {
       it("exploredTagsが空配列の場合、全タグを未探索として扱う", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByUnexploredTags({
@@ -492,10 +485,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("excludeIdsがundefinedの場合、デフォルト値[]が渡される", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         await vectorSearch.searchByUnexploredTags({
@@ -513,10 +503,7 @@ describe("SupabaseVectorSearch", () => {
 
       it("検索結果が0件の場合、空配列を返す", async () => {
         // Arrange
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: [],
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse([]) as never);
 
         // Act
         const result = await vectorSearch.searchByUnexploredTags({
@@ -536,10 +523,7 @@ describe("SupabaseVectorSearch", () => {
           { id: "scp-096", title: "The Shy Guy" },
         ];
 
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: mockData,
-          error: null,
-        });
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
 
         // Act
         const result = await vectorSearch.searchByUnexploredTags({
@@ -557,11 +541,10 @@ describe("SupabaseVectorSearch", () => {
     describe("異常系", () => {
       it("RPC関数がエラーを返した場合、例外をthrowする", async () => {
         // Arrange
-        const mockError = new Error("RPC function error");
-        vi.mocked(mockSupabase.rpc).mockResolvedValue({
-          data: null,
-          error: mockError,
-        });
+        const mockError = createMockPostgrestError("RPC function error");
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(
+          createMockRpcResponse(null, mockError) as never
+        );
 
         // Act & Assert
         await expect(

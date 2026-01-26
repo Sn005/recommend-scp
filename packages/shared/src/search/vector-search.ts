@@ -33,11 +33,11 @@ export async function vectorSearch(params: VectorSearchParams): Promise<VectorSe
 
   const supabase = getSupabaseAdmin();
 
-  // クエリ記事のタイトルを取得
+  // クエリ記事のタイトルを取得（queryIdは"SCP-173"形式のarticle_id）
   const { data: queryArticle, error: articleError } = await supabase
     .from("scp_articles")
     .select("title")
-    .eq("id", queryId)
+    .eq("article_id", queryId)
     .single();
 
   if (articleError || !queryArticle) {

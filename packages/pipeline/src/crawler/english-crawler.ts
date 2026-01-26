@@ -8,6 +8,26 @@ import type { ArticleContent, ArticleIndex, BranchCrawler } from "./types";
 
 const BASE_URL = "https://scp-data.tedivm.com/data/scp/items";
 
+/** Fetch タイムアウト（ミリ秒） */
+const FETCH_TIMEOUT_MS = 30000;
+
+/**
+ * タイムアウト付きfetchを実行する
+ */
+async function fetchWithTimeout(url: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 interface ScpIndexItem {
   link: string;
   title: string;
@@ -61,7 +81,7 @@ export class EnglishCrawler implements BranchCrawler {
       return this.indexCache;
     }
 
-    const response = await fetch(`${BASE_URL}/index.json`);
+    const response = await fetchWithTimeout(`${BASE_URL}/index.json`);
     if (!response.ok) {
       throw new Error(`インデックス取得に失敗: ${String(response.status)}`);
     }
@@ -77,7 +97,7 @@ export class EnglishCrawler implements BranchCrawler {
       return cached;
     }
 
-    const response = await fetch(`${BASE_URL}/content_${seriesName}.json`);
+    const response = await fetchWithTimeout(`${BASE_URL}/content_${seriesName}.json`);
     if (!response.ok) {
       throw new Error(`${seriesName}の取得に失敗: ${String(response.status)}`);
     }

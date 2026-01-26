@@ -34,7 +34,8 @@ const ESTIMATED_OUTPUT_TOKENS = 50;
 
 /** DB記事型 */
 export interface DbTaggingArticle {
-  id: string;
+  id: string; // UUID (サロゲートキー)
+  article_id: string; // SCP記事ID (例: "SCP-173")
   title: string;
   content: string;
   content_hash: string;
@@ -419,9 +420,10 @@ ${preprocessed}
 
   /**
    * ステータスを更新する
+   * @param id - UUID (プライマリキー)
    */
   private async updateStatus(
-    articleId: string,
+    id: string,
     status: DbTaggingArticle["tagging_status"],
     lastTaggedAt?: string
   ): Promise<void> {
@@ -433,7 +435,8 @@ ${preprocessed}
       updateData.last_tagged_at = lastTaggedAt;
     }
 
-    await this.supabase.from("scp_articles").update(updateData).eq("article_id", articleId);
+    // UUIDでマッチング（一意性を保証）
+    await this.supabase.from("scp_articles").update(updateData).eq("id", id);
   }
 
   /**
@@ -600,7 +603,7 @@ ${preprocessed}
 
       for (const article of batch) {
         try {
-          // ステータスをprocessingに更新
+          // ステータスをprocessingに更新（UUIDで一意に特定）
           await this.updateStatus(article.id, "processing");
 
           // タグ抽出
@@ -612,17 +615,17 @@ ${preprocessed}
           totalInputTokens += inputTokens;
           totalOutputTokens += outputTokens;
 
-          // タグ正規化
+          // タグ正規化（article_idはログ・エラー報告用）
           const { normalized, unknownTags: articleUnknownTags } = await this.normalizeTags(
-            article.id,
+            article.article_id,
             rawTags,
             article.lang
           );
 
           unknownTags.push(...articleUnknownTags);
 
-          // タグ保存
-          await this.saveTags(article.id, normalized);
+          // タグ保存（article_tagsテーブルはarticle_idで関連付け）
+          await this.saveTags(article.article_id, normalized);
 
           // 成功時の更新
           await this.updateStatus(article.id, "completed", new Date().toISOString());
@@ -630,12 +633,12 @@ ${preprocessed}
           succeeded++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          errors.push({ articleId: article.id, error: errorMessage });
+          errors.push({ articleId: article.article_id, error: errorMessage });
           failed++;
 
           // エラー時の更新
           await this.updateStatus(article.id, "error");
-          await this.addToRetryQueue(article.id, errorMessage);
+          await this.addToRetryQueue(article.article_id, errorMessage);
         }
 
         // 進捗表示

@@ -29,7 +29,8 @@ const BASE_RETRY_DELAY_MS = 1000;
 
 /** DB記事型 */
 export interface DbArticle {
-  id: string;
+  id: string; // UUID (サロゲートキー)
+  article_id: string; // SCP記事ID (例: "SCP-173")
   title: string;
   content: string;
   content_hash: string;
@@ -222,9 +223,10 @@ export class BatchEmbeddingProcessor {
 
   /**
    * ステータスを更新する
+   * @param id - UUID (プライマリキー)
    */
   private async updateStatus(
-    articleId: string,
+    id: string,
     status: DbArticle["embedding_status"],
     embedding?: number[],
     lastProcessedAt?: string
@@ -241,7 +243,8 @@ export class BatchEmbeddingProcessor {
       updateData.last_processed_at = lastProcessedAt;
     }
 
-    await this.supabase.from("scp_articles").update(updateData).eq("article_id", articleId);
+    // UUIDでマッチング（一意性を保証）
+    await this.supabase.from("scp_articles").update(updateData).eq("id", id);
   }
 
   /**
@@ -334,7 +337,7 @@ export class BatchEmbeddingProcessor {
 
       for (const article of batch) {
         try {
-          // ステータスをprocessingに更新
+          // ステータスをprocessingに更新（UUIDで一意に特定）
           await this.updateStatus(article.id, "processing");
 
           // Embedding生成
@@ -348,12 +351,12 @@ export class BatchEmbeddingProcessor {
           succeeded++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          errors.push({ articleId: article.id, error: errorMessage });
+          errors.push({ articleId: article.article_id, error: errorMessage });
           failed++;
 
           // エラー時の更新
           await this.updateStatus(article.id, "error");
-          await this.addToRetryQueue(article.id, errorMessage);
+          await this.addToRetryQueue(article.article_id, errorMessage);
         }
 
         // 進捗表示
