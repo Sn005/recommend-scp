@@ -436,14 +436,20 @@ ${preprocessed}
     }
 
     // UUIDでマッチング（一意性を保証）
-    await this.supabase.from("scp_articles").update(updateData).eq("id", id);
+    const { error } = await this.supabase.from("scp_articles").update(updateData).eq("id", id);
+
+    if (error) {
+      throw new Error(
+        `ステータス更新に失敗しました (id=${id}, status=${status}): ${error.message}`
+      );
+    }
   }
 
   /**
    * リトライキューに追加する
    */
   private async addToRetryQueue(articleId: string, errorMessage: string): Promise<void> {
-    await this.supabase.from("retry_queue").upsert(
+    const { error } = await this.supabase.from("retry_queue").upsert(
       {
         article_id: articleId,
         operation: "tagging",
@@ -453,6 +459,12 @@ ${preprocessed}
       },
       { onConflict: "article_id,operation" }
     );
+
+    if (error) {
+      throw new Error(
+        `リトライキューへの追加に失敗しました (articleId=${articleId}): ${error.message}`
+      );
+    }
   }
 
   /**
@@ -460,7 +472,16 @@ ${preprocessed}
    */
   private async saveTags(articleId: string, normalized: NormalizedTags): Promise<void> {
     // 既存タグを削除
-    await this.supabase.from("article_tags").delete().eq("article_id", articleId);
+    const { error: deleteError } = await this.supabase
+      .from("article_tags")
+      .delete()
+      .eq("article_id", articleId);
+
+    if (deleteError) {
+      throw new Error(
+        `既存タグの削除に失敗しました (articleId=${articleId}): ${deleteError.message}`
+      );
+    }
 
     // 新しいタグを挿入
     const tagRecords: { article_id: string; tag_id: number }[] = [];
@@ -490,7 +511,13 @@ ${preprocessed}
     }
 
     if (tagRecords.length > 0) {
-      await this.supabase.from("article_tags").insert(tagRecords);
+      const { error: insertError } = await this.supabase.from("article_tags").insert(tagRecords);
+
+      if (insertError) {
+        throw new Error(
+          `タグの保存に失敗しました (articleId=${articleId}): ${insertError.message}`
+        );
+      }
     }
   }
 
@@ -499,11 +526,17 @@ ${preprocessed}
    */
   private async getOrCreateTagId(category: string, value: string): Promise<number | null> {
     // 既存タグを検索
-    const { data: existing } = await this.supabase
+    const { data: existing, error: selectError } = await this.supabase
       .from("tags")
       .select("id")
       .eq("category", category)
       .eq("value", value);
+
+    if (selectError) {
+      throw new Error(
+        `タグの検索に失敗しました (category=${category}, value=${value}): ${selectError.message}`
+      );
+    }
 
     const existingTags = existing as { id: number }[] | null;
     if (existingTags && existingTags.length > 0) {
@@ -511,10 +544,16 @@ ${preprocessed}
     }
 
     // 新規作成
-    const { data: created } = await this.supabase
+    const { data: created, error: upsertError } = await this.supabase
       .from("tags")
       .upsert({ category, value }, { onConflict: "category,value" })
       .select("id");
+
+    if (upsertError) {
+      throw new Error(
+        `タグの作成に失敗しました (category=${category}, value=${value}): ${upsertError.message}`
+      );
+    }
 
     const createdTags = created as { id: number }[] | null;
     return createdTags?.[0]?.id ?? null;
