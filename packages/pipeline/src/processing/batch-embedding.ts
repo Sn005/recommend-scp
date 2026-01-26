@@ -29,7 +29,8 @@ const BASE_RETRY_DELAY_MS = 1000;
 
 /** DB記事型 */
 export interface DbArticle {
-  id: string;
+  id: string; // UUID (サロゲートキー)
+  article_id: string; // SCP記事ID (例: "SCP-173")
   title: string;
   content: string;
   content_hash: string;
@@ -335,7 +336,7 @@ export class BatchEmbeddingProcessor {
       for (const article of batch) {
         try {
           // ステータスをprocessingに更新
-          await this.updateStatus(article.id, "processing");
+          await this.updateStatus(article.article_id, "processing");
 
           // Embedding生成
           const { embedding, tokenCount } = await this.generateEmbeddingWithRetry(article.content);
@@ -343,17 +344,22 @@ export class BatchEmbeddingProcessor {
           totalTokens += tokenCount;
 
           // 成功時の更新
-          await this.updateStatus(article.id, "completed", embedding, new Date().toISOString());
+          await this.updateStatus(
+            article.article_id,
+            "completed",
+            embedding,
+            new Date().toISOString()
+          );
 
           succeeded++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          errors.push({ articleId: article.id, error: errorMessage });
+          errors.push({ articleId: article.article_id, error: errorMessage });
           failed++;
 
           // エラー時の更新
-          await this.updateStatus(article.id, "error");
-          await this.addToRetryQueue(article.id, errorMessage);
+          await this.updateStatus(article.article_id, "error");
+          await this.addToRetryQueue(article.article_id, errorMessage);
         }
 
         // 進捗表示

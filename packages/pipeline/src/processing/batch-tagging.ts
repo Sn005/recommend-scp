@@ -34,7 +34,8 @@ const ESTIMATED_OUTPUT_TOKENS = 50;
 
 /** DB記事型 */
 export interface DbTaggingArticle {
-  id: string;
+  id: string; // UUID (サロゲートキー)
+  article_id: string; // SCP記事ID (例: "SCP-173")
   title: string;
   content: string;
   content_hash: string;
@@ -601,7 +602,7 @@ ${preprocessed}
       for (const article of batch) {
         try {
           // ステータスをprocessingに更新
-          await this.updateStatus(article.id, "processing");
+          await this.updateStatus(article.article_id, "processing");
 
           // タグ抽出
           const { rawTags, inputTokens, outputTokens } = await this.extractTagsWithRetry(
@@ -614,7 +615,7 @@ ${preprocessed}
 
           // タグ正規化
           const { normalized, unknownTags: articleUnknownTags } = await this.normalizeTags(
-            article.id,
+            article.article_id,
             rawTags,
             article.lang
           );
@@ -622,20 +623,20 @@ ${preprocessed}
           unknownTags.push(...articleUnknownTags);
 
           // タグ保存
-          await this.saveTags(article.id, normalized);
+          await this.saveTags(article.article_id, normalized);
 
           // 成功時の更新
-          await this.updateStatus(article.id, "completed", new Date().toISOString());
+          await this.updateStatus(article.article_id, "completed", new Date().toISOString());
 
           succeeded++;
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          errors.push({ articleId: article.id, error: errorMessage });
+          errors.push({ articleId: article.article_id, error: errorMessage });
           failed++;
 
           // エラー時の更新
-          await this.updateStatus(article.id, "error");
-          await this.addToRetryQueue(article.id, errorMessage);
+          await this.updateStatus(article.article_id, "error");
+          await this.addToRetryQueue(article.article_id, errorMessage);
         }
 
         // 進捗表示

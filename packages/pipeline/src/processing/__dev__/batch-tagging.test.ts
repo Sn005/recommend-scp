@@ -59,12 +59,16 @@ const mockTagDictionaryManager: TagDictionaryManager = {
 
 // テストヘルパー
 function createMockArticle(overrides?: {
-  id?: string;
+  id?: string; // 後方互換性のために残す（article_idに使用される）
+  article_id?: string;
   content?: string;
   tagging_status?: DbTaggingArticle["tagging_status"];
 }): DbTaggingArticle {
+  // id パラメータは article_id として扱う（後方互換性）
+  const articleId = overrides?.article_id ?? overrides?.id ?? "SCP-173";
   return {
-    id: overrides?.id ?? "SCP-173",
+    id: `uuid-${articleId}`, // UUIDはarticle_idから生成
+    article_id: articleId,
     title: "The Sculpture",
     content: overrides?.content ?? "The Sculpture is to be kept in a locked container...",
     content_hash: "hash123",
