@@ -10,7 +10,9 @@
     "./embedding": "./src/embedding/index.ts",
     "./tagging": "./src/tagging/index.ts",
     "./search": "./src/search/index.ts",
-    "./onboarding": "./src/onboarding/index.ts"
+    "./onboarding": "./src/onboarding/index.ts",
+    "./storage": "./src/storage/index.ts",
+    "./storage/server": "./src/storage/server.ts"
   },
   "scripts": {
     "test": "vitest run",
