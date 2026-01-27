@@ -96,7 +96,7 @@ describe("POST /visitors - 正常系（新規登録）", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId: VALID_UUID }),
     });
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, unknown>;
 
     // Assert
     expect(json).toHaveProperty("isNew", true);
@@ -117,7 +117,7 @@ describe("POST /visitors - 正常系（新規登録）", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId: VALID_UUID }),
     });
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, unknown>;
 
     // Assert
     expect(json).toEqual(expected);
@@ -169,7 +169,7 @@ describe("POST /visitors - 正常系（既存登録）", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visitorId: VALID_UUID }),
     });
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, unknown>;
 
     // Assert
     expect(json).toHaveProperty("isNew", false);
