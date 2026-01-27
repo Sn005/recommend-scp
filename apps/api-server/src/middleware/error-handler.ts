@@ -1,7 +1,9 @@
 import type { ErrorHandler } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import { createProblemDetails } from "../lib/problem-details";
+import { AppError } from "../lib/errors";
 import { logger as defaultLogger } from "../lib/logger";
 import { NotFoundError, OnboardingRequiredError } from "../lib/errors";
 
@@ -38,6 +40,13 @@ const HTTP_STATUS_MESSAGES: Record<number, string> = {
  */
 export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler => {
   return (error, c) => {
+    // AppError: カスタムアプリケーションエラー
+    if (error instanceof AppError) {
+      return c.json(error.toProblemDetails(), error.status as ContentfulStatusCode, {
+        "Content-Type": "application/problem+json",
+      });
+    }
+
     // ZodError: バリデーションエラー
     if (error instanceof ZodError) {
       const detail = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
