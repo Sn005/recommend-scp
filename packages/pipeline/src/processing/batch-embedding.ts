@@ -95,14 +95,40 @@ export interface ProcessorOptions {
 
 /**
  * コンテンツを前処理する
+ * - CSSコード（ブロック、セレクタ、@ルール）を除去
  * - HTMLタグを除去
  * - 空白を正規化
  * - 最大長でトランケート
  */
 function preprocessContent(content: string): string {
-  const withoutTags = content.replace(/<[^>]*>/g, "");
-  const normalized = withoutTags.replace(/\s+/g, " ").trim();
-  return normalized.slice(0, MAX_CONTENT_LENGTH);
+  let processed = content;
+
+  // 1. CSSコメントを除去
+  processed = processed.replace(/\/\*[\s\S]*?\*\//g, " ");
+
+  // 2. CSSブロックを除去（{...} で囲まれたスタイル定義）
+  // ネストに対応するため複数回実行
+  for (let i = 0; i < 3; i++) {
+    processed = processed.replace(/\{[^{}]*\}/g, " ");
+  }
+
+  // 3. @ルール（@media, @import, @keyframes等）を除去
+  processed = processed.replace(/@[\w-]+[^;]*;/g, " ");
+
+  // 4. CSSセレクタパターンを除去（.class, #id, element::pseudo等）
+  processed = processed.replace(/[.#][\w-]+(?:\s*,\s*[.#][\w-]+)*/g, " ");
+
+  // 5. CSS擬似要素・擬似クラスを除去
+  processed = processed.replace(/::?[\w-]+/g, " ");
+
+  // 6. HTMLタグを除去（念のため）
+  processed = processed.replace(/<[^>]*>/g, " ");
+
+  // 7. 空白を正規化
+  processed = processed.replace(/\s+/g, " ").trim();
+
+  // 8. 最大長でトランケート
+  return processed.slice(0, MAX_CONTENT_LENGTH);
 }
 
 /**

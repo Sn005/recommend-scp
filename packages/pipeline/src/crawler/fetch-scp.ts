@@ -64,20 +64,42 @@ const fetchSeriesContent = async (seriesFile: string): Promise<Record<string, Sc
 
 /**
  * Extract plain text from HTML content
+ * CSSコード、スクリプト、HTMLタグを除去してプレーンテキストを抽出
  */
-const htmlToPlainText = (html: string): string =>
-  html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
+const htmlToPlainText = (html: string): string => {
+  let text = html;
+
+  // 1. style/scriptタグとその内容を除去
+  text = text.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ");
+  text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ");
+
+  // 2. HTMLタグを除去
+  text = text.replace(/<[^>]+>/g, " ");
+
+  // 3. CSSコメントを除去
+  text = text.replace(/\/\*[\s\S]*?\*\//g, " ");
+
+  // 4. CSSブロック（{...}）を除去（ネスト対応で複数回実行）
+  for (let i = 0; i < 3; i++) {
+    text = text.replace(/\{[^{}]*\}/g, " ");
+  }
+
+  // 5. @ルール（@media, @import等）を除去
+  text = text.replace(/@[\w-]+[^;]*;/g, " ");
+
+  // 6. HTMLエンティティをデコード
+  text = text.replace(/&nbsp;/g, " ");
+  text = text.replace(/&amp;/g, "&");
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+
+  // 7. 空白を正規化
+  text = text.replace(/\s+/g, " ").trim();
+
+  return text;
+};
 
 /**
  * Filter and sort articles by rating

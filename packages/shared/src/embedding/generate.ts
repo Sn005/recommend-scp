@@ -51,19 +51,40 @@ export interface ScpArticle {
 
 /**
  * Preprocess content for embedding generation
+ * - Removes CSS code (blocks, selectors, @rules)
  * - Removes HTML tags
  * - Normalizes whitespace
  * - Truncates to max length
  */
 export function preprocessContent(content: string): string {
-  // Remove HTML tags
-  const withoutTags = content.replace(/<[^>]*>/g, "");
+  let processed = content;
 
-  // Normalize whitespace
-  const normalized = withoutTags.replace(/\s+/g, " ").trim();
+  // 1. Remove CSS comments
+  processed = processed.replace(/\/\*[\s\S]*?\*\//g, " ");
 
-  // Truncate to max length
-  return normalized.slice(0, MAX_CONTENT_LENGTH);
+  // 2. Remove CSS blocks ({...} style definitions)
+  // Run multiple times to handle nesting
+  for (let i = 0; i < 3; i++) {
+    processed = processed.replace(/\{[^{}]*\}/g, " ");
+  }
+
+  // 3. Remove @rules (@media, @import, @keyframes, etc.)
+  processed = processed.replace(/@[\w-]+[^;]*;/g, " ");
+
+  // 4. Remove CSS selector patterns (.class, #id, element::pseudo, etc.)
+  processed = processed.replace(/[.#][\w-]+(?:\s*,\s*[.#][\w-]+)*/g, " ");
+
+  // 5. Remove CSS pseudo-elements and pseudo-classes
+  processed = processed.replace(/::?[\w-]+/g, " ");
+
+  // 6. Remove HTML tags (just in case)
+  processed = processed.replace(/<[^>]*>/g, " ");
+
+  // 7. Normalize whitespace
+  processed = processed.replace(/\s+/g, " ").trim();
+
+  // 8. Truncate to max length
+  return processed.slice(0, MAX_CONTENT_LENGTH);
 }
 
 /**
