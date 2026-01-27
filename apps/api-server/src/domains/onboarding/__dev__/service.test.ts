@@ -175,9 +175,12 @@ describe("OnboardingApiService", () => {
       );
 
       await expect(service.selectPack("invalid-visitor", "horror")).rejects.toThrow(NotFoundError);
-      await expect(service.selectPack("invalid-visitor", "horror")).rejects.toThrow(
-        /Visitor.*invalid-visitor/
-      );
+      // detailにvisitorIdが含まれることを確認
+      try {
+        await service.selectPack("invalid-visitor", "horror");
+      } catch (e) {
+        expect((e as NotFoundError).detail).toMatch(/Visitor.*invalid-visitor/);
+      }
     });
 
     it("VisitorsRepository.findByVisitorIdがエラーをスローした場合、そのままスローする", async () => {
@@ -316,7 +319,12 @@ describe("OnboardingApiService", () => {
         mockOnboardingService as unknown as OnboardingService
       );
 
-      await expect(service.selectCustom("visitor-123", [])).rejects.toThrow(/at least 3 articles/i);
+      // detailにメッセージが含まれることを確認
+      try {
+        await service.selectCustom("visitor-123", []);
+      } catch (e) {
+        expect((e as ValidationError).detail).toMatch(/at least 3 articles/i);
+      }
     });
 
     it("未登録visitorIdの場合、NotFoundErrorをスローする", async () => {

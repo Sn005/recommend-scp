@@ -1,12 +1,10 @@
-/**
- * @file 共通エラークラス
- * @description RFC 7807 Problem Details形式に対応したエラークラス群
- */
+import type { ProblemDetails } from "./problem-details";
+
+const BASE_URI = "https://recommend-scp.dev/errors";
 
 /**
- * 基底エラークラス
- *
- * RFC 7807 Problem Details形式のエラーレスポンスを生成可能。
+ * アプリケーションエラーの基底クラス
+ * RFC 7807 Problem Details形式に変換可能
  */
 export class AppError extends Error {
   constructor(
@@ -16,56 +14,57 @@ export class AppError extends Error {
     public readonly detail?: string,
     public readonly instance?: string
   ) {
-    super(detail ?? title);
-    this.name = "AppError";
+    super(title);
+    this.name = this.constructor.name;
   }
 
-  /**
-   * Problem Details形式に変換
-   */
-  toProblemDetails = () => ({
-    type: this.type,
-    title: this.title,
-    status: this.status,
-    detail: this.detail,
-    instance: this.instance,
-  });
+  toProblemDetails(): ProblemDetails {
+    return {
+      type: this.type,
+      title: this.title,
+      status: this.status,
+      detail: this.detail,
+      instance: this.instance,
+    };
+  }
 }
 
 /**
- * リソース未発見エラー
- *
- * 指定されたリソースが存在しない場合に使用。
- * HTTPステータス: 404 Not Found
+ * リソースが見つからない場合のエラー
+ * @example new NotFoundError("Visitor", "abc-123")
  */
 export class NotFoundError extends AppError {
-  constructor(resource: string, id: string, instance?: string) {
+  constructor(resourceType: string, id: string) {
     super(
-      "https://recommend-scp.dev/errors/not-found",
+      `${BASE_URI}/not-found`,
       "Resource Not Found",
       404,
-      `${resource} with id '${id}' not found`,
-      instance
+      `${resourceType} with id '${id}' not found`
     );
-    this.name = "NotFoundError";
   }
 }
 
 /**
  * バリデーションエラー
- *
- * 入力値が不正な場合に使用。
- * HTTPステータス: 400 Bad Request
+ * @example new ValidationError("At least 3 articles must be selected")
  */
 export class ValidationError extends AppError {
-  constructor(detail: string, instance?: string) {
+  constructor(message: string) {
+    super(`${BASE_URI}/validation-error`, "Validation Error", 400, message);
+  }
+}
+
+/**
+ * オンボーディング未完了エラー
+ * @example new OnboardingRequiredError("abc-123")
+ */
+export class OnboardingRequiredError extends AppError {
+  constructor(visitorId: string) {
     super(
-      "https://recommend-scp.dev/errors/validation",
-      "Validation Failed",
-      400,
-      detail,
-      instance
+      `${BASE_URI}/onboarding-required`,
+      "Onboarding Required",
+      403,
+      `Visitor '${visitorId}' has not completed onboarding`
     );
-    this.name = "ValidationError";
   }
 }
