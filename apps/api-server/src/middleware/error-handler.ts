@@ -39,12 +39,9 @@ const HTTP_STATUS_MESSAGES: Record<number, string> = {
  */
 export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler => {
   return (error, c) => {
-    // AppError: カスタムアプリケーションエラー
+    // AppError: アプリケーション固有エラー（NotFoundError, ValidationError等）
     if (error instanceof AppError) {
-      const problemDetails = error.toProblemDetails();
-      // instanceをリクエストパスで上書き
-      problemDetails.instance = c.req.path;
-      return c.json(problemDetails, error.status as ContentfulStatusCode, {
+      return c.json(error.toProblemDetails(), error.status as ContentfulStatusCode, {
         "Content-Type": "application/problem+json",
       });
     }
