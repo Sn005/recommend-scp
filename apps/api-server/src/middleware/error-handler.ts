@@ -1,9 +1,10 @@
 import type { ErrorHandler } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import { createProblemDetails } from "../lib/problem-details";
+import { AppError } from "../lib/errors";
 import { logger as defaultLogger } from "../lib/logger";
-import { NotFoundError, OnboardingRequiredError } from "../lib/errors";
 
 /**
  * ロガーインターフェース（テスト用DI）
@@ -38,6 +39,16 @@ const HTTP_STATUS_MESSAGES: Record<number, string> = {
  */
 export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler => {
   return (error, c) => {
+    // AppError: カスタムアプリケーションエラー
+    if (error instanceof AppError) {
+      const problemDetails = error.toProblemDetails();
+      // instanceをリクエストパスで上書き
+      problemDetails.instance = c.req.path;
+      return c.json(problemDetails, error.status as ContentfulStatusCode, {
+        "Content-Type": "application/problem+json",
+      });
+    }
+
     // ZodError: バリデーションエラー
     if (error instanceof ZodError) {
       const detail = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
@@ -45,30 +56,6 @@ export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler
       return c.json(
         createProblemDetails("VALIDATION_ERROR", "Validation Error", 400, detail, c.req.path),
         400,
-        { "Content-Type": "application/problem+json" }
-      );
-    }
-
-    // NotFoundError: リソースが見つからない
-    if (error instanceof NotFoundError) {
-      return c.json(
-        createProblemDetails("NOT_FOUND", "Resource Not Found", 404, error.message, c.req.path),
-        404,
-        { "Content-Type": "application/problem+json" }
-      );
-    }
-
-    // OnboardingRequiredError: オンボーディング未完了
-    if (error instanceof OnboardingRequiredError) {
-      return c.json(
-        createProblemDetails(
-          "ONBOARDING_REQUIRED",
-          "Onboarding Required",
-          403,
-          error.message,
-          c.req.path
-        ),
-        403,
         { "Content-Type": "application/problem+json" }
       );
     }

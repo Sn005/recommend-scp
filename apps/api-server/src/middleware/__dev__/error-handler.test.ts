@@ -5,7 +5,12 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { createErrorHandler, type Logger } from "../error-handler";
 import type { ProblemDetails } from "../../lib/problem-details";
-import { NotFoundError, OnboardingRequiredError } from "../../lib/errors";
+import {
+  AppError,
+  NotFoundError,
+  ValidationError,
+  OnboardingRequiredError,
+} from "../../lib/errors";
 
 /**
  * モックロガーを作成
@@ -102,7 +107,7 @@ describe("エラーハンドリングミドルウェア - NotFoundError", () => 
     expect(json.type).toContain("not-found");
     expect(json.title).toBe("Resource Not Found");
     expect(json.status).toBe(404);
-    expect(json.detail).toBe("Visitor not found: abc-123");
+    expect(json.detail).toBe("Visitor with id 'abc-123' not found");
     expect(json.instance).toBe("/visitors/abc-123");
   });
 });
@@ -124,7 +129,7 @@ describe("エラーハンドリングミドルウェア - OnboardingRequiredErro
     expect(json.type).toContain("onboarding-required");
     expect(json.title).toBe("Onboarding Required");
     expect(json.status).toBe(403);
-    expect(json.detail).toBe("Onboarding required for visitor: visitor-456");
+    expect(json.detail).toBe("Visitor 'visitor-456' has not completed onboarding");
     expect(json.instance).toBe("/recommend");
   });
 });
@@ -290,6 +295,141 @@ describe("エラーハンドリングミドルウェア - Content-Type", () => {
           });
         },
         request: () => new Request("http://localhost/unknown", { method: "GET" }),
+      },
+    ];
+
+    for (const { setup, request } of testCases) {
+      const app = createTestApp();
+      setup(app);
+      const res = await app.request(request());
+
+      expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+    }
+  });
+});
+
+describe("エラーハンドリングミドルウェア - AppError統合", () => {
+  it("NotFoundErrorをキャッチして404とProblemDetailsを返す", async () => {
+    const mockLogger = createMockLogger();
+    const app = createTestApp(mockLogger);
+
+    app.get("/test/:id", () => {
+      throw new NotFoundError("Visitor", "abc-123");
+    });
+
+    const res = await app.request("/test/abc-123", { method: "GET" });
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toBe("https://recommend-scp.dev/errors/not-found");
+    expect(json.title).toBe("Resource Not Found");
+    expect(json.status).toBe(404);
+    expect(json.detail).toBe("Visitor with id 'abc-123' not found");
+  });
+
+  it("ValidationErrorをキャッチして400とProblemDetailsを返す", async () => {
+    const mockLogger = createMockLogger();
+    const app = createTestApp(mockLogger);
+
+    app.post("/test", () => {
+      throw new ValidationError("At least 3 articles must be selected");
+    });
+
+    const res = await app.request("/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toBe("https://recommend-scp.dev/errors/validation-error");
+    expect(json.title).toBe("Validation Error");
+    expect(json.status).toBe(400);
+    expect(json.detail).toBe("At least 3 articles must be selected");
+  });
+
+  it("OnboardingRequiredErrorをキャッチして403とProblemDetailsを返す", async () => {
+    const mockLogger = createMockLogger();
+    const app = createTestApp(mockLogger);
+
+    app.get("/recommendations", () => {
+      throw new OnboardingRequiredError("visitor-123");
+    });
+
+    const res = await app.request("/recommendations", { method: "GET" });
+
+    expect(res.status).toBe(403);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toBe("https://recommend-scp.dev/errors/onboarding-required");
+    expect(json.title).toBe("Onboarding Required");
+    expect(json.status).toBe(403);
+    expect(json.detail).toBe("Visitor 'visitor-123' has not completed onboarding");
+  });
+
+  it("カスタムAppErrorサブクラスも正しく処理される", async () => {
+    class CustomError extends AppError {
+      constructor(message: string) {
+        super("https://example.com/custom", "Custom Error", 418, message);
+      }
+    }
+
+    const mockLogger = createMockLogger();
+    const app = createTestApp(mockLogger);
+
+    app.get("/test", () => {
+      throw new CustomError("I'm a teapot");
+    });
+
+    const res = await app.request("/test", { method: "GET" });
+
+    expect(res.status).toBe(418);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toBe("https://example.com/custom");
+    expect(json.title).toBe("Custom Error");
+    expect(json.detail).toBe("I'm a teapot");
+  });
+
+  it("AppErrorでもContent-Typeがapplication/problem+jsonである", async () => {
+    const testCases = [
+      {
+        name: "NotFoundError",
+        setup: (app: Hono) => {
+          app.get("/not-found", () => {
+            throw new NotFoundError("Resource", "123");
+          });
+        },
+        request: () => new Request("http://localhost/not-found", { method: "GET" }),
+      },
+      {
+        name: "ValidationError",
+        setup: (app: Hono) => {
+          app.post("/validation", () => {
+            throw new ValidationError("Invalid");
+          });
+        },
+        request: () =>
+          new Request("http://localhost/validation", {
+            method: "POST",
+            body: "{}",
+          }),
+      },
+      {
+        name: "OnboardingRequiredError",
+        setup: (app: Hono) => {
+          app.get("/onboarding", () => {
+            throw new OnboardingRequiredError("visitor-1");
+          });
+        },
+        request: () => new Request("http://localhost/onboarding", { method: "GET" }),
       },
     ];
 

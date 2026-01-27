@@ -135,7 +135,7 @@ describe("RecommendService", () => {
 
         await expect(service.getRecommendations("unknown-visitor")).rejects.toThrow(NotFoundError);
         await expect(service.getRecommendations("unknown-visitor")).rejects.toThrow(
-          "Visitor not found: unknown-visitor"
+          "Resource Not Found"
         );
       });
 
@@ -167,7 +167,7 @@ describe("RecommendService", () => {
           OnboardingRequiredError
         );
         await expect(service.getRecommendations("not-onboarded-visitor")).rejects.toThrow(
-          "Onboarding required for visitor: not-onboarded-visitor"
+          "Onboarding Required"
         );
       });
 
