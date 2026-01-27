@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Feedback } from "@recommend-scp/shared/storage";
+import type { Feedback } from "@recommend-scp/shared/storage/server";
 import { FeedbackRepository } from "../repository";
 
 /** モック用DB行の型 */

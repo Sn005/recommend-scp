@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Feedback } from "@recommend-scp/shared/storage";
+import type { Feedback } from "@recommend-scp/shared/storage/server";
 
 /** DB行の型（snake_case） */
 interface FeedbackRow {
