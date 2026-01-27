@@ -12,7 +12,8 @@
     "./search": "./src/search/index.ts",
     "./onboarding": "./src/onboarding/index.ts",
     "./storage": "./src/storage/index.ts",
-    "./storage/server": "./src/storage/server.ts"
+    "./storage/server": "./src/storage/server.ts",
+    "./recommendation": "./src/recommendation/index.ts"
   },
   "scripts": {
     "test": "vitest run",

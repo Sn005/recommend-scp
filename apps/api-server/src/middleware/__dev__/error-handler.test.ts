@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { createErrorHandler, type Logger } from "../error-handler";
 import type { ProblemDetails } from "../../lib/problem-details";
+import { NotFoundError, OnboardingRequiredError } from "../../lib/errors";
 
 /**
  * モックロガーを作成
@@ -80,6 +81,51 @@ describe("エラーハンドリングミドルウェア - Zodバリデーショ�
     const json = (await res.json()) as ProblemDetails;
     expect(json.detail).toContain("email");
     expect(json.detail).toContain("age");
+  });
+});
+
+describe("エラーハンドリングミドルウェア - NotFoundError", () => {
+  it("NotFoundError時に404とProblemDetailsを返す", async () => {
+    const app = createTestApp();
+
+    app.get("/visitors/:id", (c) => {
+      const id = c.req.param("id");
+      throw new NotFoundError("Visitor", id);
+    });
+
+    const res = await app.request("/visitors/abc-123", { method: "GET" });
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toContain("not-found");
+    expect(json.title).toBe("Resource Not Found");
+    expect(json.status).toBe(404);
+    expect(json.detail).toBe("Visitor not found: abc-123");
+    expect(json.instance).toBe("/visitors/abc-123");
+  });
+});
+
+describe("エラーハンドリングミドルウェア - OnboardingRequiredError", () => {
+  it("OnboardingRequiredError時に403とProblemDetailsを返す", async () => {
+    const app = createTestApp();
+
+    app.post("/recommend", () => {
+      throw new OnboardingRequiredError("visitor-456");
+    });
+
+    const res = await app.request("/recommend", { method: "POST" });
+
+    expect(res.status).toBe(403);
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as ProblemDetails;
+    expect(json.type).toContain("onboarding-required");
+    expect(json.title).toBe("Onboarding Required");
+    expect(json.status).toBe(403);
+    expect(json.detail).toBe("Onboarding required for visitor: visitor-456");
+    expect(json.instance).toBe("/recommend");
   });
 });
 
