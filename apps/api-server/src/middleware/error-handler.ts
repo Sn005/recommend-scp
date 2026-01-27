@@ -5,7 +5,6 @@ import { ZodError } from "zod";
 import { createProblemDetails } from "../lib/problem-details";
 import { AppError } from "../lib/errors";
 import { logger as defaultLogger } from "../lib/logger";
-import { NotFoundError, OnboardingRequiredError } from "../lib/errors";
 
 /**
  * ロガーインターフェース（テスト用DI）
@@ -42,7 +41,10 @@ export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler
   return (error, c) => {
     // AppError: カスタムアプリケーションエラー
     if (error instanceof AppError) {
-      return c.json(error.toProblemDetails(), error.status as ContentfulStatusCode, {
+      const problemDetails = error.toProblemDetails();
+      // instanceをリクエストパスで上書き
+      problemDetails.instance = c.req.path;
+      return c.json(problemDetails, error.status as ContentfulStatusCode, {
         "Content-Type": "application/problem+json",
       });
     }
@@ -54,30 +56,6 @@ export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler
       return c.json(
         createProblemDetails("VALIDATION_ERROR", "Validation Error", 400, detail, c.req.path),
         400,
-        { "Content-Type": "application/problem+json" }
-      );
-    }
-
-    // NotFoundError: リソースが見つからない
-    if (error instanceof NotFoundError) {
-      return c.json(
-        createProblemDetails("NOT_FOUND", "Resource Not Found", 404, error.message, c.req.path),
-        404,
-        { "Content-Type": "application/problem+json" }
-      );
-    }
-
-    // OnboardingRequiredError: オンボーディング未完了
-    if (error instanceof OnboardingRequiredError) {
-      return c.json(
-        createProblemDetails(
-          "ONBOARDING_REQUIRED",
-          "Onboarding Required",
-          403,
-          error.message,
-          c.req.path
-        ),
-        403,
         { "Content-Type": "application/problem+json" }
       );
     }
