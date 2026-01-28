@@ -90,7 +90,7 @@ describe("GET /articles/search - 正常系", () => {
 
     // Act
     const res = await app.request("/articles/search?q=ホラー");
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, unknown>;
 
     // Assert
     expect(json).toEqual(expected);
@@ -351,7 +351,7 @@ describe("GET /articles/search - エッジケース", () => {
 
     // Act
     const res = await app.request("/articles/search?q=存在しないクエリ");
-    const json = await res.json();
+    const json = (await res.json()) as Record<string, unknown>;
 
     // Assert
     expect(res.status).toBe(200);

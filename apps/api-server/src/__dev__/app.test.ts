@@ -46,7 +46,7 @@ describe("Honoアプリケーション", () => {
   it("GET /health はJSONレスポンスを返す", async () => {
     const req = new Request("http://localhost/health");
     const res = await app.fetch(req);
-    const body = await res.json();
+    const body = (await res.json()) as Record<string, unknown>;
 
     expect(body).toHaveProperty("status", "ok");
   });
