@@ -6,7 +6,7 @@
 | [005-02](./005-02-server-storage/005-02.md) | サーバー側ストレージ | PreferenceStorage/VectorSearchClientのSupabase実装   | completed  |
 | [005-03](./005-03-visitors-api/005-03.md)   | visitors API         | visitorId登録エンドポイント                          | completed  |
 | [005-04](./005-04-articles-api/005-04.md)   | articles API         | ベクトル検索エンドポイント                           | completed  |
-| [005-05](./005-05-recommend-api/005-05.md)  | recommend API        | 推薦取得エンドポイント                               | planned    |
+| [005-05](./005-05-recommend-api/005-05.md)  | recommend API        | 推薦取得エンドポイント                               | completed  |
 | [005-06](./005-06-feedback-api/005-06.md)   | feedback API         | Like/Dislike記録エンドポイント                       | completed  |
 | [005-07](./005-07-onboarding-api/005-07.md) | onboarding API       | スターターパック一覧・選択エンドポイント             | planned    |
 | [005-08](./005-08-api-types/005-08.md)      | 型共有パッケージ     | packages/api-typesでRPC型をexport                    | planned    |

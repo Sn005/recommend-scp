@@ -113,7 +113,7 @@ describe("エラーハンドリングミドルウェア - NotFoundError", () => 
 });
 
 describe("エラーハンドリングミドルウェア - OnboardingRequiredError", () => {
-  it("OnboardingRequiredError時に403とProblemDetailsを返す", async () => {
+  it("OnboardingRequiredError時に400とProblemDetailsを返す", async () => {
     const app = createTestApp();
 
     app.post("/recommend", () => {
@@ -122,13 +122,13 @@ describe("エラーハンドリングミドルウェア - OnboardingRequiredErro
 
     const res = await app.request("/recommend", { method: "POST" });
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(400);
     expect(res.headers.get("Content-Type")).toBe("application/problem+json");
 
     const json = (await res.json()) as ProblemDetails;
     expect(json.type).toContain("onboarding-required");
     expect(json.title).toBe("Onboarding Required");
-    expect(json.status).toBe(403);
+    expect(json.status).toBe(400);
     expect(json.detail).toBe("Visitor 'visitor-456' has not completed onboarding");
     expect(json.instance).toBe("/recommend");
   });
@@ -353,7 +353,7 @@ describe("エラーハンドリングミドルウェア - AppError統合", () =>
     expect(json.detail).toBe("At least 3 articles must be selected");
   });
 
-  it("OnboardingRequiredErrorをキャッチして403とProblemDetailsを返す", async () => {
+  it("OnboardingRequiredErrorをキャッチして400とProblemDetailsを返す", async () => {
     const mockLogger = createMockLogger();
     const app = createTestApp(mockLogger);
 
@@ -363,13 +363,13 @@ describe("エラーハンドリングミドルウェア - AppError統合", () =>
 
     const res = await app.request("/recommendations", { method: "GET" });
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(400);
     expect(res.headers.get("Content-Type")).toBe("application/problem+json");
 
     const json = (await res.json()) as ProblemDetails;
     expect(json.type).toBe("https://recommend-scp.dev/errors/onboarding-required");
     expect(json.title).toBe("Onboarding Required");
-    expect(json.status).toBe(403);
+    expect(json.status).toBe(400);
     expect(json.detail).toBe("Visitor 'visitor-123' has not completed onboarding");
   });
 

@@ -56,6 +56,7 @@ export class ValidationError extends AppError {
 
 /**
  * オンボーディング未完了エラー
+ * @see specs/005-backend-api/005-05-recommend-api/005-05-02.md
  * @example new OnboardingRequiredError("abc-123")
  */
 export class OnboardingRequiredError extends AppError {
@@ -63,7 +64,7 @@ export class OnboardingRequiredError extends AppError {
     super(
       `${BASE_URI}/onboarding-required`,
       "Onboarding Required",
-      403,
+      400,
       `Visitor '${visitorId}' has not completed onboarding`
     );
   }

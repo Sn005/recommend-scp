@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/error-handler";
 import { healthRoutes } from "./routes/health";
 import { createVisitorsRoutes } from "./domains/visitors/routes";
 import { createArticlesRoutes } from "./domains/articles/routes";
+import { createRecommendRoutes } from "./domains/recommend/routes";
 
 const app = new Hono();
 
@@ -25,6 +26,9 @@ app.route("/visitors", createVisitorsRoutes(supabase));
 
 // Articles API
 app.route("/articles", createArticlesRoutes(supabase));
+
+// Recommend API
+app.route("/recommend", createRecommendRoutes(supabase));
 
 export { app };
 export type AppType = typeof app;
