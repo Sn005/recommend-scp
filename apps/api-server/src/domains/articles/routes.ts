@@ -26,6 +26,8 @@ const throwOnValidationError = <T>(result: { success: boolean; error?: ZodError<
 /**
  * Articles routes ファクトリ
  *
+ * Method chainingでルートを定義し、Hono RPC用の型推論を有効化
+ *
  * @param supabase - SupabaseClient
  * @param serviceFactory - テスト用のサービスファクトリ（オプション）
  * @returns Hono router
@@ -34,8 +36,6 @@ export const createArticlesRoutes = (
   supabase: SupabaseClient,
   serviceFactory?: (repo: ArticlesRepository) => ArticlesService
 ) => {
-  const articles = new Hono();
-
   const repository = new ArticlesRepository(supabase);
   const service = serviceFactory ? serviceFactory(repository) : new ArticlesService(repository);
 
@@ -52,7 +52,7 @@ export const createArticlesRoutes = (
    * - 200 OK: 検索成功
    * - 400 Bad Request: バリデーションエラー（クエリなし、1文字クエリ等）
    */
-  articles.get(
+  return new Hono().get(
     "/search",
     zValidator("query", searchArticlesSchema, throwOnValidationError),
     async (c) => {
@@ -61,6 +61,4 @@ export const createArticlesRoutes = (
       return c.json(result, 200);
     }
   );
-
-  return articles;
 };

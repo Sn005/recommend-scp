@@ -27,6 +27,8 @@ const throwOnValidationError = <T>(result: { success: boolean; error?: ZodError<
 /**
  * Feedback routes ファクトリ
  *
+ * Method chainingでルートを定義し、Hono RPC用の型推論を有効化
+ *
  * @param supabase - SupabaseClient
  * @param serviceFactory - テスト用のサービスファクトリ（オプション）
  * @returns Hono router
@@ -35,8 +37,6 @@ export const createFeedbackRoutes = (
   supabase: SupabaseClient,
   serviceFactory?: () => FeedbackService
 ) => {
-  const feedback = new Hono();
-
   const feedbackRepo = new FeedbackRepository(supabase);
   const visitorsRepo = new VisitorsRepository(supabase);
   const service = serviceFactory
@@ -57,7 +57,7 @@ export const createFeedbackRoutes = (
    * - 400 Bad Request: バリデーションエラー
    * - 404 Not Found: visitorId未登録
    */
-  feedback.post(
+  return new Hono().post(
     "/",
     zValidator("json", recordFeedbackSchema, throwOnValidationError),
     async (c) => {
@@ -75,6 +75,4 @@ export const createFeedbackRoutes = (
       );
     }
   );
-
-  return feedback;
 };
