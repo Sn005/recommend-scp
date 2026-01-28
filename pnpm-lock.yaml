@@ -85,6 +85,22 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@22.19.3)(jiti@2.6.1)(tsx@4.21.0)
 
+  packages/api-types:
+    dependencies:
+      hono:
+        specifier: ^4.7.10
+        version: 4.11.5
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.3
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@22.19.3)(jiti@2.6.1)(tsx@4.21.0)
+
   packages/pipeline:
     dependencies:
       '@recommend-scp/shared':
