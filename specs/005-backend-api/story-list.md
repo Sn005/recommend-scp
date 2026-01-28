@@ -4,7 +4,7 @@
 | ------------------------------------------- | -------------------- | ---------------------------------------------------- | ---------- |
 | [005-01](./005-01-api-foundation/005-01.md) | API基盤構築          | Honoサーバー初期化、ミドルウェア、エラーハンドリング | completed  |
 | [005-02](./005-02-server-storage/005-02.md) | サーバー側ストレージ | PreferenceStorage/VectorSearchClientのSupabase実装   | completed  |
-| [005-03](./005-03-visitors-api/005-03.md)   | visitors API         | visitorId登録エンドポイント                          | planned    |
+| [005-03](./005-03-visitors-api/005-03.md)   | visitors API         | visitorId登録エンドポイント                          | completed  |
 | [005-04](./005-04-articles-api/005-04.md)   | articles API         | ベクトル検索エンドポイント                           | completed  |
 | [005-05](./005-05-recommend-api/005-05.md)  | recommend API        | 推薦取得エンドポイント                               | planned    |
 | [005-06](./005-06-feedback-api/005-06.md)   | feedback API         | Like/Dislike記録エンドポイント                       | planned    |
