@@ -26,6 +26,8 @@ const throwOnValidationError = <T>(result: { success: boolean; error?: ZodError<
 /**
  * Visitors routes ファクトリ
  *
+ * Method chainingでルートを定義し、Hono RPC用の型推論を有効化
+ *
  * @param supabase - SupabaseClient
  * @param serviceFactory - テスト用のサービスファクトリ（オプション）
  * @returns Hono router
@@ -34,8 +36,6 @@ export const createVisitorsRoutes = (
   supabase: SupabaseClient,
   serviceFactory?: (repo: VisitorsRepository) => VisitorsService
 ) => {
-  const visitors = new Hono();
-
   const repository = new VisitorsRepository(supabase);
   const service = serviceFactory ? serviceFactory(repository) : new VisitorsService(repository);
 
@@ -52,7 +52,7 @@ export const createVisitorsRoutes = (
    * - 200 OK: 既存visitorId取得
    * - 400 Bad Request: バリデーションエラー
    */
-  visitors.post(
+  return new Hono().post(
     "/",
     zValidator("json", registerVisitorSchema, throwOnValidationError),
     async (c) => {
@@ -63,6 +63,4 @@ export const createVisitorsRoutes = (
       return c.json(result, status);
     }
   );
-
-  return visitors;
 };

@@ -87,6 +87,9 @@ importers:
 
   packages/api-types:
     dependencies:
+      '@recommend-scp/api-server':
+        specifier: workspace:*
+        version: link:../../apps/api-server
       hono:
         specifier: ^4.7.10
         version: 4.11.5

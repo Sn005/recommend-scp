@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@recommend-scp/api-server": "workspace:*",
     "hono": "^4.7.10"
   },
   "devDependencies": {

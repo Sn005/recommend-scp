@@ -6,10 +6,12 @@ vi.mock("@recommend-scp/shared/lib/supabase", () => ({
 }));
 
 import { getSupabaseClient } from "@recommend-scp/shared/lib/supabase";
-import { app } from "../app";
+import { createApp, createRoutes } from "../app";
 import type { AppType } from "../app";
 
 describe("Honoアプリケーション", () => {
+  let app: ReturnType<typeof createApp>;
+
   beforeEach(() => {
     vi.clearAllMocks();
     // 正常なDB接続をモック
@@ -24,6 +26,9 @@ describe("Honoアプリケーション", () => {
       }),
     };
     (getSupabaseClient as Mock).mockReturnValue(mockClient);
+
+    // テスト用にアプリケーションを作成
+    app = createApp(getSupabaseClient());
   });
 
   it("Hono インスタンスが export される", () => {
@@ -32,8 +37,9 @@ describe("Honoアプリケーション", () => {
   });
 
   it("AppType 型が export される", () => {
-    const _typeCheck: AppType = app;
-    expect(_typeCheck).toBe(app);
+    const routes = createRoutes(getSupabaseClient());
+    const _typeCheck: AppType = routes;
+    expect(_typeCheck).toBeDefined();
   });
 
   it("基本的なHTTPリクエストに応答できる", async () => {

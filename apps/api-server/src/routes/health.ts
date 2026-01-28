@@ -3,6 +3,8 @@
  *
  * サーバーの稼働状態を確認するためのエンドポイント。
  * 監視ツールやロードバランサーでのヘルスチェックに使用。
+ *
+ * Method chainingでルートを定義し、Hono RPC用の型推論を有効化
  */
 
 import { Hono } from "hono";
@@ -18,9 +20,16 @@ interface HealthResponse {
   version: string;
 }
 
-const healthRoutes = new Hono();
-
-healthRoutes.get("/", async (c) => {
+/**
+ * GET /health
+ *
+ * ヘルスチェック
+ *
+ * Response:
+ * - 200 OK: サーバー正常
+ * - 503 Service Unavailable: DB接続不可
+ */
+export const healthRoutes = new Hono().get("/", async (c) => {
   const response: HealthResponse = {
     status: "ok",
     timestamp: new Date().toISOString(),
@@ -45,5 +54,3 @@ healthRoutes.get("/", async (c) => {
 
   return c.json(response, 200);
 });
-
-export { healthRoutes };
