@@ -6,6 +6,7 @@ import { healthRoutes } from "./routes/health";
 import { createVisitorsRoutes } from "./domains/visitors/routes";
 import { createArticlesRoutes } from "./domains/articles/routes";
 import { createRecommendRoutes } from "./domains/recommend/routes";
+import { createOnboardingRoutes } from "./domains/onboarding/routes";
 
 const app = new Hono();
 
@@ -29,6 +30,9 @@ app.route("/articles", createArticlesRoutes(supabase));
 
 // Recommend API
 app.route("/recommend", createRecommendRoutes(supabase));
+
+// Onboarding API
+app.route("/onboarding", createOnboardingRoutes(supabase));
 
 export { app };
 export type AppType = typeof app;
