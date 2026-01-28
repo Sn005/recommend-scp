@@ -223,9 +223,9 @@ describe("ValidationError", () => {
 
 describe("OnboardingRequiredError", () => {
   describe("基本機能", () => {
-    it("statusが403である", () => {
+    it("statusが400である", () => {
       const error = new OnboardingRequiredError("visitor-123");
-      expect(error.status).toBe(403);
+      expect(error.status).toBe(400);
     });
 
     it("typeが正しいURIである", () => {
@@ -250,7 +250,7 @@ describe("OnboardingRequiredError", () => {
       expect(problemDetails).toEqual({
         type: "https://recommend-scp.dev/errors/onboarding-required",
         title: "Onboarding Required",
-        status: 403,
+        status: 400,
         detail: "Visitor 'abc-xyz-789' has not completed onboarding",
         instance: undefined,
       });
