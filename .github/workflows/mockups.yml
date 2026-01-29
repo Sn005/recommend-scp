@@ -1,0 +1,22 @@
+name: Upload Mockups
+
+on:
+  push:
+    paths:
+      - "mockups/**"
+    branches:
+      - "**"
+  workflow_dispatch:
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload mockups artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mockups
+          path: mockups/
+          retention-days: 30

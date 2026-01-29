@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>推薦 - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* SCP-Wiki風カスタムカラー */
+    :root {
+      --scp-bg: #1a1a1a;
+      --scp-header: #2a2a2a;
+      --scp-red: #990000;
+      --scp-red-light: #b01;
+      --scp-text: #e0e0e0;
+      --scp-text-muted: #888;
+    }
+
+    body {
+      background: var(--scp-bg);
+      color: var(--scp-text);
+      overflow: hidden;
+    }
+
+    /* ヘッダー自動非表示（簡易版） */
+    .header-hidden {
+      transform: translateY(-100%);
+    }
+
+    /* iframe読み込み失敗時のフォールバック */
+    .iframe-fallback {
+      background: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col">
+
+  <!-- ヘッダー -->
+  <header
+    id="header"
+    class="fixed top-0 left-0 right-0 z-50 transition-transform duration-300"
+    style="background: var(--scp-header);"
+  >
+    <div class="flex items-center justify-between px-4 py-3">
+      <!-- 戻るボタン -->
+      <a href="index.html" class="text-neutral-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+
+      <!-- 記事タイトル -->
+      <div class="flex-1 text-center">
+        <h1 class="text-lg font-bold" style="color: var(--scp-red-light);">SCP-173</h1>
+        <p class="text-xs text-neutral-500">彫刻 - オリジナル</p>
+      </div>
+
+      <!-- メニュー（プレースホルダー） -->
+      <button class="text-neutral-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 進捗バー -->
+    <div class="h-1 bg-neutral-700">
+      <div class="h-full bg-red-800" style="width: 20%;"></div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ（iframe） -->
+  <main class="flex-1 pt-16">
+    <!-- iframeを試みる。X-Frame-Optionsでブロックされる可能性あり -->
+    <iframe
+      id="article-frame"
+      src="https://scp-jp.wikidot.com/scp-173"
+      class="w-full h-full border-0"
+      sandbox="allow-scripts allow-same-origin"
+      loading="lazy"
+      onerror="showFallback()"
+    ></iframe>
+
+    <!-- フォールバック（iframe失敗時に表示） -->
+    <div id="fallback" class="iframe-fallback hidden">
+      <div class="text-6xl mb-4">🔒</div>
+      <h2 class="text-xl font-bold mb-2" style="color: var(--scp-red-light);">SCP-173</h2>
+      <p class="text-neutral-400 mb-4">彫刻 - オリジナル</p>
+      <p class="text-sm text-neutral-500 mb-6">
+        iframeでの埋め込みがブロックされています。<br>
+        本番環境ではプロキシ経由で表示します。
+      </p>
+      <a
+        href="https://scp-jp.wikidot.com/scp-173"
+        target="_blank"
+        class="px-4 py-2 rounded text-white"
+        style="background: var(--scp-red);"
+      >
+        SCP-JPで開く →
+      </a>
+    </div>
+  </main>
+
+  <!-- フローティングアクションボタン群 -->
+  <footer class="fixed bottom-0 left-0 right-0 z-50 p-4" style="background: linear-gradient(transparent, var(--scp-bg));">
+    <div class="flex items-center justify-between max-w-md mx-auto">
+
+      <!-- スキップボタン -->
+      <button class="flex flex-col items-center text-neutral-500 hover:text-neutral-300">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span class="text-xs mt-1">スキップ</span>
+      </button>
+
+      <!-- お気に入りボタン（メイン） -->
+      <button
+        id="favorite-btn"
+        class="flex flex-col items-center p-4 rounded-full transition-all"
+        style="background: var(--scp-red);"
+        onclick="toggleFavorite()"
+      >
+        <svg id="heart-icon" class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+      </button>
+
+      <!-- 次へボタン -->
+      <button class="flex flex-col items-center text-neutral-400 hover:text-white">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+        </svg>
+        <span class="text-xs mt-1">次へ</span>
+      </button>
+
+    </div>
+  </footer>
+
+  <script>
+    // iframe読み込みチェック
+    const iframe = document.getElementById('article-frame');
+    const fallback = document.getElementById('fallback');
+
+    // iframeのloadイベントで確認（クロスオリジンでは限定的）
+    iframe.addEventListener('load', function() {
+      try {
+        // クロスオリジンではアクセス不可なのでエラーになる
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+      } catch (e) {
+        // X-Frame-Optionsブロック時はこちらに来る可能性
+        // ただし多くの場合loadイベント自体が発火する
+      }
+    });
+
+    // 3秒後にフォールバック表示（iframeが真っ白の場合の対策）
+    setTimeout(() => {
+      // 本番では不要。モック確認用
+      // showFallback();
+    }, 3000);
+
+    function showFallback() {
+      iframe.classList.add('hidden');
+      fallback.classList.remove('hidden');
+    }
+
+    // お気に入りトグル
+    let isFavorite = false;
+    function toggleFavorite() {
+      isFavorite = !isFavorite;
+      const btn = document.getElementById('favorite-btn');
+      const icon = document.getElementById('heart-icon');
+
+      if (isFavorite) {
+        icon.setAttribute('fill', 'currentColor');
+        btn.style.transform = 'scale(1.1)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+      } else {
+        icon.setAttribute('fill', 'none');
+      }
+    }
+
+    // ヘッダー自動非表示（スクロール検知 - モック用簡易版）
+    let lastScrollY = 0;
+    const header = document.getElementById('header');
+
+    // 注: iframeのスクロールは検知できないため、
+    // 本番ではpostMessageまたはIntersectionObserverを使用
+    document.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        header.classList.add('header-hidden');
+      } else {
+        header.classList.remove('header-hidden');
+      }
+      lastScrollY = currentScrollY;
+    });
+  </script>
+
+</body>
+</html>
