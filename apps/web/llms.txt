@@ -1,0 +1,63 @@
+# recommend-scp Web Application
+
+> SCP記事推薦システムのフロントエンドアプリケーション
+
+## Overview
+
+Next.js 16 App RouterベースのWebアプリケーション。
+SCP財団のWikiサイトから記事を推薦するシステムのUI部分を担当。
+
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19
+- TypeScript 5
+- Tailwind CSS 4
+
+## Project Structure
+
+```
+apps/web/
+├── src/
+│   ├── app/           # Next.js App Router pages
+│   │   ├── layout.tsx # Root layout
+│   │   ├── page.tsx   # Home page
+│   │   └── globals.css
+│   └── shared/        # Shared code
+│       ├── components/
+│       │   └── ui/    # UI components (shadcn/ui)
+│       ├── hooks/     # Custom React hooks
+│       ├── lib/       # Utility libraries
+│       └── types/     # TypeScript types
+├── public/            # Static assets
+├── next.config.ts     # Next.js configuration
+├── tsconfig.json      # TypeScript configuration
+└── package.json
+```
+
+## Key Features
+
+- SCP記事の閲覧
+- お気に入り管理
+- 類似記事の推薦
+
+## API Integration
+
+バックエンドAPIとの通信にはHono RPCクライアントを使用（型安全）。
+`@recommend-scp/api-types`パッケージから型定義をインポート。
+
+## Development
+
+```bash
+# 開発サーバー起動
+pnpm dev --filter web
+
+# ビルド
+pnpm build --filter web
+
+# 型チェック
+pnpm type-check --filter web
+
+# Lint
+pnpm --filter web lint
+```
