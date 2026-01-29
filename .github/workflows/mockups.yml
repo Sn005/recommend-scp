@@ -1,4 +1,4 @@
-name: Upload Mockups
+name: Deploy Mockups to GitHub Pages
 
 on:
   push:
@@ -8,15 +8,34 @@ on:
       - "**"
   workflow_dispatch:
 
+# GitHub Pages デプロイに必要な権限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時デプロイを防止
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  upload:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Upload mockups artifact
-        uses: actions/upload-artifact@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: mockups
           path: mockups/
-          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
