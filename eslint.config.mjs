@@ -75,6 +75,7 @@ export default tseslint.config(
       "dist/",
       "**/node_modules/",
       "**/dist/",
+      "**/.next/",
       "supabase/",
       "**/*.js",
       "**/*.mjs",
