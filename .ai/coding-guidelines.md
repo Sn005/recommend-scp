@@ -55,36 +55,52 @@ const result = await getRecommendations(visitorId);
 各ドメインは以下の構成を必須とする:
 
 ```
-domains/[domain]/
+apps/api-server/src/domains/[domain]/
 ├── routes.ts      # APIエンドポイント定義
 ├── service.ts     # ビジネスロジック
 ├── repository.ts  # DB操作層
 ├── schema.ts      # Zodバリデーション
-├── types.ts       # 型定義
+├── types.ts       # 型定義（必要に応じて）
 └── __dev__/       # テストファイル
+    ├── routes.test.ts
+    ├── service.test.ts
+    └── repository.test.ts
 ```
+
+### 各ファイルの責務
+
+| ファイル      | 責務                               | 依存先             |
+| ------------- | ---------------------------------- | ------------------ |
+| routes.ts     | HTTPリクエスト/レスポンス処理      | service, schema    |
+| service.ts    | ビジネスロジック、トランザクション | repository, shared |
+| repository.ts | DB操作（CRUD）、snake_case変換     | Supabase           |
+| schema.ts     | 入力バリデーション（Zod）          | -                  |
 
 ### routes.ts
 
 エンドポイント定義とリクエスト処理のみ。ビジネスロジックは書かない。
+ファクトリ関数でSupabaseクライアントをDIする。
 
 ```typescript
-// Good
+// Good - ファクトリパターンでDI
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { recommendRequestSchema } from "./schema";
-import { RecommendService } from "./service";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { mySchema } from "./schema";
+import { MyService } from "./service";
 
-const app = new Hono();
+export const createMyRoutes = (supabase: SupabaseClient) => {
+  const routes = new Hono();
+  const service = new MyService(supabase);
 
-app.post("/", zValidator("json", recommendRequestSchema), async (c) => {
-  const body = c.req.valid("json");
-  const service = new RecommendService();
-  const result = await service.getRecommendations(body);
-  return c.json(result);
-});
+  routes.post("/", zValidator("json", mySchema), async (c) => {
+    const input = c.req.valid("json");
+    const result = await service.doSomething(input);
+    return c.json(result, 200);
+  });
 
-export default app;
+  return routes;
+};
 ```
 
 ```typescript
@@ -283,7 +299,26 @@ export class ValidationError extends AppError {
     );
   }
 }
+
+export class OnboardingRequiredError extends AppError {
+  constructor(visitorId: string) {
+    super(
+      "https://recommend-scp.dev/errors/onboarding-required",
+      "Onboarding Required",
+      400,
+      `Onboarding not completed for visitor ${visitorId}`
+    );
+  }
+}
 ```
+
+### エラータイプ一覧
+
+| エラータイプ            | status | 用途                   |
+| ----------------------- | ------ | ---------------------- |
+| NotFoundError           | 404    | リソースが見つからない |
+| ValidationError         | 400    | 入力値が不正           |
+| OnboardingRequiredError | 400    | オンボーディング未完了 |
 
 ### エラーミドルウェア
 
