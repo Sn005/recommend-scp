@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>オンボーディング - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --scp-bg: #1a1a1a;
+      --scp-card: #2a2a2a;
+      --scp-red: #990000;
+      --scp-red-light: #b01;
+      --scp-text: #e0e0e0;
+    }
+
+    body {
+      background: var(--scp-bg);
+      color: var(--scp-text);
+    }
+
+    .screen { display: none; }
+    .screen.active { display: flex; }
+
+    .card {
+      background: var(--scp-card);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .card:active {
+      transform: scale(0.98);
+    }
+
+    .pack-card {
+      background: var(--scp-card);
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .pack-card.selected {
+      border-color: var(--scp-red);
+    }
+    .pack-card:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Screen 1: 選択画面 -->
+  <div id="screen-choice" class="screen active flex-col items-center justify-center min-h-screen p-6">
+    <div class="text-center mb-10">
+      <h1 class="text-2xl font-bold mb-2">ようこそ！</h1>
+      <p class="text-neutral-400">どちらの方法で始めますか？</p>
+    </div>
+
+    <div class="w-full max-w-sm space-y-4">
+      <!-- スターターパック -->
+      <button onclick="showScreen('screen-packs')" class="card w-full p-6 rounded-lg text-left">
+        <div class="flex items-center gap-4">
+          <span class="text-3xl">🎁</span>
+          <div>
+            <div class="font-bold text-lg">スターターパックから選ぶ</div>
+            <div class="text-sm text-neutral-400">初心者におすすめ</div>
+          </div>
+        </div>
+      </button>
+
+      <!-- SCP番号指定 -->
+      <button onclick="showScreen('screen-custom')" class="card w-full p-6 rounded-lg text-left">
+        <div class="flex items-center gap-4">
+          <span class="text-3xl">🔢</span>
+          <div>
+            <div class="font-bold text-lg">好きなSCPを教える</div>
+            <div class="text-sm text-neutral-400">すでにお気に入りがある方</div>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 2: スターターパック選択 -->
+  <div id="screen-packs" class="screen flex-col min-h-screen p-6">
+    <header class="flex items-center mb-6">
+      <button onclick="showScreen('screen-choice')" class="text-neutral-400 hover:text-white mr-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <h1 class="text-xl font-bold">パックを選ぶ</h1>
+    </header>
+
+    <p class="text-neutral-400 mb-6">興味のあるジャンルを選んでください</p>
+
+    <div class="grid grid-cols-2 gap-3 mb-8">
+      <button onclick="selectPack(this, 'horror')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">👻</span>
+        <span class="font-medium">ホラー</span>
+      </button>
+      <button onclick="selectPack(this, 'sf')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">🚀</span>
+        <span class="font-medium">SF</span>
+      </button>
+      <button onclick="selectPack(this, 'comedy')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">😂</span>
+        <span class="font-medium">コメディ</span>
+      </button>
+      <button onclick="selectPack(this, 'mystery')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">🔍</span>
+        <span class="font-medium">ミステリー</span>
+      </button>
+      <button onclick="selectPack(this, 'heartwarming')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">💖</span>
+        <span class="font-medium">ハートフル</span>
+      </button>
+      <button onclick="selectPack(this, 'classic')" class="pack-card p-4 rounded-lg text-center">
+        <span class="text-2xl block mb-2">📚</span>
+        <span class="font-medium">クラシック</span>
+      </button>
+    </div>
+
+    <div class="mt-auto">
+      <button
+        id="pack-submit"
+        onclick="location.href='reader.html'"
+        class="w-full py-4 rounded-lg font-bold text-white opacity-50 pointer-events-none"
+        style="background: var(--scp-red);"
+      >
+        この内容で始める
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 3: SCP番号指定 -->
+  <div id="screen-custom" class="screen flex-col min-h-screen p-6">
+    <header class="flex items-center mb-6">
+      <button onclick="showScreen('screen-choice')" class="text-neutral-400 hover:text-white mr-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <h1 class="text-xl font-bold">好きなSCPを教えて</h1>
+    </header>
+
+    <p class="text-neutral-400 mb-6">お気に入りのSCP番号を入力してください（1〜3個）</p>
+
+    <div class="space-y-3 mb-6">
+      <input
+        type="text"
+        placeholder="例: SCP-173"
+        class="w-full px-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 focus:border-red-800 focus:outline-none"
+        oninput="checkCustomInput()"
+      >
+      <input
+        type="text"
+        placeholder="例: SCP-682"
+        class="w-full px-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 focus:border-red-800 focus:outline-none"
+        oninput="checkCustomInput()"
+      >
+      <input
+        type="text"
+        placeholder="例: SCP-999"
+        class="w-full px-4 py-3 rounded-lg bg-neutral-800 border border-neutral-700 focus:border-red-800 focus:outline-none"
+        oninput="checkCustomInput()"
+      >
+    </div>
+
+    <p class="text-xs text-neutral-500 mb-8">
+      入力されたSCPに似た記事を推薦します
+    </p>
+
+    <div class="mt-auto">
+      <button
+        id="custom-submit"
+        onclick="location.href='reader.html'"
+        class="w-full py-4 rounded-lg font-bold text-white opacity-50 pointer-events-none"
+        style="background: var(--scp-red);"
+      >
+        この内容で始める
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    let selectedPack = null;
+    function selectPack(el, pack) {
+      document.querySelectorAll('.pack-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedPack = pack;
+
+      const btn = document.getElementById('pack-submit');
+      btn.classList.remove('opacity-50', 'pointer-events-none');
+    }
+
+    function checkCustomInput() {
+      const inputs = document.querySelectorAll('#screen-custom input');
+      const hasValue = Array.from(inputs).some(i => i.value.trim() !== '');
+
+      const btn = document.getElementById('custom-submit');
+      if (hasValue) {
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+      } else {
+        btn.classList.add('opacity-50', 'pointer-events-none');
+      }
+    }
+  </script>
+
+</body>
+</html>
