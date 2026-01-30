@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ヘッダー案2: Floating - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #3B82F6;
+    }
+    /* Floating Header */
+    .floating-header {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin: 8px 12px;
+    }
+    /* SCP-JP実際のスタイル再現 */
+    .scp-wiki {
+      background: #EDEDED;
+      font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
+      line-height: 1.8;
+    }
+    .scp-wiki .wiki-header {
+      background: #8B0000;
+      color: white;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      display: flex;
+      gap: 24px;
+    }
+    .scp-wiki .wiki-header span { opacity: 0.9; }
+    .scp-wiki .content { padding: 20px 16px; background: #F5F5F5; }
+    .scp-wiki h1 { font-size: 1.8rem; font-weight: bold; color: #000; margin-bottom: 16px; }
+    .scp-wiki .rating-box {
+      display: inline-flex;
+      align-items: center;
+      background: #8B0000;
+      color: white;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .scp-wiki .rating-box .buttons { margin-left: 12px; display: flex; gap: 4px; }
+    .scp-wiki .rating-box .buttons span { padding: 0 6px; cursor: pointer; }
+    .scp-wiki .field { margin-bottom: 16px; font-size: 0.95rem; color: #333; }
+    .scp-wiki .field strong { color: #000; }
+    .scp-wiki .field-title { font-weight: bold; color: #000; }
+    .scp-wiki p { margin-bottom: 16px; font-size: 0.95rem; color: #333; text-align: justify; }
+    .scp-wiki a { color: #8B0000; text-decoration: none; }
+    .scp-wiki a:hover { text-decoration: underline; }
+    .scp-wiki sup { font-size: 0.7rem; color: #8B0000; }
+    .scp-wiki hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+
+  <!-- Floating Header -->
+  <header class="floating-header fixed top-0 left-0 right-0 z-50">
+    <div class="flex items-center justify-between px-4 py-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+          <span class="text-xs font-bold" style="color: var(--primary);">3</span>
+        </div>
+        <div>
+          <h1 class="text-sm font-semibold text-gray-800 leading-tight">SCP-5000</h1>
+          <p class="text-xs text-gray-400">Why?</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background: var(--primary);">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- プログレスバー（丸みを帯びた） -->
+    <div class="px-4 pb-3">
+      <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
+        <div class="h-full w-1/5 rounded-full" style="background: var(--primary);"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SCP記事コンテンツ -->
+  <main class="flex-1 overflow-auto pt-20 pb-24">
+    <div class="scp-wiki">
+      <div class="wiki-header">
+        <span>SCP記事</span>
+        <span>情報とアイフワフ</span>
+      </div>
+
+      <div class="content">
+        <h1>SCP-5000</h1>
+
+        <div class="rating-box">
+          評価: +574
+          <div class="buttons">
+            <span>+</span>
+            <span>-</span>
+            <span>×</span>
+          </div>
+        </div>
+
+        <div class="field"><strong>アイテム番号:</strong> SCP-5000</div>
+        <div class="field"><strong>オブジェクトクラス:</strong> Safe</div>
+
+        <p><span class="field-title">特別収容プロトコル:</span> SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存され、アーカイブ部門の要請に応じてバックアップが閲覧可能です。</p>
+
+        <p><span class="field-title">説明:</span> SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。SCP-5000はかつて装着者を保護し、有益な影響を及ぼすための異常な機能を多数搭載していたと考えられていますが、過去に損傷した結果、現在では基本的なファイル保存のみが可能となっています。</p>
+
+        <p>SCP-5000は2020/04/12、サイト-62Cにある<a href="#">SCP-579</a>の収容チャンバーに閃光を伴って出現し、内部には財団職員ピエトロ・ウィルソンと遺伝的に一致する死体<sup>1</sup>が入っていました。</p>
+
+        <hr>
+
+        <p>以下省略...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- お気に入りボタン -->
+  <button class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg" style="background: var(--primary);">
+    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+    </svg>
+  </button>
+
+  <!-- 案ラベル -->
+  <div class="fixed top-24 left-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg z-50 bg-white">
+    案2: Floating
+  </div>
+
+</body>
+</html>
