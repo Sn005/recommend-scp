@@ -7,44 +7,77 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
-      --bg: #F8F6F1;
-      --card: #FFFFFF;
-      --text: #2C2C2C;
-      --text-muted: #71717A;
+      --header-bg: #F8F6F1;
       --primary: #1C1C1C;
       --accent: #C9B037;
       --border: #D4D4D4;
-      --stamp: #8B0000;
-    }
-    body {
-      background: var(--bg);
-      color: var(--text);
     }
     .typewriter { font-family: 'Courier New', Courier, monospace; }
-    .stamp { border: 3px solid var(--stamp); color: var(--stamp); transform: rotate(-5deg); font-weight: bold; }
-    /* SCP Content Styles */
-    .scp-content { font-family: 'Courier New', Courier, monospace; line-height: 1.6; padding: 16px; }
-    .scp-content h1 { font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem; border-bottom: 2px solid var(--accent); padding-bottom: 0.5rem; letter-spacing: 0.05em; }
-    .scp-content .rating { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; }
-    .scp-content .info-box { background: var(--card); border: 2px solid var(--primary); padding: 12px; margin-bottom: 1rem; font-size: 0.875rem; }
-    .scp-content h2 { font-size: 0.9rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-    .scp-content p { margin-bottom: 1rem; font-size: 0.875rem; }
-    .scp-content .collapsible { background: var(--card); border: 1px solid var(--border); margin: 1rem 0; }
-    .scp-content .collapsible-header { background: var(--bg); padding: 8px 12px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase; }
-    .scp-content .collapsible-content { padding: 12px; font-size: 0.875rem; }
-    .scp-content .log-entry { background: var(--card); border-left: 4px solid var(--stamp); padding: 12px; margin: 1rem 0; font-size: 0.8rem; }
-    .scp-content .log-entry .timestamp { color: var(--stamp); font-size: 0.7rem; margin-bottom: 0.5rem; font-weight: bold; }
-    .scp-content .redacted { background: #000; color: #000; padding: 0 4px; }
-    .scp-content .classification { display: inline-block; border: 2px solid var(--stamp); color: var(--stamp); padding: 2px 8px; font-size: 0.7rem; font-weight: bold; transform: rotate(-2deg); margin-left: 8px; }
+    /* SCP-JP実際のスタイル再現 */
+    .scp-wiki {
+      background: #EDEDED;
+      font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
+      line-height: 1.8;
+    }
+    .scp-wiki .wiki-header {
+      background: #8B0000;
+      color: white;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      display: flex;
+      gap: 24px;
+    }
+    .scp-wiki .wiki-header span { opacity: 0.9; }
+    .scp-wiki .content { padding: 20px 16px; background: #F5F5F5; }
+    .scp-wiki h1 { font-size: 1.8rem; font-weight: bold; color: #000; margin-bottom: 16px; }
+    .scp-wiki .rating-box {
+      display: inline-flex;
+      align-items: center;
+      background: #8B0000;
+      color: white;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .scp-wiki .rating-box .buttons { margin-left: 12px; display: flex; gap: 4px; }
+    .scp-wiki .rating-box .buttons span { padding: 0 6px; cursor: pointer; }
+    .scp-wiki .field { margin-bottom: 16px; font-size: 0.95rem; color: #333; }
+    .scp-wiki .field strong { color: #000; }
+    .scp-wiki .field-title { font-weight: bold; color: #000; }
+    .scp-wiki p { margin-bottom: 16px; font-size: 0.95rem; color: #333; text-align: justify; }
+    .scp-wiki a { color: #8B0000; text-decoration: none; }
+    .scp-wiki a:hover { text-decoration: underline; }
+    .scp-wiki sup { font-size: 0.7rem; color: #8B0000; }
+    .scp-wiki hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+    .scp-wiki .collapsible-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 24px;
+    }
+    .scp-wiki .collapsible-header .icon {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #999;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #666;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- ヘッダー -->
-  <header class="flex-shrink-0 sticky top-0 z-50 border-b" style="background: var(--bg); border-color: var(--border);">
+  <!-- アプリヘッダー -->
+  <header class="flex-shrink-0 sticky top-0 z-50 border-b" style="background: var(--header-bg); border-color: var(--border);">
     <div class="flex items-center justify-between px-4 py-3">
       <h1 class="text-lg font-bold typewriter" style="color: var(--primary);">SCP-5000</h1>
-      <button class="flex items-center gap-1 text-sm" style="color: var(--text-muted);">
+      <button class="flex items-center gap-1 text-sm text-gray-500">
         <span>次へ</span>
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -54,50 +87,42 @@
     <div class="h-1" style="background: var(--accent);"></div>
   </header>
 
-  <!-- コンテンツ -->
+  <!-- SCP記事コンテンツ -->
   <main class="flex-1 overflow-auto pb-24">
-    <div class="scp-content">
-      <h1>SCP-5000 <span class="classification">SAFE</span></h1>
-      <div class="rating">DOCUMENT REVISION: 12 | CLEARANCE: LEVEL 4</div>
-
-      <div class="info-box">
-        <strong>ITEM #:</strong> SCP-5000<br>
-        <strong>OBJECT CLASS:</strong> Safe<br>
-        <strong>SITE:</strong> Site-22
+    <div class="scp-wiki">
+      <div class="wiki-header">
+        <span>SCP記事</span>
+        <span>情報とアイフワフ</span>
       </div>
 
-      <h2>Special Containment Procedures</h2>
-      <p>SCP-5000はサイト-22の標準保管ロッカーに収容されます。SCP-5000に関する全ての実験は現在凍結されています。</p>
+      <div class="content">
+        <h1>SCP-5000</h1>
 
-      <h2>Description</h2>
-      <p>SCP-5000は財団製エクソスーツ「絶対排除スーツ」のプロトタイプであり、着用者を全ての既知の異常効果および物理的危害から保護する能力を持ちます。</p>
-      <p>SCP-5000は2020年4月12日、現在の現実とは大きく異なる状況下で発見されました。スーツの内部ログから、「ピエトリック」と名乗る財団職員が着用していたことが判明しています。</p>
+        <div class="rating-box">
+          評価: +574
+          <div class="buttons">
+            <span>+</span>
+            <span>-</span>
+            <span>×</span>
+          </div>
+        </div>
 
-      <div class="collapsible">
-        <div class="collapsible-header">+ ADDENDUM 5000.1: RECOVERY LOG</div>
-        <div class="collapsible-content">
-          <p>SCP-5000は2020年4月12日、サイト-62の廃墟から回収されました。発見時、スーツ内部には人骨の残骸が存在していました。</p>
+        <div class="field"><strong>アイテム番号:</strong> SCP-5000</div>
+        <div class="field"><strong>オブジェクトクラス:</strong> Safe</div>
+
+        <p><span class="field-title">特別収容プロトコル:</span> SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存され、アーカイブ部門の要請に応じてバックアップが閲覧可能です。</p>
+
+        <p><span class="field-title">説明:</span> SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。SCP-5000はかつて装着者を保護し、有益な影響を及ぼすための異常な機能を多数搭載していたと考えられていますが、過去に損傷した結果、現在では基本的なファイル保存のみが可能となっています。回収当時のSCP-5000に収められていた記録については、アーカイブ5000-1を参照してください。</p>
+
+        <p>SCP-5000は2020/04/12、サイト-62Cにある<a href="#">SCP-579</a>の収容チャンバーに閃光を伴って出現し、内部には財団職員ピエトロ・ウィルソンと遺伝的に一致する死体<sup>1</sup>が入っていました。ピエトロ・ウィルソンは現在<a href="#">除外サイト-06</a><sup>2</sup>に勤務しており、記憶補強セラピーによって、SCP-5000の知識やそのアーカイブで詳述されている出来事の記憶を持っていないことが確認されています。</p>
+
+        <hr>
+
+        <div class="collapsible-header">
+          <div class="icon">≡</div>
+          <span>アーカイブ 5000-1:</span>
         </div>
       </div>
-
-      <h2>Addendum 5000.2: Internal Logs</h2>
-      <div class="log-entry">
-        <div class="timestamp">[2020/01/01 00:00:00]</div>
-        <p>「ハンマーダウン」プロトコル発令。全サイトに通達。人類はSCP財団の敵と宣言される。</p>
-      </div>
-      <div class="log-entry">
-        <div class="timestamp">[2020/01/15 14:32:00]</div>
-        <p>絶対排除スーツを入手。これで彼らから隠れられる。</p>
-      </div>
-      <div class="log-entry">
-        <div class="timestamp">[DAY 120 - FINAL ENTRY]</div>
-        <p>ピエトリックがSCP-579とSCP-055を接触させる。現実が書き換えられる。</p>
-      </div>
-
-      <p style="margin-top: 2rem; font-style: italic; color: var(--stamp); text-align: center; font-size: 1rem;">
-        「なぜだ？」<br>
-        <span style="font-size: 0.7rem; color: var(--text-muted);">— 回収されたスーツ内の最後のメッセージ</span>
-      </p>
     </div>
   </main>
 
@@ -109,7 +134,7 @@
   </button>
 
   <!-- 案ラベル -->
-  <div class="fixed top-16 left-4 stamp px-3 py-1 rounded text-xs z-50 bg-white">
+  <div class="fixed top-16 left-4 px-3 py-1 rounded text-xs font-bold z-50 border-2 border-red-800 text-red-800 bg-white" style="transform: rotate(-3deg);">
     案B: 機密文書風
   </div>
 
