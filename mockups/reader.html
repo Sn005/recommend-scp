@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>推薦 - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --scp-bg: #1a1a1a;
+      --scp-header: #2a2a2a;
+      --scp-red: #990000;
+      --scp-red-light: #b01;
+      --scp-text: #e0e0e0;
+    }
+
+    body {
+      background: var(--scp-bg);
+      color: var(--scp-text);
+      overflow: hidden;
+    }
+
+    .header-hidden {
+      transform: translateY(-100%);
+    }
+
+    .iframe-fallback {
+      background: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 2rem;
+    }
+  </style>
+</head>
+<body class="h-screen flex flex-col">
+
+  <!-- 自動非表示ヘッダー: タイトル + 次へボタン -->
+  <header
+    id="header"
+    class="fixed top-0 left-0 right-0 z-50 transition-transform duration-300"
+    style="background: var(--scp-header);"
+  >
+    <div class="flex items-center justify-between px-4 py-3">
+      <!-- 記事タイトル -->
+      <h1 class="text-lg font-bold" style="color: var(--scp-red-light);">SCP-173</h1>
+
+      <!-- 次へボタン（スキップ = Dislike） -->
+      <button class="flex items-center gap-1 text-neutral-400 hover:text-white text-sm">
+        <span>次へ</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 読み込み進捗バー -->
+    <div class="h-0.5 bg-neutral-700">
+      <div class="h-full bg-red-800 transition-all duration-300" style="width: 0%;"></div>
+    </div>
+  </header>
+
+  <!-- 全画面WebView -->
+  <main class="flex-1 pt-12">
+    <iframe
+      id="article-frame"
+      src="https://scp-jp.wikidot.com/scp-173"
+      class="w-full h-full border-0"
+      sandbox="allow-scripts allow-same-origin"
+      loading="lazy"
+    ></iframe>
+
+    <!-- フォールバック -->
+    <div id="fallback" class="iframe-fallback hidden">
+      <div class="text-6xl mb-4">📄</div>
+      <h2 class="text-xl font-bold mb-2" style="color: var(--scp-red-light);">SCP-173</h2>
+      <p class="text-sm text-neutral-500 mb-6">
+        iframeでの埋め込みがブロックされています。<br>
+        本番環境ではプロキシ経由で表示します。
+      </p>
+      <a
+        href="https://scp-jp.wikidot.com/scp-173"
+        target="_blank"
+        class="px-4 py-2 rounded text-white"
+        style="background: var(--scp-red);"
+      >
+        SCP-JPで開く →
+      </a>
+    </div>
+  </main>
+
+  <!-- フローティングお気に入りボタン（右下固定、これのみ） -->
+  <button
+    id="favorite-btn"
+    class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
+    style="background: var(--scp-red);"
+    onclick="toggleFavorite()"
+  >
+    <svg id="heart-icon" class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+    </svg>
+  </button>
+
+  <script>
+    // お気に入りトグル
+    let isFavorite = false;
+    function toggleFavorite() {
+      isFavorite = !isFavorite;
+      const btn = document.getElementById('favorite-btn');
+      const icon = document.getElementById('heart-icon');
+
+      if (isFavorite) {
+        icon.setAttribute('fill', 'currentColor');
+        btn.style.transform = 'scale(1.1)';
+        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+      } else {
+        icon.setAttribute('fill', 'none');
+      }
+    }
+
+    // ヘッダー自動非表示（デモ用）
+    let lastScrollY = 0;
+    const header = document.getElementById('header');
+
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        header.classList.add('header-hidden');
+      } else {
+        header.classList.remove('header-hidden');
+      }
+      lastScrollY = currentScrollY;
+    });
+  </script>
+
+</body>
+</html>

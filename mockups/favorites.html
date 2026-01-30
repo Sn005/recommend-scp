@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>お気に入り - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --scp-bg: #1a1a1a;
+      --scp-card: #2a2a2a;
+      --scp-red: #990000;
+      --scp-red-light: #b01;
+      --scp-text: #e0e0e0;
+    }
+
+    body {
+      background: var(--scp-bg);
+      color: var(--scp-text);
+    }
+
+    .favorite-item {
+      background: var(--scp-card);
+      transition: transform 0.2s;
+    }
+    .favorite-item:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-50 px-4 py-4" style="background: var(--scp-bg);">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold">お気に入り</h1>
+      <span class="text-sm text-neutral-400">3件</span>
+    </div>
+  </header>
+
+  <!-- お気に入り一覧 -->
+  <main class="px-4 pb-24">
+    <ul class="space-y-3">
+      <!-- アイテム1 -->
+      <li>
+        <a href="reader.html" class="favorite-item block p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h2 class="font-bold mb-1" style="color: var(--scp-red-light);">SCP-173</h2>
+              <p class="text-sm text-neutral-400 line-clamp-2">
+                彫刻 - オリジナル。常に視線を向けていなければならない。
+              </p>
+              <p class="text-xs text-neutral-500 mt-2">保存日: 2026-01-28</p>
+            </div>
+            <button
+              onclick="event.preventDefault(); removeFavorite(this)"
+              class="ml-4 p-2 text-neutral-500 hover:text-red-500"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </a>
+      </li>
+
+      <!-- アイテム2 -->
+      <li>
+        <a href="reader.html" class="favorite-item block p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h2 class="font-bold mb-1" style="color: var(--scp-red-light);">SCP-999</h2>
+              <p class="text-sm text-neutral-400 line-clamp-2">
+                くすぐりモンスター。触れた人を幸せな気分にする。
+              </p>
+              <p class="text-xs text-neutral-500 mt-2">保存日: 2026-01-27</p>
+            </div>
+            <button
+              onclick="event.preventDefault(); removeFavorite(this)"
+              class="ml-4 p-2 text-neutral-500 hover:text-red-500"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </a>
+      </li>
+
+      <!-- アイテム3 -->
+      <li>
+        <a href="reader.html" class="favorite-item block p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h2 class="font-bold mb-1" style="color: var(--scp-red-light);">SCP-682</h2>
+              <p class="text-sm text-neutral-400 line-clamp-2">
+                不死身の爬虫類。あらゆる方法で終了を試みるも失敗。
+              </p>
+              <p class="text-xs text-neutral-500 mt-2">保存日: 2026-01-25</p>
+            </div>
+            <button
+              onclick="event.preventDefault(); removeFavorite(this)"
+              class="ml-4 p-2 text-neutral-500 hover:text-red-500"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <!-- 空状態（参考用、非表示） -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <div class="text-4xl mb-4">💔</div>
+      <p class="text-neutral-400">お気に入りはまだありません</p>
+      <a href="reader.html" class="inline-block mt-4 text-sm" style="color: var(--scp-red-light);">
+        記事を読む →
+      </a>
+    </div>
+  </main>
+
+  <!-- 下部タブナビゲーション -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-800" style="background: var(--scp-bg);">
+    <div class="flex">
+      <a href="reader.html" class="flex-1 py-4 text-center text-neutral-500 hover:text-white">
+        <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        <span class="text-xs">推薦</span>
+      </a>
+      <a href="favorites.html" class="flex-1 py-4 text-center" style="color: var(--scp-red-light);">
+        <svg class="w-6 h-6 mx-auto mb-1" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span class="text-xs">お気に入り</span>
+      </a>
+    </div>
+  </nav>
+
+  <script>
+    function removeFavorite(btn) {
+      const item = btn.closest('li');
+      item.style.transform = 'translateX(100%)';
+      item.style.opacity = '0';
+      item.style.transition = 'all 0.3s';
+      setTimeout(() => item.remove(), 300);
+    }
+  </script>
+
+</body>
+</html>

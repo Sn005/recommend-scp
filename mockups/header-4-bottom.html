@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ヘッダー案4: Bottom Focus - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #3B82F6;
+    }
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      background: white;
+      border-top: 1px solid #F3F4F6;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 16px;
+      color: #9CA3AF;
+      font-size: 10px;
+      transition: color 0.2s;
+    }
+    .nav-btn.active {
+      color: var(--primary);
+    }
+    .nav-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+    /* SCP-JP実際のスタイル再現 */
+    .scp-wiki {
+      background: #EDEDED;
+      font-family: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
+      line-height: 1.8;
+    }
+    .scp-wiki .wiki-header {
+      background: #8B0000;
+      color: white;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      display: flex;
+      gap: 24px;
+    }
+    .scp-wiki .wiki-header span { opacity: 0.9; }
+    .scp-wiki .content { padding: 20px 16px; background: #F5F5F5; }
+    .scp-wiki h1 { font-size: 1.8rem; font-weight: bold; color: #000; margin-bottom: 16px; }
+    .scp-wiki .rating-box {
+      display: inline-flex;
+      align-items: center;
+      background: #8B0000;
+      color: white;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .scp-wiki .rating-box .buttons { margin-left: 12px; display: flex; gap: 4px; }
+    .scp-wiki .rating-box .buttons span { padding: 0 6px; cursor: pointer; }
+    .scp-wiki .field { margin-bottom: 16px; font-size: 0.95rem; color: #333; }
+    .scp-wiki .field strong { color: #000; }
+    .scp-wiki .field-title { font-weight: bold; color: #000; }
+    .scp-wiki p { margin-bottom: 16px; font-size: 0.95rem; color: #333; text-align: justify; }
+    .scp-wiki a { color: #8B0000; text-decoration: none; }
+    .scp-wiki a:hover { text-decoration: underline; }
+    .scp-wiki sup { font-size: 0.7rem; color: #8B0000; }
+    .scp-wiki hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-white">
+
+  <!-- ヘッダーなし - コンテンツエリア最大化 -->
+
+  <!-- SCP記事コンテンツ（ヘッダーなしでフルスクリーン） -->
+  <main class="flex-1 overflow-auto pb-20">
+    <div class="scp-wiki">
+      <div class="wiki-header">
+        <span>SCP記事</span>
+        <span>情報とアイフワフ</span>
+      </div>
+
+      <div class="content">
+        <h1>SCP-5000</h1>
+
+        <div class="rating-box">
+          評価: +574
+          <div class="buttons">
+            <span>+</span>
+            <span>-</span>
+            <span>×</span>
+          </div>
+        </div>
+
+        <div class="field"><strong>アイテム番号:</strong> SCP-5000</div>
+        <div class="field"><strong>オブジェクトクラス:</strong> Safe</div>
+
+        <p><span class="field-title">特別収容プロトコル:</span> SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存され、アーカイブ部門の要請に応じてバックアップが閲覧可能です。</p>
+
+        <p><span class="field-title">説明:</span> SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。SCP-5000はかつて装着者を保護し、有益な影響を及ぼすための異常な機能を多数搭載していたと考えられていますが、過去に損傷した結果、現在では基本的なファイル保存のみが可能となっています。</p>
+
+        <p>SCP-5000は2020/04/12、サイト-62Cにある<a href="#">SCP-579</a>の収容チャンバーに閃光を伴って出現し、内部には財団職員ピエトロ・ウィルソンと遺伝的に一致する死体<sup>1</sup>が入っていました。</p>
+
+        <hr>
+
+        <p>以下省略...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav fixed bottom-0 left-0 right-0 z-50">
+    <div class="flex items-center justify-around py-1">
+      <button class="nav-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        <span>前へ</span>
+      </button>
+
+      <button class="nav-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        <span>お気に入り</span>
+      </button>
+
+      <button class="nav-btn active">
+        <svg fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <span>3 / 15</span>
+      </button>
+
+      <button class="nav-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+        </svg>
+        <span>リスト</span>
+      </button>
+
+      <button class="nav-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span>次へ</span>
+      </button>
+    </div>
+    <!-- プログレスバー -->
+    <div class="h-0.5 bg-gray-100">
+      <div class="h-full w-1/5" style="background: var(--primary);"></div>
+    </div>
+  </nav>
+
+  <!-- 案ラベル -->
+  <div class="fixed top-4 left-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg z-50 bg-white">
+    案4: Bottom Focus
+  </div>
+
+</body>
+</html>
