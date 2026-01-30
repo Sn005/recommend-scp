@@ -10,6 +10,14 @@
       --primary: #3B82F6;
     }
 
+    /* メニューボタン */
+    .menu-btn {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
     /* ヘッダー */
     .page-header {
       background: rgba(255, 255, 255, 0.8);
@@ -34,27 +42,118 @@
     .badge-euclid { background: #F59E0B; color: white; }
     .badge-keter { background: #EF4444; color: white; }
 
-    /* 戻るボタン */
-    .back-btn {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    /* ドロワー */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    .drawer-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: white;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 101;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    }
+    .drawer.open {
+      transform: translateX(0);
+    }
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      color: #374151;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+    .drawer-item:hover {
+      background: #F3F4F6;
+    }
+    .drawer-item.active {
+      background: #EFF6FF;
+      color: var(--primary);
+    }
+    .drawer-item svg {
+      width: 22px;
+      height: 22px;
+      color: #6B7280;
+    }
+    .drawer-item.active svg {
+      color: var(--primary);
     }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
 
-  <!-- ヘッダー -->
-  <header class="page-header fixed top-0 left-0 right-0 z-50 border-b border-gray-100">
-    <div class="flex items-center gap-3 px-4 py-3">
-      <button class="back-btn w-9 h-9 rounded-full flex items-center justify-center" onclick="history.back()">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+  <!-- 左上メニューボタン -->
+  <button id="menuBtn" class="menu-btn fixed top-4 left-4 z-50 w-10 h-10 rounded-full flex items-center justify-center">
+    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+
+  <!-- ドロワーメニュー -->
+  <div id="drawerOverlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+  <div id="drawer" class="drawer">
+    <div class="pt-16 pb-4 px-5 border-b border-gray-100">
+      <h2 class="text-lg font-bold text-gray-800">SCP Recommend</h2>
+      <p class="text-sm text-gray-500 mt-1">あなた専用のSCP推薦</p>
+    </div>
+    <nav class="py-2">
+      <a href="header-6-minimal-2btn.html" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
         </svg>
-      </button>
+        推薦を見る
+      </a>
+      <a href="favorites-v2.html" class="drawer-item active">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+        </svg>
+        お気に入り一覧
+      </a>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        閲覧履歴
+      </a>
+      <div class="my-2 border-t border-gray-100"></div>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        設定
+      </a>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        推薦をリセット
+      </a>
+    </nav>
+  </div>
+
+  <!-- ヘッダー -->
+  <header class="page-header fixed top-0 left-0 right-0 z-40 border-b border-gray-100">
+    <div class="flex items-center justify-between px-4 py-3 pl-16">
       <h1 class="text-lg font-semibold text-gray-800">お気に入り</h1>
-      <span class="text-sm text-gray-400 ml-auto">12件</span>
+      <span class="text-sm text-gray-400">12件</span>
     </div>
   </header>
 
@@ -149,6 +248,18 @@
 
     </div>
   </main>
+
+  <script>
+    function openDrawer() {
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('drawerOverlay').classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('drawerOverlay').classList.remove('open');
+    }
+    document.getElementById('menuBtn').addEventListener('click', openDrawer);
+  </script>
 
 </body>
 </html>
