@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>お気に入り一覧 - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #3B82F6;
+    }
+
+    /* ヘッダー */
+    .page-header {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* お気に入りカード */
+    .fav-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+    }
+    .fav-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    /* オブジェクトクラスバッジ */
+    .badge-safe { background: #10B981; color: white; }
+    .badge-euclid { background: #F59E0B; color: white; }
+    .badge-keter { background: #EF4444; color: white; }
+
+    /* 戻るボタン */
+    .back-btn {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- ヘッダー -->
+  <header class="page-header fixed top-0 left-0 right-0 z-50 border-b border-gray-100">
+    <div class="flex items-center gap-3 px-4 py-3">
+      <button class="back-btn w-9 h-9 rounded-full flex items-center justify-center" onclick="history.back()">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <h1 class="text-lg font-semibold text-gray-800">お気に入り</h1>
+      <span class="text-sm text-gray-400 ml-auto">12件</span>
+    </div>
+  </header>
+
+  <!-- お気に入り一覧 -->
+  <main class="pt-16 pb-8 px-4">
+    <div class="space-y-3 mt-4">
+
+      <!-- カード1 -->
+      <a href="header-6-minimal-2btn.html" class="fav-card block p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+              <span class="text-xs text-gray-400">+574</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">SCP-5000</h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- カード2 -->
+      <a href="#" class="fav-card block p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+              <span class="text-xs text-gray-400">+2,841</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">SCP-682</h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- カード3 -->
+      <a href="#" class="fav-card block p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded badge-euclid">Euclid</span>
+              <span class="text-xs text-gray-400">+4,102</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">SCP-173</h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">彫刻 - オリジナル - 視線を外すと高速で移動し首を折る彫刻</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- カード4 -->
+      <a href="#" class="fav-card block p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+              <span class="text-xs text-gray-400">+1,256</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">SCP-999</h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+
+      <!-- カード5 -->
+      <a href="#" class="fav-card block p-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+              <span class="text-xs text-gray-400">+892</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">SCP-3000</h3>
+            <p class="text-sm text-gray-500 mt-1 line-clamp-2">アナンタシェーシャ - ベンガル湾深海に棲む巨大なウナギ型生物</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+</body>
+</html>
