@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>案C: クリーンラボ風 - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 案C: 「クリーンラボ」風（2026トレンド準拠） */
+    :root {
+      --bg: #FAFAFA;           /* Cloud White */
+      --card: #FFFFFF;
+      --text: #1F2937;         /* Cool Gray 800 */
+      --text-muted: #64748B;   /* Slate 500 */
+      --primary: #3B82F6;      /* Blue 500 */
+      --primary-dark: #2563EB; /* Blue 600 */
+      --secondary: #64748B;    /* Slate 500 */
+      --accent: #F59E0B;       /* Amber 500 */
+      --border: #E2E8F0;       /* Slate 200 */
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-50 border-b" style="background: var(--card); border-color: var(--border);">
+    <div class="flex items-center justify-between px-4 py-3">
+      <h1 class="text-lg font-semibold" style="color: var(--text);">SCP-173</h1>
+      <button class="flex items-center gap-1 text-sm font-medium" style="color: var(--primary);">
+        <span>次へ</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+    <div class="h-0.5" style="background: var(--border);">
+      <div class="h-full w-1/5" style="background: var(--primary);"></div>
+    </div>
+  </header>
+
+  <!-- コンテンツエリア -->
+  <main class="p-4">
+    <!-- 分類バッジ -->
+    <div class="flex gap-2 mb-4">
+      <span class="px-3 py-1 text-xs font-medium rounded-full" style="background: #DBEAFE; color: var(--primary-dark);">
+        Euclid
+      </span>
+      <span class="px-3 py-1 text-xs font-medium rounded-full" style="background: #FEF3C7; color: #B45309;">
+        収容中
+      </span>
+    </div>
+
+    <!-- 記事プレビュー -->
+    <div class="rounded-xl p-4 mb-3 shadow-sm" style="background: var(--card); border: 1px solid var(--border);">
+      <h2 class="font-semibold mb-2 text-sm" style="color: var(--text);">特別収容プロトコル</h2>
+      <p class="text-sm leading-relaxed" style="color: var(--text-muted);">
+        SCP-173は常時施錠された収容室内に保管されます。職員がSCP-173の収容室に入る際は最低3名以上で行い、入室後はドアを施錠しなければなりません...
+      </p>
+    </div>
+
+    <div class="rounded-xl p-4 shadow-sm" style="background: var(--card); border: 1px solid var(--border);">
+      <h2 class="font-semibold mb-2 text-sm" style="color: var(--text);">説明</h2>
+      <p class="text-sm leading-relaxed" style="color: var(--text-muted);">
+        SCP-173はコンクリートと鉄筋から成る彫刻で、Krylon社製スプレー塗料の痕跡が付着しています。SCP-173は生きており、極めて敵対的です...
+      </p>
+    </div>
+
+    <!-- メタ情報 -->
+    <div class="mt-4 flex items-center justify-between text-xs" style="color: var(--text-muted);">
+      <span>Rating: +7521</span>
+      <span>2007年投稿</span>
+    </div>
+  </main>
+
+  <!-- お気に入りボタン -->
+  <button
+    class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95"
+    style="background: var(--primary);"
+  >
+    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+    </svg>
+  </button>
+
+  <!-- 案ラベル -->
+  <div class="fixed top-16 left-4 px-3 py-1 rounded-full text-xs font-medium shadow-sm" style="background: var(--primary); color: white;">
+    案C: クリーンラボ風
+  </div>
+
+</body>
+</html>

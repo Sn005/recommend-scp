@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>案B: 機密文書風 - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 案B: 「機密文書」風 */
+    :root {
+      --bg: #F8F6F1;           /* Warm Off-White / 紙風 */
+      --card: #FFFFFF;
+      --text: #2C2C2C;         /* Charcoal */
+      --text-muted: #71717A;
+      --primary: #1C1C1C;      /* Near Black / スタンプ風 */
+      --accent: #C9B037;       /* Amber / 機密レベル */
+      --border: #D4D4D4;
+      --stamp: #8B0000;        /* 赤スタンプ */
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* 紙のテクスチャ風 */
+    .paper {
+      background: var(--card);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* タイプライター風フォント */
+    .typewriter {
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    /* 機密スタンプ風 */
+    .stamp {
+      border: 3px solid var(--stamp);
+      color: var(--stamp);
+      transform: rotate(-5deg);
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="sticky top-0 z-50 border-b" style="background: var(--bg); border-color: var(--border);">
+    <div class="flex items-center justify-between px-4 py-3">
+      <h1 class="text-lg font-bold typewriter" style="color: var(--primary);">SCP-173</h1>
+      <button class="flex items-center gap-1 text-sm" style="color: var(--text-muted);">
+        <span>次へ</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+    <div class="h-1" style="background: var(--accent);"></div>
+  </header>
+
+  <!-- コンテンツエリア -->
+  <main class="p-4">
+    <!-- 分類バッジ -->
+    <div class="flex items-center gap-3 mb-4">
+      <span class="stamp px-2 py-1 text-xs rounded">EUCLID</span>
+      <span class="px-2 py-1 text-xs font-medium rounded typewriter" style="background: var(--accent); color: var(--primary);">
+        LEVEL 2 CLEARANCE
+      </span>
+    </div>
+
+    <!-- 記事プレビュー -->
+    <div class="paper rounded p-4 mb-4 border" style="border-color: var(--border);">
+      <h2 class="font-bold mb-2 typewriter text-sm tracking-wider" style="color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+        SPECIAL CONTAINMENT PROCEDURES
+      </h2>
+      <p class="text-sm leading-relaxed" style="color: var(--text);">
+        SCP-173は常時施錠された収容室内に保管されます。職員がSCP-173の収容室に入る際は最低3名以上で行い、入室後はドアを施錠しなければなりません...
+      </p>
+    </div>
+
+    <div class="paper rounded p-4 border" style="border-color: var(--border);">
+      <h2 class="font-bold mb-2 typewriter text-sm tracking-wider" style="color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+        DESCRIPTION
+      </h2>
+      <p class="text-sm leading-relaxed" style="color: var(--text);">
+        SCP-173はコンクリートと鉄筋から成る彫刻で、Krylon社製スプレー塗料の痕跡が付着しています。SCP-173は生きており、極めて敵対的です...
+      </p>
+    </div>
+
+    <!-- 文書フッター -->
+    <div class="mt-4 text-xs typewriter text-center" style="color: var(--text-muted);">
+      DOCUMENT #173-A | REVISION 12 | ████-██-██
+    </div>
+  </main>
+
+  <!-- お気に入りボタン -->
+  <button
+    class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+    style="background: var(--primary);"
+  >
+    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+    </svg>
+  </button>
+
+  <!-- 案ラベル -->
+  <div class="fixed top-16 left-4 stamp px-3 py-1 rounded text-xs">
+    案B: 機密文書風
+  </div>
+
+</body>
+</html>

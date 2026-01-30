@@ -6,31 +6,52 @@
   <title>Mockups - SCP Recommend</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-neutral-900 text-neutral-200 min-h-screen p-8">
-  <h1 class="text-2xl font-bold mb-6 text-red-700">SCP Recommend Mockups</h1>
+<body class="bg-neutral-100 text-neutral-800 min-h-screen p-6">
+  <h1 class="text-2xl font-bold mb-6">SCP Recommend Mockups</h1>
 
-  <ul class="space-y-4">
-    <li>
-      <a href="onboarding.html" class="text-red-500 hover:text-red-400 underline">
-        オンボーディング (onboarding)
+  <!-- カラー比較セクション -->
+  <section class="mb-8">
+    <h2 class="text-lg font-semibold mb-3 text-blue-600">カラー比較</h2>
+    <div class="grid gap-3">
+      <a href="color-a.html" class="block p-4 bg-white rounded-lg shadow-sm border-l-4 border-blue-800 hover:shadow-md transition-shadow">
+        <div class="font-medium">案A: CERN風「研究機関」</div>
+        <div class="text-sm text-neutral-500 mt-1">青(#0033A0) + 白 / 知的・科学的</div>
       </a>
-      <span class="text-neutral-500 ml-2">← 最初の画面</span>
-    </li>
-    <li>
-      <a href="reader.html" class="text-red-500 hover:text-red-400 underline">
-        推薦画面 (reader)
+      <a href="color-b.html" class="block p-4 bg-white rounded-lg shadow-sm border-l-4 border-amber-600 hover:shadow-md transition-shadow">
+        <div class="font-medium">案B: 機密文書風</div>
+        <div class="text-sm text-neutral-500 mt-1">紙風オフホワイト + 黒 / レトロモダン</div>
       </a>
-    </li>
-    <li>
-      <a href="favorites.html" class="text-red-500 hover:text-red-400 underline">
-        お気に入り (favorites)
+      <a href="color-c.html" class="block p-4 bg-white rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+        <div class="font-medium">案C: クリーンラボ風</div>
+        <div class="text-sm text-neutral-500 mt-1">青(#3B82F6) + Cloud White / 2026トレンド</div>
       </a>
-    </li>
-  </ul>
+    </div>
+  </section>
 
-  <div class="mt-8 text-sm text-neutral-500">
+  <!-- 画面モック -->
+  <section class="mb-8">
+    <h2 class="text-lg font-semibold mb-3 text-neutral-600">画面モック（現行ダーク版）</h2>
+    <ul class="space-y-2">
+      <li>
+        <a href="onboarding.html" class="text-blue-600 hover:underline">
+          オンボーディング
+        </a>
+      </li>
+      <li>
+        <a href="reader.html" class="text-blue-600 hover:underline">
+          推薦画面
+        </a>
+      </li>
+      <li>
+        <a href="favorites.html" class="text-blue-600 hover:underline">
+          お気に入り
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  <div class="text-sm text-neutral-500">
     <p>モバイル: 375px幅で確認推奨</p>
-    <p>Chrome DevTools → Toggle device toolbar (Ctrl+Shift+M)</p>
   </div>
 </body>
 </html>
