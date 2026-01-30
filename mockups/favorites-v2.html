@@ -66,7 +66,7 @@
       transform: translateX(-100%);
       transition: transform 0.3s ease;
       z-index: 101;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
     }
     .drawer.open {
       transform: translateX(0);
@@ -149,17 +149,15 @@
     </nav>
   </div>
 
-  <!-- ヘッダー -->
-  <header class="page-header fixed top-0 left-0 right-0 z-40 border-b border-gray-100">
-    <div class="flex items-center justify-between px-4 py-3 pl-16">
+  <!-- お気に入り一覧 -->
+  <main class="pb-8 px-4">
+    <!-- ヘッダー（スクロール可能） -->
+    <div class="flex items-center justify-between py-4 pl-12">
       <h1 class="text-lg font-semibold text-gray-800">お気に入り</h1>
       <span class="text-sm text-gray-400">12件</span>
     </div>
-  </header>
 
-  <!-- お気に入り一覧 -->
-  <main class="pt-16 pb-8 px-4">
-    <div class="space-y-3 mt-4">
+    <div class="space-y-3">
 
       <!-- カード1 -->
       <a href="header-6-minimal-2btn.html" class="fav-card block p-4">
