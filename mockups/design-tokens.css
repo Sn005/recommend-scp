@@ -1,0 +1,198 @@
+/**
+ * SCP Recommend - Design Tokens
+ *
+ * このファイルは実装時にそのまま使用可能なCSS変数定義です。
+ * Tailwind CSS と併用する場合は tailwind.config.js に統合してください。
+ */
+
+:root {
+  /* ========================================
+   * Colors - カラーパレット
+   * ======================================== */
+
+  /* Primary - メインブランドカラー */
+  --color-primary: #3B82F6;           /* Tailwind blue-500 */
+  --color-primary-light: #60A5FA;     /* blue-400 */
+  --color-primary-dark: #2563EB;      /* blue-600 */
+
+  /* Background - 背景色 */
+  --color-bg-primary: #FFFFFF;        /* メイン背景 */
+  --color-bg-secondary: #F9FAFB;      /* gray-50: セカンダリ背景 */
+  --color-bg-tertiary: #F3F4F6;       /* gray-100: カード背景など */
+
+  /* Text - テキスト色 */
+  --color-text-primary: #1F2937;      /* gray-800: メインテキスト */
+  --color-text-secondary: #6B7280;    /* gray-500: サブテキスト */
+  --color-text-tertiary: #9CA3AF;     /* gray-400: 補助テキスト */
+  --color-text-disabled: #D1D5DB;     /* gray-300: 無効テキスト */
+
+  /* Border - ボーダー色 */
+  --color-border-light: #F3F4F6;      /* gray-100 */
+  --color-border-default: #E5E7EB;    /* gray-200 */
+
+  /* Status - ステータス色（オブジェクトクラス） */
+  --color-safe: #10B981;              /* emerald-500 */
+  --color-euclid: #F59E0B;            /* amber-500 */
+  --color-keter: #EF4444;             /* red-500 */
+
+  /* Semantic - 意味的な色 */
+  --color-favorite: #EF4444;          /* red-500: お気に入り（塗り） */
+  --color-favorite-outline: #6B7280;  /* gray-500: お気に入り（線） */
+
+
+  /* ========================================
+   * Glassmorphism - すりガラス効果
+   * ======================================== */
+
+  /* ボトムナビ（推薦画面） */
+  --glass-nav-bg: rgba(255, 255, 255, 0.3);
+  --glass-nav-blur: blur(20px);
+  --glass-nav-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+
+  /* メニューボタン */
+  --glass-button-bg: rgba(255, 255, 255, 0.8);
+  --glass-button-blur: blur(12px);
+  --glass-button-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* ドロワー */
+  --drawer-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
+  --drawer-overlay-bg: rgba(0, 0, 0, 0.3);
+
+
+  /* ========================================
+   * Spacing - 余白
+   * ======================================== */
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 32px;
+
+
+  /* ========================================
+   * Border Radius - 角丸
+   * ======================================== */
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 50px;       /* ピル型 */
+  --radius-circle: 50%;      /* 完全な円 */
+
+
+  /* ========================================
+   * Typography - タイポグラフィ
+   * ======================================== */
+
+  /* Font Family */
+  --font-family-base: 'Hiragino Kaku Gothic Pro', 'ヒラギノ角ゴ Pro W3', Meiryo, sans-serif;
+
+  /* Font Size */
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+
+  /* Font Weight */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Height */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.8;
+
+
+  /* ========================================
+   * Transitions - アニメーション
+   * ======================================== */
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+
+  /* ========================================
+   * Z-Index - 重なり順
+   * ======================================== */
+
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-progress-bar: 40;
+  --z-nav: 50;
+  --z-drawer-overlay: 100;
+  --z-drawer: 101;
+  --z-modal: 200;
+  --z-toast: 300;
+
+
+  /* ========================================
+   * Component Specific - コンポーネント固有
+   * ======================================== */
+
+  /* ボトムナビ（フローティングピル） */
+  --nav-pill-padding-x: 20px;
+  --nav-pill-padding-y: 8px;
+  --nav-pill-gap: 24px;           /* gap-6 */
+  --nav-button-size: 48px;
+  --nav-icon-size: 26px;
+
+  /* ドロワー */
+  --drawer-width: 280px;
+
+  /* メニューボタン */
+  --menu-button-size: 40px;
+  --menu-icon-size: 20px;
+
+  /* お気に入りカード */
+  --card-padding: 16px;
+  --card-radius: 12px;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --card-shadow-active: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* バッジ */
+  --badge-padding-x: 8px;
+  --badge-padding-y: 2px;
+  --badge-radius: 4px;
+  --badge-font-size: 12px;
+
+
+  /* ========================================
+   * Safe Area - セーフエリア
+   * ======================================== */
+
+  --safe-area-bottom: env(safe-area-inset-bottom);
+}
+
+
+/* ========================================
+ * アクセシビリティ対応
+ * ======================================== */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-nav-bg: rgba(255, 255, 255, 0.98);
+    --glass-button-bg: rgba(255, 255, 255, 0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0s;
+    --transition-normal: 0s;
+    --transition-slow: 0s;
+  }
+}
