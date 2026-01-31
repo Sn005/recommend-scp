@@ -81,8 +81,20 @@ describe("RecommendService", () => {
       };
 
       const mockRecommendations: RecommendedArticle[] = [
-        { id: "scp-173", title: "彫刻", similarityScore: 0.95, source: "preference" },
-        { id: "scp-096", title: "シャイガイ", similarityScore: 0.87, source: "preference" },
+        {
+          id: "scp-173",
+          title: "彫刻",
+          similarityScore: 0.95,
+          source: "preference",
+          url: "http://scp-jp.wikidot.com/scp-173",
+        },
+        {
+          id: "scp-096",
+          title: "シャイガイ",
+          similarityScore: 0.87,
+          source: "preference",
+          url: "http://scp-jp.wikidot.com/scp-096",
+        },
       ];
 
       it("有効なvisitorIdで推薦記事を返す", async () => {

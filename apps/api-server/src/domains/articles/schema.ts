@@ -21,3 +21,22 @@ export const searchArticlesSchema = z.object({
  * GET /articles/search クエリパラメータの型
  */
 export type SearchArticlesInput = z.infer<typeof searchArticlesSchema>;
+
+/**
+ * PATCH /articles/:articleId/translation リクエストボディスキーマ
+ *
+ * - lang: 言語コード（2〜5文字）
+ * - hasTranslation: 翻訳有無
+ */
+export const updateTranslationSchema = z.object({
+  lang: z
+    .string()
+    .min(2, "Language code must be at least 2 characters")
+    .max(5, "Language code must be at most 5 characters"),
+  hasTranslation: z.boolean(),
+});
+
+/**
+ * PATCH /articles/:articleId/translation リクエストボディの型
+ */
+export type UpdateTranslationInput = z.infer<typeof updateTranslationSchema>;

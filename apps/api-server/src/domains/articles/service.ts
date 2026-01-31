@@ -6,6 +6,7 @@
 
 import type { ArticlesRepository } from "./repository";
 import { createEmbedding } from "../../lib/openai";
+import { NotFoundError } from "../../lib/errors";
 
 /**
  * 記事検索結果の1件
@@ -85,4 +86,46 @@ export class ArticlesService {
       query,
     };
   };
+
+  /**
+   * 翻訳有無を更新
+   *
+   * @param articleId - 記事ID
+   * @param lang - 言語コード
+   * @param hasTranslation - 翻訳有無
+   * @returns 更新結果
+   * @throws NotFoundError - 翻訳レコードが存在しない場合
+   */
+  updateTranslation = async (
+    articleId: string,
+    lang: string,
+    hasTranslation: boolean
+  ): Promise<UpdateTranslationResult> => {
+    const result = await this.repository.updateTranslation(articleId, lang, hasTranslation);
+
+    if (result === null) {
+      throw new NotFoundError("Translation", `${articleId}/${lang}`);
+    }
+
+    return {
+      articleId: result.article_id,
+      lang: result.lang,
+      hasTranslation: result.has_translation ?? false,
+      checkedAt: result.checked_at ?? new Date().toISOString(),
+    };
+  };
+}
+
+/**
+ * 翻訳更新結果
+ */
+export interface UpdateTranslationResult {
+  /** 記事ID */
+  articleId: string;
+  /** 言語コード */
+  lang: string;
+  /** 翻訳有無 */
+  hasTranslation: boolean;
+  /** 確認日時 */
+  checkedAt: string;
 }

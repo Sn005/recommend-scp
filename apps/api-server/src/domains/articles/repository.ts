@@ -23,6 +23,17 @@ interface SupabaseResponse<T> {
 }
 
 /**
+ * 翻訳レコード（DBカラム名）
+ */
+export interface TranslationRow {
+  article_id: string;
+  lang: string;
+  url: string;
+  has_translation: boolean | null;
+  checked_at: string | null;
+}
+
+/**
  * 記事詳細
  */
 export interface ArticleDetail {
@@ -93,6 +104,36 @@ export class ArticlesRepository {
       .select("id, title, url, tags, rating")
       .eq("id", id)
       .single()) as unknown as SupabaseResponse<ArticleDetail>;
+
+    // PGRST116: 行が見つからない場合のエラーコード
+    if (response.error?.code === "PGRST116") return null;
+    if (response.error !== null) throw response.error;
+    return response.data;
+  };
+
+  /**
+   * 翻訳有無を更新
+   *
+   * @param articleId - 記事ID
+   * @param lang - 言語コード
+   * @param hasTranslation - 翻訳有無
+   * @returns 更新後の翻訳レコード。存在しない場合はnull
+   */
+  updateTranslation = async (
+    articleId: string,
+    lang: string,
+    hasTranslation: boolean
+  ): Promise<TranslationRow | null> => {
+    const response = (await this.supabase
+      .from("article_translations")
+      .update({
+        has_translation: hasTranslation,
+        checked_at: new Date().toISOString(),
+      })
+      .eq("article_id", articleId)
+      .eq("lang", lang)
+      .select()
+      .single()) as unknown as SupabaseResponse<TranslationRow>;
 
     // PGRST116: 行が見つからない場合のエラーコード
     if (response.error?.code === "PGRST116") return null;

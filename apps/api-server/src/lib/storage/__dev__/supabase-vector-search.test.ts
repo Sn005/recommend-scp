@@ -73,8 +73,18 @@ describe("SupabaseVectorSearch", () => {
       it("クエリベクトルに類似した記事を取得できる", async () => {
         // Arrange
         const mockData = [
-          { id: "scp-173", title: "The Sculpture", similarity: 0.95 },
-          { id: "scp-096", title: "The Shy Guy", similarity: 0.87 },
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            similarity: 0.95,
+            url: "http://scp-jp.wikidot.com/scp-173",
+          },
+          {
+            id: "scp-096",
+            title: "The Shy Guy",
+            similarity: 0.87,
+            url: "http://scp-jp.wikidot.com/scp-096",
+          },
         ];
 
         vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
@@ -87,8 +97,18 @@ describe("SupabaseVectorSearch", () => {
 
         // Assert
         expect(result).toEqual([
-          { id: "scp-173", title: "The Sculpture", similarity: 0.95 },
-          { id: "scp-096", title: "The Shy Guy", similarity: 0.87 },
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            similarity: 0.95,
+            url: "http://scp-jp.wikidot.com/scp-173",
+          },
+          {
+            id: "scp-096",
+            title: "The Shy Guy",
+            similarity: 0.87,
+            url: "http://scp-jp.wikidot.com/scp-096",
+          },
         ]);
 
         expect(mockSupabase.rpc).toHaveBeenCalledWith("search_articles_by_embedding", {

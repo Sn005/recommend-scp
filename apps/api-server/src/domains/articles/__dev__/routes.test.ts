@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import { createArticlesRoutes } from "../routes";
 import { createErrorHandler } from "../../../middleware/error-handler";
+import { NotFoundError } from "../../../lib/errors";
 import type { ArticlesService } from "../service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -16,6 +17,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 interface MockService {
   searchArticles: ReturnType<typeof vi.fn>;
+  updateTranslation: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -54,6 +56,7 @@ describe("GET /articles/search - 正常系", () => {
     vi.clearAllMocks();
     mockService = {
       searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -181,6 +184,7 @@ describe("GET /articles/search - 異常系（バリデーションエラー）",
     vi.clearAllMocks();
     mockService = {
       searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -274,6 +278,7 @@ describe("GET /articles/search - エッジケース", () => {
     vi.clearAllMocks();
     mockService = {
       searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -402,6 +407,7 @@ describe("GET /articles/search - サービスエラー", () => {
     vi.clearAllMocks();
     mockService = {
       searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -430,5 +436,313 @@ describe("GET /articles/search - サービスエラー", () => {
     const json = (await res.json()) as Record<string, unknown>;
     expect(json.type).toContain("internal-error");
     expect(json.status).toBe(500);
+  });
+});
+
+// ============================================
+// PATCH /articles/:articleId/translation
+// ============================================
+
+describe("PATCH /articles/:articleId/translation - 正常系", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("有効なリクエストで200 OKを返す", async () => {
+    // Arrange
+    mockService.updateTranslation.mockResolvedValue({
+      articleId: "scp-173",
+      lang: "ja",
+      hasTranslation: false,
+      checkedAt: "2026-01-31T12:00:00Z",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+
+  it("レスポンスにsuccess: trueとdataが含まれる", async () => {
+    // Arrange
+    const expected = {
+      articleId: "scp-173",
+      lang: "ja",
+      hasTranslation: false,
+      checkedAt: "2026-01-31T12:00:00Z",
+    };
+    mockService.updateTranslation.mockResolvedValue(expected);
+
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: false,
+      }),
+    });
+    const json = (await res.json()) as { success: boolean; data: unknown };
+
+    // Assert
+    expect(json.success).toBe(true);
+    expect(json.data).toEqual(expected);
+  });
+
+  it("hasTranslation=trueで更新できる", async () => {
+    // Arrange
+    mockService.updateTranslation.mockResolvedValue({
+      articleId: "scp-173",
+      lang: "ja",
+      hasTranslation: true,
+      checkedAt: "2026-01-31T12:00:00Z",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: true,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(mockService.updateTranslation).toHaveBeenCalledWith("scp-173", "ja", true);
+  });
+
+  it("特殊文字を含むarticleIdを処理できる", async () => {
+    // Arrange
+    mockService.updateTranslation.mockResolvedValue({
+      articleId: "SCP-173-JP",
+      lang: "ja",
+      hasTranslation: false,
+      checkedAt: "2026-01-31T12:00:00Z",
+    });
+
+    // Act
+    const res = await app.request("/articles/SCP-173-JP/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(mockService.updateTranslation).toHaveBeenCalledWith("SCP-173-JP", "ja", false);
+  });
+});
+
+describe("PATCH /articles/:articleId/translation - 異常系", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("存在しない翻訳レコードで404を返す", async () => {
+    // Arrange
+    mockService.updateTranslation.mockRejectedValue(
+      new NotFoundError("Translation", "nonexistent/ja")
+    );
+
+    // Act
+    const res = await app.request("/articles/nonexistent/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(404);
+  });
+
+  it("404エラー時にRFC 7807形式で返す", async () => {
+    // Arrange
+    mockService.updateTranslation.mockRejectedValue(
+      new NotFoundError("Translation", "nonexistent/ja")
+    );
+
+    // Act
+    const res = await app.request("/articles/nonexistent/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json).toHaveProperty("type");
+    expect(json.type).toContain("not-found");
+    expect(json).toHaveProperty("status", 404);
+  });
+});
+
+describe("PATCH /articles/:articleId/translation - バリデーション", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("langが1文字で400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "x",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("langが6文字以上で400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "toolong",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("langが空文字列で400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("hasTranslationが文字列で400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+        hasTranslation: "true",
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("リクエストボディなしで400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("langがない場合400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("hasTranslationがない場合400を返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "ja",
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("バリデーションエラー時にRFC 7807形式で返す", async () => {
+    // Act
+    const res = await app.request("/articles/scp-173/translation", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lang: "x",
+        hasTranslation: false,
+      }),
+    });
+
+    // Assert
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json).toHaveProperty("type");
+    expect(json.type).toContain("validation-error");
+    expect(json).toHaveProperty("title", "Validation Error");
+    expect(json).toHaveProperty("status", 400);
   });
 });

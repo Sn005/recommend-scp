@@ -58,9 +58,27 @@ const UNKNOWN_VISITOR_ID = "00000000-0000-0000-0000-000000000000";
  * モック推薦記事
  */
 const mockRecommendations: RecommendedArticle[] = [
-  { id: "scp-173", title: "彫刻", similarityScore: 0.95, source: "preference" },
-  { id: "scp-096", title: "シャイガイ", similarityScore: 0.87, source: "preference" },
-  { id: "scp-999", title: "くすぐりオバケ", similarityScore: 0.45, source: "serendipity" },
+  {
+    id: "scp-173",
+    title: "彫刻",
+    similarityScore: 0.95,
+    source: "preference",
+    url: "http://scp-jp.wikidot.com/scp-173",
+  },
+  {
+    id: "scp-096",
+    title: "シャイガイ",
+    similarityScore: 0.87,
+    source: "preference",
+    url: "http://scp-jp.wikidot.com/scp-096",
+  },
+  {
+    id: "scp-999",
+    title: "くすぐりオバケ",
+    similarityScore: 0.45,
+    source: "serendipity",
+    url: "http://scp-jp.wikidot.com/scp-999",
+  },
 ];
 
 describe("POST /recommend - 正常系", () => {
