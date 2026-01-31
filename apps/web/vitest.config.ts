@@ -15,6 +15,9 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
       exclude: ["node_modules", ".next", "src/test", "**/*.d.ts", "**/*.config.*"],
     },
+    env: {
+      NEXT_PUBLIC_API_URL: "http://localhost:3001",
+    },
   },
   resolve: {
     alias: {

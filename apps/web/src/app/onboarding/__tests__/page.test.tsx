@@ -2,6 +2,42 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// api-clientをモック（他のimportより先に定義）
+vi.mock("@/shared/lib/api-client", () => ({
+  api: {
+    onboarding: {
+      packs: {
+        $get: vi.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              packs: [
+                {
+                  type: "horror",
+                  displayName: "ホラー好き",
+                  description: "恐怖と不気味さを求めるあなたに",
+                  primaryTags: ["ホラー", "恐怖", "不気味"],
+                },
+              ],
+            }),
+        }),
+      },
+      select: {
+        $post: vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        }),
+        custom: {
+          $post: vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true }),
+          }),
+        },
+      },
+    },
+  },
+}));
+
 // モックを先に定義
 const mockRouterReplace = vi.fn();
 const mockRouterPush = vi.fn();
@@ -104,7 +140,7 @@ describe("OnboardingPage", () => {
       await user.click(packButton);
 
       // 戻るボタンをクリック
-      const backButton = screen.getByRole("button", { name: "戻る" });
+      const backButton = screen.getByRole("button", { name: /戻る/ });
       await user.click(backButton);
 
       // 選択画面に戻っていることを確認
@@ -133,7 +169,7 @@ describe("OnboardingPage", () => {
       await user.click(customButton);
 
       // 戻るボタンをクリック
-      const backButton = screen.getByRole("button", { name: "戻る" });
+      const backButton = screen.getByRole("button", { name: /戻る/ });
       await user.click(backButton);
 
       // 選択画面に戻っていることを確認
