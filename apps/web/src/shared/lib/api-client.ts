@@ -18,7 +18,7 @@ type AppType = Hono<any, any, any>;
  * 環境変数から取得、未設定時はエラー
  */
 const getBaseUrl = (): string => {
-  // eslint-disable-next-line n/no-process-env
+  // Note: NEXT_PUBLIC_* 環境変数はクライアントで使用するため直接参照
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (!url) {
     throw new Error("NEXT_PUBLIC_API_URL is not defined");

@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/app.ts",
       "import": "./dist/index.js"
+    },
+    "./app": {
+      "types": "./src/app.ts",
+      "import": "./src/app.ts"
     }
   },
   "scripts": {
