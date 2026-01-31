@@ -2,17 +2,17 @@
 
 このプロジェクトで管理しているEPICの一覧です。
 
-| ID                                              | 名前                     | 概要                                                      | ステータス |
-| ----------------------------------------------- | ------------------------ | --------------------------------------------------------- | ---------- |
-| [001](./001-poc/001-poc.md)                     | 技術検証（PoC）          | SCP推薦システムの技術的実現可能性を検証                   | completed  |
-| [002](./002-quality/002-quality.md)             | 開発環境品質基盤         | ESLint/Prettier/lefthook/CI環境を整備                     | completed  |
-| [003](./003-data-pipeline/003-data-pipeline.md) | データパイプライン本番化 | 全記事クロール・差分更新・タグ辞書DB管理                  | completed  |
-| [004](./004-recommend/004-recommend.md)         | 推薦ロジック実装         | ハイブリッド推薦・80/20セレンディピティ・オンボーディング | completed  |
-| [005](./005-backend-api/005-backend-api.md)     | バックエンドAPI          | 検索・推薦・フィードバック収集のRESTエンドポイント        | planned    |
-| [006](./006-frontend/006-frontend.md)           | フロントエンドUI         | オンボーディング・記事閲覧・お気に入り管理                | planned    |
-| [007](./007-infra/007-infra.md)                 | インフラ・デプロイ       | 本番環境構築・CI/CD・シークレット管理                     | completed  |
-| [008](./008-observability/008-observability.md) | 運用・監視               | ログ収集・エラー監視・パフォーマンスダッシュボード        | planned    |
-| [009](./009-security/009-security.md)           | セキュリティ強化         | レート制限・CORS・入力バリデーション                      | planned    |
+| ID                                              | 名前                     | 概要                                                      | ステータス  |
+| ----------------------------------------------- | ------------------------ | --------------------------------------------------------- | ----------- |
+| [001](./001-poc/001-poc.md)                     | 技術検証（PoC）          | SCP推薦システムの技術的実現可能性を検証                   | completed   |
+| [002](./002-quality/002-quality.md)             | 開発環境品質基盤         | ESLint/Prettier/lefthook/CI環境を整備                     | completed   |
+| [003](./003-data-pipeline/003-data-pipeline.md) | データパイプライン本番化 | 全記事クロール・差分更新・タグ辞書DB管理                  | completed   |
+| [004](./004-recommend/004-recommend.md)         | 推薦ロジック実装         | ハイブリッド推薦・80/20セレンディピティ・オンボーディング | completed   |
+| [005](./005-backend-api/005-backend-api.md)     | バックエンドAPI          | 検索・推薦・フィードバック収集のRESTエンドポイント        | planned     |
+| [006](./006-frontend/006-frontend.md)           | フロントエンドUI         | オンボーディング・記事閲覧・お気に入り管理                | planned     |
+| [007](./007-infra/007-infra.md)                 | インフラ・デプロイ       | 本番環境構築・CI/CD・シークレット管理                     | in_progress |
+| [008](./008-observability/008-observability.md) | 運用・監視               | ログ収集・エラー監視・パフォーマンスダッシュボード        | planned     |
+| [009](./009-security/009-security.md)           | セキュリティ強化         | レート制限・CORS・入力バリデーション                      | planned     |
 
 ## 優先順位
 
