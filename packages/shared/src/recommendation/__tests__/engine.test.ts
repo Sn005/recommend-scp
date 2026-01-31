@@ -76,9 +76,24 @@ describe("RecommendationEngine", () => {
   describe("getRecommendations", () => {
     it("嗜好ベクトルが存在する場合、類似度の高い記事リストが返る", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0.95 },
-        { id: "article-2", title: "記事2", similarity: 0.85 },
-        { id: "article-3", title: "記事3", similarity: 0.75 },
+        {
+          id: "article-1",
+          title: "記事1",
+          similarity: 0.95,
+          url: "http://ja.scp-wiki.net/scp-001",
+        },
+        {
+          id: "article-2",
+          title: "記事2",
+          similarity: 0.85,
+          url: "http://ja.scp-wiki.net/scp-002",
+        },
+        {
+          id: "article-3",
+          title: "記事3",
+          similarity: 0.75,
+          url: "http://ja.scp-wiki.net/scp-003",
+        },
       ];
 
       const storage = createMockStorage({
@@ -106,6 +121,7 @@ describe("RecommendationEngine", () => {
         title: "記事1",
         similarityScore: 0.95,
         source: "preference",
+        url: "http://ja.scp-wiki.net/scp-001",
       });
       expect(recommendations[1].similarityScore).toBe(0.85);
       expect(recommendations[2].similarityScore).toBe(0.75);
@@ -356,7 +372,12 @@ describe("RecommendationEngine", () => {
   describe("セレンディピティ統合", () => {
     it("explorationRate=0の場合、常に好み推薦が返る", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0.95 },
+        {
+          id: "article-1",
+          title: "記事1",
+          similarity: 0.95,
+          url: "http://ja.scp-wiki.net/scp-001",
+        },
       ];
 
       const storage = createMockStorage({
@@ -383,7 +404,12 @@ describe("RecommendationEngine", () => {
 
     it("explorationRate=1の場合、常にセレンディピティが返る", async () => {
       const adjacentResults: VectorSearchResult[] = [
-        { id: "adjacent-1", title: "隣接1", similarity: 0.5 },
+        {
+          id: "adjacent-1",
+          title: "隣接1",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/adjacent-1",
+        },
       ];
 
       const viewHistory: ViewHistory[] = [
@@ -496,7 +522,12 @@ describe("RecommendationEngine", () => {
         });
 
         const serendipityResults: VectorSearchResult[] = [
-          { id: "serendipity-1", title: "冒険記事", similarity: 0.6 },
+          {
+            id: "serendipity-1",
+            title: "冒険記事",
+            similarity: 0.6,
+            url: "http://ja.scp-wiki.net/serendipity-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -535,7 +566,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -565,7 +601,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -601,7 +642,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -640,7 +686,12 @@ describe("RecommendationEngine", () => {
         });
 
         const serendipityResults: VectorSearchResult[] = [
-          { id: "serendipity-1", title: "冒険記事", similarity: 0.6 },
+          {
+            id: "serendipity-1",
+            title: "冒険記事",
+            similarity: 0.6,
+            url: "http://ja.scp-wiki.net/serendipity-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -744,7 +795,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -780,7 +836,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({
@@ -816,7 +877,12 @@ describe("RecommendationEngine", () => {
         });
 
         const preferenceResults: VectorSearchResult[] = [
-          { id: "pref-1", title: "好み記事", similarity: 0.9 },
+          {
+            id: "pref-1",
+            title: "好み記事",
+            similarity: 0.9,
+            url: "http://ja.scp-wiki.net/pref-1",
+          },
         ];
 
         const vectorSearch = createMockVectorSearch({

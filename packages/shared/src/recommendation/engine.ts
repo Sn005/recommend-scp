@@ -26,6 +26,8 @@ export interface RecommendedArticle {
   similarityScore: number;
   /** 推薦ソース */
   source: "preference" | "serendipity";
+  /** 日本語版URL（article_translationsから取得） */
+  url: string;
 }
 
 /**
@@ -178,6 +180,7 @@ export class RecommendationEngine {
       title: r.title,
       similarityScore: r.similarity,
       source: "preference" as const,
+      url: r.url,
     }));
   }
 

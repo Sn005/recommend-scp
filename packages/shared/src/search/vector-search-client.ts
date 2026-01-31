@@ -14,6 +14,8 @@ export interface VectorSearchResult {
   title: string;
   /** コサイン類似度スコア（0〜1） */
   similarity: number;
+  /** 日本語版URL（article_translationsから取得） */
+  url: string;
 }
 
 /**

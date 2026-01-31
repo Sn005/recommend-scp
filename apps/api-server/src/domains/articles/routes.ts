@@ -1,14 +1,15 @@
 /**
- * @file GET /articles/search エンドポイント
- * @description ベクトル検索API
+ * @file GET /articles/search, PATCH /articles/:articleId/translation エンドポイント
+ * @description ベクトル検索API・翻訳有無更新API
  * @see specs/005-backend-api/005-04-articles-api/005-04-02.md
+ * @see specs/010-ja-article-display/010-02-api-extension/010-02-02.md
  */
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import type { ZodError } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { searchArticlesSchema } from "./schema";
+import { searchArticlesSchema, updateTranslationSchema } from "./schema";
 import { ArticlesService } from "./service";
 import { ArticlesRepository } from "./repository";
 
@@ -52,13 +53,41 @@ export const createArticlesRoutes = (
    * - 200 OK: 検索成功
    * - 400 Bad Request: バリデーションエラー（クエリなし、1文字クエリ等）
    */
-  return new Hono().get(
-    "/search",
-    zValidator("query", searchArticlesSchema, throwOnValidationError),
-    async (c) => {
-      const { q, limit } = c.req.valid("query");
-      const result = await service.searchArticles(q, { limit });
-      return c.json(result, 200);
-    }
+  return (
+    new Hono()
+      .get(
+        "/search",
+        zValidator("query", searchArticlesSchema, throwOnValidationError),
+        async (c) => {
+          const { q, limit } = c.req.valid("query");
+          const result = await service.searchArticles(q, { limit });
+          return c.json(result, 200);
+        }
+      )
+      /**
+       * PATCH /articles/:articleId/translation
+       *
+       * 翻訳有無を更新
+       *
+       * @param articleId - 記事ID（パスパラメータ）
+       * @param lang - 言語コード（2〜5文字）
+       * @param hasTranslation - 翻訳有無
+       * @returns 更新結果
+       *
+       * Response:
+       * - 200 OK: 更新成功
+       * - 400 Bad Request: バリデーションエラー
+       * - 404 Not Found: 翻訳レコードが存在しない
+       */
+      .patch(
+        "/:articleId/translation",
+        zValidator("json", updateTranslationSchema, throwOnValidationError),
+        async (c) => {
+          const articleId = c.req.param("articleId");
+          const { lang, hasTranslation } = c.req.valid("json");
+          const result = await service.updateTranslation(articleId, lang, hasTranslation);
+          return c.json({ success: true, data: result }, 200);
+        }
+      )
   );
 };

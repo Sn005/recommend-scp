@@ -113,6 +113,7 @@ export async function getAdjacentArticles(
     title: r.title,
     similarityScore: r.similarity,
     source: "serendipity" as const,
+    url: r.url,
   }));
 }
 
@@ -147,5 +148,6 @@ export async function getUnexploredArticles(
     title: r.title,
     similarityScore: 0, // 未探索なので類似度は0
     source: "serendipity" as const,
+    url: r.url,
   }));
 }
