@@ -69,6 +69,21 @@ export default tseslint.config(
       "n/no-process-env": "off",
     },
   },
+  // Next.js API Routes (route.ts) では process.env 直接参照を許可
+  // Edge/Node.js RuntimeではNode.js固有のenv.tsが使用できないため
+  {
+    files: ["**/app/api/**/route.ts"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
+  // Next.js クライアント用ファイルでは NEXT_PUBLIC_* 環境変数の直接参照を許可
+  {
+    files: ["**/src/shared/lib/api-client.ts"],
+    rules: {
+      "n/no-process-env": "off",
+    },
+  },
   {
     ignores: [
       "node_modules/",
