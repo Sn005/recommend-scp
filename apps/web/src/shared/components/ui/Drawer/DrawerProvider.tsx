@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, useCallback, type ReactNode } from "react";
 import { DrawerContext, type DrawerContextValue } from "./DrawerContext";
 
 interface DrawerProviderProps {
@@ -10,20 +10,20 @@ interface DrawerProviderProps {
 export const DrawerProvider = ({ children }: DrawerProviderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // setIsOpen は React が保証する安定参照なので依存配列から省略可能
+  const open = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+  const close = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+  const toggle = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
+
   const value: DrawerContextValue = useMemo(
-    () => ({
-      isOpen,
-      open: () => {
-        setIsOpen(true);
-      },
-      close: () => {
-        setIsOpen(false);
-      },
-      toggle: () => {
-        setIsOpen((prev) => !prev);
-      },
-    }),
-    [isOpen]
+    () => ({ isOpen, open, close, toggle }),
+    [isOpen, open, close, toggle]
   );
 
   return (
