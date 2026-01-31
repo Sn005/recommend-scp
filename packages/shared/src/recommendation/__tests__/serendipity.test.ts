@@ -47,9 +47,24 @@ describe("セレンディピティ推薦", () => {
   describe("getAdjacentArticles", () => {
     it("隣接領域記事は類似度0.4〜0.7の範囲から選ばれる", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0.65 },
-        { id: "article-2", title: "記事2", similarity: 0.55 },
-        { id: "article-3", title: "記事3", similarity: 0.45 },
+        {
+          id: "article-1",
+          title: "記事1",
+          similarity: 0.65,
+          url: "http://ja.scp-wiki.net/scp-001",
+        },
+        {
+          id: "article-2",
+          title: "記事2",
+          similarity: 0.55,
+          url: "http://ja.scp-wiki.net/scp-002",
+        },
+        {
+          id: "article-3",
+          title: "記事3",
+          similarity: 0.45,
+          url: "http://ja.scp-wiki.net/scp-003",
+        },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -121,6 +136,7 @@ describe("セレンディピティ推薦", () => {
         id: `article-${i}`,
         title: `記事${i}`,
         similarity: 0.65 - i * 0.02,
+        url: `http://ja.scp-wiki.net/scp-${i.toString().padStart(3, "0")}`,
       }));
 
       const vectorSearch = createMockVectorSearch({
@@ -142,8 +158,18 @@ describe("セレンディピティ推薦", () => {
   describe("getUnexploredArticles", () => {
     it("未探索ジャンル記事はユーザーが読んでいないタグを持つ", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1（ミステリー）", similarity: 0 },
-        { id: "article-2", title: "記事2（科学）", similarity: 0 },
+        {
+          id: "article-1",
+          title: "記事1（ミステリー）",
+          similarity: 0,
+          url: "http://ja.scp-wiki.net/scp-001",
+        },
+        {
+          id: "article-2",
+          title: "記事2（科学）",
+          similarity: 0,
+          url: "http://ja.scp-wiki.net/scp-002",
+        },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -182,7 +208,7 @@ describe("セレンディピティ推薦", () => {
 
     it("exploredTags=[]の場合、全記事が未探索対象となる", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0 },
+        { id: "article-1", title: "記事1", similarity: 0, url: "http://ja.scp-wiki.net/scp-001" },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -218,12 +244,14 @@ describe("セレンディピティ推薦", () => {
         id: `adjacent-${i}`,
         title: `隣接${i}`,
         similarity: 0.65 - i * 0.02,
+        url: `http://ja.scp-wiki.net/adjacent-${i}`,
       }));
 
       const unexploredResults: VectorSearchResult[] = Array.from({ length: 10 }, (_, i) => ({
         id: `unexplored-${i}`,
         title: `未探索${i}`,
         similarity: 0,
+        url: `http://ja.scp-wiki.net/unexplored-${i}`,
       }));
 
       const vectorSearch = createMockVectorSearch({
@@ -255,7 +283,7 @@ describe("セレンディピティ推薦", () => {
 
     it("返却されるarticleのsourceが'serendipity'に設定される", async () => {
       const mockResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0.5 },
+        { id: "article-1", title: "記事1", similarity: 0.5, url: "http://ja.scp-wiki.net/scp-001" },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -280,13 +308,18 @@ describe("セレンディピティ推薦", () => {
     it("重複記事が除去される", async () => {
       // 隣接領域と未探索ジャンルで同じIDが返される場合
       const adjacentResults: VectorSearchResult[] = [
-        { id: "article-1", title: "記事1", similarity: 0.5 },
-        { id: "article-2", title: "記事2", similarity: 0.45 },
+        { id: "article-1", title: "記事1", similarity: 0.5, url: "http://ja.scp-wiki.net/scp-001" },
+        {
+          id: "article-2",
+          title: "記事2",
+          similarity: 0.45,
+          url: "http://ja.scp-wiki.net/scp-002",
+        },
       ];
 
       const unexploredResults: VectorSearchResult[] = [
-        { id: "article-2", title: "記事2", similarity: 0 }, // 重複
-        { id: "article-3", title: "記事3", similarity: 0 },
+        { id: "article-2", title: "記事2", similarity: 0, url: "http://ja.scp-wiki.net/scp-002" }, // 重複
+        { id: "article-3", title: "記事3", similarity: 0, url: "http://ja.scp-wiki.net/scp-003" },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -342,6 +375,7 @@ describe("セレンディピティ推薦", () => {
         id: `unexplored-${i}`,
         title: `未探索${i}`,
         similarity: 0,
+        url: `http://ja.scp-wiki.net/unexplored-${i}`,
       }));
 
       const vectorSearch = createMockVectorSearch({
@@ -373,6 +407,7 @@ describe("セレンディピティ推薦", () => {
         id: `adjacent-${i}`,
         title: `隣接${i}`,
         similarity: 0.65 - i * 0.02,
+        url: `http://ja.scp-wiki.net/adjacent-${i}`,
       }));
 
       const vectorSearch = createMockVectorSearch({
@@ -401,11 +436,21 @@ describe("セレンディピティ推薦", () => {
 
     it("両方の検索で結果が少ない場合、取得可能分のみ返す", async () => {
       const adjacentResults: VectorSearchResult[] = [
-        { id: "adjacent-0", title: "隣接0", similarity: 0.5 },
+        {
+          id: "adjacent-0",
+          title: "隣接0",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/adjacent-0",
+        },
       ];
 
       const unexploredResults: VectorSearchResult[] = [
-        { id: "unexplored-0", title: "未探索0", similarity: 0 },
+        {
+          id: "unexplored-0",
+          title: "未探索0",
+          similarity: 0,
+          url: "http://ja.scp-wiki.net/unexplored-0",
+        },
       ];
 
       const vectorSearch = createMockVectorSearch({
@@ -428,11 +473,21 @@ describe("セレンディピティ推薦", () => {
 
     it("limit=1、adjacentRatio=0.5の場合、隣接1件のみ", async () => {
       const adjacentResults: VectorSearchResult[] = [
-        { id: "adjacent-0", title: "隣接0", similarity: 0.5 },
+        {
+          id: "adjacent-0",
+          title: "隣接0",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/adjacent-0",
+        },
       ];
 
       const unexploredResults: VectorSearchResult[] = [
-        { id: "unexplored-0", title: "未探索0", similarity: 0 },
+        {
+          id: "unexplored-0",
+          title: "未探索0",
+          similarity: 0,
+          url: "http://ja.scp-wiki.net/unexplored-0",
+        },
       ];
 
       const vectorSearch = createMockVectorSearch({
