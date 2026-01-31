@@ -7,14 +7,14 @@
 
 ## トレードオフ分析
 
-| 観点 | 選択肢A | 選択肢B | 決定 | 理由 |
-|------|---------|---------|------|------|
-| 記事表示 | アプリ内表示（本文DB保存） | WebView（外部サイト） | B | 実装コスト削減 |
-| 日本語URL | クローラーで取得 | 既存データから生成 | B | 法則性あり、SQL一発 |
-| 翻訳有無管理 | 専用カラム（url_ja, has_ja） | 別テーブル | B | 多言語拡張性 |
-| 翻訳判定 | バッチで事前確認 | 初回アクセス時 | B | 実装コスト削減 |
-| 本文抽出 | DB保存（クローラー） | 閲覧時WebViewから抽出 | B | コスパ重視 |
-| 404時 | エラー画面 | 別記事サジェスト | B | UX向上 |
+| 観点         | 選択肢A                      | 選択肢B               | 決定 | 理由                |
+| ------------ | ---------------------------- | --------------------- | ---- | ------------------- |
+| 記事表示     | アプリ内表示（本文DB保存）   | WebView（外部サイト） | B    | 実装コスト削減      |
+| 日本語URL    | クローラーで取得             | 既存データから生成    | B    | 法則性あり、SQL一発 |
+| 翻訳有無管理 | 専用カラム（url_ja, has_ja） | 別テーブル            | B    | 多言語拡張性        |
+| 翻訳判定     | バッチで事前確認             | 初回アクセス時        | B    | 実装コスト削減      |
+| 本文抽出     | DB保存（クローラー）         | 閲覧時WebViewから抽出 | B    | コスパ重視          |
+| 404時        | エラー画面                   | 別記事サジェスト      | B    | UX向上              |
 
 ---
 
@@ -81,11 +81,11 @@ FROM scp_articles WHERE lang = 'en';
 
 ```typescript
 interface HistoryEntry {
-  scpNumber: string;        // "SCP-173"
-  title: string;            // "彫刻 - オリジナル"（WebViewから抽出）
-  excerpt: string;          // 本文冒頭50文字（WebViewから抽出）
+  scpNumber: string; // "SCP-173"
+  title: string; // "彫刻 - オリジナル"（WebViewから抽出）
+  excerpt: string; // 本文冒頭50文字（WebViewから抽出）
   objectClass: ObjectClass; // "Euclid"
-  viewedAt: string;         // ISO8601
+  viewedAt: string; // ISO8601
 }
 ```
 
@@ -135,12 +135,12 @@ interface HistoryEntry {
 
 ## 影響を受けるSpec
 
-| Spec ID | 名前 | 影響内容 |
-|---------|------|----------|
-| 006-02-02 | WebViewコンポーネント | 日本語URL使用、404検知、本文抽出 |
-| 006-04-01 | 履歴記録機能 | excerpt フィールド追加 |
-| 005-05 | 推薦API | article_translations JOIN、url返却 |
-| 新規 | article_translations | テーブル追加マイグレーション |
+| Spec ID   | 名前                  | 影響内容                           |
+| --------- | --------------------- | ---------------------------------- |
+| 006-02-02 | WebViewコンポーネント | 日本語URL使用、404検知、本文抽出   |
+| 006-04-01 | 履歴記録機能          | excerpt フィールド追加             |
+| 005-05    | 推薦API               | article_translations JOIN、url返却 |
+| 新規      | article_translations  | テーブル追加マイグレーション       |
 
 ---
 
