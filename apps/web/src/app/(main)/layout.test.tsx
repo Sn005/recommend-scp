@@ -30,7 +30,7 @@ describe("MainLayout", () => {
         </MainLayout>
       );
 
-      expect(screen.getByTestId("menu-button")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /メニューを開く/ })).toBeInTheDocument();
     });
 
     it("メニューボタンをクリックするとドロワーが開く", async () => {
@@ -46,7 +46,7 @@ describe("MainLayout", () => {
       expect(screen.queryByTestId("drawer")).not.toBeInTheDocument();
 
       // メニューボタンをクリック
-      await user.click(screen.getByTestId("menu-button"));
+      await user.click(screen.getByRole("button", { name: /メニューを開く/ }));
 
       // ドロワーが表示される
       expect(screen.getByTestId("drawer")).toBeInTheDocument();
@@ -63,7 +63,7 @@ describe("MainLayout", () => {
       );
 
       // ドロワーを開く
-      await user.click(screen.getByTestId("menu-button"));
+      await user.click(screen.getByRole("button", { name: /メニューを開く/ }));
       expect(screen.getByTestId("drawer")).toBeInTheDocument();
 
       // オーバーレイをクリック
