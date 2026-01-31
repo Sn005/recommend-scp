@@ -52,11 +52,11 @@ app/(main)/history/
 
 ### 3. 共有と専用の判断基準
 
-| 使用箇所 | 配置場所 | 例 |
-|----------|----------|-----|
-| 単一ページのみ | `app/.../page/_xxx/` | `_components/`, `_hooks/` |
-| 複数ページで使用 | `shared/components/ui/` | `Drawer/`, `Button/` |
-| アプリ全体で使用 | `shared/lib/` | `api-client.ts`, `utils.ts` |
+| 使用箇所         | 配置場所                | 例                          |
+| ---------------- | ----------------------- | --------------------------- |
+| 単一ページのみ   | `app/.../page/_xxx/`    | `_components/`, `_hooks/`   |
+| 複数ページで使用 | `shared/components/ui/` | `Drawer/`, `Button/`        |
+| アプリ全体で使用 | `shared/lib/`           | `api-client.ts`, `utils.ts` |
 
 ---
 
@@ -132,10 +132,10 @@ shared/components/ui/[ComponentName]/
 
 ```typescript
 // shared/components/ui/Drawer/index.tsx
-export { Drawer } from './Drawer';
-export { DrawerProvider } from './DrawerProvider';
-export { useDrawer } from './useDrawer';
-export type { DrawerProps, DrawerContextValue } from './types';
+export { Drawer } from "./Drawer";
+export { DrawerProvider } from "./DrawerProvider";
+export { useDrawer } from "./useDrawer";
+export type { DrawerProps, DrawerContextValue } from "./types";
 ```
 
 ### Context + Hook のコロケーション
@@ -144,7 +144,7 @@ Context と Hook は必ず同じディレクトリに配置する。
 
 ```typescript
 // shared/components/ui/Drawer/DrawerContext.tsx
-import { createContext } from 'react';
+import { createContext } from "react";
 
 export interface DrawerContextValue {
   isOpen: boolean;
@@ -158,13 +158,13 @@ export const DrawerContext = createContext<DrawerContextValue | null>(null);
 
 ```typescript
 // shared/components/ui/Drawer/useDrawer.ts
-import { useContext } from 'react';
-import { DrawerContext } from './DrawerContext';
+import { useContext } from "react";
+import { DrawerContext } from "./DrawerContext";
 
 export const useDrawer = () => {
   const context = useContext(DrawerContext);
   if (!context) {
-    throw new Error('useDrawer must be used within DrawerProvider');
+    throw new Error("useDrawer must be used within DrawerProvider");
   }
   return context;
 };
@@ -201,9 +201,9 @@ export const HistoryCard = ({ entry, onClick }: HistoryCardProps) => {
 
 ```typescript
 // app/(main)/history/_hooks/useHistory.ts
-import { useState, useEffect } from 'react';
-import { getHistory, addHistory, clearHistory } from '../_lib/historyStorage';
-import type { HistoryEntry } from '../_types';
+import { useState, useEffect } from "react";
+import { getHistory, addHistory, clearHistory } from "../_lib/historyStorage";
+import type { HistoryEntry } from "../_types";
 
 export const useHistory = () => {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -214,7 +214,7 @@ export const useHistory = () => {
     setIsLoading(false);
   }, []);
 
-  const add = (entry: Omit<HistoryEntry, 'viewedAt'>) => {
+  const add = (entry: Omit<HistoryEntry, "viewedAt">) => {
     const newEntry = addHistory(entry);
     setEntries((prev) => [newEntry, ...prev]);
   };
@@ -232,18 +232,18 @@ export const useHistory = () => {
 
 ```typescript
 // app/(main)/history/_lib/historyStorage.ts
-import type { HistoryEntry } from '../_types';
+import type { HistoryEntry } from "../_types";
 
-const STORAGE_KEY = 'scp-recommend-history';
+const STORAGE_KEY = "scp-recommend-history";
 const MAX_ENTRIES = 100;
 
 export const getHistory = (): HistoryEntry[] => {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   const stored = localStorage.getItem(STORAGE_KEY);
   return stored ? JSON.parse(stored) : [];
 };
 
-export const addHistory = (entry: Omit<HistoryEntry, 'viewedAt'>): HistoryEntry => {
+export const addHistory = (entry: Omit<HistoryEntry, "viewedAt">): HistoryEntry => {
   const newEntry: HistoryEntry = {
     ...entry,
     viewedAt: new Date().toISOString(),
@@ -266,13 +266,13 @@ export const clearHistory = (): void => {
 
 ```typescript
 // app/(main)/history/_types/index.ts
-export type ObjectClass = 'Safe' | 'Euclid' | 'Keter' | 'Thaumiel' | 'Neutralized';
+export type ObjectClass = "Safe" | "Euclid" | "Keter" | "Thaumiel" | "Neutralized";
 
 export interface HistoryEntry {
-  scpNumber: string;      // "SCP-173"
-  title: string;          // "彫刻 - オリジナル"
+  scpNumber: string; // "SCP-173"
+  title: string; // "彫刻 - オリジナル"
   objectClass: ObjectClass;
-  viewedAt: string;       // ISO8601
+  viewedAt: string; // ISO8601
 }
 ```
 
@@ -290,18 +290,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        safe: 'var(--color-safe)',
-        euclid: 'var(--color-euclid)',
-        keter: 'var(--color-keter)',
-        primary: 'var(--color-primary)',
+        safe: "var(--color-safe)",
+        euclid: "var(--color-euclid)",
+        keter: "var(--color-keter)",
+        primary: "var(--color-primary)",
       },
       spacing: {
-        drawer: 'var(--drawer-width)',
+        drawer: "var(--drawer-width)",
       },
       zIndex: {
-        nav: 'var(--z-nav)',
-        'drawer-overlay': 'var(--z-drawer-overlay)',
-        drawer: 'var(--z-drawer)',
+        nav: "var(--z-nav)",
+        "drawer-overlay": "var(--z-drawer-overlay)",
+        drawer: "var(--z-drawer)",
       },
     },
   },
@@ -336,12 +336,12 @@ const Button = ({ variant, className, ...props }) => {
 
 ### 判断基準
 
-| 状態の種類 | 推奨アプローチ |
-|------------|----------------|
-| UIのみ（開閉状態など） | React Context |
-| ページ内データ | useState / useReducer |
-| 永続化データ | localStorage + カスタムフック |
-| サーバーデータ | TanStack Query（将来導入時） |
+| 状態の種類             | 推奨アプローチ                |
+| ---------------------- | ----------------------------- |
+| UIのみ（開閉状態など） | React Context                 |
+| ページ内データ         | useState / useReducer         |
+| 永続化データ           | localStorage + カスタムフック |
+| サーバーデータ         | TanStack Query（将来導入時）  |
 
 ### Context は最小スコープで
 
@@ -382,12 +382,12 @@ shared/components/ui/Drawer/
 ### テストケース名は日本語
 
 ```typescript
-describe('Drawer', () => {
-  it('開くボタンをクリックするとドロワーが表示される', () => {
+describe("Drawer", () => {
+  it("開くボタンをクリックするとドロワーが表示される", () => {
     // ...
   });
 
-  it('オーバーレイをクリックするとドロワーが閉じる', () => {
+  it("オーバーレイをクリックするとドロワーが閉じる", () => {
     // ...
   });
 });
@@ -416,32 +416,38 @@ shared/components/ui/Drawer/
 
 ```typescript
 // Bad - 履歴は history ページ専用
-shared/hooks/useHistory.ts
-shared/lib/historyStorage.ts
+shared / hooks / useHistory.ts;
+shared / lib / historyStorage.ts;
 
 // Good - ページディレクトリ内
-app/(main)/history/_hooks/useHistory.ts
-app/(main)/history/_lib/historyStorage.ts
+app / main / history / _hooks / useHistory.ts;
+app / main / history / _lib / historyStorage.ts;
 ```
 
 ### 3. 過度な抽象化
 
 ```typescript
 // Bad - 1箇所でしか使わないのに抽象化
-shared/components/ui/HistoryCard/  // ← history ページでしか使わない
-
-// Good - ページ専用として配置
-app/(main)/history/_components/HistoryCard.tsx
+shared /
+  components /
+  ui /
+  HistoryCard / // ← history ページでしか使わない
+  // Good - ページ専用として配置
+  app /
+  main /
+  history /
+  _components /
+  HistoryCard.tsx;
 ```
 
 ### 4. 型定義の散在
 
 ```typescript
 // Bad - 型定義が離れている
-shared/types/history.ts  // ← history ページの型なのに shared にある
+shared / types / history.ts; // ← history ページの型なのに shared にある
 
 // Good - 使用箇所と同じディレクトリ
-app/(main)/history/_types/index.ts
+app / main / history / _types / index.ts;
 ```
 
 ---
