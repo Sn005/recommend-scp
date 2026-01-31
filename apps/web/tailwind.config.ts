@@ -21,6 +21,8 @@ const config: Config = {
           safe: "#10B981", // emerald-500
           euclid: "#F59E0B", // amber-500
           keter: "#EF4444", // red-500
+          thaumiel: "#8B5CF6", // violet-500
+          neutralized: "#6B7280", // gray-500
         },
         // お気に入り
         favorite: {
