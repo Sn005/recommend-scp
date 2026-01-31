@@ -1,17 +1,5 @@
 import { hc, type ClientResponse, type InferResponseType } from "hono/client";
-import type { Hono } from "hono";
-
-/**
- * AppType定義
- *
- * TODO: api-typesパッケージのビルドが安定したら、以下のように変更:
- * import type { AppType } from "@recommend-scp/api-types";
- *
- * 現在は型定義のみを使用するため、一時的にHono型として定義
- * 実際のAPI呼び出しは実行時に行われるため、型安全性は実行時に担保される
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AppType = Hono<any, any, any>;
+import type { AppType } from "@recommend-scp/api-types";
 
 /**
  * APIベースURL
