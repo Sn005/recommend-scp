@@ -1,5 +1,27 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
+
+// api-clientのモック（useVisitorIdが依存）
+vi.mock("@/shared/lib/api-client", () => ({
+  api: {
+    visitors: {
+      $post: vi.fn(),
+    },
+  },
+}));
+
+// useVisitorIdのモック（OnboardingGuardが依存）
+vi.mock("@/shared/hooks/useVisitorId", () => ({
+  useVisitorId: () => ({
+    visitorId: "test-visitor-id",
+    isLoading: false,
+    isOnboarded: true,
+    error: null,
+    refresh: vi.fn(),
+  }),
+}));
+
 import MainLayout from "./layout";
 
 describe("MainLayout", () => {
