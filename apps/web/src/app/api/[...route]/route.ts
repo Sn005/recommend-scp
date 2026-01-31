@@ -11,6 +11,7 @@
  * @see specs/007-infra/007-02-auto-preview/007-02-02.md
  */
 
+import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import { createClient } from "@supabase/supabase-js";
 import { createApp } from "@recommend-scp/api-server/app";
@@ -43,21 +44,36 @@ const getSupabaseClient = () => {
 };
 
 /**
- * Hono app 生成
- * createApp は SupabaseClient を受け取り、全ルートが登録されたHonoアプリを返す
+ * Hono app 生成（遅延初期化）
+ *
+ * Next.js のビルド時には環境変数が設定されていないため、
+ * リクエスト時に初めてアプリを初期化する
+ *
+ * Next.js API Route は /api/* へのリクエストを処理するため、
+ * Hono app に basePath('/api') を設定してパスを一致させる
  */
-const supabase = getSupabaseClient();
-const app = createApp(supabase);
+let cachedApp: ReturnType<typeof createHonoApp> | null = null;
+
+const createHonoApp = () => {
+  const supabase = getSupabaseClient();
+  const honoApp = createApp(supabase);
+  return new Hono().basePath("/api").route("/", honoApp);
+};
+
+const getApp = () => {
+  cachedApp ??= createHonoApp();
+  return cachedApp;
+};
 
 /**
- * Vercel Edge Handler
- * handle() で Hono app をラップし、Next.js API Routes互換のハンドラを生成
+ * Vercel Handler
+ * リクエスト時に Hono app を取得し、handle() でラップして処理
  */
-export const GET = handle(app);
-export const POST = handle(app);
-export const PUT = handle(app);
-export const DELETE = handle(app);
-export const PATCH = handle(app);
+export const GET = (req: Request) => handle(getApp())(req);
+export const POST = (req: Request) => handle(getApp())(req);
+export const PUT = (req: Request) => handle(getApp())(req);
+export const DELETE = (req: Request) => handle(getApp())(req);
+export const PATCH = (req: Request) => handle(getApp())(req);
 
 /**
  * Node.js Runtime指定

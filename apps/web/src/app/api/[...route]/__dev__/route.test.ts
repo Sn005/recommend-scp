@@ -67,7 +67,8 @@ describe("AC2: Hono統合", () => {
 
   it("handle()でHono appをラップしている", () => {
     const content = fs.readFileSync(routeFilePath, "utf-8");
-    expect(content).toContain("handle(app)");
+    // 遅延初期化のため getApp() を使用
+    expect(content).toContain("handle(getApp())");
   });
 
   it("@recommend-scp/api-server/appからcreateAppをインポートしている", () => {
