@@ -233,6 +233,23 @@ describe("設定要件の確認と決定", () => {
 });
 ```
 
+## デザイン準拠チェックリスト（EPIC-006フロントエンド専用）
+
+**※ EPIC-006のSubtaskでは、このセクションを必須とする**
+
+```markdown
+## デザイン準拠チェックリスト
+
+**参照モック**: `mockups/{screen-name}.html`
+
+- [ ] カラーがdesign-tokens.cssと一致している
+- [ ] spacing（padding/margin）がモックと一致している
+- [ ] アイコンがSVGで実装されている（テキスト絵文字禁止）
+- [ ] border-radius/shadowがモックと一致している
+- [ ] フォントサイズ・weightがモックと一致している
+- [ ] Glassmorphism効果が適用されている（該当箇所のみ）
+```
+
 ## 完了確認
 
 - 確認日: （完了時に記入）
