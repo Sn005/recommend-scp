@@ -4,10 +4,7 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      data-testid="onboarding-layout"
-      className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800"
-    >
+    <div data-testid="onboarding-layout" className="min-h-screen bg-gray-50">
       {children}
     </div>
   );

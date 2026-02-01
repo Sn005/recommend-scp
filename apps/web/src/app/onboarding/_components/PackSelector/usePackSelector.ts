@@ -37,7 +37,8 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
     try {
       const res = await api.onboarding.packs.$get();
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
+      // res.okは型定義上は常にtrueだが、ネットワークエラー時はfalseになる可能性がある
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!res.ok) {
         throw new Error("パック一覧の取得に失敗しました");
       }
@@ -76,7 +77,8 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
         },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
+      // res.okは型定義上は常にtrueだが、ネットワークエラー時はfalseになる可能性がある
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!res.ok) {
         const errorData = (await res.json()) as { title?: string };
         throw new Error(errorData.title ?? "選択に失敗しました");
