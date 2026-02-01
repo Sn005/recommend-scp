@@ -36,13 +36,11 @@ export const PillNav = ({ onFavorite, onNext, isFavorited }: PillNavProps) => {
   return (
     <nav
       className={cn(
-        "fixed bottom-8 left-1/2 -translate-x-1/2",
         "flex items-center gap-6",
         "py-2 px-5",
         "bg-white/30 backdrop-blur-glass",
         "rounded-[50px]",
-        "shadow-glass",
-        "z-nav"
+        "shadow-glass"
       )}
     >
       {/* お気に入りボタン */}
