@@ -13,7 +13,7 @@ const icons: Record<string, string> = {
   horror: "👻",
   surreal: "🌀",
   scientific: "🔬",
-  heartwarming: "💖",
+  heartwarming: "💝",
   mystery: "🔍",
 };
 
@@ -22,24 +22,26 @@ export function PackCard({ pack, isSelected, onSelect, disabled }: PackCardProps
     <button
       onClick={onSelect}
       disabled={disabled}
-      className={`rounded-lg border-2 p-4 text-left transition-colors ${
-        isSelected
-          ? "border-blue-500 bg-blue-900/30"
-          : "border-gray-600 bg-gray-800 hover:border-gray-500"
+      className={`relative rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all ${
+        isSelected ? "border-primary ring-4 ring-primary/10" : "border-transparent hover:shadow-md"
       } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
     >
-      <div className="flex items-start gap-3">
-        <span className="text-2xl">{icons[pack.type] || "📦"}</span>
+      {/* チェックマーク（選択時のみ表示） */}
+      {isSelected && (
+        <div
+          className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary"
+          data-testid="pack-check"
+        >
+          <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">{icons[pack.type] ?? "📦"}</span>
         <div>
-          <h3 className="font-bold text-white">{pack.displayName}</h3>
-          <p className="mt-1 text-sm text-gray-400">{pack.description}</p>
-          <div className="mt-2 flex gap-2">
-            {pack.primaryTags.slice(0, 3).map((tag) => (
-              <span key={tag} className="rounded bg-gray-700 px-2 py-1 text-xs text-gray-300">
-                {tag}
-              </span>
-            ))}
-          </div>
+          <h3 className="font-semibold text-gray-800">{pack.displayName}</h3>
+          <p className="text-sm text-gray-500">{pack.description}</p>
         </div>
       </div>
     </button>
