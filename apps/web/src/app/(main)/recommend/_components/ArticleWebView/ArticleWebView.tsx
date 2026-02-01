@@ -17,7 +17,11 @@ export function ArticleWebView({
   });
 
   return (
-    <div className={cn("relative w-full h-[calc(100vh-100px)]", className)}>
+    <div
+      data-testid="article-webview"
+      data-url={url}
+      className={cn("relative w-full h-[calc(100vh-100px)]", className)}
+    >
       {/* ローディングインジケータ */}
       {isLoading && !error && (
         <div
