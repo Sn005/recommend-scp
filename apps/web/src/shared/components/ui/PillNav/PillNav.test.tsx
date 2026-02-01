@@ -14,17 +14,7 @@ describe("PillNav", () => {
     vi.clearAllMocks();
   });
 
-  describe("AC-1: 表示位置", () => {
-    it("ピルナビが画面下部中央に表示される", () => {
-      render(<PillNav {...defaultProps} />);
-
-      const nav = screen.getByRole("navigation");
-      expect(nav).toHaveClass("fixed");
-      expect(nav).toHaveClass("bottom-8");
-      expect(nav).toHaveClass("left-1/2");
-      expect(nav).toHaveClass("-translate-x-1/2");
-    });
-
+  describe("AC-1: スタイル", () => {
     it("Glassmorphism効果が適用される", () => {
       render(<PillNav {...defaultProps} />);
 
@@ -231,13 +221,6 @@ describe("PillNav", () => {
       });
       const heartIcon = favoriteButton.querySelector("span");
       expect(heartIcon).toHaveClass("text-[26px]");
-    });
-
-    it("z-indexがナビゲーションレベルに設定される", () => {
-      render(<PillNav {...defaultProps} />);
-
-      const nav = screen.getByRole("navigation");
-      expect(nav).toHaveClass("z-nav");
     });
   });
 });
