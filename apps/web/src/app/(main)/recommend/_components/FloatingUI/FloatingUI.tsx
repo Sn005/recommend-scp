@@ -30,7 +30,7 @@ export function FloatingUI({
           "flex justify-center pb-8 transition-opacity duration-300",
           isPillNavVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
-        data-testid="pillnav-wrapper"
+        data-testid="pill-nav"
       >
         <PillNav isFavorited={isFavorited} onFavorite={onFavorite} onNext={onNext} />
       </div>

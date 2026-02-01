@@ -38,7 +38,7 @@ describe("FloatingUI", () => {
       const { container } = render(<FloatingUI {...defaultProps} scrollPercentage={0} />);
 
       // PillNavラッパーを取得
-      const pillNavWrapper = container.querySelector("[data-testid='pillnav-wrapper']");
+      const pillNavWrapper = container.querySelector("[data-testid='pill-nav']");
       expect(pillNavWrapper).toHaveClass("opacity-100");
       expect(pillNavWrapper).not.toHaveClass("opacity-0");
     });
@@ -113,7 +113,7 @@ describe("FloatingUI", () => {
     it("transition-opacityとduration-300が適用される", () => {
       const { container } = render(<FloatingUI {...defaultProps} />);
 
-      const pillNavWrapper = container.querySelector("[data-testid='pillnav-wrapper']");
+      const pillNavWrapper = container.querySelector("[data-testid='pill-nav']");
       expect(pillNavWrapper).toHaveClass("transition-opacity", "duration-300");
     });
   });
