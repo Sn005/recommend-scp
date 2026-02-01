@@ -80,7 +80,7 @@ export const PillNav = ({ onFavorite, onNext, isFavorited }: PillNavProps) => {
           "transition-transform active:scale-95"
         )}
       >
-        <span className="text-[26px] text-gray-500">{"\u2192"}</span>
+        <span className="text-[26px] text-primary">{"\u2192"}</span>
       </button>
     </nav>
   );
