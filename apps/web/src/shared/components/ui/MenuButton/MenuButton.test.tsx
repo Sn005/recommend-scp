@@ -19,11 +19,13 @@ describe("MenuButton", () => {
       expect(button).toBeInTheDocument();
     });
 
-    it("ハンバーガーアイコン（☰）が表示される", () => {
+    it("SVGハンバーガーアイコンが表示される", () => {
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
-      expect(button).toHaveTextContent("☰");
+      const svg = button.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+      expect(svg).toHaveAttribute("role", "img");
     });
 
     it("fixed配置で左上に固定される", () => {

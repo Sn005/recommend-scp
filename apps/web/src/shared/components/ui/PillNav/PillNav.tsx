@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
+import { Icon } from "@/shared/components/ui/Icon";
 
 export interface PillNavProps {
   onFavorite: () => void;
@@ -55,14 +56,12 @@ export const PillNav = ({ onFavorite, onNext, isFavorited }: PillNavProps) => {
           "transition-transform active:scale-95"
         )}
       >
-        <span
-          className={cn(
-            "text-[26px]",
-            isFavorited ? "text-favorite" : "text-favorite-outline",
-            shouldAnimate && "animate-heart-pop"
-          )}
-        >
-          {isFavorited ? "\u2665" : "\u2661"}
+        <span className={cn(shouldAnimate && "animate-heart-pop")}>
+          <Icon
+            name={isFavorited ? "heart-filled" : "heart"}
+            size={26}
+            className={isFavorited ? "text-favorite" : "text-favorite-outline"}
+          />
         </span>
       </button>
 
@@ -78,7 +77,7 @@ export const PillNav = ({ onFavorite, onNext, isFavorited }: PillNavProps) => {
           "transition-transform active:scale-95"
         )}
       >
-        <span className="text-[26px] text-primary">{"\u2192"}</span>
+        <Icon name="chevron-right" size={26} className="text-primary" />
       </button>
     </nav>
   );
