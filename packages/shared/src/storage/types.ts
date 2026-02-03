@@ -112,19 +112,21 @@ export interface PreferenceStorage {
  * スターターパック種別
  *
  * オンボーディング時にユーザーが選択するジャンル嗜好。
- * - horror: ホラー
- * - surreal: シュール
- * - scientific: 科学的
- * - heartwarming: ハートウォーミング
- * - mystery: ミステリー
- * - custom: カスタム（複数選択）
+ * - classic: 定番・名作
+ * - horror: ホラー・恐怖
+ * - scifi: SF・テクノロジー
+ * - heartwarming: 感動・ハートフル
+ * - mystery: ミステリー・考察
+ * - jp: 日本支部オリジナル
+ * - custom: カスタム（SCP番号を直接入力）
  */
 export type StarterPackType =
+  | "classic"
   | "horror"
-  | "surreal"
-  | "scientific"
+  | "scifi"
   | "heartwarming"
   | "mystery"
+  | "jp"
   | "custom";
 
 /**

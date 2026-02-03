@@ -41,7 +41,7 @@ export class OnboardingService {
   ) {}
 
   /**
-   * スターターパック選択でオンボーディングを完了
+   * スターターパック選択でオンボーディングを完了（単一パック）
    *
    * @param visitorId 訪問者ID
    * @param packType スターターパック種別（customを除く）
@@ -52,27 +52,56 @@ export class OnboardingService {
     visitorId: string,
     packType: Exclude<StarterPackType, "custom">
   ): Promise<PreferenceProfile> {
-    const pack = getStarterPack(packType);
-    if (!pack) {
-      throw new Error(`Starter pack not found: ${packType}`);
+    return this.completeWithStarterPacks(visitorId, [packType]);
+  }
+
+  /**
+   * 複数スターターパック選択でオンボーディングを完了
+   *
+   * 選択された全パックのタグを統合し、seedArticlesのEmbedding平均を計算。
+   *
+   * @param visitorId 訪問者ID
+   * @param packTypes スターターパック種別の配列（customを除く）
+   * @returns 構築された嗜好プロファイル
+   * @throws パックが見つからない場合
+   */
+  async completeWithStarterPacks(
+    visitorId: string,
+    packTypes: Exclude<StarterPackType, "custom">[]
+  ): Promise<PreferenceProfile> {
+    if (packTypes.length === 0) {
+      throw new Error("At least one pack type must be selected");
     }
 
-    // primaryTagsからtagWeightsを生成（全て1.0）
+    // 全パックを取得
+    const packs = packTypes.map((packType) => {
+      const pack = getStarterPack(packType);
+      if (!pack) {
+        throw new Error(`Starter pack not found: ${packType}`);
+      }
+      return pack;
+    });
+
+    // 全パックのprimaryTagsを統合（重複は1.0）
     const tagWeights: Record<string, number> = {};
-    for (const tag of pack.primaryTags) {
-      tagWeights[tag] = 1.0;
+    for (const pack of packs) {
+      for (const tag of pack.primaryTags) {
+        tagWeights[tag] = 1.0;
+      }
     }
 
-    // seedArticlesのEmbedding平均を計算
-    const preferenceEmbedding = await this.calculateAverageEmbedding(pack.seedArticles);
+    // 全パックのseedArticlesを統合してEmbedding平均を計算
+    const allSeedArticles = packs.flatMap((pack) => pack.seedArticles);
+    const preferenceEmbedding = await this.calculateAverageEmbedding(allSeedArticles);
 
     const now = new Date().toISOString();
 
+    // 複数パック選択の場合、最初のパックをstarterPackとして保存
     const profile: PreferenceProfile = {
       visitorId,
       tagWeights,
       objectClassPreference: {},
-      starterPack: packType,
+      starterPack: packs.length === 1 ? packs[0].type : "custom",
       onboardingCompletedAt: now,
       preferenceEmbedding,
       createdAt: now,

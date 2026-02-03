@@ -9,11 +9,14 @@ import { z } from "zod";
  * スターターパック選択スキーマ
  *
  * POST /onboarding/select で使用。
+ * 複数パック選択をサポート（タグを統合）。
  * customは別エンドポイント（/select/custom）で使用するため除外。
  */
 export const selectPackSchema = z.object({
   visitorId: z.string().uuid(),
-  packType: z.enum(["horror", "surreal", "scientific", "heartwarming", "mystery"]),
+  packTypes: z
+    .array(z.enum(["classic", "horror", "scifi", "heartwarming", "mystery", "jp"]))
+    .min(1, "At least 1 pack must be selected"),
 });
 
 /**

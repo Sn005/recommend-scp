@@ -60,15 +60,17 @@ export class OnboardingApiService {
   };
 
   /**
-   * スターターパックを選択してオンボーディングを完了
+   * 複数スターターパックを選択してオンボーディングを完了
+   *
+   * 選択された全パックのタグを統合してプロファイルを構築。
    *
    * @param visitorId - 訪問者ID
-   * @param packType - 選択するパック種別（custom以外）
+   * @param packTypes - 選択するパック種別の配列（custom以外）
    * @throws NotFoundError - visitorIdが未登録の場合
    */
-  selectPack = async (
+  selectPacks = async (
     visitorId: string,
-    packType: Exclude<StarterPackType, "custom">
+    packTypes: Exclude<StarterPackType, "custom">[]
   ): Promise<void> => {
     // visitorの存在確認
     const visitor = await this.visitorsRepo.findByVisitorId(visitorId);
@@ -76,8 +78,8 @@ export class OnboardingApiService {
       throw new NotFoundError("Visitor", visitorId);
     }
 
-    // OnboardingServiceでプロファイル初期化
-    await this.onboardingService.completeWithStarterPack(visitorId, packType);
+    // OnboardingServiceでプロファイル初期化（複数パック対応）
+    await this.onboardingService.completeWithStarterPacks(visitorId, packTypes);
   };
 
   /**

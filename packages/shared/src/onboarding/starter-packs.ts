@@ -10,54 +10,62 @@ import type { StarterPackDefinition } from "./types";
  * スターターパック種別一覧
  */
 export const STARTER_PACK_TYPES: StarterPackType[] = [
+  "classic",
   "horror",
-  "surreal",
-  "scientific",
+  "scifi",
   "heartwarming",
   "mystery",
+  "jp",
   "custom",
 ];
 
 /**
  * スターターパック定義
  *
- * customを除く5種類のパック定義。
+ * customを除く6種類のパック定義。
  */
 export const STARTER_PACKS: Record<Exclude<StarterPackType, "custom">, StarterPackDefinition> = {
+  classic: {
+    type: "classic",
+    displayName: "定番・名作",
+    description: "財団世界観の基礎となる必読作品",
+    primaryTags: ["popular", "classic", "foundation"],
+    seedArticles: ["scp-173", "scp-682", "scp-049"],
+  },
   horror: {
     type: "horror",
-    displayName: "ホラー好き",
+    displayName: "ホラー・恐怖",
     description: "背筋が凍るような恐怖体験を求めるあなたへ",
     primaryTags: ["horror", "creepy", "keter", "euclid"],
     seedArticles: ["scp-087", "scp-106", "scp-096"],
   },
-  surreal: {
-    type: "surreal",
-    displayName: "シュール好き",
-    description: "不思議で奇妙な世界観を楽しみたいあなたへ",
-    primaryTags: ["surreal", "humorous", "joke", "absurd"],
-    seedArticles: ["scp-426", "scp-999", "scp-2337"],
-  },
-  scientific: {
-    type: "scientific",
-    displayName: "科学・SF好き",
+  scifi: {
+    type: "scifi",
+    displayName: "SF・テクノロジー",
     description: "科学的な考察やSF要素を楽しみたいあなたへ",
     primaryTags: ["scientific", "technological", "extraterrestrial"],
     seedArticles: ["scp-914", "scp-2000", "scp-3000"],
   },
   heartwarming: {
     type: "heartwarming",
-    displayName: "ほのぼの好き",
+    displayName: "感動・ハートフル",
     description: "心温まる優しい異常存在を探しているあなたへ",
     primaryTags: ["heartwarming", "safe", "friendly"],
     seedArticles: ["scp-999", "scp-131", "scp-529"],
   },
   mystery: {
     type: "mystery",
-    displayName: "謎解き好き",
+    displayName: "ミステリー・考察",
     description: "複雑な謎や考察を楽しみたいあなたへ",
     primaryTags: ["mystery", "puzzle", "meta"],
     seedArticles: ["scp-001", "scp-055", "scp-2521"],
+  },
+  jp: {
+    type: "jp",
+    displayName: "日本支部オリジナル",
+    description: "日本支部のオリジナル作品を楽しむ",
+    primaryTags: ["jp", "japan-branch"],
+    seedArticles: ["scp-040-jp", "scp-280-jp", "scp-444-jp"],
   },
 };
 

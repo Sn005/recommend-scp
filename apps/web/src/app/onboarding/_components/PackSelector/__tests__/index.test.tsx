@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // api-clientをモック（他のimportより先に定義）
 const mockPacksGet = vi.fn<() => Promise<{ ok: boolean; json: () => Promise<unknown> }>>();
 const mockSelectPost = vi.fn<
-  (params: { json: { visitorId: string; packType: string } }) => Promise<{
+  (params: { json: { visitorId: string; packTypes: string[] } }) => Promise<{
     ok: boolean;
     json: () => Promise<unknown>;
   }>
@@ -18,7 +18,7 @@ vi.mock("@/shared/lib/api-client", () => ({
         $get: () => mockPacksGet(),
       },
       select: {
-        $post: (params: { json: { visitorId: string; packType: string } }) =>
+        $post: (params: { json: { visitorId: string; packTypes: string[] } }) =>
           mockSelectPost(params),
       },
     },
@@ -36,13 +36,13 @@ const mockPacks = [
     primaryTags: ["ホラー", "恐怖", "不気味"],
   },
   {
-    type: "surreal" as const,
-    displayName: "シュール派",
-    description: "常識を超えた不条理を楽しむ",
-    primaryTags: ["シュール", "不条理", "奇妙"],
+    type: "mystery" as const,
+    displayName: "ミステリー派",
+    description: "謎解きと陰謀論を追求",
+    primaryTags: ["ミステリー", "陰謀", "謎"],
   },
   {
-    type: "scientific" as const,
+    type: "scifi" as const,
     displayName: "サイエンス派",
     description: "SF的・科学的な収容物に興味",
     primaryTags: ["科学", "テクノロジー", "実験"],
@@ -54,10 +54,10 @@ const mockPacks = [
     primaryTags: ["ほのぼの", "癒し", "友好"],
   },
   {
-    type: "mystery" as const,
-    displayName: "ミステリー派",
-    description: "謎解きと陰謀論を追求",
-    primaryTags: ["ミステリー", "陰謀", "謎"],
+    type: "classic" as const,
+    displayName: "定番派",
+    description: "定番・名作を楽しむ",
+    primaryTags: ["定番", "名作", "人気"],
   },
 ];
 
@@ -75,7 +75,6 @@ function getPackCard(packName: string): HTMLElement {
 
 describe("PackSelector", () => {
   const mockOnComplete = vi.fn();
-  const mockOnBack = vi.fn();
   const mockVisitorId = "test-visitor-id";
 
   beforeEach(() => {
@@ -93,9 +92,7 @@ describe("PackSelector", () => {
 
   describe("AC-1: パック一覧表示", () => {
     it("初回表示時にGET /onboarding/packs APIが呼び出される", async () => {
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(mockPacksGet).toHaveBeenCalledTimes(1);
@@ -103,23 +100,19 @@ describe("PackSelector", () => {
     });
 
     it("5種類のスターターパックが表示される", async () => {
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
-        expect(screen.getByText("シュール派")).toBeInTheDocument();
+        expect(screen.getByText("ミステリー派")).toBeInTheDocument();
         expect(screen.getByText("サイエンス派")).toBeInTheDocument();
         expect(screen.getByText("ほのぼの派")).toBeInTheDocument();
-        expect(screen.getByText("ミステリー派")).toBeInTheDocument();
+        expect(screen.getByText("定番派")).toBeInTheDocument();
       });
     });
 
     it("各パックに名前・説明・アイコンが表示される", async () => {
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         // ホラーパックの確認
@@ -130,12 +123,10 @@ describe("PackSelector", () => {
     });
   });
 
-  describe("AC-2: パック選択", () => {
+  describe("AC-2: パック選択（複数選択対応）", () => {
     it("パッククリックで選択状態になりハイライト表示される", async () => {
       const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -150,9 +141,7 @@ describe("PackSelector", () => {
 
     it("パック選択後は「推薦を開始」ボタンが有効になる", async () => {
       const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -167,11 +156,9 @@ describe("PackSelector", () => {
       expect(startButton).not.toBeDisabled();
     });
 
-    it("別のパックに切り替えると前のパックの選択が解除される", async () => {
+    it("複数のパックを同時に選択できる", async () => {
       const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -180,23 +167,39 @@ describe("PackSelector", () => {
       // ホラーを選択
       const horrorButton = getPackCard("ホラー好き");
       await user.click(horrorButton);
+
+      // ミステリーも選択
+      const mysteryButton = getPackCard("ミステリー派");
+      await user.click(mysteryButton);
+
+      // チェックマークは2つ
+      expect(screen.getAllByTestId("pack-check")).toHaveLength(2);
+    });
+
+    it("選択したパックを再度クリックすると選択解除される", async () => {
+      const user = userEvent.setup();
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("ホラー好き")).toBeInTheDocument();
+      });
+
+      const packButton = getPackCard("ホラー好き");
+
+      // 選択
+      await user.click(packButton);
       expect(screen.getByTestId("pack-check")).toBeInTheDocument();
 
-      // シュールに切り替え
-      const surrealButton = getPackCard("シュール派");
-      await user.click(surrealButton);
-
-      // チェックマークは1つだけ
-      expect(screen.getAllByTestId("pack-check")).toHaveLength(1);
+      // 選択解除
+      await user.click(packButton);
+      expect(screen.queryByTestId("pack-check")).not.toBeInTheDocument();
     });
   });
 
   describe("AC-3: パック確定", () => {
     it("「推薦を開始」ボタンクリックでPOST /onboarding/select APIが呼び出される", async () => {
       const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -214,7 +217,33 @@ describe("PackSelector", () => {
         expect(mockSelectPost).toHaveBeenCalledWith({
           json: {
             visitorId: mockVisitorId,
-            packType: "horror",
+            packTypes: ["horror"],
+          },
+        });
+      });
+    });
+
+    it("複数パック選択時、全てのpackTypesがAPIに送信される", async () => {
+      const user = userEvent.setup();
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
+
+      await waitFor(() => {
+        expect(screen.getByText("ホラー好き")).toBeInTheDocument();
+      });
+
+      // 複数パックを選択
+      await user.click(getPackCard("ホラー好き"));
+      await user.click(getPackCard("ミステリー派"));
+
+      // 確定ボタンをクリック
+      const startButton = screen.getByRole("button", { name: /推薦を開始/ });
+      await user.click(startButton);
+
+      await waitFor(() => {
+        expect(mockSelectPost).toHaveBeenCalledWith({
+          json: {
+            visitorId: mockVisitorId,
+            packTypes: ["horror", "mystery"],
           },
         });
       });
@@ -222,9 +251,7 @@ describe("PackSelector", () => {
 
     it("確定成功時にonCompleteが呼ばれる", async () => {
       const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -258,17 +285,13 @@ describe("PackSelector", () => {
           )
       );
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       expect(screen.getByTestId("pack-selector-skeleton")).toBeInTheDocument();
     });
 
     it("パック一覧取得完了後はスケルトンローダーが非表示になる", async () => {
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.queryByTestId("pack-selector-skeleton")).not.toBeInTheDocument();
@@ -293,9 +316,7 @@ describe("PackSelector", () => {
           )
       );
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -328,9 +349,7 @@ describe("PackSelector", () => {
           )
       );
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -364,9 +383,7 @@ describe("PackSelector", () => {
         json: () => Promise.resolve({ error: "Internal Server Error" }),
       });
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("パック一覧の取得に失敗しました")).toBeInTheDocument();
@@ -379,9 +396,7 @@ describe("PackSelector", () => {
         json: () => Promise.resolve({ error: "Network Error" }),
       });
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /リトライ/ })).toBeInTheDocument();
@@ -406,9 +421,7 @@ describe("PackSelector", () => {
         });
       });
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByRole("button", { name: /リトライ/ })).toBeInTheDocument();
@@ -432,9 +445,7 @@ describe("PackSelector", () => {
         json: () => Promise.resolve({ title: "選択に失敗しました" }),
       });
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -461,9 +472,7 @@ describe("PackSelector", () => {
         json: () => Promise.resolve({ error: "Error" }),
       });
 
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
+      render(<PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} />);
 
       await waitFor(() => {
         expect(screen.getByText("ホラー好き")).toBeInTheDocument();
@@ -484,45 +493,6 @@ describe("PackSelector", () => {
 
       // 選択状態（チェックマーク）が維持されている
       expect(screen.getByTestId("pack-check")).toBeInTheDocument();
-    });
-  });
-
-  describe("AC-8: 戻るボタン", () => {
-    it("「戻る」ボタンクリックでonBackが呼ばれる", async () => {
-      const user = userEvent.setup();
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText("ホラー好き")).toBeInTheDocument();
-      });
-
-      const backButton = screen.getByLabelText("← 戻る");
-      await user.click(backButton);
-
-      expect(mockOnBack).toHaveBeenCalledTimes(1);
-    });
-
-    it("エラー画面の「戻る」ボタンクリックでonBackが呼ばれる", async () => {
-      const user = userEvent.setup();
-      mockPacksGet.mockResolvedValue({
-        ok: false,
-        json: () => Promise.resolve({ error: "Error" }),
-      });
-
-      render(
-        <PackSelector visitorId={mockVisitorId} onComplete={mockOnComplete} onBack={mockOnBack} />
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText("パック一覧の取得に失敗しました")).toBeInTheDocument();
-      });
-
-      const backButton = screen.getByRole("button", { name: "戻る" });
-      await user.click(backButton);
-
-      expect(mockOnBack).toHaveBeenCalledTimes(1);
     });
   });
 });

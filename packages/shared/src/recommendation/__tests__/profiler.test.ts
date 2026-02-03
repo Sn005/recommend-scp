@@ -387,22 +387,22 @@ describe("PreferenceProfiler", () => {
       expect(profile.onboardingCompletedAt).toBeDefined();
     });
 
-    it("THEN 初期tagWeightsがスターターパックに基づいて設定される（scientific）", async () => {
+    it("THEN 初期tagWeightsがスターターパックに基づいて設定される（scifi）", async () => {
       // Act
-      const profile = await profiler.initializeFromStarterPack(visitorId, "scientific");
+      const profile = await profiler.initializeFromStarterPack(visitorId, "scifi");
 
       // Assert
-      expect(profile.starterPack).toBe("scientific");
+      expect(profile.starterPack).toBe("scifi");
       expect(profile.tagWeights["scientific"]).toBeGreaterThan(0);
     });
 
     it("AND 各スターターパック種別で異なる初期重みが設定される", async () => {
       // Act
       const horrorProfile = await profiler.initializeFromStarterPack("visitor-1", "horror");
-      const scientificProfile = await profiler.initializeFromStarterPack("visitor-2", "scientific");
+      const scifiProfile = await profiler.initializeFromStarterPack("visitor-2", "scifi");
 
       // Assert
-      expect(horrorProfile.tagWeights).not.toEqual(scientificProfile.tagWeights);
+      expect(horrorProfile.tagWeights).not.toEqual(scifiProfile.tagWeights);
     });
 
     it("AND customスターターパックでは指定されたタグの初期重みが設定される", async () => {

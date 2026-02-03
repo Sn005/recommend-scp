@@ -13,6 +13,7 @@ import type { StarterPackType } from "@recommend-scp/shared/storage";
 // モック用の型
 interface MockOnboardingService {
   completeWithStarterPack: ReturnType<typeof vi.fn>;
+  completeWithStarterPacks: ReturnType<typeof vi.fn>;
   completeWithCustomSelection: ReturnType<typeof vi.fn>;
 }
 
@@ -26,14 +27,14 @@ describe("OnboardingApiService", () => {
   // ============================================
 
   describe("getStarterPacks", () => {
-    it("5種類のスターターパックを返す", () => {
+    it("6種類のスターターパックを返す", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
       const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
       const packs = service.getStarterPacks();
 
-      expect(packs).toHaveLength(5);
+      expect(packs).toHaveLength(6);
     });
 
     it("各パックにtype, displayName, description, primaryTagsが含まれる", () => {
@@ -88,10 +89,10 @@ describe("OnboardingApiService", () => {
   });
 
   // ============================================
-  // selectPack テスト
+  // selectPacks テスト
   // ============================================
 
-  describe("selectPack", () => {
+  describe("selectPacks", () => {
     let mockVisitorsRepo: MockVisitorsRepository;
     let mockOnboardingService: MockOnboardingService;
 
@@ -101,11 +102,12 @@ describe("OnboardingApiService", () => {
       };
       mockOnboardingService = {
         completeWithStarterPack: vi.fn(),
+        completeWithStarterPacks: vi.fn(),
         completeWithCustomSelection: vi.fn(),
       };
     });
 
-    it("有効なvisitorIdとpackTypeの場合、OnboardingService.completeWithStarterPackを呼び出す", async () => {
+    it("有効なvisitorIdとpackTypesの場合、OnboardingService.completeWithStarterPacksを呼び出す", async () => {
       const visitor = {
         id: "uuid-1",
         visitorId: "visitor-123",
@@ -114,7 +116,7 @@ describe("OnboardingApiService", () => {
       };
 
       mockVisitorsRepo.findByVisitorId.mockResolvedValue(visitor);
-      mockOnboardingService.completeWithStarterPack.mockResolvedValue({
+      mockOnboardingService.completeWithStarterPacks.mockResolvedValue({
         visitorId: "visitor-123",
         starterPack: "horror",
         onboardingCompletedAt: "2024-01-01T00:00:00Z",
@@ -125,22 +127,22 @@ describe("OnboardingApiService", () => {
         mockOnboardingService as unknown as OnboardingService
       );
 
-      await service.selectPack("visitor-123", "horror");
+      await service.selectPacks("visitor-123", ["horror"]);
 
       expect(mockVisitorsRepo.findByVisitorId).toHaveBeenCalledWith("visitor-123");
-      expect(mockOnboardingService.completeWithStarterPack).toHaveBeenCalledWith(
-        "visitor-123",
-        "horror"
-      );
+      expect(mockOnboardingService.completeWithStarterPacks).toHaveBeenCalledWith("visitor-123", [
+        "horror",
+      ]);
     });
 
     it("全てのパック種別で正常に動作する", async () => {
       const packTypes: Exclude<StarterPackType, "custom">[] = [
+        "classic",
         "horror",
-        "surreal",
-        "scientific",
+        "scifi",
         "heartwarming",
         "mystery",
+        "jp",
       ];
 
       for (const packType of packTypes) {
@@ -148,22 +150,42 @@ describe("OnboardingApiService", () => {
           id: "uuid-1",
           visitorId: "visitor-123",
         });
-        mockOnboardingService.completeWithStarterPack.mockResolvedValue({});
+        mockOnboardingService.completeWithStarterPacks.mockResolvedValue({});
 
         const service = new OnboardingApiService(
           mockVisitorsRepo as unknown as VisitorsRepository,
           mockOnboardingService as unknown as OnboardingService
         );
 
-        await service.selectPack("visitor-123", packType);
+        await service.selectPacks("visitor-123", [packType]);
 
-        expect(mockOnboardingService.completeWithStarterPack).toHaveBeenCalledWith(
-          "visitor-123",
-          packType
-        );
+        expect(mockOnboardingService.completeWithStarterPacks).toHaveBeenCalledWith("visitor-123", [
+          packType,
+        ]);
 
         vi.clearAllMocks();
       }
+    });
+
+    it("複数パック選択で正常に動作する", async () => {
+      mockVisitorsRepo.findByVisitorId.mockResolvedValue({
+        id: "uuid-1",
+        visitorId: "visitor-123",
+      });
+      mockOnboardingService.completeWithStarterPacks.mockResolvedValue({});
+
+      const service = new OnboardingApiService(
+        mockVisitorsRepo as unknown as VisitorsRepository,
+        mockOnboardingService as unknown as OnboardingService
+      );
+
+      await service.selectPacks("visitor-123", ["horror", "mystery", "jp"]);
+
+      expect(mockOnboardingService.completeWithStarterPacks).toHaveBeenCalledWith("visitor-123", [
+        "horror",
+        "mystery",
+        "jp",
+      ]);
     });
 
     it("未登録visitorIdの場合、NotFoundErrorをスローする", async () => {
@@ -174,10 +196,12 @@ describe("OnboardingApiService", () => {
         mockOnboardingService as unknown as OnboardingService
       );
 
-      await expect(service.selectPack("invalid-visitor", "horror")).rejects.toThrow(NotFoundError);
+      await expect(service.selectPacks("invalid-visitor", ["horror"])).rejects.toThrow(
+        NotFoundError
+      );
       // detailにvisitorIdが含まれることを確認
       try {
-        await service.selectPack("invalid-visitor", "horror");
+        await service.selectPacks("invalid-visitor", ["horror"]);
       } catch (e) {
         expect((e as NotFoundError).detail).toMatch(/Visitor.*invalid-visitor/);
       }
@@ -191,24 +215,24 @@ describe("OnboardingApiService", () => {
         mockOnboardingService as unknown as OnboardingService
       );
 
-      await expect(service.selectPack("visitor-123", "horror")).rejects.toThrow(
+      await expect(service.selectPacks("visitor-123", ["horror"])).rejects.toThrow(
         "DB connection failed"
       );
     });
 
-    it("OnboardingService.completeWithStarterPackがエラーをスローした場合、そのままスローする", async () => {
+    it("OnboardingService.completeWithStarterPacksがエラーをスローした場合、そのままスローする", async () => {
       mockVisitorsRepo.findByVisitorId.mockResolvedValue({
         id: "uuid-1",
         visitorId: "visitor-123",
       });
-      mockOnboardingService.completeWithStarterPack.mockRejectedValue(new Error("Storage error"));
+      mockOnboardingService.completeWithStarterPacks.mockRejectedValue(new Error("Storage error"));
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
         mockOnboardingService as unknown as OnboardingService
       );
 
-      await expect(service.selectPack("visitor-123", "horror")).rejects.toThrow("Storage error");
+      await expect(service.selectPacks("visitor-123", ["horror"])).rejects.toThrow("Storage error");
     });
   });
 
@@ -226,6 +250,7 @@ describe("OnboardingApiService", () => {
       };
       mockOnboardingService = {
         completeWithStarterPack: vi.fn(),
+        completeWithStarterPacks: vi.fn(),
         completeWithCustomSelection: vi.fn(),
       };
     });

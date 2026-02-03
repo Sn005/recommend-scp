@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { api } from "@/shared/lib/api-client";
 
 export interface StarterPackInfo {
-  type: "horror" | "surreal" | "scientific" | "heartwarming" | "mystery";
+  type: "classic" | "horror" | "scifi" | "heartwarming" | "mystery" | "jp";
   displayName: string;
   description: string;
   primaryTags: string[];
@@ -14,8 +14,8 @@ interface UsePackSelectorResult {
   packs: StarterPackInfo[];
   isLoadingPacks: boolean;
   packsError: Error | null;
-  selectedPack: StarterPackInfo | null;
-  selectPack: (pack: StarterPackInfo) => void;
+  selectedPacks: Set<string>;
+  togglePack: (packType: string) => void;
   confirmSelection: () => Promise<void>;
   isConfirming: boolean;
   confirmError: Error | null;
@@ -26,7 +26,7 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
   const [packs, setPacks] = useState<StarterPackInfo[]>([]);
   const [isLoadingPacks, setIsLoadingPacks] = useState(true);
   const [packsError, setPacksError] = useState<Error | null>(null);
-  const [selectedPack, setSelectedPack] = useState<StarterPackInfo | null>(null);
+  const [selectedPacks, setSelectedPacks] = useState<Set<string>>(new Set());
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<Error | null>(null);
 
@@ -56,13 +56,21 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
     void loadPacks();
   }, [loadPacks]);
 
-  const selectPack = useCallback((pack: StarterPackInfo) => {
-    setSelectedPack(pack);
+  const togglePack = useCallback((packType: string) => {
+    setSelectedPacks((prev) => {
+      const next = new Set(prev);
+      if (next.has(packType)) {
+        next.delete(packType);
+      } else {
+        next.add(packType);
+      }
+      return next;
+    });
     setConfirmError(null);
   }, []);
 
   const confirmSelection = useCallback(async () => {
-    if (!selectedPack) {
+    if (selectedPacks.size === 0) {
       return;
     }
 
@@ -73,7 +81,14 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
       const res = await api.onboarding.select.$post({
         json: {
           visitorId,
-          packType: selectedPack.type,
+          packTypes: Array.from(selectedPacks) as (
+            | "classic"
+            | "horror"
+            | "scifi"
+            | "heartwarming"
+            | "mystery"
+            | "jp"
+          )[],
         },
       });
 
@@ -90,7 +105,7 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
     } finally {
       setIsConfirming(false);
     }
-  }, [selectedPack, visitorId]);
+  }, [selectedPacks, visitorId]);
 
   const retryLoadPacks = useCallback(() => {
     void loadPacks();
@@ -100,8 +115,8 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
     packs,
     isLoadingPacks,
     packsError,
-    selectedPack,
-    selectPack,
+    selectedPacks,
+    togglePack,
     confirmSelection,
     isConfirming,
     confirmError,
