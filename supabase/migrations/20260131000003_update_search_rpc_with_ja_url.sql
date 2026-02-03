@@ -11,6 +11,9 @@
 -- article_translationsをLEFT JOINしてurlを返す。
 -- has_translation = FALSEの記事を除外する。
 
+-- 戻り値の型が変わるため、まずDROPが必要
+DROP FUNCTION IF EXISTS search_articles_by_embedding(vector(1536), text[], integer, float, float);
+
 CREATE OR REPLACE FUNCTION search_articles_by_embedding(
   query_vector vector(1536),
   exclude_ids text[] DEFAULT '{}',
@@ -56,6 +59,9 @@ COMMENT ON FUNCTION search_articles_by_embedding IS 'コサイン類似度でベ
 -- ============================================
 -- 同様にarticle_translationsをLEFT JOINしてurlを返す。
 
+-- 戻り値の型が変わるため、まずDROPが必要
+DROP FUNCTION IF EXISTS search_articles_by_unexplored_tags(text[], text[], integer, text);
+
 CREATE OR REPLACE FUNCTION search_articles_by_unexplored_tags(
   explored_tags text[] DEFAULT '{}',
   exclude_ids text[] DEFAULT '{}',
@@ -100,6 +106,9 @@ COMMENT ON FUNCTION search_articles_by_unexplored_tags IS '未探索タグを持
 -- ============================================
 -- search_articles_by_embeddingを内部で使用しているので、
 -- 戻り値の型にurlを追加する。
+
+-- 戻り値の型が変わるため、まずDROPが必要
+DROP FUNCTION IF EXISTS search_adjacent_articles(vector(1536), text[], integer, float, float);
 
 CREATE OR REPLACE FUNCTION search_adjacent_articles(
   query_vector vector(1536),
