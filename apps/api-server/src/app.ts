@@ -14,6 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { corsMiddleware } from "./middleware/cors";
 import { errorHandler } from "./middleware/error-handler";
 import { healthRoutes } from "./routes/health";
+import { checkUrlRoutes } from "./routes/check-url";
 import { createVisitorsRoutes } from "./domains/visitors/routes";
 import { createArticlesRoutes } from "./domains/articles/routes";
 import { createRecommendRoutes } from "./domains/recommend/routes";
@@ -34,6 +35,7 @@ import { createOnboardingRoutes } from "./domains/onboarding/routes";
 export const createRoutes = (supabase: SupabaseClient) => {
   return new Hono()
     .route("/health", healthRoutes)
+    .route("/check-url", checkUrlRoutes)
     .route("/visitors", createVisitorsRoutes(supabase))
     .route("/articles", createArticlesRoutes(supabase))
     .route("/recommend", createRecommendRoutes(supabase))

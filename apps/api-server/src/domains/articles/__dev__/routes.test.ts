@@ -18,6 +18,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 interface MockService {
   searchArticles: ReturnType<typeof vi.fn>;
   updateTranslation: ReturnType<typeof vi.fn>;
+  getContent: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -57,6 +58,7 @@ describe("GET /articles/search - 正常系", () => {
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -185,6 +187,7 @@ describe("GET /articles/search - 異常系（バリデーションエラー）",
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -279,6 +282,7 @@ describe("GET /articles/search - エッジケース", () => {
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -408,6 +412,7 @@ describe("GET /articles/search - サービスエラー", () => {
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -452,6 +457,7 @@ describe("PATCH /articles/:articleId/translation - 正常系", () => {
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -563,6 +569,7 @@ describe("PATCH /articles/:articleId/translation - 異常系", () => {
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -622,6 +629,7 @@ describe("PATCH /articles/:articleId/translation - バリデーション", () =>
     mockService = {
       searchArticles: vi.fn(),
       updateTranslation: vi.fn(),
+      getContent: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -744,5 +752,188 @@ describe("PATCH /articles/:articleId/translation - バリデーション", () =>
     expect(json.type).toContain("validation-error");
     expect(json).toHaveProperty("title", "Validation Error");
     expect(json).toHaveProperty("status", 400);
+  });
+});
+
+// ============================================
+// GET /articles/:articleId/content
+// ============================================
+
+describe("GET /articles/:articleId/content - 正常系", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+      getContent: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("有効なarticleIdで200 OKを返す", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-173 - 彫刻 - オリジナル",
+      excerpt: "アイテム番号: SCP-173。オブジェクトクラス: Euclid。特別収容プ",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+
+  it("タイトルと本文冒頭50文字を返す", async () => {
+    // Arrange
+    const expected = {
+      title: "SCP-173 - 彫刻 - オリジナル",
+      excerpt: "アイテム番号: SCP-173。オブジェクトクラス: Euclid。特別収容プ",
+    };
+    mockService.getContent.mockResolvedValue(expected);
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as Record<string, unknown>;
+
+    // Assert
+    expect(json).toEqual(expected);
+  });
+
+  it("excerptが50文字に切り詰められる", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-173",
+      excerpt: "12345678901234567890123456789012345678901234567890", // 50文字
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as { excerpt: string };
+
+    // Assert
+    expect(json.excerpt.length).toBeLessThanOrEqual(50);
+  });
+
+  it("本文が50文字未満の場合は全文を返す", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-173",
+      excerpt: "短い本文",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as { excerpt: string };
+
+    // Assert
+    expect(json.excerpt).toBe("短い本文");
+  });
+});
+
+describe("GET /articles/:articleId/content - 異常系（エラー耐性）", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+      getContent: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("fetch失敗時も200で空レスポンスを返す", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "",
+      excerpt: "",
+    });
+
+    // Act
+    const res = await app.request("/articles/nonexistent/content");
+    const json = (await res.json()) as Record<string, unknown>;
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(json).toEqual({ title: "", excerpt: "" });
+  });
+
+  it("Serviceがエラーをスローした場合も200で空レスポンスを返す", async () => {
+    // Arrange
+    mockService.getContent.mockRejectedValue(new Error("Network error"));
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as Record<string, unknown>;
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(json).toEqual({ title: "", excerpt: "" });
+  });
+});
+
+describe("GET /articles/:articleId/content - エッジケース", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      searchArticles: vi.fn(),
+      updateTranslation: vi.fn(),
+      getContent: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("タイトルが空の場合は空文字列を返す", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "",
+      excerpt: "本文はあります",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as { title: string };
+
+    // Assert
+    expect(json.title).toBe("");
+  });
+
+  it("本文が空の場合は空文字列を返す", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-173",
+      excerpt: "",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-173/content");
+    const json = (await res.json()) as { excerpt: string };
+
+    // Assert
+    expect(json.excerpt).toBe("");
+  });
+
+  it("特殊文字を含むarticleIdを処理できる", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-173-JP",
+      excerpt: "本文",
+    });
+
+    // Act
+    const res = await app.request("/articles/SCP-173-JP/content");
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(mockService.getContent).toHaveBeenCalledWith("SCP-173-JP");
   });
 });

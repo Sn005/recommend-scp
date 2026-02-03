@@ -114,6 +114,50 @@ export class ArticlesService {
       checkedAt: result.checked_at ?? new Date().toISOString(),
     };
   };
+
+  /**
+   * 記事のタイトルと本文冒頭を取得
+   *
+   * SCP-JP WikiからHTMLを取得し、DOM解析でタイトルと本文冒頭50文字を抽出する。
+   * クロスオリジン制限を回避するためサーバーサイドで実行。
+   *
+   * @param articleId - 記事ID（例: scp-173）
+   * @returns { title: string, excerpt: string }
+   */
+  getContent = async (articleId: string): Promise<ContentResult> => {
+    const url = `http://scp-jp.wikidot.com/${articleId.toLowerCase()}`;
+
+    try {
+      const response = await fetch(url);
+      const html = await response.text();
+
+      // jsdomでDOM解析
+      const { JSDOM } = await import("jsdom");
+      const dom = new JSDOM(html);
+      const doc = dom.window.document;
+
+      const titleText = doc.querySelector("#page-title")?.textContent ?? "";
+      const contentText = doc.querySelector("#page-content")?.textContent ?? "";
+      const title = titleText.trim();
+      const content = contentText.trim();
+      const excerpt = content.substring(0, 50);
+
+      return { title, excerpt };
+    } catch {
+      // エラー耐性: サイレント失敗で空レスポンス
+      return { title: "", excerpt: "" };
+    }
+  };
+}
+
+/**
+ * コンテンツ取得結果
+ */
+export interface ContentResult {
+  /** 記事タイトル */
+  title: string;
+  /** 本文冒頭（最大50文字） */
+  excerpt: string;
 }
 
 /**
