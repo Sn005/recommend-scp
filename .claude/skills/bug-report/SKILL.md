@@ -160,7 +160,34 @@ UI探索フェーズで発見した違和感を、GitHub Issueとして記録す
 
 ---
 
-## クラウド環境対応
+## API連携（推奨）
+
+### GITHUB_TOKEN利用可能な場合（自動）
+
+`scripts/github-issue.sh` を使用してAPI経由で自動作成：
+
+```bash
+# 認証確認
+./scripts/github-issue.sh check
+
+# Issue作成
+./scripts/github-issue.sh create \
+  --title "[screen:recommend] ボタンの色が薄い" \
+  --body "## 概要
+ボタンの色がデザイントークンと異なり、視認性が低下している
+
+## 発見経緯
+- 報告者の記述: ボタンの色が薄くて見づらい
+- 検出根拠: design-tokens.css との差分
+
+## 比較対象
+- 参照モック: mockups/header-6-minimal-2btn.html
+- 該当コード: apps/web/src/components/Button.tsx:45
+
+## 提案される修正方針
+opacity: 0.7 を削除し、design-tokensの色をそのまま使用" \
+  --labels "type:ui-bug,major,screen:recommend,status:open"
+```
 
 ### gh CLI利用可能な場合
 
@@ -179,7 +206,7 @@ EOF
   --label "type:ui-bug,major,screen:recommend,status:open"
 ```
 
-### gh CLI利用不可の場合（フォールバック）
+### フォールバック（GITHUB_TOKEN/gh CLI どちらも不可）
 
 テンプレートを出力し、ユーザーがGitHub Web UIで作成：
 

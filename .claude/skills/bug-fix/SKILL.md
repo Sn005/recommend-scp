@@ -223,7 +223,31 @@ https://claude.ai/code/session_xxx
 
 ---
 
-## クラウド環境対応
+## API連携（推奨）
+
+### GITHUB_TOKEN利用可能な場合（自動）
+
+`scripts/github-issue.sh` を使用してAPI経由で自動操作：
+
+```bash
+# 認証確認
+./scripts/github-issue.sh check
+
+# Issue一覧取得（ラベルでフィルタ）
+./scripts/github-issue.sh list --labels "type:ui-bug,status:open"
+
+# Issue詳細取得
+./scripts/github-issue.sh get --number 42
+
+# ラベル更新（status:open → status:fixed）
+./scripts/github-issue.sh update --number 42 \
+  --remove-labels "status:open" \
+  --add-labels "status:fixed"
+
+# wontfixクローズ
+./scripts/github-issue.sh update --number 42 --add-labels "status:wontfix"
+./scripts/github-issue.sh close --number 42 --reason "仕様通りの動作のため"
+```
 
 ### gh CLI利用可能な場合
 
@@ -242,7 +266,7 @@ gh issue close {number} --comment "理由: ..."
 gh issue edit {number} --add-label "status:wontfix"
 ```
 
-### gh CLI利用不可の場合（フォールバック）
+### フォールバック（GITHUB_TOKEN/gh CLI どちらも不可）
 
 ```markdown
 ---
