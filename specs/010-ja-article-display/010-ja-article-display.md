@@ -31,53 +31,53 @@ SCP記事を日本語版サイト（scp-jp.wikidot.com）のURLでWebView表示�
 
 ### AC-1: 日本語URL管理
 
-- [ ] WHEN システムが初期化される際
+- [x] WHEN システムが初期化される際
       GIVEN `article_translations` テーブルが存在しない場合
       THEN マイグレーションでテーブルを作成する
       AND 既存の英語版記事から日本語URLを一括生成する
 
 ### AC-2: 推薦APIでのURL提供
 
-- [ ] WHEN 推薦APIが記事を返す際
+- [x] WHEN 推薦APIが記事を返す際
       GIVEN 日本語翻訳がある（または未確認の）記事の場合
       THEN レスポンスに `url` フィールドを含める
 
 ### AC-3: 翻訳なし記事の除外
 
-- [ ] WHEN 推薦APIが記事を選択する際
+- [x] WHEN 推薦APIが記事を選択する際
       GIVEN `has_translation = FALSE` の記事がある場合
       THEN その記事を推薦候補から除外する
 
 ### AC-4: WebView日本語表示
 
-- [ ] WHEN 記事をWebViewで表示する際
+- [x] WHEN 記事をWebViewで表示する際
       THEN 日本語版URL（scp-jp.wikidot.com）を使用する
 
 ### AC-5: 404検知とサジェスト
 
-- [ ] WHEN WebViewで404エラーが発生した際
+- [x] WHEN WebViewで404エラーが発生した際
       THEN DBの `has_translation` を FALSE に更新する
       AND サジェスト画面を表示する
 
 ### AC-6: 本文抽出と履歴保存
 
-- [ ] WHEN 記事をWebViewで正常に表示した際
+- [x] WHEN 記事をWebViewで正常に表示した際
       THEN 本文冒頭50文字とタイトルを抽出する
       AND ローカルストレージに保存する
 
 ### AC-7: 閲覧履歴での本文表示
 
-- [ ] WHEN 閲覧履歴画面を表示する際
+- [x] WHEN 閲覧履歴画面を表示する際
       THEN 各エントリにタイトルと本文冒頭を表示する
 
 ## 関連Story
 
 | ID                                           | 名前                  | 概要                         | ステータス |
 | -------------------------------------------- | --------------------- | ---------------------------- | ---------- |
-| [010-01](./010-01-url-management/010-01.md)  | 日本語記事URL管理     | テーブル作成・データ投入     | pending    |
-| [010-02](./010-02-api-extension/010-02.md)   | 推薦API日本語対応     | url追加・翻訳有無API         | pending    |
-| [010-03](./010-03-webview-ja/010-03.md)      | WebView日本語記事表示 | 日本語URL・404検知・本文抽出 | pending    |
-| [010-04](./010-04-history-excerpt/010-04.md) | 閲覧履歴本文表示      | excerpt追加                  | pending    |
+| [010-01](./010-01-url-management/010-01.md)  | 日本語記事URL管理     | テーブル作成・データ投入     | completed  |
+| [010-02](./010-02-api-extension/010-02.md)   | 推薦API日本語対応     | url追加・翻訳有無API         | completed  |
+| [010-03](./010-03-webview-ja/010-03.md)      | WebView日本語記事表示 | 日本語URL・404検知・本文抽出 | completed  |
+| [010-04](./010-04-history-excerpt/010-04.md) | 閲覧履歴本文表示      | excerpt追加                  | completed  |
 
 ## 技術設計
 
@@ -123,4 +123,4 @@ interface HistoryEntry {
 
 ## 実装状況
 
-- **status**: pending
+- **status**: completed

@@ -9,7 +9,8 @@ import { useState, useCallback } from "react";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
 import { useFeedback } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "./_hooks/useArticleFavorite";
-import { ArticleWebView } from "./_components/ArticleWebView";
+import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
+import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
 import { FloatingUI } from "./_components/FloatingUI";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
@@ -43,6 +44,7 @@ export default function RecommendPage() {
   const { recordLike, recordDislike } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite(currentArticle?.id);
+  const { add: addToHistory } = useHistory();
 
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -77,6 +79,20 @@ export default function RecommendPage() {
     }
   }, [currentArticle, recordLike]);
 
+  // コンテンツ読み込み完了ハンドラー（履歴保存）
+  const handleContentLoaded = useCallback(
+    (content: ArticleContent) => {
+      if (currentArticle) {
+        addToHistory({
+          scpNumber: currentArticle.id,
+          title: content.title || currentArticle.title,
+          excerpt: content.excerpt,
+        });
+      }
+    },
+    [currentArticle, addToHistory]
+  );
+
   // AC-1: ローディング中はスケルトンUIを表示
   if (isLoading) {
     return <SkeletonLoader />;
@@ -103,6 +119,7 @@ export default function RecommendPage() {
         articleId={currentArticle.id}
         onScrollEnd={handleScrollEnd}
         onSkip={goToNext}
+        onContentLoaded={handleContentLoaded}
       />
       <FloatingUI
         progress={progress}
