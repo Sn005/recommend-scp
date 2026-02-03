@@ -22,7 +22,9 @@ EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行
 └── skills/
     ├── clarify/        # 暗黙知抽出Skill（/spec の前段階）
     ├── spec/           # 仕様策定Skill
-    └── spec-workflow/  # 自動発動ワークフローSkill（実装）
+    ├── spec-workflow/  # 自動発動ワークフローSkill（実装）
+    ├── bug-report/     # UI探索バグ報告Skill
+    └── bug-fix/        # UI探索バグ修正Skill
 
 specs/                  # 仕様書本体
 ├── epic-list.md        # EPIC一覧
@@ -251,12 +253,64 @@ sed -n '/^## 学習記録/,$p' .claude/CLAUDE.md | grep -c "^###"  # 5項目超�
 - Subtask開始、Story開始
 - EPIC、Story、Subtaskへの言及
 
+**`bug-report` Skill（UI探索バグ報告）:**
+
+- 「バグを報告」「違和感がある」「おかしい」
+- `/bug-report` コマンド
+
+**`bug-fix` Skill（UI探索バグ修正）:**
+
+- 「バグを修正して」「Issueを対応して」
+- `/bug-fix` コマンド
+
 ### 禁止事項
 
 - ACなしでの実装開始
 - テストなしの実装（TDD違反）
 - スコープ外の「ついでに」実装
 - ユーザー確認なしの仕様変更
+
+---
+
+### ⚠️ UI探索フェーズ: バグ対応Skill（アドホック）
+
+**フェーズの位置づけ**: シナリオテスト（QA）前段階。UIの地雷除去が目的。
+
+| Skill        | 目的             | 発動キーワード                             | スラッシュコマンド |
+| ------------ | ---------------- | ------------------------------------------ | ------------------ |
+| `bug-report` | 違和感→Issue作成 | 「バグを報告」「違和感がある」「おかしい」 | `/bug-report`      |
+| `bug-fix`    | Issue一覧→修正PR | 「バグを修正して」「Issueを対応して」      | `/bug-fix`         |
+
+**バグ認定の比較対象（UI）:**
+
+```
+モックアップHTML → デザイントークン → spec AC → 人間の違和感
+```
+
+**ラベル体系:**
+
+| 軸     | 値                                                                              |
+| ------ | ------------------------------------------------------------------------------- |
+| 重要度 | `critical` / `major` / `minor`                                                  |
+| 画面   | `screen:onboarding` / `screen:recommend` / `screen:favorites` / `screen:common` |
+| 状態   | `status:open` / `status:in-progress` / `status:fixed` / `status:wontfix`        |
+| 種別   | `type:ui-bug`                                                                   |
+
+**運用ルール:**
+
+- 同一原因のIssueはAI判断でグルーピングして修正
+- 対応しない場合は `wontfix` でクローズ（理由コメント必須）
+- ついで修正は禁止
+- 修正対象は main ブランチのみ（QAブランチは触らない）
+
+**クラウド環境対応:**
+
+- gh CLI利用可能 → 自動でIssue作成/更新
+- gh CLI利用不可 → テンプレート出力（GitHub Web UIでコピペ作成）
+
+詳細: `.claude/skills/bug-report/SKILL.md`, `.claude/skills/bug-fix/SKILL.md`
+
+---
 
 ## サブエージェント活用ガイド
 
