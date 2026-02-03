@@ -2,17 +2,15 @@
 -- 多言語記事URL管理テーブルを作成する
 
 -- テーブル作成
+-- 注意: scp_articles.article_id は複合ユニーク(article_id, lang)のため、
+-- 単体での外部キー制約は設定できない。アプリケーションレベルで整合性を担保。
 CREATE TABLE article_translations (
   article_id TEXT NOT NULL,
   lang TEXT NOT NULL,
   url TEXT NOT NULL,
   has_translation BOOLEAN DEFAULT NULL,
   checked_at TIMESTAMPTZ,
-  PRIMARY KEY (article_id, lang),
-  CONSTRAINT fk_article_translations_article
-    FOREIGN KEY (article_id)
-    REFERENCES scp_articles(article_id)
-    ON DELETE CASCADE
+  PRIMARY KEY (article_id, lang)
 );
 
 -- コメント
