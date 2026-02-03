@@ -1,12 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useVisitorId } from "@/shared/hooks/useVisitorId";
-import { useOnboarding } from "./_hooks/useOnboarding";
-import { OnboardingSelect } from "./_components/OnboardingSelect";
 import { PackSelector } from "./_components/PackSelector";
 import { ScpNumberInput } from "./_components/ScpNumberInput";
+
+type TabType = "pack" | "manual";
+
+/**
+ * タブボタンコンポーネント
+ */
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`flex-1 border-b-2 px-5 py-3 font-medium transition-all ${
+        active ? "border-primary text-primary" : "border-transparent text-gray-400"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
 /**
  * ローディングインジケーター
@@ -49,15 +75,13 @@ function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void })
 /**
  * オンボーディングページ
  *
- * 新規ユーザー向けの初回設定フロー。
- * - 選択肢表示（スターターパック or カスタム入力）
- * - 各選択に応じたコンポーネント表示
+ * タブUIで「スターターパック」と「SCP番号を入力」を切り替え
  * - オンボーディング完了済みの場合は /reader にリダイレクト
  */
 export default function OnboardingPage() {
   const router = useRouter();
   const { visitorId, isLoading: isVisitorLoading, isOnboarded, error } = useVisitorId();
-  const { step, setStep, goBack } = useOnboarding();
+  const [activeTab, setActiveTab] = useState<TabType>("pack");
 
   // AC-3: オンボーディング完了済みならリダイレクト
   useEffect(() => {
@@ -66,12 +90,12 @@ export default function OnboardingPage() {
     }
   }, [isVisitorLoading, isOnboarded, router]);
 
-  // AC-6: ローディング状態
+  // ローディング状態
   if (isVisitorLoading) {
     return <LoadingIndicator />;
   }
 
-  // AC-7: エラー状態
+  // エラー状態
   if (error) {
     return (
       <ErrorMessage
@@ -83,7 +107,7 @@ export default function OnboardingPage() {
     );
   }
 
-  // AC-3: オンボーディング完了済みの場合は何も表示しない（リダイレクト中）
+  // オンボーディング完了済みの場合は何も表示しない（リダイレクト中）
   if (isOnboarded) {
     return null;
   }
@@ -93,41 +117,45 @@ export default function OnboardingPage() {
     return null;
   }
 
-  // ステップに応じたコンポーネント表示
-  switch (step) {
-    case "select":
-      // AC-1: 選択肢表示
-      return (
-        <OnboardingSelect
-          onSelectPack={() => {
-            setStep("pack");
-          }}
-          onSelectCustom={() => {
-            setStep("custom");
-          }}
-        />
-      );
-    case "pack":
-      // AC-4: パック選択コンポーネント
-      return (
-        <PackSelector
-          visitorId={visitorId}
-          onComplete={() => {
-            router.push("/reader");
-          }}
-          onBack={goBack}
-        />
-      );
-    case "custom":
-      // AC-5: SCP番号入力コンポーネント
-      return (
-        <ScpNumberInput
-          visitorId={visitorId}
-          onComplete={() => {
-            router.push("/reader");
-          }}
-          onBack={goBack}
-        />
-      );
-  }
+  const handleComplete = () => {
+    router.push("/reader");
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      {/* ヘッダー */}
+      <header className="border-b border-gray-100 bg-white">
+        <div className="px-6 pb-6 pt-12">
+          <h1 className="text-2xl font-bold text-gray-800">SCP Recommend</h1>
+          <p className="mt-2 text-gray-500">あなたの好みに合わせたSCP記事を推薦します</p>
+        </div>
+        {/* タブ */}
+        <div className="flex border-b border-gray-100" role="tablist">
+          <TabButton
+            active={activeTab === "pack"}
+            onClick={() => {
+              setActiveTab("pack");
+            }}
+          >
+            スターターパック
+          </TabButton>
+          <TabButton
+            active={activeTab === "manual"}
+            onClick={() => {
+              setActiveTab("manual");
+            }}
+          >
+            SCP番号を入力
+          </TabButton>
+        </div>
+      </header>
+
+      {/* コンテンツ */}
+      {activeTab === "pack" ? (
+        <PackSelector visitorId={visitorId} onComplete={handleComplete} />
+      ) : (
+        <ScpNumberInput visitorId={visitorId} onComplete={handleComplete} />
+      )}
+    </div>
+  );
 }

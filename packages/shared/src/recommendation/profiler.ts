@@ -20,17 +20,17 @@ const WEIGHTS = {
  * スターターパック別の初期タグ重み定義
  */
 const STARTER_PACK_TAGS: Record<Exclude<StarterPackType, "custom">, Record<string, number>> = {
+  classic: {
+    popular: 1.0,
+    classic: 0.8,
+    foundation: 0.6,
+  },
   horror: {
     horror: 1.0,
     keter: 0.8,
     cognitohazard: 0.6,
   },
-  surreal: {
-    surreal: 1.0,
-    euclid: 0.8,
-    narrative: 0.6,
-  },
-  scientific: {
+  scifi: {
     scientific: 1.0,
     safe: 0.8,
     technology: 0.6,
@@ -44,6 +44,10 @@ const STARTER_PACK_TAGS: Record<Exclude<StarterPackType, "custom">, Record<strin
     mystery: 1.0,
     euclid: 0.8,
     unexplained: 0.6,
+  },
+  jp: {
+    jp: 1.0,
+    "japan-branch": 0.8,
   },
 };
 

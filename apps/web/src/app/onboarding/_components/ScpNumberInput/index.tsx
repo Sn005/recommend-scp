@@ -1,132 +1,151 @@
 "use client";
 
-import { useScpNumberInput } from "./useScpNumberInput";
-import { ScpNumberTag } from "./ScpNumberTag";
+import { useState, useCallback } from "react";
+import { api } from "@/shared/lib/api-client";
 
 export interface ScpNumberInputProps {
   visitorId: string;
   onComplete: () => void;
-  onBack: () => void;
+}
+
+const PLACEHOLDERS = ["例: 173", "例: 5000", "例: 999", "", ""];
+const MAX_INPUTS = 5;
+
+// 許可される入力形式
+const SCP_NUMBER_PATTERNS = [
+  /^(\d{1,4})$/, // 例: 173, 2000
+  /^SCP-(\d{1,4})$/i, // 例: SCP-173, scp-173
+  /^(\d{1,4})-JP$/i, // 例: 999-JP
+];
+
+// 正規化関数
+function normalizeScpNumber(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  for (const pattern of SCP_NUMBER_PATTERNS) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const num = match[1];
+      // 3桁以上にパディング
+      const paddedNum = num.length < 3 ? num.padStart(3, "0") : num;
+      // JP支部判定
+      if (trimmed.toUpperCase().includes("-JP")) {
+        return `scp-${paddedNum}-JP`;
+      }
+      return `scp-${paddedNum}`;
+    }
+  }
+  return null;
 }
 
 /**
- * SCP番号入力コンポーネント
+ * SCP番号入力コンポーネント（モック準拠）
  *
- * ユーザーが好きなSCP番号を入力して登録できる
+ * 5つの入力フィールドでSCP番号を入力
  */
-export function ScpNumberInput({ visitorId, onComplete, onBack }: ScpNumberInputProps) {
-  const {
-    inputValue,
-    setInputValue,
-    scpNumbers,
-    inputError,
-    addNumber,
-    removeNumber,
-    isValid,
-    remainingCount,
-    confirmSelection,
-    isConfirming,
-    confirmError,
-    invalidNumbers,
-  } = useScpNumberInput(visitorId);
+export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
+  const [inputs, setInputs] = useState<string[]>(Array(MAX_INPUTS).fill(""));
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<Error | null>(null);
+
+  const handleInputChange = useCallback((index: number, value: string) => {
+    setInputs((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+    setConfirmError(null);
+  }, []);
+
+  // 有効な入力値があるかチェック
+  const hasValidInput = inputs.some((input) => {
+    const normalized = normalizeScpNumber(input);
+    return normalized !== null;
+  });
 
   const handleSubmit = async () => {
-    try {
-      await confirmSelection();
-      onComplete();
-    } catch {
-      // エラーはhook内で処理
-    }
-  };
+    // 有効な入力値を収集
+    const validIds = inputs
+      .map((input) => normalizeScpNumber(input))
+      .filter((id): id is string => id !== null);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addNumber();
+    if (validIds.length === 0) {
+      return;
+    }
+
+    setIsConfirming(true);
+    setConfirmError(null);
+
+    try {
+      const res = await api.onboarding.select.custom.$post({
+        json: {
+          visitorId,
+          articleIds: validIds,
+        },
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!res.ok) {
+        const errorData = (await res.json()) as { title?: string };
+        throw new Error(errorData.title ?? "エラーが発生しました");
+      }
+
+      onComplete();
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error("Unknown error");
+      setConfirmError(error);
+    } finally {
+      setIsConfirming(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col p-4 text-white" data-testid="scp-number-input">
-      <header className="mb-6">
-        <button onClick={onBack} className="text-gray-400 hover:text-gray-200">
-          ← 戻る
-        </button>
-        <h1 className="mt-2 text-xl font-bold">好きなSCPを教えてください</h1>
-        <p className="mt-1 text-sm text-gray-400">最低3つのSCP番号を入力してください</p>
-      </header>
-
+    <>
       {/* 入力フォーム */}
-      <div className="mb-4 flex gap-2">
-        <input
-          type="text"
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder="例: 173, SCP-682"
-          className="flex-1 rounded-lg border border-gray-600 bg-gray-800 p-3 text-white placeholder-gray-500"
-          disabled={isConfirming}
-        />
-        <button
-          onClick={addNumber}
-          disabled={isConfirming || !inputValue.trim()}
-          className="rounded-lg bg-gray-700 px-4 py-2 text-white disabled:opacity-50"
-        >
-          追加
-        </button>
-      </div>
+      <main className="flex-1 px-4 py-6 pb-28" data-testid="scp-number-input">
+        <p className="mb-4 text-sm text-gray-500">好きなSCPの番号を入力してください（最大5つ）</p>
 
-      {inputError && <p className="mb-4 text-sm text-red-400">{inputError}</p>}
-
-      {/* 入力済みリスト */}
-      <div className="flex-1">
-        <div className="flex flex-wrap gap-2">
-          {scpNumbers.map((num) => (
-            <ScpNumberTag
-              key={num}
-              number={num}
-              onRemove={() => {
-                removeNumber(num);
+        <div className="space-y-3">
+          {inputs.map((value, index) => (
+            <input
+              key={index}
+              type="text"
+              value={value}
+              onChange={(e) => {
+                handleInputChange(index, e.target.value);
               }}
-              isInvalid={invalidNumbers.includes(num)}
+              placeholder={PLACEHOLDERS[index]}
               disabled={isConfirming}
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
             />
           ))}
         </div>
 
-        {scpNumbers.length === 0 && (
-          <p className="mt-8 text-center text-gray-500">まだSCP番号が入力されていません</p>
+        <p className="mt-4 text-xs text-gray-400">
+          ※ 番号のみ入力。JPの場合は「999-JP」のように入力
+        </p>
+
+        {/* エラーメッセージ */}
+        {confirmError && (
+          <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-500">
+            エラーが発生しました。もう一度お試しください。
+          </div>
         )}
-      </div>
+      </main>
 
-      {/* 残り件数 */}
-      {!isValid && (
-        <p className="mt-4 text-center text-sm text-gray-400">あと{remainingCount}件必要です</p>
-      )}
-
-      {/* 確定エラー */}
-      {confirmError && (
-        <div className="mt-4 text-sm text-red-400">
-          {invalidNumbers.length > 0
-            ? `存在しないSCP番号があります: ${invalidNumbers.join(", ")}`
-            : "エラーが発生しました。もう一度お試しください。"}
-        </div>
-      )}
-
-      {/* 確定ボタン */}
-      <footer className="mt-6">
+      {/* 開始ボタン（固定フッター） */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
         <button
           onClick={() => {
             void handleSubmit();
           }}
-          disabled={!isValid || isConfirming}
-          className="w-full rounded-lg bg-blue-600 py-3 text-white disabled:opacity-50"
+          disabled={!hasValidInput || isConfirming}
+          className="w-full rounded-full bg-primary py-4 text-lg font-semibold text-white shadow-lg shadow-primary/40 transition-all disabled:bg-gray-300 disabled:shadow-none"
         >
-          {isConfirming ? "設定中..." : `始める（${String(scpNumbers.length)}件選択中）`}
+          {isConfirming ? "設定中..." : "推薦を開始"}
         </button>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }

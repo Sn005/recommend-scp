@@ -10,10 +10,10 @@ import type { StarterPackDefinition } from "./types";
 
 describe("スターターパック", () => {
   describe("getStarterPackList", () => {
-    it("5種類のパックを返す", () => {
+    it("6種類のパックを返す", () => {
       const packs = getStarterPackList();
 
-      expect(packs).toHaveLength(5);
+      expect(packs).toHaveLength(6);
     });
 
     it("各パックにdisplayName, description, primaryTags, seedArticlesが含まれる", () => {
@@ -35,15 +35,16 @@ describe("スターターパック", () => {
       });
     });
 
-    it("horror, surreal, scientific, heartwarming, mysteryの5種類が含まれる", () => {
+    it("classic, horror, scifi, heartwarming, mystery, jpの6種類が含まれる", () => {
       const packs = getStarterPackList();
       const types = packs.map((pack) => pack.type);
 
+      expect(types).toContain("classic");
       expect(types).toContain("horror");
-      expect(types).toContain("surreal");
-      expect(types).toContain("scientific");
+      expect(types).toContain("scifi");
       expect(types).toContain("heartwarming");
       expect(types).toContain("mystery");
+      expect(types).toContain("jp");
     });
   });
 
@@ -53,7 +54,7 @@ describe("スターターパック", () => {
 
       expect(pack).not.toBeNull();
       expect(pack?.type).toBe("horror");
-      expect(pack?.displayName).toBe("ホラー好き");
+      expect(pack?.displayName).toBe("ホラー・恐怖");
     });
 
     it("customタイプでnullを返す", () => {
@@ -71,14 +72,15 @@ describe("スターターパック", () => {
   });
 
   describe("STARTER_PACK_TYPES", () => {
-    it("5種類のパックタイプ + customが定義されている", () => {
+    it("6種類のパックタイプ + customが定義されている", () => {
+      expect(STARTER_PACK_TYPES).toContain("classic");
       expect(STARTER_PACK_TYPES).toContain("horror");
-      expect(STARTER_PACK_TYPES).toContain("surreal");
-      expect(STARTER_PACK_TYPES).toContain("scientific");
+      expect(STARTER_PACK_TYPES).toContain("scifi");
       expect(STARTER_PACK_TYPES).toContain("heartwarming");
       expect(STARTER_PACK_TYPES).toContain("mystery");
+      expect(STARTER_PACK_TYPES).toContain("jp");
       expect(STARTER_PACK_TYPES).toContain("custom");
-      expect(STARTER_PACK_TYPES).toHaveLength(6);
+      expect(STARTER_PACK_TYPES).toHaveLength(7);
     });
   });
 });

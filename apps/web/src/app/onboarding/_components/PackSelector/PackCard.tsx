@@ -9,12 +9,14 @@ interface PackCardProps {
   disabled: boolean;
 }
 
+// モック準拠のアイコン（🏛️👻🚀💝🔍🇯🇵）
 const icons: Record<string, string> = {
-  horror: "👻",
-  surreal: "🌀",
-  scientific: "🔬",
-  heartwarming: "💝",
-  mystery: "🔍",
+  classic: "🏛️", // 定番・名作
+  horror: "👻", // ホラー・恐怖
+  scifi: "🚀", // SF・テクノロジー
+  heartwarming: "💝", // 感動・ハートフル
+  mystery: "🔍", // ミステリー・考察
+  jp: "🇯🇵", // 日本支部オリジナル
 };
 
 export function PackCard({ pack, isSelected, onSelect, disabled }: PackCardProps) {
@@ -22,7 +24,7 @@ export function PackCard({ pack, isSelected, onSelect, disabled }: PackCardProps
     <button
       onClick={onSelect}
       disabled={disabled}
-      className={`relative rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all ${
+      className={`relative w-full rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all ${
         isSelected ? "border-primary ring-4 ring-primary/10" : "border-transparent hover:shadow-md"
       } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
     >

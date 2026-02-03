@@ -52,14 +52,14 @@ export const createOnboardingRoutes = (
       return c.json({ packs }, 200);
     })
     .post("/select", zValidator("json", selectPackSchema, throwOnValidationError), async (c) => {
-      const { visitorId, packType } = c.req.valid("json");
-      await service.selectPack(visitorId, packType);
+      const { visitorId, packTypes } = c.req.valid("json");
+      await service.selectPacks(visitorId, packTypes);
 
       return c.json(
         {
           success: true,
           visitorId,
-          packType,
+          packTypes,
         },
         200
       );

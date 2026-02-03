@@ -17,7 +17,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 interface MockService {
   getStarterPacks: ReturnType<typeof vi.fn>;
-  selectPack: ReturnType<typeof vi.fn>;
+  selectPacks: ReturnType<typeof vi.fn>;
   selectCustom: ReturnType<typeof vi.fn>;
 }
 
@@ -36,34 +36,40 @@ const createMockLogger = () => ({
  */
 const mockStarterPacks: StarterPackInfo[] = [
   {
+    type: "classic",
+    displayName: "定番・名作",
+    description: "財団世界観の基礎となる必読作品",
+    primaryTags: ["popular", "classic", "foundation"],
+  },
+  {
     type: "horror",
-    displayName: "ホラー好き",
+    displayName: "ホラー・恐怖",
     description: "背筋が凍るような恐怖体験を求めるあなたへ",
     primaryTags: ["horror", "creepy", "keter", "euclid"],
   },
   {
-    type: "surreal",
-    displayName: "シュール好き",
-    description: "不思議で奇妙な世界観を楽しみたいあなたへ",
-    primaryTags: ["surreal", "humorous", "joke", "absurd"],
-  },
-  {
-    type: "scientific",
-    displayName: "科学・SF好き",
+    type: "scifi",
+    displayName: "SF・テクノロジー",
     description: "科学的な考察やSF要素を楽しみたいあなたへ",
     primaryTags: ["scientific", "technological", "extraterrestrial"],
   },
   {
     type: "heartwarming",
-    displayName: "ほのぼの好き",
+    displayName: "感動・ハートフル",
     description: "心温まる優しい異常存在を探しているあなたへ",
     primaryTags: ["heartwarming", "safe", "friendly"],
   },
   {
     type: "mystery",
-    displayName: "謎解き好き",
+    displayName: "ミステリー・考察",
     description: "複雑な謎や考察を楽しみたいあなたへ",
     primaryTags: ["mystery", "puzzle", "meta"],
+  },
+  {
+    type: "jp",
+    displayName: "日本支部オリジナル",
+    description: "日本支部のオリジナル作品を楽しむ",
+    primaryTags: ["jp", "japan-branch"],
   },
 ];
 
@@ -102,7 +108,7 @@ describe("GET /onboarding/packs - 正常系", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn().mockReturnValue(mockStarterPacks),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -116,13 +122,13 @@ describe("GET /onboarding/packs - 正常系", () => {
     expect(res.status).toBe(200);
   });
 
-  it("5種類のスターターパックを返す", async () => {
+  it("6種類のスターターパックを返す", async () => {
     const res = await app.request("/onboarding/packs", {
       method: "GET",
     });
     const json = (await res.json()) as { packs: StarterPackInfo[] };
 
-    expect(json.packs).toHaveLength(5);
+    expect(json.packs).toHaveLength(6);
   });
 
   it("各パックにtype, displayName, description, primaryTagsが含まれる", async () => {
@@ -170,7 +176,7 @@ describe("GET /onboarding/packs - キャッシュヘッダー", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn().mockReturnValue(mockStarterPacks),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -201,7 +207,7 @@ describe("GET /onboarding/packs - 冪等性", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn().mockReturnValue(mockStarterPacks),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -230,7 +236,7 @@ describe("GET /onboarding/packs - エラーハンドリング", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -276,32 +282,32 @@ describe("POST /onboarding/select - 正常系", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn().mockResolvedValue(undefined),
+      selectPacks: vi.fn().mockResolvedValue(undefined),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
   });
 
-  it("有効なvisitorIdとpackTypeで200を返す", async () => {
+  it("有効なvisitorIdとpackTypesで200を返す", async () => {
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
     expect(res.status).toBe(200);
   });
 
-  it("レスポンスにsuccess, visitorId, packTypeが含まれる", async () => {
+  it("レスポンスにsuccess, visitorId, packTypesが含まれる", async () => {
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "mystery",
+        packTypes: ["mystery"],
       }),
     });
     const json = (await res.json()) as Record<string, unknown>;
@@ -309,12 +315,12 @@ describe("POST /onboarding/select - 正常系", () => {
     expect(json).toEqual({
       success: true,
       visitorId: VALID_VISITOR_ID,
-      packType: "mystery",
+      packTypes: ["mystery"],
     });
   });
 
-  it("全てのパック種別（horror, surreal, scientific, heartwarming, mystery）で正常に動作する", async () => {
-    const packTypes = ["horror", "surreal", "scientific", "heartwarming", "mystery"];
+  it("全てのパック種別（classic, horror, scifi, heartwarming, mystery, jp）で正常に動作する", async () => {
+    const packTypes = ["classic", "horror", "scifi", "heartwarming", "mystery", "jp"];
 
     for (const packType of packTypes) {
       const res = await app.request("/onboarding/select", {
@@ -322,7 +328,7 @@ describe("POST /onboarding/select - 正常系", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           visitorId: VALID_VISITOR_ID,
-          packType,
+          packTypes: [packType],
         }),
       });
 
@@ -330,17 +336,32 @@ describe("POST /onboarding/select - 正常系", () => {
     }
   });
 
-  it("OnboardingApiService.selectPackが適切に呼び出される", async () => {
+  it("複数パック選択で正常に動作する", async () => {
+    const res = await app.request("/onboarding/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        packTypes: ["horror", "mystery", "jp"],
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json.packTypes).toEqual(["horror", "mystery", "jp"]);
+  });
+
+  it("OnboardingApiService.selectPacksが適切に呼び出される", async () => {
     await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
-    expect(mockService.selectPack).toHaveBeenCalledWith(VALID_VISITOR_ID, "horror");
+    expect(mockService.selectPacks).toHaveBeenCalledWith(VALID_VISITOR_ID, ["horror"]);
   });
 });
 
@@ -352,7 +373,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -364,7 +385,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: "invalid-uuid",
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -376,7 +397,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -389,7 +410,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: null,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -402,27 +423,27 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: "",
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
     expect(res.status).toBe(400);
   });
 
-  it("無効なpackTypeで400を返す", async () => {
+  it("無効なpackTypeを含む配列で400を返す", async () => {
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "invalid",
+        packTypes: ["invalid"],
       }),
     });
 
     expect(res.status).toBe(400);
   });
 
-  it("packTypeなしで400を返す", async () => {
+  it("packTypesなしで400を返す", async () => {
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -434,13 +455,26 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
     expect(res.status).toBe(400);
   });
 
-  it("packType=customで400を返す", async () => {
+  it("空配列のpackTypesで400を返す", async () => {
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "custom",
+        packTypes: [],
+      }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("packTypes=customで400を返す", async () => {
+    const res = await app.request("/onboarding/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        packTypes: ["custom"],
       }),
     });
 
@@ -453,7 +487,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "invalid",
+        packTypes: ["invalid"],
       }),
     });
     const json = (await res.json()) as Record<string, unknown>;
@@ -470,7 +504,7 @@ describe("POST /onboarding/select - 異常系（バリデーションエラー�
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "invalid",
+        packTypes: ["invalid"],
       }),
     });
 
@@ -486,21 +520,21 @@ describe("POST /onboarding/select - 異常系（visitorId未登録）", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
   });
 
   it("未登録visitorIdで404を返す", async () => {
-    mockService.selectPack.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
+    mockService.selectPacks.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
 
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -508,14 +542,14 @@ describe("POST /onboarding/select - 異常系（visitorId未登録）", () => {
   });
 
   it("404エラー時にRFC 7807形式を返す", async () => {
-    mockService.selectPack.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
+    mockService.selectPacks.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
 
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -528,14 +562,14 @@ describe("POST /onboarding/select - 異常系（visitorId未登録）", () => {
   });
 
   it("detailにvisitorIdが含まれる", async () => {
-    mockService.selectPack.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
+    mockService.selectPacks.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
 
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
     const json = (await res.json()) as Record<string, unknown>;
@@ -552,21 +586,21 @@ describe("POST /onboarding/select - エラーハンドリング", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
   });
 
   it("Serviceがエラーをスローした場合500を返す", async () => {
-    mockService.selectPack.mockRejectedValue(new Error("DB connection failed"));
+    mockService.selectPacks.mockRejectedValue(new Error("DB connection failed"));
 
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -574,14 +608,14 @@ describe("POST /onboarding/select - エラーハンドリング", () => {
   });
 
   it("500エラー時にもRFC 7807形式を返す", async () => {
-    mockService.selectPack.mockRejectedValue(new Error("Unexpected error"));
+    mockService.selectPacks.mockRejectedValue(new Error("Unexpected error"));
 
     const res = await app.request("/onboarding/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
-        packType: "horror",
+        packTypes: ["horror"],
       }),
     });
 
@@ -605,7 +639,7 @@ describe("POST /onboarding/select/custom - 正常系", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn().mockResolvedValue(undefined),
     };
     app = createTestApp(mockService);
@@ -666,7 +700,7 @@ describe("POST /onboarding/select/custom - 正常系（境界値）", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn().mockResolvedValue(undefined),
     };
     app = createTestApp(mockService);
@@ -716,7 +750,7 @@ describe("POST /onboarding/select/custom - 異常系（articleIds検証）", () 
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -809,7 +843,7 @@ describe("POST /onboarding/select/custom - 異常系（visitorId検証）", () =
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -865,7 +899,7 @@ describe("POST /onboarding/select/custom - 異常系（visitorId未登録）", (
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);
@@ -914,7 +948,7 @@ describe("POST /onboarding/select/custom - エッジケース", () => {
     vi.clearAllMocks();
     mockService = {
       getStarterPacks: vi.fn(),
-      selectPack: vi.fn(),
+      selectPacks: vi.fn(),
       selectCustom: vi.fn(),
     };
     app = createTestApp(mockService);

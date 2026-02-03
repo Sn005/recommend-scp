@@ -125,17 +125,18 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
   });
 
   describe("StarterPackType 型", () => {
-    it("6種類のバリアントを含む", () => {
+    it("7種類のバリアントを含む", () => {
       const types: StarterPackType[] = [
+        "classic",
         "horror",
-        "surreal",
-        "scientific",
+        "scifi",
         "heartwarming",
         "mystery",
+        "jp",
         "custom",
       ];
 
-      expect(types).toHaveLength(6);
+      expect(types).toHaveLength(7);
       types.forEach((type) => {
         expectTypeOf(type).toMatchTypeOf<StarterPackType>();
       });
