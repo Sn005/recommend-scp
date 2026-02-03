@@ -76,7 +76,7 @@ function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void })
  * オンボーディングページ
  *
  * タブUIで「スターターパック」と「SCP番号を入力」を切り替え
- * - オンボーディング完了済みの場合は /reader にリダイレクト
+ * - オンボーディング完了済みの場合は /recommend にリダイレクト
  */
 export default function OnboardingPage() {
   const router = useRouter();
@@ -86,7 +86,7 @@ export default function OnboardingPage() {
   // AC-3: オンボーディング完了済みならリダイレクト
   useEffect(() => {
     if (!isVisitorLoading && isOnboarded) {
-      router.replace("/reader");
+      router.replace("/recommend");
     }
   }, [isVisitorLoading, isOnboarded, router]);
 
@@ -118,7 +118,7 @@ export default function OnboardingPage() {
   }
 
   const handleComplete = () => {
-    router.push("/reader");
+    router.push("/recommend");
   };
 
   return (

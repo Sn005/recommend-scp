@@ -477,7 +477,7 @@ describe("OnboardingPage", () => {
       });
     });
 
-    it("確定成功時に/readerにリダイレクトされる", async () => {
+    it("確定成功時に/recommendにリダイレクトされる", async () => {
       const user = userEvent.setup();
       render(<OnboardingPage />);
 
@@ -491,7 +491,7 @@ describe("OnboardingPage", () => {
       await user.click(startButton);
 
       await waitFor(() => {
-        expect(mockRouterPush).toHaveBeenCalledWith("/reader");
+        expect(mockRouterPush).toHaveBeenCalledWith("/recommend");
       });
     });
   });
@@ -521,13 +521,13 @@ describe("OnboardingPage", () => {
   });
 
   describe("オンボーディング完了済みリダイレクト", () => {
-    it("オンボーディングが既に完了している場合、/reader にリダイレクトされる", async () => {
+    it("オンボーディングが既に完了している場合、/recommend にリダイレクトされる", async () => {
       mockUseVisitorIdResult.isOnboarded = true;
 
       render(<OnboardingPage />);
 
       await waitFor(() => {
-        expect(mockRouterReplace).toHaveBeenCalledWith("/reader");
+        expect(mockRouterReplace).toHaveBeenCalledWith("/recommend");
       });
     });
   });
