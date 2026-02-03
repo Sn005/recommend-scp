@@ -13,7 +13,7 @@
 | [007](./007-infra/007-infra.md)                           | インフラ・デプロイ           | 本番環境構築・CI/CD・シークレット管理                     | completed  |
 | [008](./008-observability/008-observability.md)           | 運用・監視                   | ログ収集・エラー監視・パフォーマンスダッシュボード        | planned    |
 | [009](./009-security/009-security.md)                     | セキュリティ強化             | レート制限・CORS・入力バリデーション                      | planned    |
-| [010](./010-ja-article-display/010-ja-article-display.md) | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                  | pending    |
+| [010](./010-ja-article-display/010-ja-article-display.md) | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                  | completed  |
 | [011](./011-qa-testing/011-qa-testing.md)                 | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成               | pending    |
 
 ## 優先順位
