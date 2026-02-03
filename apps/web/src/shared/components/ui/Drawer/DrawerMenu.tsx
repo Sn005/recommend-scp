@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDrawer } from "./useDrawer";
+import { Icon, type IconName } from "@/shared/components/ui/Icon";
 
 interface MenuItem {
   href: string;
-  icon: string;
+  icon: IconName;
   label: string;
 }
 
 const menuItems: MenuItem[] = [
-  { href: "/recommend", icon: "📖", label: "推薦を見る" },
-  { href: "/favorites", icon: "♡", label: "お気に入り一覧" },
-  { href: "/history", icon: "🕐", label: "閲覧履歴" },
+  { href: "/recommend", icon: "bookmark", label: "推薦を見る" },
+  { href: "/favorites", icon: "heart", label: "お気に入り一覧" },
+  { href: "/history", icon: "clock", label: "閲覧履歴" },
 ];
 
 export const DrawerMenu = () => {
@@ -49,7 +50,11 @@ export const DrawerMenu = () => {
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  <Icon
+                    name={item.icon}
+                    size={22}
+                    className={isActive ? "text-primary" : "text-gray-500"}
+                  />
                   <span>{item.label}</span>
                 </Link>
               </li>

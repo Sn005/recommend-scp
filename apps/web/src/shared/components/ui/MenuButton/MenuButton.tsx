@@ -1,6 +1,7 @@
 "use client";
 
 import { useDrawer } from "@/shared/components/ui/Drawer";
+import { Icon } from "@/shared/components/ui/Icon";
 
 export const MenuButton = () => {
   const { toggle } = useDrawer();
@@ -15,7 +16,7 @@ export const MenuButton = () => {
                  flex items-center justify-center
                  transition-transform active:scale-95"
     >
-      <span className="text-xl">☰</span>
+      <Icon name="menu" size={20} className="text-gray-600" />
     </button>
   );
 };

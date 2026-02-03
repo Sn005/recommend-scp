@@ -74,23 +74,25 @@ describe("PillNav", () => {
       expect(onFavorite).toHaveBeenCalledTimes(1);
     });
 
-    it("isFavorited=true でハートが赤く表示される", () => {
+    it("isFavorited=true でSVGハートが塗りつぶしで表示される", () => {
       render(<PillNav {...defaultProps} isFavorited={true} />);
 
       const favoriteButton = screen.getByRole("button", {
         name: /お気に入りから削除/,
       });
-      const heartIcon = favoriteButton.querySelector("span");
+      const heartIcon = favoriteButton.querySelector("svg");
+      expect(heartIcon).toBeInTheDocument();
       expect(heartIcon).toHaveClass("text-favorite");
     });
 
-    it("isFavorited=false でハートがグレーで表示される", () => {
+    it("isFavorited=false でSVGハートがアウトラインで表示される", () => {
       render(<PillNav {...defaultProps} isFavorited={false} />);
 
       const favoriteButton = screen.getByRole("button", {
         name: /お気に入りに追加/,
       });
-      const heartIcon = favoriteButton.querySelector("span");
+      const heartIcon = favoriteButton.querySelector("svg");
+      expect(heartIcon).toBeInTheDocument();
       expect(heartIcon).toHaveClass("text-favorite-outline");
     });
 
@@ -103,8 +105,8 @@ describe("PillNav", () => {
       const favoriteButton = screen.getByRole("button", {
         name: /お気に入りから削除/,
       });
-      const heartIcon = favoriteButton.querySelector("span");
-      expect(heartIcon).toHaveClass("animate-heart-pop");
+      const iconWrapper = favoriteButton.querySelector("span");
+      expect(iconWrapper).toHaveClass("animate-heart-pop");
     });
   });
 
@@ -213,14 +215,15 @@ describe("PillNav", () => {
       expect(nav).toHaveClass("px-5"); // 20px = 5 * 4px
     });
 
-    it("アイコンサイズが26pxに設定される", () => {
+    it("SVGアイコンサイズが26pxに設定される", () => {
       render(<PillNav {...defaultProps} />);
 
       const favoriteButton = screen.getByRole("button", {
         name: /お気に入りに追加/,
       });
-      const heartIcon = favoriteButton.querySelector("span");
-      expect(heartIcon).toHaveClass("text-[26px]");
+      const heartIcon = favoriteButton.querySelector("svg");
+      expect(heartIcon).toHaveAttribute("width", "26");
+      expect(heartIcon).toHaveAttribute("height", "26");
     });
   });
 });

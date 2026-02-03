@@ -113,16 +113,16 @@ describe("Drawer", () => {
       expect(screen.getByText("閲覧履歴")).toBeInTheDocument();
     });
 
-    it("メニュー項目にアイコンが表示される", async () => {
+    it("メニュー項目にSVGアイコンが表示される", async () => {
       const user = userEvent.setup();
       renderWithProvider(<Drawer />);
 
       await user.click(screen.getByTestId("open-drawer"));
 
-      // アイコンが含まれているか確認（絵文字またはaria-label）
-      expect(screen.getByText(/📖/)).toBeInTheDocument();
-      expect(screen.getByText(/♡/)).toBeInTheDocument();
-      expect(screen.getByText(/🕐/)).toBeInTheDocument();
+      // SVGアイコンが含まれているか確認（3つのメニュー項目）
+      const drawer = screen.getByTestId("drawer");
+      const svgIcons = drawer.querySelectorAll("svg");
+      expect(svgIcons.length).toBe(3);
     });
 
     it("現在のページ（/recommend）がハイライトされる", async () => {
