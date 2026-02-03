@@ -89,5 +89,26 @@ export const createArticlesRoutes = (
           return c.json({ success: true, data: result }, 200);
         }
       )
+      /**
+       * GET /articles/:articleId/content
+       *
+       * 記事のタイトルと本文冒頭を取得
+       *
+       * @param articleId - 記事ID（パスパラメータ）
+       * @returns { title: string, excerpt: string }
+       *
+       * Response:
+       * - 200 OK: 取得成功（エラー時も空文字列を返す）
+       */
+      .get("/:articleId/content", async (c) => {
+        const articleId = c.req.param("articleId");
+        try {
+          const result = await service.getContent(articleId);
+          return c.json(result, 200);
+        } catch {
+          // エラー耐性: 失敗時も200で空レスポンス
+          return c.json({ title: "", excerpt: "" }, 200);
+        }
+      })
   );
 };

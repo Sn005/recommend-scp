@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { ArticleWebView } from "./ArticleWebView";
 
 // useArticleWebViewのモック
@@ -7,8 +7,15 @@ vi.mock("./useArticleWebView", () => ({
   useArticleWebView: vi.fn(),
 }));
 
+// use404Detectionのモック
+vi.mock("./use404Detection", () => ({
+  use404Detection: vi.fn(),
+}));
+
 import { useArticleWebView } from "./useArticleWebView";
+import { use404Detection } from "./use404Detection";
 const mockUseArticleWebView = vi.mocked(useArticleWebView);
+const mockUse404Detection = vi.mocked(use404Detection);
 
 describe("ArticleWebView", () => {
   const createMockReturn = (overrides = {}) => ({
@@ -24,6 +31,11 @@ describe("ArticleWebView", () => {
 
   beforeEach(() => {
     mockUseArticleWebView.mockReturnValue(createMockReturn());
+    // use404Detectionのデフォルトモック（存在するURLとして扱う）
+    mockUse404Detection.mockReturnValue({
+      isChecking: false,
+      isNotFound: false,
+    });
   });
 
   afterEach(() => {
@@ -222,6 +234,70 @@ describe("ArticleWebView", () => {
 
       const root = container.firstChild;
       expect(root).toHaveClass("h-[calc(100vh-100px)]");
+    });
+  });
+
+  describe("AC: 404検知・サジェスト画面", () => {
+    it("404検知チェック中はローディングが表示される", () => {
+      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
+      mockUse404Detection.mockReturnValue({
+        isChecking: true,
+        isNotFound: false,
+      });
+
+      render(<ArticleWebView url="https://example.com" />);
+
+      expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
+    });
+
+    it("404検知時にサジェスト画面が表示される", async () => {
+      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
+
+      // onNotFoundコールバックをキャプチャして後から呼び出す
+      let capturedOnNotFound: (() => void | Promise<void>) | undefined;
+      mockUse404Detection.mockImplementation(({ onNotFound }) => {
+        capturedOnNotFound = onNotFound;
+        return {
+          isChecking: false,
+          isNotFound: false,
+        };
+      });
+
+      render(
+        <ArticleWebView url="https://example.com" articleId="test-article" onSkip={vi.fn()} />
+      );
+
+      // コールバックをact内で呼び出す
+      await act(async () => {
+        await capturedOnNotFound?.();
+      });
+
+      expect(screen.getByTestId("translation-not-found")).toBeInTheDocument();
+    });
+
+    it("サジェスト画面でボタンクリック後にonSkipが呼ばれる", async () => {
+      const onSkip = vi.fn();
+      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
+
+      let capturedOnNotFound: (() => void | Promise<void>) | undefined;
+      mockUse404Detection.mockImplementation(({ onNotFound }) => {
+        capturedOnNotFound = onNotFound;
+        return {
+          isChecking: false,
+          isNotFound: false,
+        };
+      });
+
+      render(<ArticleWebView url="https://example.com" articleId="test-article" onSkip={onSkip} />);
+
+      // コールバックをact内で呼び出してサジェスト画面を表示
+      await act(async () => {
+        await capturedOnNotFound?.();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "別の記事をおすすめ" }));
+
+      expect(onSkip).toHaveBeenCalledTimes(1);
     });
   });
 });

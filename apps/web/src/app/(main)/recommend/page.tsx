@@ -98,7 +98,12 @@ export default function RecommendPage() {
   // AC-2: 記事表示レイアウト
   return (
     <div className="relative h-screen" data-testid="article-viewer">
-      <ArticleWebView url={currentArticle.url} onScrollEnd={handleScrollEnd} />
+      <ArticleWebView
+        url={currentArticle.url}
+        articleId={currentArticle.id}
+        onScrollEnd={handleScrollEnd}
+        onSkip={goToNext}
+      />
       <FloatingUI
         progress={progress}
         isFavorited={isFavorited}
