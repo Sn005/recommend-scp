@@ -21,22 +21,52 @@ export interface Article {
   url: string;
 }
 
+/** POST /recommend APIレスポンス */
+export interface RecommendResponse {
+  /** 推薦記事リスト */
+  recommendations: Article[];
+  /** 取得件数 */
+  count: number;
+  /** これ以上記事があるか */
+  hasMore?: boolean;
+}
+
+/** useInfiniteArticles フックのオプション */
+export interface UseInfiniteArticlesOptions {
+  /** 初回取得件数（デフォルト: 3） */
+  initialCount?: number;
+  /** 追加取得件数（デフォルト: 1） */
+  loadMoreCount?: number;
+  /** 自動読み込み上限（デフォルト: 10） */
+  autoLoadLimit?: number;
+}
+
 /** useInfiniteArticles フックの戻り値 */
 export interface UseInfiniteArticlesResult {
   /** 記事リスト */
   articles: Article[];
   /** 現在の記事インデックス */
   currentIndex: number;
-  /** ローディング中 */
+  /** 初回読み込み中 */
   isLoading: boolean;
+  /** 追加読み込み中 */
+  isLoadingMore: boolean;
   /** エラー */
   error: Error | null;
   /** 推薦が空 */
   isEmpty: boolean;
+  /** これ以上記事があるか */
+  hasMore: boolean;
+  /** 自動読み込みが一時停止中か */
+  isPaused: boolean;
   /** 追加読み込み */
   loadMore: () => Promise<void>;
   /** 次の記事へ */
   goToNext: () => void;
+  /** 自動読み込みを再開 */
+  resumeAutoLoad: () => void;
+  /** リセット */
+  reset: () => void;
   /** 再取得 */
   refetch: () => Promise<void>;
 }
