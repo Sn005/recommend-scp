@@ -20,6 +20,7 @@ import { createArticlesRoutes } from "./domains/articles/routes";
 import { createRecommendRoutes } from "./domains/recommend/routes";
 import { createFeedbackRoutes } from "./domains/feedback/routes";
 import { createOnboardingRoutes } from "./domains/onboarding/routes";
+import { createFavoritesRoutes } from "./domains/favorites/routes";
 
 /**
  * APIルート定義ファクトリ
@@ -40,7 +41,8 @@ export const createRoutes = (supabase: SupabaseClient) => {
     .route("/articles", createArticlesRoutes(supabase))
     .route("/recommend", createRecommendRoutes(supabase))
     .route("/feedback", createFeedbackRoutes(supabase))
-    .route("/onboarding", createOnboardingRoutes(supabase));
+    .route("/onboarding", createOnboardingRoutes(supabase))
+    .route("/favorites", createFavoritesRoutes(supabase));
 };
 
 /**
