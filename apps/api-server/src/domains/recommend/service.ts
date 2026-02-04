@@ -78,8 +78,21 @@ export class RecommendService {
       throw new OnboardingRequiredError(visitorId);
     }
 
+    // preferenceEmbeddingの存在確認（seed articlesがDBに存在しない場合はundefined）
+    if (!profile.preferenceEmbedding) {
+      throw new OnboardingRequiredError(visitorId);
+    }
+
     // RecommendationEngineで推薦取得
-    return this.engine.getRecommendations(visitorId, limit);
+    try {
+      return await this.engine.getRecommendations(visitorId, limit);
+    } catch (error) {
+      // preferenceEmbedding関連のエラーはOnboardingRequiredErrorに変換
+      if (error instanceof Error && error.message.includes("preferenceEmbedding")) {
+        throw new OnboardingRequiredError(visitorId);
+      }
+      throw error;
+    }
   };
 
   /**

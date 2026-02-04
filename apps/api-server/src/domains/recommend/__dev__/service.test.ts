@@ -205,6 +205,21 @@ describe("RecommendService", () => {
           OnboardingRequiredError
         );
       });
+
+      it("preferenceEmbeddingがundefinedの場合、OnboardingRequiredErrorをスローする", async () => {
+        const profileWithoutEmbedding = {
+          visitorId: "incomplete-visitor",
+          onboardingCompletedAt: "2025-01-20T10:00:00Z",
+          preferenceEmbedding: undefined,
+        };
+
+        mockVisitorsRepo.findByVisitorId.mockResolvedValue(mockVisitor);
+        mockStorage.getProfile.mockResolvedValue(profileWithoutEmbedding);
+
+        await expect(service.getRecommendations("incomplete-visitor")).rejects.toThrow(
+          OnboardingRequiredError
+        );
+      });
     });
 
     describe("依存関係エラー", () => {
@@ -227,6 +242,7 @@ describe("RecommendService", () => {
         const mockProfile = {
           visitorId: "valid-visitor",
           onboardingCompletedAt: "2025-01-20T10:00:00Z",
+          preferenceEmbedding: [0.1, 0.2, 0.3], // preferenceEmbeddingが存在する場合
         };
         const engineError = new Error("Vector calculation failed");
 
