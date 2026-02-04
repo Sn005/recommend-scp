@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../logger";
+import { parseVectorField } from "./parse-vector";
 import type {
   PreferenceStorage,
   PreferenceProfile,
@@ -248,7 +249,8 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     const objectClassPreference = row.object_class_preference as Record<string, number> | null;
     const starterPack = row.starter_pack as StarterPackType | null;
     const onboardingCompletedAt = row.onboarding_completed_at as string | null;
-    const preferenceEmbedding = row.preference_vector as number[] | null;
+    // pgvectorカラムは文字列 "[0.1,0.2,...]" として返される場合がある
+    const preferenceEmbedding = parseVectorField(row.preference_vector);
 
     return {
       visitorId: row.visitor_id as string,

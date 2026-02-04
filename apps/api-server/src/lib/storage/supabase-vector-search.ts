@@ -11,6 +11,7 @@ import type {
   VectorSearchClientResult,
   UnexploredTagsSearchParams,
 } from "@recommend-scp/shared/search";
+import { parseVectorField } from "./parse-vector";
 
 /**
  * RPC関数からの検索結果行
@@ -126,7 +127,8 @@ export class SupabaseVectorSearch implements VectorSearchClient {
       return null;
     }
 
-    return response.data.embedding;
+    // pgvectorカラムは文字列 "[0.1,0.2,...]" として返される場合がある
+    return parseVectorField(response.data.embedding);
   };
 
   /**
