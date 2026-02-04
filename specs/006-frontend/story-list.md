@@ -6,7 +6,7 @@
 | [006-00](./006-00-web-foundation/006-00.md)   | フロントエンド環境構築 | Next.js初期化、Tailwind、APIクライアント      | completed  |
 | [006-00](./006-00-common-ui/006-00.md)        | 共通UIコンポーネント   | ドロワー・メニューボタン・ピルナビ・バッジ等  | completed  |
 | [006-01](./006-01-onboarding/006-01.md)       | オンボーディング       | パック選択・SCP番号指定による初期設定         | pending    |
-| [006-02](./006-02-article-reader/006-02.md)   | 記事閲覧               | 全画面WebView・無限スクロール・フィードバック | pending    |
+| [006-02](./006-02-article-reader/006-02.md)   | 記事閲覧               | 全画面WebView・無限スクロール・フィードバック | completed  |
 | [006-03](./006-03-favorites/006-03.md)        | お気に入り管理         | お気に入り一覧・再読・解除                    | pending    |
 | [006-04](./006-04-history/006-04.md)          | 閲覧履歴               | 履歴記録・一覧表示・遷移                      | pending    |
 | [006-ex01](./006-ex01-design-fix/006-ex01.md) | デザイン整合性修正     | SVGアイコン化・モックアップ準拠修正           | pending    |
