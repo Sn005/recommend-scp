@@ -271,6 +271,11 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     updated_at: new Date().toISOString(),
   });
 
+  /** OpenAI埋め込みの期待される次元数 */
+  private static readonly EXPECTED_EMBEDDING_DIMENSION = 1536;
+  /** pgvectorの最大次元数 */
+  private static readonly MAX_VECTOR_DIMENSION = 16000;
+
   /**
    * 埋め込みベクトルをサニタイズ
    *
@@ -282,6 +287,27 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
    */
   private sanitizeEmbedding = (embedding: number[] | undefined): number[] | undefined => {
     if (!embedding) return undefined;
+
+    // 次元数の検証
+    if (embedding.length > SupabasePreferenceStorage.MAX_VECTOR_DIMENSION) {
+      // eslint-disable-next-line no-console -- デバッグ用ログ
+      console.error(
+        `[sanitizeEmbedding] Vector dimension ${String(embedding.length)} exceeds maximum ${String(SupabasePreferenceStorage.MAX_VECTOR_DIMENSION)}. Truncating to expected dimension.`
+      );
+      // 異常な次元数の場合は期待される次元数に切り詰め
+      embedding = embedding.slice(0, SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION);
+    }
+
+    // 期待される次元数と異なる場合は警告
+    if (
+      embedding.length !== SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION &&
+      embedding.length > 0
+    ) {
+      // eslint-disable-next-line no-console -- デバッグ用ログ
+      console.warn(
+        `[sanitizeEmbedding] Unexpected embedding dimension: ${String(embedding.length)}, expected: ${String(SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION)}`
+      );
+    }
 
     return embedding.map((value) => {
       // 型アサーションで実行時のnull/undefinedチェックを許可
