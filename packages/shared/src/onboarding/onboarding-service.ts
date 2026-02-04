@@ -154,16 +154,20 @@ export class OnboardingService {
   /**
    * 記事群のEmbedding平均を計算
    *
+   * 各次元について、nullでない値のみを使って平均を計算する。
+   * nullが含まれている次元は、有効な値の平均を使用する。
+   * 全てnullの次元は0として扱う。
+   *
    * @param articleIds 記事IDの配列
    * @returns 平均Embeddingベクトル。有効な記事がない場合はundefined
    */
   private async calculateAverageEmbedding(articleIds: string[]): Promise<number[] | undefined> {
-    const embeddings: number[][] = [];
+    const embeddings: (number | null)[][] = [];
 
     for (const articleId of articleIds) {
       const embedding = await this.embeddingRepo.getArticleEmbedding(articleId);
-      if (embedding) {
-        embeddings.push(embedding);
+      if (embedding && embedding.length > 0) {
+        embeddings.push(embedding as (number | null)[]);
       }
     }
 
@@ -174,9 +178,21 @@ export class OnboardingService {
     const dimension = embeddings[0].length;
     const average = new Array<number>(dimension).fill(0);
 
-    for (const embedding of embeddings) {
-      for (let i = 0; i < dimension; i++) {
-        average[i] += embedding[i] / embeddings.length;
+    for (let i = 0; i < dimension; i++) {
+      // 各次元でnullでない値のみを収集
+      const validValues: number[] = [];
+      for (const embedding of embeddings) {
+        const value = embedding[i];
+        if (value !== null && value !== undefined && !Number.isNaN(value)) {
+          validValues.push(value);
+        }
+      }
+
+      // 有効な値がある場合は平均を計算、なければ0
+      if (validValues.length > 0) {
+        average[i] = validValues.reduce((sum, v) => sum + v, 0) / validValues.length;
+      } else {
+        average[i] = 0;
       }
     }
 

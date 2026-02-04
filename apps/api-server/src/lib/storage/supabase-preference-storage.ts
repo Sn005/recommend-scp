@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "../logger";
 import type {
   PreferenceStorage,
   PreferenceProfile,
@@ -186,7 +187,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     const result = await this.supabase
       .from("scp_articles")
       .select("tags")
-      .eq("id", articleId)
+      .eq("article_id", articleId)
       .single();
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Supabase型はnullを返す可能性がある
@@ -267,9 +268,67 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     object_class_preference: profile.objectClassPreference,
     starter_pack: profile.starterPack,
     onboarding_completed_at: profile.onboardingCompletedAt,
-    preference_vector: profile.preferenceEmbedding,
+    preference_vector: this.sanitizeEmbedding(profile.preferenceEmbedding),
     updated_at: new Date().toISOString(),
   });
+
+  /** OpenAI埋め込みの期待される次元数 */
+  private static readonly EXPECTED_EMBEDDING_DIMENSION = 1536;
+  /** pgvectorの最大次元数 */
+  private static readonly MAX_VECTOR_DIMENSION = 16000;
+
+  /**
+   * 埋め込みベクトルをサニタイズ
+   *
+   * PostgreSQLのvector型はnull値を受け付けないため、
+   * null/undefined/NaNを0に変換する。
+   *
+   * NOTE: TypeScriptの型ではnumber[]だが、実行時にはDBからnull値が
+   * 含まれた配列が返ってくることがあるため、明示的にチェックが必要
+   */
+  private sanitizeEmbedding = (embedding: number[] | undefined): number[] | undefined => {
+    if (!embedding) return undefined;
+
+    // 次元数の検証
+    if (embedding.length > SupabasePreferenceStorage.MAX_VECTOR_DIMENSION) {
+      logger.error(
+        {
+          dimension: embedding.length,
+          maxDimension: SupabasePreferenceStorage.MAX_VECTOR_DIMENSION,
+        },
+        "Vector dimension exceeds maximum. Truncating to expected dimension."
+      );
+      // 異常な次元数の場合は期待される次元数に切り詰め
+      embedding = embedding.slice(0, SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION);
+    }
+
+    // 期待される次元数と異なる場合は警告
+    if (
+      embedding.length !== SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION &&
+      embedding.length > 0
+    ) {
+      logger.warn(
+        {
+          dimension: embedding.length,
+          expectedDimension: SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION,
+        },
+        "Unexpected embedding dimension"
+      );
+    }
+
+    return embedding.map((value) => {
+      // 型アサーションで実行時のnull/undefinedチェックを許可
+      const v = value as number | null | undefined;
+      // null, undefined, NaN を 0 に変換
+      if (v === null || v === undefined || Number.isNaN(v)) {
+        return 0;
+      }
+      // Infinity を最大/最小値に制限
+      if (v === Infinity) return Number.MAX_VALUE;
+      if (v === -Infinity) return -Number.MAX_VALUE;
+      return v;
+    });
+  };
 
   private toViewHistory = (row: DbRow): ViewHistory => ({
     id: row.id as string,

@@ -167,6 +167,55 @@ describe("OnboardingService", () => {
       expect(profile.preferenceEmbedding![1]).toBeCloseTo(0.9, 5);
       expect(profile.preferenceEmbedding![2]).toBeCloseTo(1.35, 5);
     });
+
+    it("Embedding配列内にnull値が含まれている場合でも正しく平均を計算する", async () => {
+      // Arrange
+      const visitorId = "visitor-123";
+      // 実際のDBでは embedding に null 値が含まれていることがある
+      vi.mocked(embeddingRepo.getArticleEmbedding)
+        .mockResolvedValueOnce([null, 0.2, 0.3, null] as unknown as number[])
+        .mockResolvedValueOnce([0.4, null, 0.6, 0.8] as unknown as number[])
+        .mockResolvedValueOnce([0.7, 0.8, null, 1.0] as unknown as number[]);
+
+      // Act
+      const profile = await service.completeWithStarterPack(visitorId, "horror");
+
+      // Assert
+      // 各次元でnull以外の値の平均を計算:
+      // dim0: (0.4+0.7)/2 = 0.55 (nullは1件)
+      // dim1: (0.2+0.8)/2 = 0.5 (nullは1件)
+      // dim2: (0.3+0.6)/2 = 0.45 (nullは1件)
+      // dim3: (0.8+1.0)/2 = 0.9 (nullは1件)
+      expect(profile.preferenceEmbedding).toBeDefined();
+      expect(profile.preferenceEmbedding).toHaveLength(4);
+      expect(profile.preferenceEmbedding![0]).toBeCloseTo(0.55, 5);
+      expect(profile.preferenceEmbedding![1]).toBeCloseTo(0.5, 5);
+      expect(profile.preferenceEmbedding![2]).toBeCloseTo(0.45, 5);
+      expect(profile.preferenceEmbedding![3]).toBeCloseTo(0.9, 5);
+      // null値が結果に含まれていないことを確認
+      expect(profile.preferenceEmbedding!.every((v) => v !== null && !Number.isNaN(v))).toBe(true);
+    });
+
+    it("全ての値がnullの次元は0として扱う", async () => {
+      // Arrange
+      const visitorId = "visitor-123";
+      vi.mocked(embeddingRepo.getArticleEmbedding)
+        .mockResolvedValueOnce([null, 0.2, 0.3] as unknown as number[])
+        .mockResolvedValueOnce([null, 0.4, 0.6] as unknown as number[])
+        .mockResolvedValueOnce([null, 0.6, 0.9] as unknown as number[]);
+
+      // Act
+      const profile = await service.completeWithStarterPack(visitorId, "horror");
+
+      // Assert
+      // dim0は全てnullなので0
+      // dim1: (0.2+0.4+0.6)/3 = 0.4
+      // dim2: (0.3+0.6+0.9)/3 = 0.6
+      expect(profile.preferenceEmbedding).toBeDefined();
+      expect(profile.preferenceEmbedding![0]).toBe(0);
+      expect(profile.preferenceEmbedding![1]).toBeCloseTo(0.4, 5);
+      expect(profile.preferenceEmbedding![2]).toBeCloseTo(0.6, 5);
+    });
   });
 
   describe("completeWithCustomSelection", () => {

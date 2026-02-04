@@ -76,8 +76,12 @@ export const createErrorHandler = (logger: Logger = defaultLogger): ErrorHandler
     // 予期しないエラー: 500 Internal Server Error
     logger.error({ err: error, path: c.req.path }, "Unexpected error");
 
+    // エラーの詳細をdetailに含める（デバッグ用）
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorDetail = `${errorMessage}${error instanceof Error && error.stack ? ` | Stack: ${error.stack.split("\n").slice(0, 3).join(" ")}` : ""}`;
+
     return c.json(
-      createProblemDetails("INTERNAL_ERROR", "Internal Server Error", 500, undefined, c.req.path),
+      createProblemDetails("INTERNAL_ERROR", "Internal Server Error", 500, errorDetail, c.req.path),
       500,
       { "Content-Type": "application/problem+json" }
     );
