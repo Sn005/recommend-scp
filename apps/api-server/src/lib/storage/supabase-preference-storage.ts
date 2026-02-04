@@ -186,7 +186,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     const result = await this.supabase
       .from("scp_articles")
       .select("tags")
-      .eq("id", articleId)
+      .eq("article_id", articleId)
       .single();
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- Supabase型はnullを返す可能性がある
