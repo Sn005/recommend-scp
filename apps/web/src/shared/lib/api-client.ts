@@ -15,8 +15,12 @@ const getBaseUrl = (): string => {
 };
 
 /**
- * Hono RPCクライアント
+ * Hono RPCクライアント（遅延初期化）
  * 型安全なAPI呼び出しを提供
+ *
+ * モジュールスコープでの即座初期化を避け、実際のAPI呼び出し時に初期化する。
+ * これにより、Next.jsのSSR/プリレンダリング時にNEXT_PUBLIC_API_URLが
+ * 未設定でもモジュールの読み込みが失敗しない。
  *
  * 使用例:
  * ```typescript
@@ -26,7 +30,20 @@ const getBaseUrl = (): string => {
  * }
  * ```
  */
-export const api = hc<AppType>(getBaseUrl());
+type ApiClientType = ReturnType<typeof hc<AppType>>;
+let _client: ApiClientType | null = null;
+
+const getClient = (): ApiClientType => {
+  _client ??= hc<AppType>(getBaseUrl());
+  return _client;
+};
+
+export const api: ApiClientType = new Proxy({} as ApiClientType, {
+  get(_, prop: string | symbol) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- Proxy経由の遅延初期化のため、実行時の型はApiClientTypeと一致する
+    return Reflect.get(getClient(), prop);
+  },
+});
 
 /**
  * APIクライアントの型エクスポート
