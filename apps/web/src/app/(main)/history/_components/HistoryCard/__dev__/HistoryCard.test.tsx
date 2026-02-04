@@ -1,7 +1,7 @@
 /**
  * @file HistoryCard コンポーネントテスト
  * @description 履歴カードのUI表示テスト
- * @see specs/010-ja-article-display/010-04-history-excerpt/010-04-01.md
+ * @see specs/006-frontend/006-04-history/006-04-03.md
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -12,6 +12,24 @@ import type { HistoryEntry } from "../../../_types";
 // formatRelativeTime のモック
 vi.mock("@/shared/lib/date", () => ({
   formatRelativeTime: vi.fn(() => "2時間前"),
+}));
+
+// next/link のモック
+vi.mock("next/link", () => ({
+  default: ({
+    children,
+    href,
+    className,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 describe("HistoryCard", () => {
@@ -104,5 +122,31 @@ describe("HistoryCard", () => {
     render(<HistoryCard entry={mockEntry} />);
 
     expect(screen.getByText("2時間前")).toBeInTheDocument();
+  });
+
+  it("カードをクリックすると記事詳細画面に遷移する（AC-1）", () => {
+    render(<HistoryCard entry={mockEntry} />);
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/recommend/scp-173");
+  });
+
+  it("SCP番号が正しくエンコードされる", () => {
+    const entryWithSpecialChars: HistoryEntry = {
+      ...mockEntry,
+      scpNumber: "SCP-173-JP",
+    };
+
+    render(<HistoryCard entry={entryWithSpecialChars} />);
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/recommend/SCP-173-JP");
+  });
+
+  it("タップフィードバックのスタイルが適用されている（AC-2）", () => {
+    render(<HistoryCard entry={mockEntry} />);
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveClass("active:scale-[0.98]");
   });
 });

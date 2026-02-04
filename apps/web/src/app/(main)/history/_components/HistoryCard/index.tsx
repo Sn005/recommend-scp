@@ -1,9 +1,10 @@
 /**
  * @file HistoryCard コンポーネント
  * @description 閲覧履歴カードのUI
- * @see specs/010-ja-article-display/010-04-history-excerpt/010-04-01.md
+ * @see specs/006-frontend/006-04-history/006-04-03.md
  */
 
+import Link from "next/link";
 import { formatRelativeTime } from "@/shared/lib/date";
 import { ObjectClassBadge } from "@/shared/components/ui/ObjectClassBadge";
 import type { HistoryEntry } from "../../_types";
@@ -19,12 +20,13 @@ export interface HistoryCardProps {
 /**
  * 履歴カードコンポーネント
  *
- * AC-4: UI表示
+ * AC-1: カードタップで記事詳細画面に遷移
+ * AC-2: タップフィードバック（scale: 0.98）
+ *
+ * UI表示:
  * - タイトル下に excerpt が表示される
  * - グレーのテキストカラーで表示される
  * - 1行に収まるよう省略される
- *
- * AC-5: 空の excerpt
  * - excerpt が空の場合は表示しない
  *
  * @param props - コンポーネントProps
@@ -53,12 +55,16 @@ export function HistoryCard({ entry }: HistoryCardProps) {
     | undefined;
 
   return (
-    <div className="p-4 border-b" data-testid="history-card">
+    <Link
+      href={`/recommend/${encodeURIComponent(entry.scpNumber)}`}
+      className="block p-4 border-b transition-transform active:scale-[0.98]"
+      data-testid="history-card"
+    >
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold">{entry.scpNumber}</h3>
           <p className="text-sm truncate">{entry.title}</p>
-          {/* AC-5: 空の excerpt は表示しない */}
+          {/* 空の excerpt は表示しない */}
           {entry.excerpt && (
             <p data-testid="excerpt" className="text-xs text-muted-foreground truncate">
               {entry.excerpt}
@@ -73,6 +79,6 @@ export function HistoryCard({ entry }: HistoryCardProps) {
         )}
       </div>
       <p className="text-xs text-muted-foreground mt-1">{formatRelativeTime(entry.viewedAt)}</p>
-    </div>
+    </Link>
   );
 }
