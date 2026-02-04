@@ -118,6 +118,58 @@ describe("historyStorage", () => {
       expect(history[0].excerpt).toBe("新しいexcerpt");
       expect(history[0].viewedAt).toBe("2024-01-15T11:00:00.000Z");
     });
+
+    it("100件を超えると最も古いエントリが削除される（AC-3）", () => {
+      // 100件追加（日付をずらして時系列を作成）
+      const baseDate = new Date("2024-01-01T00:00:00.000Z");
+      for (let i = 1; i <= 100; i++) {
+        const date = new Date(baseDate.getTime() + i * 60000); // 1分ずつ増加
+        vi.setSystemTime(date);
+        addHistory({
+          scpNumber: `scp-${String(i)}`,
+          title: `タイトル ${String(i)}`,
+          excerpt: `excerpt ${String(i)}`,
+          objectClass: "Safe" as const,
+        });
+      }
+
+      let history = getHistory();
+      expect(history).toHaveLength(100);
+
+      // 101件目を追加
+      vi.setSystemTime(new Date("2024-01-01T02:00:00.000Z"));
+      addHistory({
+        scpNumber: "scp-101",
+        title: "タイトル 101",
+        excerpt: "excerpt 101",
+        objectClass: "Safe" as const,
+      });
+
+      history = getHistory();
+      expect(history).toHaveLength(100);
+      expect(history[0].scpNumber).toBe("scp-101"); // 最新が先頭
+      // scp-1が削除されている
+      expect(history.find((e) => e.scpNumber === "scp-1")).toBeUndefined();
+    });
+
+    it("ちょうど100件の場合は削除されない", () => {
+      const baseDate = new Date("2024-01-01T00:00:00.000Z");
+      for (let i = 1; i <= 100; i++) {
+        const date = new Date(baseDate.getTime() + i * 60000); // 1分ずつ増加
+        vi.setSystemTime(date);
+        addHistory({
+          scpNumber: `scp-${String(i)}`,
+          title: `タイトル ${String(i)}`,
+          excerpt: `excerpt ${String(i)}`,
+          objectClass: "Safe" as const,
+        });
+      }
+
+      const history = getHistory();
+      expect(history).toHaveLength(100);
+      expect(history[0].scpNumber).toBe("scp-100");
+      expect(history[99].scpNumber).toBe("scp-1");
+    });
   });
 
   describe("getHistory", () => {
