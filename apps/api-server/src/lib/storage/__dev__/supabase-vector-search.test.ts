@@ -343,7 +343,7 @@ describe("SupabaseVectorSearch", () => {
         expect(result).toEqual(mockEmbedding);
         expect(mockSupabase.from).toHaveBeenCalledWith("scp_articles");
         expect(mockChain.select).toHaveBeenCalledWith("embedding");
-        expect(mockChain.eq).toHaveBeenCalledWith("id", "scp-173");
+        expect(mockChain.eq).toHaveBeenCalledWith("article_id", "scp-173");
         expect(mockChain.single).toHaveBeenCalled();
       });
 
