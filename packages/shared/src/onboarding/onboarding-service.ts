@@ -151,9 +151,6 @@ export class OnboardingService {
     return profile;
   }
 
-  /** OpenAI埋め込みの期待される次元数 */
-  private static readonly EXPECTED_EMBEDDING_DIMENSION = 1536;
-
   /**
    * 記事群のEmbedding平均を計算
    *
@@ -170,20 +167,6 @@ export class OnboardingService {
     for (const articleId of articleIds) {
       const embedding = await this.embeddingRepo.getArticleEmbedding(articleId);
       if (embedding && embedding.length > 0) {
-        // デバッグ: 各記事の埋め込み次元数をログ
-        // eslint-disable-next-line no-console -- デバッグ用ログ
-        console.log(
-          `[calculateAverageEmbedding] Article ${articleId}: embedding dimension = ${embedding.length}`
-        );
-
-        // 次元数が異常に大きい場合は警告
-        if (embedding.length > OnboardingService.EXPECTED_EMBEDDING_DIMENSION * 2) {
-          // eslint-disable-next-line no-console -- デバッグ用ログ
-          console.error(
-            `[calculateAverageEmbedding] Article ${articleId}: ABNORMAL dimension ${embedding.length}, expected ~${OnboardingService.EXPECTED_EMBEDDING_DIMENSION}`
-          );
-        }
-
         embeddings.push(embedding as (number | null)[]);
       }
     }
@@ -193,13 +176,6 @@ export class OnboardingService {
     }
 
     const dimension = embeddings[0].length;
-
-    // デバッグ: 最終的な次元数をログ
-    // eslint-disable-next-line no-console -- デバッグ用ログ
-    console.log(
-      `[calculateAverageEmbedding] Computing average of ${embeddings.length} embeddings with dimension ${dimension}`
-    );
-
     const average = new Array<number>(dimension).fill(0);
 
     for (let i = 0; i < dimension; i++) {

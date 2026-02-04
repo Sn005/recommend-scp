@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "../logger";
 import type {
   PreferenceStorage,
   PreferenceProfile,
@@ -290,9 +291,12 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
 
     // 次元数の検証
     if (embedding.length > SupabasePreferenceStorage.MAX_VECTOR_DIMENSION) {
-      // eslint-disable-next-line no-console -- デバッグ用ログ
-      console.error(
-        `[sanitizeEmbedding] Vector dimension ${String(embedding.length)} exceeds maximum ${String(SupabasePreferenceStorage.MAX_VECTOR_DIMENSION)}. Truncating to expected dimension.`
+      logger.error(
+        {
+          dimension: embedding.length,
+          maxDimension: SupabasePreferenceStorage.MAX_VECTOR_DIMENSION,
+        },
+        "Vector dimension exceeds maximum. Truncating to expected dimension."
       );
       // 異常な次元数の場合は期待される次元数に切り詰め
       embedding = embedding.slice(0, SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION);
@@ -303,9 +307,12 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       embedding.length !== SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION &&
       embedding.length > 0
     ) {
-      // eslint-disable-next-line no-console -- デバッグ用ログ
-      console.warn(
-        `[sanitizeEmbedding] Unexpected embedding dimension: ${String(embedding.length)}, expected: ${String(SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION)}`
+      logger.warn(
+        {
+          dimension: embedding.length,
+          expectedDimension: SupabasePreferenceStorage.EXPECTED_EMBEDDING_DIMENSION,
+        },
+        "Unexpected embedding dimension"
       );
     }
 
