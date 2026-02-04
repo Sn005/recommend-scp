@@ -1,16 +1,17 @@
 # Story一覧: EPIC-005 バックエンドAPI
 
-| ID                                          | 名前                 | 概要                                                 | ステータス |
-| ------------------------------------------- | -------------------- | ---------------------------------------------------- | ---------- |
-| [005-01](./005-01-api-foundation/005-01.md) | API基盤構築          | Honoサーバー初期化、ミドルウェア、エラーハンドリング | completed  |
-| [005-02](./005-02-server-storage/005-02.md) | サーバー側ストレージ | PreferenceStorage/VectorSearchClientのSupabase実装   | completed  |
-| [005-03](./005-03-visitors-api/005-03.md)   | visitors API         | visitorId登録エンドポイント                          | completed  |
-| [005-04](./005-04-articles-api/005-04.md)   | articles API         | ベクトル検索エンドポイント                           | completed  |
-| [005-05](./005-05-recommend-api/005-05.md)  | recommend API        | 推薦取得エンドポイント                               | completed  |
-| [005-06](./005-06-feedback-api/005-06.md)   | feedback API         | Like/Dislike記録エンドポイント                       | completed  |
-| [005-07](./005-07-onboarding-api/005-07.md) | onboarding API       | スターターパック一覧・選択エンドポイント             | completed  |
-| [005-08](./005-08-api-types/005-08.md)      | 型共有パッケージ     | packages/api-typesでRPC型をexport                    | completed  |
-| [005-09](./005-09-docs-update/005-09.md)    | ドキュメント更新     | アーキテクチャ変更の反映                             | planned    |
+| ID                                          | 名前                 | 概要                                                 | ステータス  |
+| ------------------------------------------- | -------------------- | ---------------------------------------------------- | ----------- |
+| [005-01](./005-01-api-foundation/005-01.md) | API基盤構築          | Honoサーバー初期化、ミドルウェア、エラーハンドリング | completed   |
+| [005-02](./005-02-server-storage/005-02.md) | サーバー側ストレージ | PreferenceStorage/VectorSearchClientのSupabase実装   | completed   |
+| [005-03](./005-03-visitors-api/005-03.md)   | visitors API         | visitorId登録エンドポイント                          | completed   |
+| [005-04](./005-04-articles-api/005-04.md)   | articles API         | ベクトル検索エンドポイント                           | completed   |
+| [005-05](./005-05-recommend-api/005-05.md)  | recommend API        | 推薦取得エンドポイント                               | completed   |
+| [005-06](./005-06-feedback-api/005-06.md)   | feedback API         | Like/Dislike記録エンドポイント                       | completed   |
+| [005-07](./005-07-onboarding-api/005-07.md) | onboarding API       | スターターパック一覧・選択エンドポイント             | completed   |
+| [005-08](./005-08-api-types/005-08.md)      | 型共有パッケージ     | packages/api-typesでRPC型をexport                    | completed   |
+| [005-09](./005-09-docs-update/005-09.md)    | ドキュメント更新     | アーキテクチャ変更の反映                             | planned     |
+| [005-10](./005-10-favorites-api/005-10.md)  | favorites API        | お気に入り一覧取得・削除エンドポイント               | in_progress |
 
 ## 依存関係グラフ
 
@@ -19,10 +20,10 @@
     ↓
 005-02 (サーバー側ストレージ)
     ↓
-┌───────────┬───────────┬───────────┬───────────┬───────────┐
-005-03     005-04     005-05     005-06     005-07
-(visitors) (articles) (recommend)(feedback) (onboarding)
-└───────────┴───────────┴───────────┴───────────┴───────────┘
+┌───────────┬───────────┬───────────┬───────────┬───────────┬───────────┐
+005-03     005-04     005-05     005-06     005-07     005-10
+(visitors) (articles) (recommend)(feedback) (onboarding)(favorites)
+└───────────┴───────────┴───────────┴───────────┴───────────┴───────────┘
     ↓
 005-08 (api-types)
     ↓
@@ -40,5 +41,6 @@
 | 3      | 005-05 | コア機能（推薦）           |
 | 3      | 005-06 | フィードバック収集         |
 | 3      | 005-07 | オンボーディング           |
+| 3      | 005-10 | お気に入り管理             |
 | 4      | 005-08 | API実装後に型をexport      |
 | 5      | 005-09 | 並行作業可能、マージ前必須 |
