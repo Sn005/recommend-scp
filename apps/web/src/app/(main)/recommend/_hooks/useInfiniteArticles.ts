@@ -99,8 +99,14 @@ export function useInfiniteArticles(
 
   // 初回読み込みトリガー
   useEffect(() => {
-    if (!isVisitorLoading && visitorId) {
+    if (isVisitorLoading) return;
+
+    if (visitorId) {
       void fetchArticles(initialCount);
+    } else {
+      // visitorIdがnull（エラー等）の場合はローディングを解除
+      setIsLoading(false);
+      setError(new Error("Visitor IDの取得に失敗しました"));
     }
   }, [isVisitorLoading, visitorId, fetchArticles, initialCount]);
 

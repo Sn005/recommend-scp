@@ -360,6 +360,32 @@ describe("SupabaseVectorSearch", () => {
       });
     });
 
+    describe("pgvector文字列パース", () => {
+      it("pgvector文字列表現を正しくパースしてnumber[]を返す", async () => {
+        // Arrange: Supabaseがpgvectorを文字列として返すケース
+        const mockChain = createMockChain({ embedding: "[0.1,0.2,0.3,0.4,0.5]" });
+        vi.mocked(mockSupabase.from).mockReturnValue(mockChain as never);
+
+        // Act
+        const result = await vectorSearch.getEmbedding("scp-173");
+
+        // Assert
+        expect(result).toEqual([0.1, 0.2, 0.3, 0.4, 0.5]);
+      });
+
+      it("負の値を含むpgvector文字列を正しくパースする", async () => {
+        // Arrange
+        const mockChain = createMockChain({ embedding: "[0.012,-0.034,0.056]" });
+        vi.mocked(mockSupabase.from).mockReturnValue(mockChain as never);
+
+        // Act
+        const result = await vectorSearch.getEmbedding("scp-173");
+
+        // Assert
+        expect(result).toEqual([0.012, -0.034, 0.056]);
+      });
+    });
+
     describe("エッジケース", () => {
       it("embeddingがnullの記事の場合、nullを返す", async () => {
         // Arrange

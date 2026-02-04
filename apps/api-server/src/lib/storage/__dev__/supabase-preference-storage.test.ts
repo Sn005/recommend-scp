@@ -192,6 +192,19 @@ describe("SupabasePreferenceStorage", () => {
       expect(profile).toBeNull();
     });
 
+    it("preference_vectorがpgvector文字列の場合も正しくパースされる", async () => {
+      const stringVectorRow = {
+        ...mockVisitorRow,
+        preference_vector: "[0.1,0.2,0.3]",
+      };
+      const queryMock = createQueryMock({ data: stringVectorRow, error: null });
+      mockFrom.mockReturnValue(queryMock);
+
+      const profile = await storage.getProfile("visitor-123");
+
+      expect(profile?.preferenceEmbedding).toEqual([0.1, 0.2, 0.3]);
+    });
+
     it("オプショナルフィールドがnullの場合も正しく変換される", async () => {
       const queryMock = createQueryMock({
         data: mockMinimalVisitorRow,
