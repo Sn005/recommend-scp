@@ -11,25 +11,32 @@ import { HistoryCard } from "./_components/HistoryCard";
 /**
  * 閲覧履歴ページ
  *
+ * AC-1: 画面レイアウト
+ * - タイトル「閲覧履歴」と履歴件数を表示
+ *
  * AC-2: 履歴一覧表示
  * - 各エントリにタイトルと本文冒頭が表示される
+ * - 履歴がない場合は「まだ閲覧履歴がありません」と表示
+ *
+ * AC-5: スクロール
+ * - タイトルはスクロールで消える（固定しない）
  */
 export default function HistoryPage() {
   const { history } = useHistory();
 
   return (
     <div className="min-h-screen">
-      {/* ヘッダー */}
-      <div className="sticky top-0 bg-background border-b p-4">
+      {/* ヘッダー（AC-1, AC-5: 固定しない） */}
+      <div className="bg-background border-b p-4">
         <h1 className="text-xl font-bold">閲覧履歴</h1>
-        <p className="text-sm text-muted-foreground">最近閲覧したSCP記事</p>
+        <p className="text-sm text-muted-foreground">{String(history.length)}件</p>
       </div>
 
-      {/* 履歴一覧 */}
+      {/* 履歴一覧（AC-2） */}
       <div>
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-muted-foreground">履歴がありません</p>
+            <p className="text-muted-foreground">まだ閲覧履歴がありません</p>
             <p className="text-sm text-muted-foreground mt-1">
               記事を閲覧すると、ここに履歴が表示されます
             </p>
