@@ -10,7 +10,7 @@
 | [005-06](./005-06-feedback-api/005-06.md)   | feedback API         | Like/Dislike記録エンドポイント                       | completed  |
 | [005-07](./005-07-onboarding-api/005-07.md) | onboarding API       | スターターパック一覧・選択エンドポイント             | completed  |
 | [005-08](./005-08-api-types/005-08.md)      | 型共有パッケージ     | packages/api-typesでRPC型をexport                    | completed  |
-| [005-09](./005-09-docs-update/005-09.md)    | ドキュメント更新     | アーキテクチャ変更の反映                             | planned    |
+| [005-09](./005-09-docs-update/005-09.md)    | ドキュメント更新     | アーキテクチャ変更の反映                             | completed  |
 | [005-10](./005-10-favorites-api/005-10.md)  | favorites API        | お気に入り一覧取得・削除エンドポイント               | completed  |
 
 ## 依存関係グラフ
