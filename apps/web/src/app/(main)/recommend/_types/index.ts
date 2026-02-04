@@ -90,10 +90,24 @@ export interface UseFeedbackResult {
   pendingCount: number;
 }
 
+/** useArticleFavorite フックのオプション */
+export interface UseArticleFavoriteOptions {
+  /** 記事ID */
+  articleId: string | undefined;
+  /** 初期お気に入り状態 */
+  initialFavorited?: boolean;
+}
+
 /** useArticleFavorite フックの戻り値 */
 export interface UseArticleFavoriteResult {
-  /** お気に入り済み */
+  /** お気に入り状態 */
   isFavorited: boolean;
-  /** お気に入りトグル */
+  /** 処理中フラグ */
+  isProcessing: boolean;
+  /** お気に入りをトグル */
   toggleFavorite: () => Promise<void>;
+  /** お気に入りを追加 */
+  addFavorite: () => Promise<void>;
+  /** お気に入りを解除 */
+  removeFavorite: () => Promise<void>;
 }

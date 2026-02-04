@@ -7,7 +7,7 @@
 | [006-02-03](./006-02-03.md) | フローティングUI制御  | スクロール検知・PillNav/ProgressBar表示 | completed  |
 | [006-02-04](./006-02-04.md) | 無限スクロールフック  | 次記事読み込み・Intersection Observer   | completed  |
 | [006-02-05](./006-02-05.md) | フィードバック記録    | Like/Dislike/Favorite API連携           | completed  |
-| [006-02-06](./006-02-06.md) | お気に入りボタン      | 状態管理・トグル処理                    | planned    |
+| [006-02-06](./006-02-06.md) | お気に入りボタン      | 状態管理・トグル処理                    | completed  |
 
 ## 依存関係
 

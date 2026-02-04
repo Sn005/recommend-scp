@@ -42,7 +42,9 @@ export default function RecommendPage() {
 
   const { recordLike, recordDislike } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
-  const { isFavorited, toggleFavorite } = useArticleFavorite(currentArticle?.id);
+  const { isFavorited, toggleFavorite } = useArticleFavorite({
+    articleId: currentArticle?.id,
+  });
 
   const [isRetrying, setIsRetrying] = useState(false);
 
