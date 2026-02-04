@@ -127,6 +127,15 @@ describe("useVisitorId", () => {
       // Arrange
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+          }),
+      });
 
       // Act
       const { result } = renderHook(() => useVisitorId());
@@ -138,10 +147,19 @@ describe("useVisitorId", () => {
       expect(result.current.visitorId).toBe(existingId);
     });
 
-    it("既存visitorの場合、APIは呼び出されない", async () => {
+    it("既存visitorの場合でもAPIが呼び出される（DBと同期）", async () => {
       // Arrange
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+          }),
+      });
 
       // Act
       const { result } = renderHook(() => useVisitorId());
@@ -150,7 +168,9 @@ describe("useVisitorId", () => {
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-      expect(mockApi.visitors.$post).not.toHaveBeenCalled();
+      expect(mockApi.visitors.$post).toHaveBeenCalledWith({
+        json: { visitorId: existingId },
+      });
     });
   });
 
@@ -252,6 +272,18 @@ describe("useVisitorId", () => {
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
       localStorageStore[ONBOARDING_COMPLETED_KEY] = "true";
+      // サーバーからはonboardingCompletedAtがnullで返される場合でも、
+      // localStorageの値を参照してisOnboardedを設定
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+            onboardingCompletedAt: null,
+          }),
+      });
 
       // Act
       const { result } = renderHook(() => useVisitorId());
@@ -268,6 +300,15 @@ describe("useVisitorId", () => {
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
       // ONBOARDING_COMPLETED_KEY は設定しない
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+          }),
+      });
 
       // Act
       const { result } = renderHook(() => useVisitorId());
