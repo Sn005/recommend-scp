@@ -1,14 +1,47 @@
 /**
- * @file useFeedback フック（スタブ実装）
- * @description Like/Dislikeフィードバックを記録するフック
+ * @file useFeedback フック
+ * @description Like/Dislike/Favoriteフィードバックを記録するフック
  * @see specs/006-frontend/006-02-article-reader/006-02-05.md
- *
- * TODO: 006-02-05 で本実装に置き換え
  */
 "use client";
 
-import { useCallback } from "react";
-import type { UseFeedbackResult } from "../_types";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { api } from "@/shared/lib/api-client";
+import { useVisitorId } from "@/shared/hooks/useVisitorId";
+import type { FeedbackType, UseFeedbackResult } from "../_types";
+
+/** 保留中のフィードバック */
+interface PendingFeedback {
+  articleId: string;
+  type: FeedbackType;
+  retryCount: number;
+  timestamp: number;
+}
+
+const STORAGE_KEY = "scp-feedback-pending";
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 5000;
+
+/** 優先度: favorite > like > dislike */
+const PRIORITY: Record<FeedbackType, number> = {
+  favorite: 3,
+  like: 2,
+  dislike: 1,
+};
+
+/**
+ * ローカルストレージから保留中のフィードバックを読み込む
+ */
+function loadPendingQueue(): PendingFeedback[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored) as PendingFeedback[];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * フィードバック記録フック
@@ -16,22 +49,150 @@ import type { UseFeedbackResult } from "../_types";
  * @returns UseFeedbackResult
  */
 export function useFeedback(): UseFeedbackResult {
-  const recordLike = useCallback((articleId: string) => {
-    // TODO: 006-02-05 で async 実装に変更
-    // await api.feedback.$post({ json: { visitorId, articleId, feedback: 'like' } });
-    void articleId;
-    return Promise.resolve();
-  }, []);
+  const { visitorId } = useVisitorId();
+  const [recordedFeedbacks, setRecordedFeedbacks] = useState<Map<string, FeedbackType>>(new Map());
+  const [pendingQueue, setPendingQueue] = useState<PendingFeedback[]>(loadPendingQueue);
+  const processingRef = useRef(false);
 
-  const recordDislike = useCallback((articleId: string) => {
-    // TODO: 006-02-05 で async 実装に変更
-    // await api.feedback.$post({ json: { visitorId, articleId, feedback: 'dislike' } });
-    void articleId;
-    return Promise.resolve();
-  }, []);
+  // 保留中のフィードバックをローカルストレージに保存
+  useEffect(() => {
+    if (pendingQueue.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingQueue));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [pendingQueue]);
+
+  // フィードバック送信（内部）
+  // NOTE: feedback APIは like/dislike のみサポート。favoriteは別APIで管理するため、ここでは成功とみなす
+  const sendFeedback = useCallback(
+    async (articleId: string, type: FeedbackType): Promise<boolean> => {
+      if (!visitorId) return false;
+
+      // favoriteはfeedback APIではなく別途favorites APIで管理
+      // 006-02-06（お気に入りボタン）で実装予定
+      if (type === "favorite") {
+        return true;
+      }
+
+      try {
+        const res = await api.feedback.$post({
+          json: { visitorId, articleId, type },
+        });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    },
+    [visitorId]
+  );
+
+  // キュー処理
+  const processQueue = useCallback(async () => {
+    if (processingRef.current || pendingQueue.length === 0 || !visitorId) return;
+
+    processingRef.current = true;
+
+    const [current, ...rest] = pendingQueue;
+    const success = await sendFeedback(current.articleId, current.type);
+
+    if (success) {
+      // 成功: キューから削除
+      setPendingQueue(rest);
+    } else if (current.retryCount < MAX_RETRIES) {
+      // リトライ: カウントを増やしてキューの末尾へ
+      setPendingQueue([...rest, { ...current, retryCount: current.retryCount + 1 }]);
+    } else {
+      // 最大リトライ超過: キューから削除
+      setPendingQueue(rest);
+    }
+
+    processingRef.current = false;
+  }, [pendingQueue, sendFeedback, visitorId]);
+
+  // 定期的にキューを処理
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void processQueue();
+    }, RETRY_DELAY_MS);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [processQueue]);
+
+  // オンライン復帰時にキューを処理
+  useEffect(() => {
+    const handleOnline = () => {
+      void processQueue();
+    };
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [processQueue]);
+
+  // フィードバック記録（共通）
+  const recordFeedback = useCallback(
+    async (articleId: string, type: FeedbackType) => {
+      // バリデーション
+      if (!articleId || !visitorId) return;
+
+      // 既存のフィードバックと優先度を比較
+      const existing = recordedFeedbacks.get(articleId);
+      if (existing && PRIORITY[existing] >= PRIORITY[type]) {
+        // 既存の方が優先度が高い場合はスキップ
+        return;
+      }
+
+      // 即座に記録済みとしてマーク（楽観的更新）
+      setRecordedFeedbacks((prev) => new Map(prev).set(articleId, type));
+
+      // API送信を試行
+      const success = await sendFeedback(articleId, type);
+
+      if (!success) {
+        // 失敗時はキューに追加
+        setPendingQueue((prev) => [
+          ...prev.filter((p) => p.articleId !== articleId),
+          { articleId, type, retryCount: 0, timestamp: Date.now() },
+        ]);
+      }
+    },
+    [recordedFeedbacks, sendFeedback, visitorId]
+  );
+
+  // 各フィードバック種別のラッパー
+  const recordLike = useCallback(
+    (articleId: string) => recordFeedback(articleId, "like"),
+    [recordFeedback]
+  );
+
+  const recordDislike = useCallback(
+    (articleId: string) => recordFeedback(articleId, "dislike"),
+    [recordFeedback]
+  );
+
+  const recordFavorite = useCallback(
+    (articleId: string) => recordFeedback(articleId, "favorite"),
+    [recordFeedback]
+  );
+
+  const hasRecorded = useCallback(
+    (articleId: string) => recordedFeedbacks.has(articleId),
+    [recordedFeedbacks]
+  );
+
+  const getFeedbackType = useCallback(
+    (articleId: string) => recordedFeedbacks.get(articleId) ?? null,
+    [recordedFeedbacks]
+  );
 
   return {
     recordLike,
     recordDislike,
+    recordFavorite,
+    hasRecorded,
+    getFeedbackType,
+    pendingCount: pendingQueue.length,
   };
 }

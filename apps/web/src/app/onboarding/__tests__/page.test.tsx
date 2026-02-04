@@ -49,6 +49,7 @@ const mockUseVisitorIdResult = {
 
 vi.mock("@/shared/hooks/useVisitorId", () => ({
   useVisitorId: () => mockUseVisitorIdResult,
+  ONBOARDING_COMPLETED_KEY: "recommend_scp_onboarding_completed",
 }));
 
 // コンポーネントをインポート（モックの後）

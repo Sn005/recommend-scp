@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { api } from "@/shared/lib/api-client";
+import { ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
 
 export interface ScpNumberInputProps {
   visitorId: string;
@@ -90,6 +91,9 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
         const errorData = (await res.json()) as { title?: string };
         throw new Error(errorData.title ?? "エラーが発生しました");
       }
+
+      // オンボーディング完了フラグをlocalStorageに保存
+      localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
 
       onComplete();
     } catch (e) {

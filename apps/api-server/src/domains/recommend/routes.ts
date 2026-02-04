@@ -62,6 +62,8 @@ export const createRecommendRoutes = (
         {
           recommendations,
           count: recommendations.length,
+          // limitより少ない場合は追加記事なし
+          hasMore: recommendations.length >= limit,
         },
         200
       );

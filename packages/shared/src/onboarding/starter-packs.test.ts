@@ -10,10 +10,11 @@ import type { StarterPackDefinition } from "./types";
 
 describe("スターターパック", () => {
   describe("getStarterPackList", () => {
-    it("6種類のパックを返す", () => {
+    it("5種類のパックを返す（JPは除外）", () => {
       const packs = getStarterPackList();
 
-      expect(packs).toHaveLength(6);
+      // JP記事はDBに未登録のため一時的に除外
+      expect(packs).toHaveLength(5);
     });
 
     it("各パックにdisplayName, description, primaryTags, seedArticlesが含まれる", () => {
@@ -35,7 +36,7 @@ describe("スターターパック", () => {
       });
     });
 
-    it("classic, horror, scifi, heartwarming, mystery, jpの6種類が含まれる", () => {
+    it("classic, horror, scifi, heartwarming, mysteryの5種類が含まれる（JPは除外）", () => {
       const packs = getStarterPackList();
       const types = packs.map((pack) => pack.type);
 
@@ -44,7 +45,8 @@ describe("スターターパック", () => {
       expect(types).toContain("scifi");
       expect(types).toContain("heartwarming");
       expect(types).toContain("mystery");
-      expect(types).toContain("jp");
+      // JP記事はDBに未登録のため一時的に除外
+      expect(types).not.toContain("jp");
     });
   });
 

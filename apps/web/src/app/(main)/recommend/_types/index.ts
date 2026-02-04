@@ -71,18 +71,43 @@ export interface UseInfiniteArticlesResult {
   refetch: () => Promise<void>;
 }
 
+/** フィードバック種別 */
+export type FeedbackType = "like" | "dislike" | "favorite";
+
 /** useFeedback フックの戻り値 */
 export interface UseFeedbackResult {
-  /** Like記録 */
+  /** Like記録（暗黙的Like） */
   recordLike: (articleId: string) => Promise<void>;
-  /** Dislike記録 */
+  /** Dislike記録（スキップ） */
   recordDislike: (articleId: string) => Promise<void>;
+  /** Favorite記録（明示的お気に入り） */
+  recordFavorite: (articleId: string) => Promise<void>;
+  /** 記事のフィードバック済み状態を確認 */
+  hasRecorded: (articleId: string) => boolean;
+  /** フィードバック種別を取得 */
+  getFeedbackType: (articleId: string) => FeedbackType | null;
+  /** 保留中のフィードバック数 */
+  pendingCount: number;
+}
+
+/** useArticleFavorite フックのオプション */
+export interface UseArticleFavoriteOptions {
+  /** 記事ID */
+  articleId: string | undefined;
+  /** 初期お気に入り状態 */
+  initialFavorited?: boolean;
 }
 
 /** useArticleFavorite フックの戻り値 */
 export interface UseArticleFavoriteResult {
-  /** お気に入り済み */
+  /** お気に入り状態 */
   isFavorited: boolean;
-  /** お気に入りトグル */
+  /** 処理中フラグ */
+  isProcessing: boolean;
+  /** お気に入りをトグル */
   toggleFavorite: () => Promise<void>;
+  /** お気に入りを追加 */
+  addFavorite: () => Promise<void>;
+  /** お気に入りを解除 */
+  removeFavorite: () => Promise<void>;
 }

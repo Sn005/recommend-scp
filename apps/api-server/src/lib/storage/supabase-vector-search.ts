@@ -115,7 +115,7 @@ export class SupabaseVectorSearch implements VectorSearchClient {
     const response = (await this.supabase
       .from("scp_articles")
       .select("embedding")
-      .eq("id", articleId)
+      .eq("article_id", articleId)
       .single()) as unknown as SupabaseResponse<ArticleRow>;
 
     if (response.error !== null) {

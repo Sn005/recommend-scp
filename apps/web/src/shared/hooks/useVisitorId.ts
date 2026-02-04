@@ -31,8 +31,8 @@ interface VisitorResponse {
 /**
  * visitorIdを管理するカスタムフック
  *
- * - localStorageにvisitorIdが存在しない場合、新規UUIDを生成してAPIに登録
- * - 既存のvisitorIdがある場合は、それを返す（APIは呼び出さない）
+ * - localStorageにvisitorIdが存在しない場合、新規UUIDを生成
+ * - 常にAPIを呼び出してDBと同期（visitorが存在しない場合は自動作成）
  * - オンボーディング完了状態も管理
  *
  * @example
@@ -58,26 +58,14 @@ export function useVisitorId(): UseVisitorIdResult {
     setError(null);
 
     try {
-      // 1. localStorageから取得
+      // 1. localStorageから取得、または新規UUID生成
       const storedVisitorId = localStorage.getItem(VISITOR_ID_KEY);
-      const storedOnboardingCompleted = localStorage.getItem(ONBOARDING_COMPLETED_KEY);
+      const visitorIdToUse = storedVisitorId ?? crypto.randomUUID();
 
-      if (storedVisitorId) {
-        // 既存visitorIdがある場合
-        if (isMountedRef.current) {
-          setVisitorId(storedVisitorId);
-          setIsOnboarded(storedOnboardingCompleted === "true");
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      // 2. 新規UUID生成
-      const newId = crypto.randomUUID();
-
-      // 3. APIに登録
+      // 2. APIに登録/同期（既存visitorIdでもAPIを呼んでDBと同期）
+      // これによりDBにvisitorが存在しない場合も自動的に作成される
       const res = await api.visitors.$post({
-        json: { visitorId: newId },
+        json: { visitorId: visitorIdToUse },
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
@@ -87,18 +75,22 @@ export function useVisitorId(): UseVisitorIdResult {
 
       const data: VisitorResponse = await res.json();
 
-      // 4. 状態を更新（アンマウント済みの場合はスキップ）
+      // 3. 状態を更新（アンマウント済みの場合はスキップ）
       if (isMountedRef.current) {
         // localStorageに保存
-        localStorage.setItem(VISITOR_ID_KEY, newId);
+        localStorage.setItem(VISITOR_ID_KEY, visitorIdToUse);
 
         // サーバーからonboardingCompletedAtが返された場合は同期
         if (data.onboardingCompletedAt) {
           localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
           setIsOnboarded(true);
+        } else {
+          // サーバーにonboardingCompletedAtがない場合はlocalStorageも同期
+          const storedOnboardingCompleted = localStorage.getItem(ONBOARDING_COMPLETED_KEY);
+          setIsOnboarded(storedOnboardingCompleted === "true");
         }
 
-        setVisitorId(newId);
+        setVisitorId(visitorIdToUse);
       }
     } catch (e) {
       if (isMountedRef.current) {
