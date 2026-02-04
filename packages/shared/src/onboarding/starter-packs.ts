@@ -72,10 +72,11 @@ export const STARTER_PACKS: Record<Exclude<StarterPackType, "custom">, StarterPa
 /**
  * スターターパック一覧を取得
  *
- * @returns 5種類のスターターパック定義の配列
+ * @returns 5種類のスターターパック定義の配列（JPは除外）
  */
 export function getStarterPackList(): StarterPackDefinition[] {
-  return Object.values(STARTER_PACKS);
+  // JP記事はDBに未登録のため、一時的に除外
+  return Object.values(STARTER_PACKS).filter((pack) => pack.type !== "jp");
 }
 
 /**
