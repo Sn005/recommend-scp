@@ -267,9 +267,35 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     object_class_preference: profile.objectClassPreference,
     starter_pack: profile.starterPack,
     onboarding_completed_at: profile.onboardingCompletedAt,
-    preference_vector: profile.preferenceEmbedding,
+    preference_vector: this.sanitizeEmbedding(profile.preferenceEmbedding),
     updated_at: new Date().toISOString(),
   });
+
+  /**
+   * 埋め込みベクトルをサニタイズ
+   *
+   * PostgreSQLのvector型はnull値を受け付けないため、
+   * null/undefined/NaNを0に変換する。
+   *
+   * NOTE: TypeScriptの型ではnumber[]だが、実行時にはDBからnull値が
+   * 含まれた配列が返ってくることがあるため、明示的にチェックが必要
+   */
+  private sanitizeEmbedding = (embedding: number[] | undefined): number[] | undefined => {
+    if (!embedding) return undefined;
+
+    return embedding.map((value) => {
+      // 型アサーションで実行時のnull/undefinedチェックを許可
+      const v = value as number | null | undefined;
+      // null, undefined, NaN を 0 に変換
+      if (v === null || v === undefined || Number.isNaN(v)) {
+        return 0;
+      }
+      // Infinity を最大/最小値に制限
+      if (v === Infinity) return Number.MAX_VALUE;
+      if (v === -Infinity) return -Number.MAX_VALUE;
+      return v;
+    });
+  };
 
   private toViewHistory = (row: DbRow): ViewHistory => ({
     id: row.id as string,
