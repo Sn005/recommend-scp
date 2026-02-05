@@ -12,25 +12,15 @@
  *   --concurrency N  並列数（デフォルト: 5）
  */
 
-import { readFileSync, existsSync } from "fs";
-import { resolve } from "path";
+import { config } from "dotenv";
+import { findUpSync } from "find-up";
+import { dirname, join } from "path";
 import { createClient } from "@supabase/supabase-js";
 
-// 環境変数読み込み（dotenv/find-up不要: Node.js標準APIのみ使用）
-const envPath = resolve(import.meta.dirname ?? __dirname, "..", ".env");
-if (existsSync(envPath)) {
-  const envContent = readFileSync(envPath, "utf-8");
-  for (const line of envContent.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eqIndex = trimmed.indexOf("=");
-    if (eqIndex === -1) continue;
-    const key = trimmed.slice(0, eqIndex).trim();
-    const value = trimmed.slice(eqIndex + 1).trim();
-    if (!process.env[key]) {
-      process.env[key] = value;
-    }
-  }
+// 環境変数読み込み
+const workspaceFile = findUpSync("pnpm-workspace.yaml");
+if (workspaceFile) {
+  config({ path: join(dirname(workspaceFile), ".env"), override: false });
 }
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
