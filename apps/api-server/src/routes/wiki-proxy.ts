@@ -12,21 +12,32 @@ import { Hono } from "hono";
 const ALLOWED_WIKIDOT_DOMAIN = "scp-jp.wikidot.com";
 
 /**
- * HTMLレスポンス内のHTTP URLをプロキシパスに書き換えるマッピング
+ * HTMLレスポンス内のHTTP/プロトコル相対URLをプロキシパスに書き換えるマッピング
+ *
+ * 各ドメインについて http:// と // (プロトコル相対) の両方を書き換える。
+ * 順序: 長いドメインから先に処理（部分マッチ防止）
  *
  * - wdfiles.com: Wikidotのファイルストレージ（画像・CSS等）
  * - www.wikidot.com: Wikidot共通リソース
  * - scp-jp.wikidot.com: SCP-JPサイト自体のリソース
  */
-const URL_REWRITE_MAP: ReadonlyArray<readonly [string, string]> = [
+const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
+  // scp-jp-storage.wdfiles.com
   ["http://scp-jp-storage.wdfiles.com/", "/wdfiles-scp-jp-storage/"],
+  ["//scp-jp-storage.wdfiles.com/", "/wdfiles-scp-jp-storage/"],
+  // scp-jp.wdfiles.com
   ["http://scp-jp.wdfiles.com/", "/wdfiles-scp-jp/"],
+  ["//scp-jp.wdfiles.com/", "/wdfiles-scp-jp/"],
+  // www.wikidot.com
   ["http://www.wikidot.com/", "/wikidot-www/"],
+  ["//www.wikidot.com/", "/wikidot-www/"],
+  // scp-jp.wikidot.com（最後に処理: 他のドメインを先に処理するため）
   ["http://scp-jp.wikidot.com/", "/wiki/"],
+  ["//scp-jp.wikidot.com/", "/wiki/"],
 ];
 
 /**
- * HTML内のHTTP URLをプロキシパスに一括書き換え
+ * HTML内のHTTP/プロトコル相対URLをプロキシパスに一括書き換え
  */
 function rewriteHtmlUrls(html: string): string {
   let result = html;
@@ -37,13 +48,25 @@ function rewriteHtmlUrls(html: string): string {
 }
 
 /**
+ * リクエストパスからwiki-proxy以降のパスを抽出
+ * Hono basePath(/api)を含む完全パスに対応
+ *
+ * 例: "/api/wiki-proxy/scp-173" → "scp-173"
+ *     "/wiki-proxy/scp-173"     → "scp-173"
+ */
+function extractProxyPath(requestPath: string): string {
+  const match = /\/wiki-proxy\/(.+)/.exec(requestPath);
+  return match?.[1] ?? "";
+}
+
+/**
  * GET /wiki-proxy/*
  *
  * SCP Wikiページをプロキシ配信。HTMLの場合はURL書き換えを行い、
  * CSS/JS/画像等はそのままパススルーする。
  */
 export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
-  const path = c.req.path.replace(/^\/wiki-proxy\/?/, "");
+  const path = extractProxyPath(c.req.path);
 
   if (!path) {
     return c.json({ error: "path is required" }, 400);
