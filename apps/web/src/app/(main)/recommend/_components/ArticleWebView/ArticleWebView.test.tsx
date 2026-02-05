@@ -51,6 +51,20 @@ describe("ArticleWebView", () => {
       expect(iframe).toHaveAttribute("src", "https://scp-jp.wikidot.com/scp-173");
     });
 
+    it("HTTP URLがプロキシURLに変換される（mixed content回避）", () => {
+      render(<ArticleWebView url="http://scp-jp.wikidot.com/scp-173" />);
+
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe).toHaveAttribute("src", "/wiki/scp-173");
+    });
+
+    it("HTTPS URLはプロキシ変換されない", () => {
+      render(<ArticleWebView url="https://scp-jp.wikidot.com/scp-173" />);
+
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe).toHaveAttribute("src", "https://scp-jp.wikidot.com/scp-173");
+    });
+
     it("iframeにsandbox属性が設定される", () => {
       render(<ArticleWebView url="https://example.com" />);
 

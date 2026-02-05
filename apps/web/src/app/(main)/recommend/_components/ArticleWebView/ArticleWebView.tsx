@@ -1,12 +1,25 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
 import { useArticleWebView } from "./useArticleWebView";
 import { use404Detection } from "./use404Detection";
 import { useArticleContent } from "./useArticleContent";
 import { TranslationNotFound } from "../TranslationNotFound";
 import type { ArticleWebViewProps } from "./index";
+
+/**
+ * SCP Wiki URLをNext.jsプロキシ経由のパスに変換
+ * HTTPS環境でのmixed content回避のため、iframeのsrcにはプロキシURLを使用
+ */
+const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
+
+function toProxyUrl(url: string): string {
+  if (url.startsWith(SCP_JP_HTTP_ORIGIN)) {
+    return "/wiki" + url.slice(SCP_JP_HTTP_ORIGIN.length);
+  }
+  return url;
+}
 
 export function ArticleWebView({
   url,
@@ -20,8 +33,11 @@ export function ArticleWebView({
   const [showNotFound, setShowNotFound] = useState(false);
   const contentFetchedRef = useRef(false);
 
+  // mixed content回避: iframeにはプロキシURLを使用
+  const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
+
   const { iframeRef, isLoading, error, handleLoad, handleError, retry } = useArticleWebView({
-    url,
+    url: iframeSrc,
     onScrollEnd,
     onScrollChange,
   });
@@ -121,7 +137,7 @@ export function ArticleWebView({
           信頼できないサイトには使用しないこと */}
       <iframe
         ref={iframeRef}
-        src={url}
+        src={iframeSrc}
         className="w-full h-full border-0"
         onLoad={handleIframeLoad}
         onError={handleError}
