@@ -46,10 +46,18 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 ];
 
 /**
- * HTML内のHTTP/プロトコル相対URLをプロキシパスに一括書き換え
+ * <head>末尾に注入するCSS
+ * printer--friendlyモードの印刷オプションUIを非表示にする。
+ * CSSは初回ペイント前に評価されるため、レイアウトシフトが発生しない。
  */
-function rewriteHtmlUrls(html: string): string {
-  let result = html;
+const INJECTED_STYLE = "<style>#print-options{display:none!important}</style>";
+
+/**
+ * HTML書き換え: URL変換 + 不要要素の非表示CSS注入
+ */
+function rewriteHtml(html: string): string {
+  // </head> 直前にCSSを注入（初回ペイント前に適用される）
+  let result = html.replace("</head>", `${INJECTED_STYLE}</head>`);
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
@@ -94,7 +102,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     // HTMLレスポンス: URL書き換えを適用
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      const rewritten = rewriteHtmlUrls(html);
+      const rewritten = rewriteHtml(html);
 
       return new Response(rewritten, {
         status: response.status,
