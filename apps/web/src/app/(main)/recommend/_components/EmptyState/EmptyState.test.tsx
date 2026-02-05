@@ -14,7 +14,7 @@ describe("EmptyState", () => {
 
     const link = screen.getByRole("link", { name: "好みを再設定" });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/onboarding");
+    expect(link).toHaveAttribute("href", "/onboarding?reset=true");
   });
 
   it('data-testid="empty-state"が設定されている', () => {
