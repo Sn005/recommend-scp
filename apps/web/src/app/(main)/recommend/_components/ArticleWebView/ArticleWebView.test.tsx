@@ -238,7 +238,7 @@ describe("ArticleWebView", () => {
   });
 
   describe("AC: 404検知・サジェスト画面", () => {
-    it("404検知チェック中はローディングが表示される", () => {
+    it("404検知チェック中でもローディングが表示されない（バックグラウンド実行）", () => {
       mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
       mockUse404Detection.mockReturnValue({
         isChecking: true,
@@ -247,7 +247,7 @@ describe("ArticleWebView", () => {
 
       render(<ArticleWebView url="https://example.com" />);
 
-      expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
+      expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
     });
 
     it("404検知時にサジェスト画面が表示される", async () => {

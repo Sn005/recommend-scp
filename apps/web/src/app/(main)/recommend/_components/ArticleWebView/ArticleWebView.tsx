@@ -68,8 +68,8 @@ export function ArticleWebView({
     setShowNotFound(true);
   }, [articleId]);
 
-  // 404検知（articleIdが指定されている場合のみ有効）
-  const { isChecking } = use404Detection({
+  // 404検知（バックグラウンドで実行、ローディング表示をブロックしない）
+  use404Detection({
     url,
     onNotFound: handleNotFound,
   });
@@ -91,8 +91,8 @@ export function ArticleWebView({
       data-url={url}
       className={cn("relative w-full h-[calc(100vh-100px)]", className)}
     >
-      {/* ローディングインジケータ（404チェック中も表示） */}
-      {(isLoading || isChecking) && !error && (
+      {/* ローディングインジケータ（iframe読み込み中のみ） */}
+      {isLoading && !error && (
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 flex items-center justify-center bg-gray-100"
