@@ -8,7 +8,10 @@ const WIKIDOT_ORIGINS = {
   main: "http://scp-jp.wikidot.com",
   wdfiles: "http://scp-jp.wdfiles.com",
   wdfilesStorage: "http://scp-jp-storage.wdfiles.com",
+  wdfilesStatic: "http://static.wdfiles.com",
+  wdfilesStaticL: "http://static-l.wdfiles.com",
   wikidotWww: "http://www.wikidot.com",
+  wikidotStatic: "http://static.wikidot.com",
 } as const;
 
 /**
@@ -43,7 +46,7 @@ const nextConfig: NextConfig = {
   //   /wdfiles-*        → *.wdfiles.com（画像・CSS等のファイルストレージ）
   //   /wikidot-www/*    → www.wikidot.com（共通リソース）
   //   /common--*等      → scp-jp.wikidot.com（絶対パスで参照される静的リソース）
-  async rewrites() {
+  rewrites() {
     return [
       // 記事ページ（HTML内リンクのフォールバック）
       {
@@ -59,10 +62,25 @@ const nextConfig: NextConfig = {
         source: "/wdfiles-scp-jp-storage/:path*",
         destination: `${WIKIDOT_ORIGINS.wdfilesStorage}/:path*`,
       },
+      // static.wdfiles.com プラットフォームテーマCSS
+      {
+        source: "/wdfiles-static/:path*",
+        destination: `${WIKIDOT_ORIGINS.wdfilesStatic}/:path*`,
+      },
+      // static-l.wdfiles.com プラットフォームテーマCSS（ロードバランサ）
+      {
+        source: "/wdfiles-static-l/:path*",
+        destination: `${WIKIDOT_ORIGINS.wdfilesStaticL}/:path*`,
+      },
       // www.wikidot.com 共通リソース
       {
         source: "/wikidot-www/:path*",
         destination: `${WIKIDOT_ORIGINS.wikidotWww}/:path*`,
+      },
+      // static.wikidot.com プラットフォーム静的リソース
+      {
+        source: "/wikidot-static/:path*",
+        destination: `${WIKIDOT_ORIGINS.wikidotStatic}/:path*`,
       },
       // Wikidot静的リソース（絶対パスで参照されるCSS/JS/画像等）
       ...WIKIDOT_RESOURCE_PREFIXES.map((prefix) => ({

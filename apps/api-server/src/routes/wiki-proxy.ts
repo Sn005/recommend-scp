@@ -28,6 +28,15 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
   // scp-jp.wdfiles.com
   ["http://scp-jp.wdfiles.com/", "/wdfiles-scp-jp/"],
   ["//scp-jp.wdfiles.com/", "/wdfiles-scp-jp/"],
+  // static.wdfiles.com（プラットフォームテーマCSS）
+  ["http://static.wdfiles.com/", "/wdfiles-static/"],
+  ["//static.wdfiles.com/", "/wdfiles-static/"],
+  // static-l.wdfiles.com（プラットフォームテーマCSS: ロードバランサ）
+  ["http://static-l.wdfiles.com/", "/wdfiles-static-l/"],
+  ["//static-l.wdfiles.com/", "/wdfiles-static-l/"],
+  // static.wikidot.com（プラットフォーム静的リソース）
+  ["http://static.wikidot.com/", "/wikidot-static/"],
+  ["//static.wikidot.com/", "/wikidot-static/"],
   // www.wikidot.com
   ["http://www.wikidot.com/", "/wikidot-www/"],
   ["//www.wikidot.com/", "/wikidot-www/"],
@@ -62,8 +71,10 @@ function extractProxyPath(requestPath: string): string {
 /**
  * GET /wiki-proxy/*
  *
- * SCP Wikiページをプロキシ配信。HTMLの場合はURL書き換えを行い、
- * CSS/JS/画像等はそのままパススルーする。
+ * SCP Wikiページをprinter--friendlyモードでプロキシ配信。
+ * printer--friendlyはサイドバー・トップバー・ナビゲーションを除去し、
+ * 記事本文のみを返すWikidot組み込み機能。
+ * HTMLの場合はURL書き換えを行い、CSS/JS/画像等はそのままパススルーする。
  */
 export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
   const path = extractProxyPath(c.req.path);
@@ -72,7 +83,8 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     return c.json({ error: "path is required" }, 400);
   }
 
-  const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/${path}`;
+  // printer--friendly: サイドバー・ナビ・広告を除去して記事本文のみ取得
+  const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/printer--friendly/${path}`;
 
   try {
     const response = await fetch(targetUrl);
