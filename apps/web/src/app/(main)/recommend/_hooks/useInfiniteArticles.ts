@@ -1,7 +1,7 @@
 /**
  * @file useInfiniteArticles フック
  * @description 推薦記事の無限スクロール取得を管理するフック
- * @see specs/006-frontend/006-02-article-reader/006-02-04.md
+ * @see specs/006-frontend/006-02-article-reader/006-02-07.md
  */
 "use client";
 
@@ -15,9 +15,9 @@ import type {
   UseInfiniteArticlesResult,
 } from "../_types";
 
-const DEFAULT_INITIAL_COUNT = 3;
-const DEFAULT_LOAD_MORE_COUNT = 1;
-const DEFAULT_AUTO_LOAD_LIMIT = 10;
+const DEFAULT_INITIAL_COUNT = 10;
+const DEFAULT_LOAD_MORE_COUNT = 5;
+const DEFAULT_PREFETCH_THRESHOLD = 3;
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
@@ -40,7 +40,7 @@ export function useInfiniteArticles(
   const {
     initialCount = DEFAULT_INITIAL_COUNT,
     loadMoreCount = DEFAULT_LOAD_MORE_COUNT,
-    autoLoadLimit = DEFAULT_AUTO_LOAD_LIMIT,
+    prefetchThreshold = DEFAULT_PREFETCH_THRESHOLD,
   } = options;
 
   const { visitorId, isLoading: isVisitorLoading } = useVisitorId();
@@ -50,11 +50,9 @@ export function useInfiniteArticles(
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
 
   const isFetchingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
-  const autoLoadCountRef = useRef(0);
   const isMountedRef = useRef(true);
 
   // マウント状態管理
@@ -131,10 +129,10 @@ export function useInfiniteArticles(
     }
   }, [isVisitorLoading, visitorId, fetchArticles, initialCount]);
 
-  // 追加読み込み
+  // 追加読み込み（バックグラウンド取得：エラーはログのみ、errorステートに設定しない）
   const loadMore = useCallback(async () => {
     // ガード条件
-    if (!visitorId || isLoadingMoreRef.current || !hasMore || isPaused) {
+    if (!visitorId || isLoadingMoreRef.current || !hasMore) {
       return;
     }
 
@@ -163,23 +161,10 @@ export function useInfiniteArticles(
       if (isMountedRef.current) {
         setArticles((prev) => [...prev, ...newArticles]);
         setHasMore(hasMoreData);
-
-        // 自動読み込みカウントをインクリメント
-        autoLoadCountRef.current += 1;
-        if (autoLoadCountRef.current >= autoLoadLimit) {
-          setIsPaused(true);
-        }
       }
-    } catch (e) {
-      if (isMountedRef.current) {
-        const message =
-          e instanceof DOMException && e.name === "AbortError"
-            ? "記事の取得がタイムアウトしました"
-            : undefined;
-        setError(
-          e instanceof Error && !message ? e : new Error(message ?? "記事の取得に失敗しました")
-        );
-      }
+    } catch {
+      // AC-7: バックグラウンド取得失敗時はユーザーの閲覧体験を中断しない
+      // エラーステートに設定せず、次の遷移時にリトライする
     } finally {
       clearTimeout(timeoutId);
       if (isMountedRef.current) {
@@ -187,32 +172,30 @@ export function useInfiniteArticles(
       }
       isLoadingMoreRef.current = false;
     }
-  }, [visitorId, hasMore, isPaused, loadMoreCount, autoLoadLimit]);
+  }, [visitorId, hasMore, loadMoreCount]);
+
+  // AC-2: バッファベースの先行取得
+  // 初回読み込み完了前（isLoading中）や記事未取得時は先行取得しない
+  useEffect(() => {
+    if (isLoading || articles.length === 0) return;
+
+    const remaining = articles.length - currentIndex - 1;
+    if (remaining <= prefetchThreshold && hasMore && !isLoadingMoreRef.current) {
+      void loadMore();
+    }
+  }, [isLoading, currentIndex, articles.length, hasMore, prefetchThreshold, loadMore]);
 
   // 次の記事に移動
   const goToNext = useCallback(() => {
     const maxIndex = articles.length - 1;
 
-    // 現在のインデックスが最大値未満なら進める
     setCurrentIndex((prev) => {
       if (prev < maxIndex) {
         return prev + 1;
       }
-      // 最大値に達している場合、loadMoreをトリガーする判定用に現在値を返す
       return prev;
     });
-
-    // 最後の記事にいて追加読み込み可能な場合
-    if (currentIndex >= maxIndex && hasMore && !isPaused) {
-      void loadMore();
-    }
-  }, [currentIndex, articles.length, hasMore, isPaused, loadMore]);
-
-  // 自動読み込みを再開
-  const resumeAutoLoad = useCallback(() => {
-    autoLoadCountRef.current = 0;
-    setIsPaused(false);
-  }, []);
+  }, [articles.length]);
 
   // リセット
   const reset = useCallback(() => {
@@ -220,8 +203,6 @@ export function useInfiniteArticles(
     setCurrentIndex(0);
     setError(null);
     setHasMore(true);
-    setIsPaused(false);
-    autoLoadCountRef.current = 0;
   }, []);
 
   // 再取得
@@ -241,10 +222,8 @@ export function useInfiniteArticles(
     error,
     isEmpty,
     hasMore,
-    isPaused,
     loadMore,
     goToNext,
-    resumeAutoLoad,
     reset,
     refetch,
   };

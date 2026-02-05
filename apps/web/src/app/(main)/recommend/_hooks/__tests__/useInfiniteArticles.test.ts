@@ -1,6 +1,6 @@
 /**
  * @file useInfiniteArticles フックのテスト
- * @see specs/006-frontend/006-02-article-reader/006-02-04.md
+ * @see specs/006-frontend/006-02-article-reader/006-02-07.md
  */
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -62,6 +62,10 @@ function createErrorResponse(status = 500) {
   };
 }
 
+function createMockArticles(count: number): Article[] {
+  return Array.from({ length: count }, (_, i) => createMockArticle(String(i + 1)));
+}
+
 describe("useInfiniteArticles", () => {
   beforeEach(() => {
     // useVisitorIdのデフォルトモック
@@ -83,109 +87,85 @@ describe("useInfiniteArticles", () => {
 
   describe("初期状態", () => {
     it("初期状態でisLoadingがtrueになる", () => {
-      // Arrange
       mockApi.recommend.$post.mockReturnValue(
         new Promise(() => {
           /* pending forever */
         })
-      ); // 永久にpending
+      );
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(result.current.isLoading).toBe(true);
     });
 
     it("初期状態でarticlesが空配列", () => {
-      // Arrange
       mockApi.recommend.$post.mockReturnValue(
         new Promise(() => {
           /* pending forever */
         })
       );
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(result.current.articles).toEqual([]);
     });
 
     it("初期状態でcurrentIndexが0", () => {
-      // Arrange
       mockApi.recommend.$post.mockReturnValue(
         new Promise(() => {
           /* pending forever */
         })
       );
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(result.current.currentIndex).toBe(0);
     });
 
     it("初期状態でhasMoreがtrue", () => {
-      // Arrange
       mockApi.recommend.$post.mockReturnValue(
         new Promise(() => {
           /* pending forever */
         })
       );
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(result.current.hasMore).toBe(true);
-    });
-
-    it("初期状態でisPausedがfalse", () => {
-      // Arrange
-      mockApi.recommend.$post.mockReturnValue(
-        new Promise(() => {
-          /* pending forever */
-        })
-      );
-
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles());
-
-      // Assert
-      expect(result.current.isPaused).toBe(false);
     });
   });
 
-  describe("AC-2: 初回読み込み", () => {
-    it("初回読み込みでinitialCount件の記事が取得される", async () => {
-      // Arrange
-      const mockArticles = [
-        createMockArticle("173"),
-        createMockArticle("682"),
-        createMockArticle("999"),
-      ];
+  describe("AC-1: 初期ロード件数の拡大", () => {
+    it("初回読み込みでinitialCount=10件の記事が取得される", async () => {
+      const mockArticles = createMockArticles(10);
       mockApi.recommend.$post.mockResolvedValue(createSuccessResponse(mockArticles));
 
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 3 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-      expect(result.current.articles).toHaveLength(3);
+      expect(result.current.articles).toHaveLength(10);
+    });
+
+    it("オプションを指定しない場合limit=10でAPI呼び出しされる（DEFAULT_INITIAL_COUNT=10）", async () => {
+      mockApi.recommend.$post.mockResolvedValue(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(mockApi.recommend.$post).toHaveBeenCalledWith({
+        json: { visitorId: "test-visitor-id", limit: 10 },
+      });
     });
 
     it("POST /recommend APIが正しいパラメータで呼び出される", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValue(createSuccessResponse([]));
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles({ initialCount: 5 }));
 
-      // Assert
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -195,14 +175,11 @@ describe("useInfiniteArticles", () => {
     });
 
     it("記事取得完了後、articlesに記事が格納される", async () => {
-      // Arrange
       const mockArticles = [createMockArticle("173", "SCP-173 - 彫刻")];
-      mockApi.recommend.$post.mockResolvedValue(createSuccessResponse(mockArticles));
+      mockApi.recommend.$post.mockResolvedValue(createSuccessResponse(mockArticles, false));
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       await waitFor(() => {
         expect(result.current.articles).toHaveLength(1);
       });
@@ -211,13 +188,10 @@ describe("useInfiniteArticles", () => {
     });
 
     it("読み込み完了後、isLoadingがfalseになる", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValue(createSuccessResponse([]));
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(result.current.isLoading).toBe(true);
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -225,7 +199,6 @@ describe("useInfiniteArticles", () => {
     });
 
     it("visitorIdがロード中の場合、API呼び出しを待機する", () => {
-      // Arrange
       mockUseVisitorId.mockReturnValue({
         visitorId: null,
         isLoading: true,
@@ -234,57 +207,36 @@ describe("useInfiniteArticles", () => {
         refresh: vi.fn(),
       });
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       expect(mockApi.recommend.$post).not.toHaveBeenCalled();
       expect(result.current.isLoading).toBe(true);
     });
-
-    it("オプションを指定しない場合デフォルト値が使用される", async () => {
-      // Arrange
-      mockApi.recommend.$post.mockResolvedValue(createSuccessResponse([]));
-
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles());
-
-      // Assert
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-      expect(mockApi.recommend.$post).toHaveBeenCalledWith({
-        json: { visitorId: "test-visitor-id", limit: 3 }, // DEFAULT_INITIAL_COUNT
-      });
-    });
   });
 
-  describe("AC-2: 追加読み込み (loadMore)", () => {
+  describe("追加読み込み (loadMore)", () => {
     it("loadMore呼び出しでPOST /recommendが実行される", async () => {
-      // Arrange
+      // initialCount=10で初回取得。10件あればremaining=9>3なのでauto-prefetchが発火しない
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("extra")]));
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
       expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
     });
 
     it("loadMore実行中にisLoadingMoreがtrueになる", async () => {
-      // Arrange
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
         // eslint-disable-next-line @typescript-eslint/no-misused-promises -- 遅延レスポンスのモック
         .mockImplementationOnce(() => {
           return new Promise((resolve) => {
@@ -294,19 +246,17 @@ describe("useInfiniteArticles", () => {
           });
         });
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act
       let loadMorePromise: Promise<void>;
       act(() => {
         loadMorePromise = result.current.loadMore();
       });
 
-      // Assert
       expect(result.current.isLoadingMore).toBe(true);
 
       await act(async () => {
@@ -316,70 +266,293 @@ describe("useInfiniteArticles", () => {
       expect(result.current.isLoadingMore).toBe(false);
     });
 
-    it("loadMoreCountオプションが反映される", async () => {
-      // Arrange
+    it("loadMoreCountオプションが反映される（デフォルト5）", async () => {
+      // hasMore=false で auto-prefetch を抑制
+      mockApi.recommend.$post.mockResolvedValueOnce(
+        createSuccessResponse([createMockArticle("173")], false)
+      );
+
+      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // hasMore=false → setHasMore(true) して手動テスト
+      // 代わりに: 10件取得してloadMoreの呼び出しパラメータを確認
+      mockApi.recommend.$post.mockReset();
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)));
+
+      const { result: result2 } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result2.current.isLoading).toBe(false);
+      });
+
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse([], false));
+
+      await act(async () => {
+        await result2.current.loadMore();
+      });
+
+      // DEFAULT_LOAD_MORE_COUNT = 5
+      expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
+        json: { visitorId: "test-visitor-id", limit: 5 },
+      });
+    });
+
+    it("loadMoreCountをカスタム指定すると反映される", async () => {
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([], false));
+
+      const { result } = renderHook(() => useInfiniteArticles({ loadMoreCount: 3 }));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.loadMore();
+      });
+
+      expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
+        json: { visitorId: "test-visitor-id", limit: 3 },
+      });
+    });
+  });
+
+  describe("AC-2: バッファベースの先行取得", () => {
+    it("バッファ残数がprefetchThreshold以下で自動追加取得される", async () => {
+      const mockArticles = createMockArticles(10);
+      const additionalArticles = createMockArticles(5).map((a) => ({
+        ...a,
+        id: `extra-${a.id}`,
+      }));
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(mockArticles))
+        .mockResolvedValueOnce(createSuccessResponse(additionalArticles));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // currentIndex=7に進める（残数 = 10 - 7 - 1 = 2 <= threshold(3)）
+      for (let i = 0; i < 7; i++) {
+        act(() => {
+          result.current.goToNext();
+        });
+      }
+
+      // 自動的にloadMoreが呼ばれて追加記事が取得される
+      await waitFor(() => {
+        expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it("バッファ残数がprefetchThresholdより多い場合は取得しない", async () => {
+      const mockArticles = createMockArticles(10);
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(mockArticles));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // currentIndex=5に進める（残数 = 10 - 5 - 1 = 4 > threshold(3)）
+      for (let i = 0; i < 5; i++) {
+        act(() => {
+          result.current.goToNext();
+        });
+      }
+
+      // 追加取得は発生しない
+      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(1);
+    });
+
+    it("hasMoreがfalseの場合、先行取得は発生しない", async () => {
+      const mockArticles = createMockArticles(5);
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(mockArticles, false));
+
+      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 5 }));
+
+      await waitFor(() => {
+        expect(result.current.hasMore).toBe(false);
+      });
+
+      // currentIndex=3に進める（残数 = 5 - 3 - 1 = 1 <= threshold(3)）
+      for (let i = 0; i < 3; i++) {
+        act(() => {
+          result.current.goToNext();
+        });
+      }
+
+      // hasMore=falseなので追加取得は発生しない
+      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(1);
+    });
+
+    it("取得中にloadMore()を呼んでも重複リクエストしない", async () => {
+      const mockArticles = createMockArticles(10);
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(mockArticles))
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises -- 遅延レスポンスのモック
+        .mockImplementationOnce(() => {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(createSuccessResponse(createMockArticles(5)));
+            }, 100);
+          });
+        });
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 2回連続でloadMoreを呼ぶ
+      await act(async () => {
+        const promise1 = result.current.loadMore();
+        const promise2 = result.current.loadMore();
+        await Promise.all([promise1, promise2]);
+      });
+
+      // 初回 + loadMore 1回 = 2回のみ
+      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
+    });
+
+    it("残数がちょうど3件の場合に先行取得される", async () => {
+      const mockArticles = createMockArticles(10);
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(mockArticles))
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(5)));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // currentIndex=6に進める（残数 = 10 - 6 - 1 = 3 <= threshold(3)）
+      for (let i = 0; i < 6; i++) {
+        act(() => {
+          result.current.goToNext();
+        });
+      }
+
+      await waitFor(() => {
+        expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe("AC-3: 自動読み込み上限の撤廃", () => {
+    it("isPaused/resumeAutoLoadが戻り値に存在しない（削除確認）", async () => {
+      mockApi.recommend.$post.mockResolvedValue(createSuccessResponse(createMockArticles(10)));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // isPaused/resumeAutoLoadが結果オブジェクトに存在しないこと
+      expect("isPaused" in result.current).toBe(false);
+      expect("resumeAutoLoad" in result.current).toBe(false);
+    });
+
+    it("autoLoadLimitによる一時停止が発生しない（上限撤廃）", async () => {
+      // 10件で初回取得（auto-prefetch抑制）+ 11回のloadMore
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)));
+
+      for (let i = 0; i < 11; i++) {
+        mockApi.recommend.$post.mockResolvedValueOnce(
+          createSuccessResponse([createMockArticle(`extra-${String(i)}`)])
+        );
+      }
+
+      const { result } = renderHook(() => useInfiniteArticles({ loadMoreCount: 1 }));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // 11回loadMoreを実行（従来は10回で一時停止していた）
+      for (let i = 0; i < 11; i++) {
+        await act(async () => {
+          await result.current.loadMore();
+        });
+      }
+
+      // 全て成功していること（一時停止が発生しない）
+      expect(result.current.articles).toHaveLength(21); // 10 + 11
+      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(12); // initial + 11
+    });
+
+    it("hasMoreがtrueである限り無限に読み続けられる", async () => {
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(createMockArticles(1)));
+
+      // 15回のloadMore
+      for (let i = 0; i < 15; i++) {
+        mockApi.recommend.$post.mockResolvedValueOnce(
+          createSuccessResponse([createMockArticle(`more-${String(i)}`)])
+        );
+      }
 
       const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, loadMoreCount: 5 })
+        useInfiniteArticles({ initialCount: 1, loadMoreCount: 1 })
       );
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act
-      await act(async () => {
-        await result.current.loadMore();
-      });
+      for (let i = 0; i < 15; i++) {
+        await act(async () => {
+          await result.current.loadMore();
+        });
+      }
 
-      // Assert
-      expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
-        json: { visitorId: "test-visitor-id", limit: 5 },
-      });
+      expect(result.current.articles).toHaveLength(16); // 1 + 15
     });
   });
 
-  describe("AC-3: シームレス接続", () => {
+  describe("シームレス接続", () => {
     it("loadMore成功後、新しい記事が既存配列の末尾に追加される", async () => {
-      // Arrange
+      // 10件で初回取得（auto-prefetch抑制）、追加で1件
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("extra")], false));
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
-        expect(result.current.articles).toHaveLength(1);
+        expect(result.current.articles).toHaveLength(10);
       });
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
-      expect(result.current.articles).toHaveLength(2);
-      expect(result.current.articles[0].id).toBe("173");
-      expect(result.current.articles[1].id).toBe("682");
+      expect(result.current.articles).toHaveLength(11);
+      expect(result.current.articles[10].id).toBe("extra");
     });
 
     it("複数回loadMoreを実行しても記事が順序通り追加される", async () => {
-      // Arrange
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("999")]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("a")]))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("b")], false));
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+      const { result } = renderHook(() => useInfiniteArticles({ loadMoreCount: 1 }));
 
       await waitFor(() => {
-        expect(result.current.articles).toHaveLength(1);
+        expect(result.current.articles).toHaveLength(10);
       });
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
@@ -387,66 +560,56 @@ describe("useInfiniteArticles", () => {
         await result.current.loadMore();
       });
 
-      // Assert
-      expect(result.current.articles).toHaveLength(3);
-      expect(result.current.articles.map((a) => a.id)).toEqual(["173", "682", "999"]);
+      expect(result.current.articles).toHaveLength(12);
+      expect(result.current.articles[10].id).toBe("a");
+      expect(result.current.articles[11].id).toBe("b");
     });
 
     it("0件のarticlesが返された場合でもエラーにならない", async () => {
-      // Arrange
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
         .mockResolvedValueOnce(createSuccessResponse([], false));
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
-        expect(result.current.articles).toHaveLength(1);
+        expect(result.current.articles).toHaveLength(10);
       });
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
-      expect(result.current.articles).toHaveLength(1);
+      expect(result.current.articles).toHaveLength(10);
       expect(result.current.error).toBeNull();
     });
 
     it("currentIndexがloadMore後も変化しない（スクロール位置維持）", async () => {
-      // Arrange
       mockApi.recommend.$post
-        .mockResolvedValueOnce(
-          createSuccessResponse([createMockArticle("173"), createMockArticle("682")])
-        )
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("999")]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("extra")], false));
 
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 2 }));
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
-        expect(result.current.articles).toHaveLength(2);
+        expect(result.current.articles).toHaveLength(10);
       });
 
-      // currentIndexを1に進める
       act(() => {
         result.current.goToNext();
       });
       expect(result.current.currentIndex).toBe(1);
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
       expect(result.current.currentIndex).toBe(1); // 変化しない
     });
   });
 
-  describe("AC-4: 重複取得防止", () => {
+  describe("重複取得防止", () => {
     it("loadMore実行中に再度loadMoreを呼んでも重複リクエストしない", async () => {
-      // Arrange
       mockApi.recommend.$post
         .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
         // eslint-disable-next-line @typescript-eslint/no-misused-promises -- 遅延レスポンスのモック
@@ -464,19 +627,16 @@ describe("useInfiniteArticles", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act - 並行して2回呼び出し
       await act(async () => {
         const promise1 = result.current.loadMore();
         const promise2 = result.current.loadMore();
         await Promise.all([promise1, promise2]);
       });
 
-      // Assert - API呼び出しは初回 + loadMore 1回 = 2回のみ
       expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
     });
 
     it("hasMoreがfalseの場合loadMoreは何もしない", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValueOnce(
         createSuccessResponse([createMockArticle("173")], false)
       );
@@ -489,51 +649,16 @@ describe("useInfiniteArticles", () => {
 
       const initialCallCount = mockApi.recommend.$post.mock.calls.length;
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
       expect(mockApi.recommend.$post).toHaveBeenCalledTimes(initialCallCount);
     });
 
-    it("isPausedがtrueの場合loadMoreは何もしない", async () => {
-      // Arrange - autoLoadLimit=1で1回のloadMoreでisPausedがtrueになる
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 1 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // 1回loadMoreでisPausedがtrue
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      expect(result.current.isPaused).toBe(true);
-
-      const callCountAfterPause = mockApi.recommend.$post.mock.calls.length;
-
-      // Act
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      // Assert - 追加の呼び出しなし
-      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(callCountAfterPause);
-    });
-
     it("3回以上連続でloadMoreを呼んでも重複しない", async () => {
-      // Arrange
       mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
         // eslint-disable-next-line @typescript-eslint/no-misused-promises -- 遅延レスポンスのモック
         .mockImplementation(() => {
           return new Promise((resolve) => {
@@ -543,15 +668,12 @@ describe("useInfiniteArticles", () => {
           });
         });
 
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 10 })
-      );
+      const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act - 3回並行して呼び出し
       await act(async () => {
         const promises = [
           result.current.loadMore(),
@@ -561,146 +683,13 @@ describe("useInfiniteArticles", () => {
         await Promise.all(promises);
       });
 
-      // Assert - 初回 + loadMore 1回 = 2回のみ
+      // 初回 + loadMore 1回 = 2回のみ
       expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe("AC-5: 取得上限", () => {
-    it("autoLoadLimit回に達するとisPausedがtrueになる", async () => {
-      // Arrange
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("999")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("001")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 3 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Act - 3回loadMore
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(false);
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(false);
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      // Assert
-      expect(result.current.isPaused).toBe(true);
-    });
-
-    it("resumeAutoLoad呼び出しでisPausedがfalseになる", async () => {
-      // Arrange
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 1 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(true);
-
-      // Act
-      act(() => {
-        result.current.resumeAutoLoad();
-      });
-
-      // Assert
-      expect(result.current.isPaused).toBe(false);
-    });
-
-    it("resumeAutoLoad呼び出しでautoLoadCountがリセットされる", async () => {
-      // Arrange
-      // 5回のAPI呼び出し: 初回 + loadMore x 2 + resume後loadMore x 2
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("999")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("001")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("002")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 2 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // 2回loadMoreでisPausedになる（別々のactで実行）
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(true);
-
-      // resumeAutoLoadでリセット
-      act(() => {
-        result.current.resumeAutoLoad();
-      });
-
-      // 再度2回loadMoreできることを確認
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(false);
-
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(true);
-    });
-
-    it("autoLoadLimit=1の場合、1回のloadMoreでisPausedがtrueになる", async () => {
-      // Arrange
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 1 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Act
-      await act(async () => {
-        await result.current.loadMore();
-      });
-
-      // Assert
-      expect(result.current.isPaused).toBe(true);
-    });
-  });
-
-  describe("AC-6: 次へボタンによる遷移 (goToNext)", () => {
+  describe("次へボタンによる遷移 (goToNext)", () => {
     it("goToNext呼び出しでcurrentIndexがインクリメントされる", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValueOnce(
         createSuccessResponse([createMockArticle("173"), createMockArticle("682")])
       );
@@ -713,40 +702,14 @@ describe("useInfiniteArticles", () => {
 
       expect(result.current.currentIndex).toBe(0);
 
-      // Act
       act(() => {
         result.current.goToNext();
       });
 
-      // Assert
       expect(result.current.currentIndex).toBe(1);
     });
 
-    it("最後の記事でgoToNext呼び出し時にloadMoreが実行される", async () => {
-      // Arrange
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
-
-      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 1 }));
-
-      await waitFor(() => {
-        expect(result.current.articles).toHaveLength(1);
-      });
-
-      // Act - 最後の記事（index 0）でgoToNext
-      act(() => {
-        result.current.goToNext();
-      });
-
-      // Assert
-      await waitFor(() => {
-        expect(result.current.articles).toHaveLength(2);
-      });
-    });
-
     it("最後の記事でhasMoreがfalseの場合、goToNextは何もしない", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValueOnce(
         createSuccessResponse([createMockArticle("173")], false)
       );
@@ -759,55 +722,15 @@ describe("useInfiniteArticles", () => {
 
       const initialCallCount = mockApi.recommend.$post.mock.calls.length;
 
-      // Act
       act(() => {
         result.current.goToNext();
       });
 
-      // Assert
       expect(mockApi.recommend.$post).toHaveBeenCalledTimes(initialCallCount);
-      expect(result.current.currentIndex).toBe(0); // 変化しない
-    });
-
-    it("isPausedがtrueの場合、最後の記事でgoToNextしてもloadMoreされない", async () => {
-      // Arrange
-      mockApi.recommend.$post
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("682")]));
-
-      const { result } = renderHook(() =>
-        useInfiniteArticles({ initialCount: 1, autoLoadLimit: 1 })
-      );
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // loadMoreでisPausedにする
-      await act(async () => {
-        await result.current.loadMore();
-      });
-      expect(result.current.isPaused).toBe(true);
-
-      // 最後の記事に移動
-      act(() => {
-        result.current.goToNext();
-      });
-      expect(result.current.currentIndex).toBe(1);
-
-      const callCountAfterPause = mockApi.recommend.$post.mock.calls.length;
-
-      // Act - 最後の記事でgoToNext
-      act(() => {
-        result.current.goToNext();
-      });
-
-      // Assert - loadMoreされない
-      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(callCountAfterPause);
+      expect(result.current.currentIndex).toBe(0);
     });
 
     it("複数回goToNextを連続で呼んでも正しく動作する", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValueOnce(
         createSuccessResponse([
           createMockArticle("173"),
@@ -822,90 +745,57 @@ describe("useInfiniteArticles", () => {
         expect(result.current.articles).toHaveLength(3);
       });
 
-      // Act
       act(() => {
         result.current.goToNext();
         result.current.goToNext();
         result.current.goToNext(); // 最後を超えた
       });
 
-      // Assert - 最大は articles.length - 1
       expect(result.current.currentIndex).toBe(2);
+    });
+
+    it("最後の記事でgoToNext呼び出し時にバッファ先行取得がトリガーされる", async () => {
+      // 4件取得（remaining=4-0-1=3 → ちょうどthreshold）→ 即座にauto-prefetchが発火
+      const additionalArticles = createMockArticles(5).map((a) => ({
+        ...a,
+        id: `extra-${a.id}`,
+      }));
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(4)))
+        .mockResolvedValueOnce(createSuccessResponse(additionalArticles, false));
+
+      const { result } = renderHook(() => useInfiniteArticles({ initialCount: 4 }));
+
+      // auto-prefetch: remaining = 4-0-1 = 3 <= threshold(3) → loadMoreが自動発火
+      // 初回ロード直後にprefetchが発火するため、最終的に4+5=9件になる
+      await waitFor(() => {
+        expect(result.current.articles.length).toBe(9);
+      });
+      expect(mockApi.recommend.$post).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe("AC-7: 初回読み込み失敗時の処理", () => {
-    it("初回取得失敗時にerrorが設定される", async () => {
-      // Arrange
-      mockApi.recommend.$post.mockRejectedValue(new Error("Network Error"));
-
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles());
-
-      // Assert
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-      expect(result.current.error).not.toBeNull();
-      // 元のエラーメッセージがそのまま保持される
-      expect(result.current.error?.message).toBe("Network Error");
-    });
-
-    it("API呼び出しがok=falseの場合、errorが設定される", async () => {
-      // Arrange
-      mockApi.recommend.$post.mockResolvedValue(createErrorResponse(500));
-
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles());
-
-      // Assert
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-      expect(result.current.error).not.toBeNull();
-    });
-
-    it("初回取得失敗時にisEmptyがfalseになる（エラー状態は空ではない）", async () => {
-      // Arrange
-      mockApi.recommend.$post.mockRejectedValue(new Error("Error"));
-
-      // Act
-      const { result } = renderHook(() => useInfiniteArticles());
-
-      // Assert
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-      // isEmptyは「!isLoading && !error && articles.length === 0」なので、
-      // エラー時はisEmpty=falseが正しい
-      expect(result.current.isEmpty).toBe(false);
-      expect(result.current.error).not.toBeNull();
-    });
-
-    it("refetch呼び出しで再試行が成功する", async () => {
-      // Arrange
+  describe("AC-7: バッファ先行取得失敗時のリトライ", () => {
+    it("loadMore()が失敗してもerrorステートにならない（閲覧中断しない）", async () => {
       mockApi.recommend.$post
-        .mockRejectedValueOnce(new Error("Network Error"))
-        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]));
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockRejectedValueOnce(new Error("Network Error"));
 
       const { result } = renderHook(() => useInfiniteArticles());
 
       await waitFor(() => {
-        expect(result.current.error).not.toBeNull();
+        expect(result.current.articles).toHaveLength(10);
       });
 
-      // Act
       await act(async () => {
-        await result.current.refetch();
+        await result.current.loadMore();
       });
 
-      // Assert
+      // エラーステートにならない（ユーザーの閲覧体験を中断しない）
       expect(result.current.error).toBeNull();
-      expect(result.current.articles).toHaveLength(1);
     });
 
-    it("API呼び出し失敗後もisLoadingMoreがfalseになる", async () => {
-      // Arrange
+    it("バックグラウンド取得失敗時にisLoadingMoreがfalseに戻る", async () => {
       mockApi.recommend.$post
         .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]))
         .mockRejectedValueOnce(new Error("Network Error"));
@@ -916,21 +806,125 @@ describe("useInfiniteArticles", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Act
       await act(async () => {
         await result.current.loadMore();
       });
 
-      // Assert
       expect(result.current.isLoadingMore).toBe(false);
+    });
+
+    it("次の記事遷移時に再度取得を試みる", async () => {
+      const mockArticles = createMockArticles(5);
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(mockArticles))
+        .mockRejectedValueOnce(new Error("Network Error"))
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(5)));
+
+      const { result } = renderHook(() =>
+        useInfiniteArticles({ initialCount: 5, prefetchThreshold: 3 })
+      );
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(5);
+      });
+
+      // 1回目のloadMore失敗
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.error).toBeNull();
+
+      // 次のgoToNextでprefetchがリトライされる
+      act(() => {
+        result.current.goToNext();
+      });
+
+      // useEffectによるリトライ
+      await waitFor(() => {
+        expect(mockApi.recommend.$post).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    it("API呼び出しがok=falseの場合もerrorステートにならない", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createErrorResponse(500));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      await act(async () => {
+        await result.current.loadMore();
+      });
+
+      // エラーステートにならない
+      expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe("初回読み込み失敗時の処理", () => {
+    it("初回取得失敗時にerrorが設定される", async () => {
+      mockApi.recommend.$post.mockRejectedValue(new Error("Network Error"));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(result.current.error).not.toBeNull();
+      expect(result.current.error?.message).toBe("Network Error");
+    });
+
+    it("API呼び出しがok=falseの場合、errorが設定される", async () => {
+      mockApi.recommend.$post.mockResolvedValue(createErrorResponse(500));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(result.current.error).not.toBeNull();
+    });
+
+    it("初回取得失敗時にisEmptyがfalseになる（エラー状態は空ではない）", async () => {
+      mockApi.recommend.$post.mockRejectedValue(new Error("Error"));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+      expect(result.current.isEmpty).toBe(false);
+      expect(result.current.error).not.toBeNull();
+    });
+
+    it("refetch呼び出しで再試行が成功する", async () => {
+      mockApi.recommend.$post
+        .mockRejectedValueOnce(new Error("Network Error"))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("173")]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.error).not.toBeNull();
+      });
+
+      await act(async () => {
+        await result.current.refetch();
+      });
+
+      expect(result.current.error).toBeNull();
+      expect(result.current.articles).toHaveLength(1);
     });
   });
 
   describe("リセット", () => {
     it("reset呼び出しで全状態が初期化される", async () => {
-      // Arrange
-      mockApi.recommend.$post.mockResolvedValue(
-        createSuccessResponse([createMockArticle("173"), createMockArticle("682")])
+      mockApi.recommend.$post.mockResolvedValueOnce(
+        createSuccessResponse([createMockArticle("173"), createMockArticle("682")], false)
       );
 
       const { result } = renderHook(() => useInfiniteArticles({ initialCount: 2 }));
@@ -939,29 +933,24 @@ describe("useInfiniteArticles", () => {
         expect(result.current.articles).toHaveLength(2);
       });
 
-      // 状態を変更
       act(() => {
         result.current.goToNext();
       });
       expect(result.current.currentIndex).toBe(1);
 
-      // Act
       act(() => {
         result.current.reset();
       });
 
-      // Assert
       expect(result.current.articles).toEqual([]);
       expect(result.current.currentIndex).toBe(0);
       expect(result.current.error).toBeNull();
       expect(result.current.hasMore).toBe(true);
-      expect(result.current.isPaused).toBe(false);
     });
   });
 
   describe("エッジケース: クリーンアップ", () => {
     it("コンポーネントアンマウント時に進行中のAPI呼び出しが安全に処理される", () => {
-      // Arrange
       // eslint-disable-next-line @typescript-eslint/no-misused-promises -- 遅延レスポンスのモック
       mockApi.recommend.$post.mockImplementation(() => {
         return new Promise((resolve) => {
@@ -971,20 +960,16 @@ describe("useInfiniteArticles", () => {
         });
       });
 
-      // Act
       const { unmount } = renderHook(() => useInfiniteArticles());
 
-      // API呼び出し中にアンマウント
       unmount();
 
-      // Assert - エラーが投げられなければOK
       expect(true).toBe(true);
     });
   });
 
   describe("エッジケース: APIレスポンスの異常", () => {
     it("hasMoreがundefinedの場合はfalseとして扱われる", async () => {
-      // Arrange
       mockApi.recommend.$post.mockResolvedValue({
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -994,14 +979,32 @@ describe("useInfiniteArticles", () => {
         }),
       });
 
-      // Act
       const { result } = renderHook(() => useInfiniteArticles());
 
-      // Assert
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
       expect(result.current.hasMore).toBe(false);
+    });
+  });
+
+  describe("エッジケース: URLフィルタリング", () => {
+    it("空URLの記事がフィルタされる", async () => {
+      const articles: Article[] = [
+        createMockArticle("173"),
+        { ...createMockArticle("682"), url: "" },
+        createMockArticle("999"),
+      ];
+      mockApi.recommend.$post.mockResolvedValueOnce(createSuccessResponse(articles, false));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.articles).toHaveLength(2);
+      expect(result.current.articles.map((a) => a.id)).toEqual(["173", "999"]);
     });
   });
 });

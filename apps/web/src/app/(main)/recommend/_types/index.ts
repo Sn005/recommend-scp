@@ -33,12 +33,12 @@ export interface RecommendResponse {
 
 /** useInfiniteArticles フックのオプション */
 export interface UseInfiniteArticlesOptions {
-  /** 初回取得件数（デフォルト: 3） */
+  /** 初回取得件数（デフォルト: 10） */
   initialCount?: number;
-  /** 追加取得件数（デフォルト: 1） */
+  /** 追加取得件数（デフォルト: 5） */
   loadMoreCount?: number;
-  /** 自動読み込み上限（デフォルト: 10） */
-  autoLoadLimit?: number;
+  /** バッファ先行取得閾値（デフォルト: 3） */
+  prefetchThreshold?: number;
 }
 
 /** useInfiniteArticles フックの戻り値 */
@@ -57,14 +57,10 @@ export interface UseInfiniteArticlesResult {
   isEmpty: boolean;
   /** これ以上記事があるか */
   hasMore: boolean;
-  /** 自動読み込みが一時停止中か */
-  isPaused: boolean;
   /** 追加読み込み */
   loadMore: () => Promise<void>;
   /** 次の記事へ */
   goToNext: () => void;
-  /** 自動読み込みを再開 */
-  resumeAutoLoad: () => void;
   /** リセット */
   reset: () => void;
   /** 再取得 */
