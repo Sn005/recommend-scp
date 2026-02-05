@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useVisitorId, ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
 import { PackSelector } from "./_components/PackSelector";
@@ -75,10 +75,23 @@ function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void })
 /**
  * オンボーディングページ
  *
+ * useSearchParams()はSuspense境界内で使用する必要がある（Next.js要件）
+ */
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<LoadingIndicator />}>
+      <OnboardingPageContent />
+    </Suspense>
+  );
+}
+
+/**
+ * オンボーディングページコンテンツ
+ *
  * タブUIで「スターターパック」と「SCP番号を入力」を切り替え
  * - オンボーディング完了済みの場合は /recommend にリダイレクト
  */
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isReset = searchParams.get("reset") === "true";

@@ -36,6 +36,7 @@ vi.mock("next/navigation", () => ({
     replace: mockRouterReplace,
     back: vi.fn(),
   }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // useVisitorIdのモック
