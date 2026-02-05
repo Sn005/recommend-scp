@@ -18,6 +18,15 @@ import type {
 const DEFAULT_INITIAL_COUNT = 3;
 const DEFAULT_LOAD_MORE_COUNT = 1;
 const DEFAULT_AUTO_LOAD_LIMIT = 10;
+const FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * 有効なURLを持つ記事のみをフィルタする
+ * 空文字列のURLは翻訳なしとみなし除外する
+ */
+function filterValidArticles(articles: Article[]): Article[] {
+  return articles.filter((article) => article.url !== "");
+}
 
 /**
  * 推薦記事を取得・管理するフック
@@ -65,6 +74,11 @@ export function useInfiniteArticles(
       setIsLoading(true);
       setError(null);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, FETCH_TIMEOUT_MS);
+
       try {
         const res = await api.recommend.$post({
           json: { visitorId, limit: count },
@@ -76,7 +90,7 @@ export function useInfiniteArticles(
         }
 
         const data = (await res.json()) as RecommendResponse;
-        const recommendations: Article[] = data.recommendations;
+        const recommendations: Article[] = filterValidArticles(data.recommendations);
         const hasMoreData: boolean = data.hasMore ?? false;
 
         if (isMountedRef.current) {
@@ -85,9 +99,16 @@ export function useInfiniteArticles(
         }
       } catch (e) {
         if (isMountedRef.current) {
-          setError(e instanceof Error ? e : new Error("記事の取得に失敗しました"));
+          const message =
+            e instanceof DOMException && e.name === "AbortError"
+              ? "記事の取得がタイムアウトしました"
+              : undefined;
+          setError(
+            e instanceof Error && !message ? e : new Error(message ?? "記事の取得に失敗しました")
+          );
         }
       } finally {
+        clearTimeout(timeoutId);
         if (isMountedRef.current) {
           setIsLoading(false);
         }
@@ -120,6 +141,11 @@ export function useInfiniteArticles(
     isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, FETCH_TIMEOUT_MS);
+
     try {
       const res = await api.recommend.$post({
         json: { visitorId, limit: loadMoreCount },
@@ -131,7 +157,7 @@ export function useInfiniteArticles(
       }
 
       const data = (await res.json()) as RecommendResponse;
-      const newArticles: Article[] = data.recommendations;
+      const newArticles: Article[] = filterValidArticles(data.recommendations);
       const hasMoreData: boolean = data.hasMore ?? false;
 
       if (isMountedRef.current) {
@@ -146,9 +172,16 @@ export function useInfiniteArticles(
       }
     } catch (e) {
       if (isMountedRef.current) {
-        setError(e instanceof Error ? e : new Error("記事の取得に失敗しました"));
+        const message =
+          e instanceof DOMException && e.name === "AbortError"
+            ? "記事の取得がタイムアウトしました"
+            : undefined;
+        setError(
+          e instanceof Error && !message ? e : new Error(message ?? "記事の取得に失敗しました")
+        );
       }
     } finally {
+      clearTimeout(timeoutId);
       if (isMountedRef.current) {
         setIsLoadingMore(false);
       }

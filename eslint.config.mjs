@@ -98,6 +98,7 @@ export default tseslint.config(
       "**/coverage/",
       "packages/poc/",
       "packages/shared/", // 003-00-03でpoc移行時に解除
+      "scripts/", // CLIユーティリティスクリプト（npx tsxで実行）
     ],
   },
   // Prettierとの競合回避（必ず最後に配置）
