@@ -240,6 +240,33 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     if (error) throw error;
   };
 
+  /**
+   * 閲覧履歴を全件削除（好み再設定時に使用）
+   */
+  clearViewHistory = async (visitorId: string): Promise<void> => {
+    const { error } = await this.supabase.from("view_history").delete().eq("visitor_id", visitorId);
+    if (error) throw error;
+  };
+
+  /**
+   * 推薦ログを全件削除（好み再設定時に使用）
+   */
+  clearRecommendationLog = async (visitorId: string): Promise<void> => {
+    const { error } = await this.supabase
+      .from("recommendation_log")
+      .delete()
+      .eq("visitor_id", visitorId);
+    if (error) throw error;
+  };
+
+  /**
+   * フィードバックを全件削除（好み再設定時に使用）
+   */
+  clearFeedback = async (visitorId: string): Promise<void> => {
+    const { error } = await this.supabase.from("feedback").delete().eq("visitor_id", visitorId);
+    if (error) throw error;
+  };
+
   // ============================================
   // Private: DB row → Domain model 変換
   // ============================================

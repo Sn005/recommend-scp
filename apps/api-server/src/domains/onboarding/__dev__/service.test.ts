@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { OnboardingApiService } from "../service";
 import type { OnboardingService } from "@recommend-scp/shared/onboarding";
 import type { VisitorsRepository } from "../../visitors/repository";
+import type { SupabasePreferenceStorage } from "../../../lib/storage/supabase-preference-storage";
 import { NotFoundError, ValidationError } from "../../../lib/errors";
 import type { StarterPackType } from "@recommend-scp/shared/storage";
 
@@ -21,6 +22,21 @@ interface MockVisitorsRepository {
   findByVisitorId: ReturnType<typeof vi.fn>;
 }
 
+interface MockPreferenceStorage {
+  getProfile: ReturnType<typeof vi.fn>;
+  clearViewHistory: ReturnType<typeof vi.fn>;
+  clearRecommendationLog: ReturnType<typeof vi.fn>;
+  clearFeedback: ReturnType<typeof vi.fn>;
+}
+
+/** デフォルトのモックPreferenceStorageを作成（初回オンボーディング: profileなし） */
+const createMockPreferenceStorage = (): MockPreferenceStorage => ({
+  getProfile: vi.fn().mockResolvedValue(null),
+  clearViewHistory: vi.fn().mockResolvedValue(undefined),
+  clearRecommendationLog: vi.fn().mockResolvedValue(undefined),
+  clearFeedback: vi.fn().mockResolvedValue(undefined),
+});
+
 describe("OnboardingApiService", () => {
   // ============================================
   // getStarterPacks テスト
@@ -31,7 +47,11 @@ describe("OnboardingApiService", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
-      const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
+      const service = new OnboardingApiService(
+        mockVisitorsRepo,
+        mockOnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
+      );
       const packs = service.getStarterPacks();
 
       expect(packs).toHaveLength(6);
@@ -41,7 +61,11 @@ describe("OnboardingApiService", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
-      const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
+      const service = new OnboardingApiService(
+        mockVisitorsRepo,
+        mockOnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
+      );
       const packs = service.getStarterPacks();
 
       for (const pack of packs) {
@@ -57,7 +81,11 @@ describe("OnboardingApiService", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
-      const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
+      const service = new OnboardingApiService(
+        mockVisitorsRepo,
+        mockOnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
+      );
       const packs = service.getStarterPacks();
 
       const types = packs.map((p) => p.type);
@@ -68,7 +96,11 @@ describe("OnboardingApiService", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
-      const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
+      const service = new OnboardingApiService(
+        mockVisitorsRepo,
+        mockOnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
+      );
       const packs = service.getStarterPacks();
 
       const types = packs.map((p) => p.type);
@@ -80,7 +112,11 @@ describe("OnboardingApiService", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
-      const service = new OnboardingApiService(mockVisitorsRepo, mockOnboardingService);
+      const service = new OnboardingApiService(
+        mockVisitorsRepo,
+        mockOnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
+      );
       const packs1 = service.getStarterPacks();
       const packs2 = service.getStarterPacks();
 
@@ -124,7 +160,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await service.selectPacks("visitor-123", ["horror"]);
@@ -154,7 +191,8 @@ describe("OnboardingApiService", () => {
 
         const service = new OnboardingApiService(
           mockVisitorsRepo as unknown as VisitorsRepository,
-          mockOnboardingService as unknown as OnboardingService
+          mockOnboardingService as unknown as OnboardingService,
+          createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
         );
 
         await service.selectPacks("visitor-123", [packType]);
@@ -176,7 +214,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await service.selectPacks("visitor-123", ["horror", "mystery", "jp"]);
@@ -193,7 +232,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectPacks("invalid-visitor", ["horror"])).rejects.toThrow(
@@ -212,7 +252,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectPacks("visitor-123", ["horror"])).rejects.toThrow(
@@ -229,7 +270,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectPacks("visitor-123", ["horror"])).rejects.toThrow("Storage error");
@@ -270,7 +312,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       const articleIds = ["scp-001", "scp-002", "scp-003"];
@@ -289,7 +332,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("visitor-123", ["a1", "a2", "a3"])).resolves.not.toThrow();
@@ -302,7 +346,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       const articleIds = Array.from({ length: 10 }, (_, i) => `article-${String(i)}`);
@@ -312,7 +357,8 @@ describe("OnboardingApiService", () => {
     it("3件未満のarticleIds（0件）の場合、ValidationErrorをスローする", async () => {
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("visitor-123", [])).rejects.toThrow(ValidationError);
@@ -321,7 +367,8 @@ describe("OnboardingApiService", () => {
     it("3件未満のarticleIds（1件）の場合、ValidationErrorをスローする", async () => {
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("visitor-123", ["a1"])).rejects.toThrow(ValidationError);
@@ -330,7 +377,8 @@ describe("OnboardingApiService", () => {
     it("3件未満のarticleIds（2件）の場合、ValidationErrorをスローする（境界値-1）", async () => {
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("visitor-123", ["a1", "a2"])).rejects.toThrow(
@@ -341,7 +389,8 @@ describe("OnboardingApiService", () => {
     it("ValidationErrorのメッセージが適切", async () => {
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       // detailにメッセージが含まれることを確認
@@ -357,7 +406,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("invalid-visitor", ["a1", "a2", "a3"])).rejects.toThrow(
@@ -371,7 +421,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       // 2件 → ValidationError (NotFoundErrorではない)
@@ -388,7 +439,8 @@ describe("OnboardingApiService", () => {
 
       const service = new OnboardingApiService(
         mockVisitorsRepo as unknown as VisitorsRepository,
-        mockOnboardingService as unknown as OnboardingService
+        mockOnboardingService as unknown as OnboardingService,
+        createMockPreferenceStorage() as unknown as SupabasePreferenceStorage
       );
 
       await expect(service.selectCustom("visitor-123", ["a1", "a2", "a3"])).rejects.toThrow(

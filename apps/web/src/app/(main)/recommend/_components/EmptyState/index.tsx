@@ -37,7 +37,7 @@ export function EmptyState() {
 
       {/* 再設定ボタン */}
       <Button asChild>
-        <Link href="/onboarding">好みを再設定</Link>
+        <Link href="/onboarding?reset=true">好みを再設定</Link>
       </Button>
     </div>
   );

@@ -43,7 +43,8 @@ export interface StarterPackInfo {
 export class OnboardingApiService {
   constructor(
     private readonly visitorsRepo: VisitorsRepository,
-    private readonly onboardingService: OnboardingService
+    private readonly onboardingService: OnboardingService,
+    private readonly preferenceStorage: SupabasePreferenceStorage
   ) {}
 
   /**
@@ -78,6 +79,9 @@ export class OnboardingApiService {
       throw new NotFoundError("Visitor", visitorId);
     }
 
+    // 再オンボーディングの場合は閲覧履歴・推薦ログ・フィードバックをクリア
+    await this.clearHistoryIfReOnboarding(visitorId);
+
     // OnboardingServiceでプロファイル初期化（複数パック対応）
     await this.onboardingService.completeWithStarterPacks(visitorId, packTypes);
   };
@@ -104,8 +108,32 @@ export class OnboardingApiService {
       throw new NotFoundError("Visitor", visitorId);
     }
 
+    // 再オンボーディングの場合は閲覧履歴・推薦ログ・フィードバックをクリア
+    await this.clearHistoryIfReOnboarding(visitorId);
+
     // OnboardingServiceでプロファイル初期化
     await this.onboardingService.completeWithCustomSelection(visitorId, articleIds);
+  };
+
+  // ============================================
+  // Private: 再オンボーディング時のクリーンアップ
+  // ============================================
+
+  /**
+   * 再オンボーディング時に閲覧履歴・推薦ログ・フィードバックをクリア
+   *
+   * 既にオンボーディング完了済みの場合のみ実行。
+   * 好み再設定後に新しい推薦を受け取れるようにするため。
+   */
+  private clearHistoryIfReOnboarding = async (visitorId: string): Promise<void> => {
+    const profile = await this.preferenceStorage.getProfile(visitorId);
+    if (!profile?.onboardingCompletedAt) return;
+
+    await Promise.all([
+      this.preferenceStorage.clearViewHistory(visitorId),
+      this.preferenceStorage.clearRecommendationLog(visitorId),
+      this.preferenceStorage.clearFeedback(visitorId),
+    ]);
   };
 
   // ============================================
@@ -139,5 +167,5 @@ export const createOnboardingApiService = (supabase: SupabaseClient): Onboarding
   const embeddingRepo = new EmbeddingRepositoryAdapter(vectorSearch, preferenceStorage);
   const onboardingService = new OnboardingService(preferenceStorage, embeddingRepo);
 
-  return new OnboardingApiService(visitorsRepo, onboardingService);
+  return new OnboardingApiService(visitorsRepo, onboardingService, preferenceStorage);
 };
