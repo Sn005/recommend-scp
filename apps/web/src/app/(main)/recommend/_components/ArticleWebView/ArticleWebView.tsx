@@ -9,14 +9,15 @@ import { TranslationNotFound } from "../TranslationNotFound";
 import type { ArticleWebViewProps } from "./index";
 
 /**
- * SCP Wiki URLをNext.jsプロキシ経由のパスに変換
- * HTTPS環境でのmixed content回避のため、iframeのsrcにはプロキシURLを使用
+ * SCP Wiki URLをHTMLプロキシエンドポイント経由のパスに変換
+ * HTTPS環境でのmixed content回避のため、iframeのsrcにはプロキシURLを使用。
+ * /api/wiki-proxy はHTML内のHTTP URLも書き換えるため、CSS/JS/画像も正常に読み込まれる。
  */
 const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
 
 function toProxyUrl(url: string): string {
   if (url.startsWith(SCP_JP_HTTP_ORIGIN)) {
-    return "/wiki" + url.slice(SCP_JP_HTTP_ORIGIN.length);
+    return "/api/wiki-proxy" + url.slice(SCP_JP_HTTP_ORIGIN.length);
   }
   return url;
 }

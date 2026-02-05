@@ -15,6 +15,7 @@ import { corsMiddleware } from "./middleware/cors";
 import { errorHandler } from "./middleware/error-handler";
 import { healthRoutes } from "./routes/health";
 import { checkUrlRoutes } from "./routes/check-url";
+import { wikiProxyRoutes } from "./routes/wiki-proxy";
 import { createVisitorsRoutes } from "./domains/visitors/routes";
 import { createArticlesRoutes } from "./domains/articles/routes";
 import { createRecommendRoutes } from "./domains/recommend/routes";
@@ -37,6 +38,7 @@ export const createRoutes = (supabase: SupabaseClient) => {
   return new Hono()
     .route("/health", healthRoutes)
     .route("/check-url", checkUrlRoutes)
+    .route("/wiki-proxy", wikiProxyRoutes)
     .route("/visitors", createVisitorsRoutes(supabase))
     .route("/articles", createArticlesRoutes(supabase))
     .route("/recommend", createRecommendRoutes(supabase))

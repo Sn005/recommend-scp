@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 /**
- * Wikidotリソースのプロキシ先ドメイン
- * scp-jp.wikidot.comはHTTPSに対応していないため、
- * Next.js rewritesでHTTPコンテンツをHTTPS経由で配信する
+ * Wikidot関連ドメインのHTTPオリジン
+ * いずれもHTTPSに対応していないため、Next.js rewritesでプロキシする
  */
-const WIKIDOT_ORIGIN = "http://scp-jp.wikidot.com";
+const WIKIDOT_ORIGINS = {
+  main: "http://scp-jp.wikidot.com",
+  wdfiles: "http://scp-jp.wdfiles.com",
+  wdfilesStorage: "http://scp-jp-storage.wdfiles.com",
+  wikidotWww: "http://www.wikidot.com",
+} as const;
 
 /**
  * Wikidotが使用するリソースパスのプレフィックス一覧
@@ -15,6 +19,8 @@ const WIKIDOT_RESOURCE_PREFIXES = [
   "common--theme", // ベーステーマCSS/JS
   "common--javascript", // 共通JavaScript
   "common--modules", // モジュールJS/CSS
+  "common--bootstrap", // Bootstrap CSS/JS
+  "common--fonts", // Font Awesome等
   "local--code", // サイト固有CSS/JS
   "local--files", // アップロードファイル（画像等）
   "local--theme", // サイト固有テーマ
@@ -30,18 +36,38 @@ const nextConfig: NextConfig = {
 
   // SCP Wiki (HTTP) へのリバースプロキシ
   // HTTPS環境でiframeにHTTPコンテンツを表示するためのmixed content回避策
+  //
+  // 構成:
+  //   /api/wiki-proxy/* → Honoエンドポイント（HTML取得 + URL書き換え）
+  //   /wiki/*           → scp-jp.wikidot.com（HTML内から参照される記事リンク等）
+  //   /wdfiles-*        → *.wdfiles.com（画像・CSS等のファイルストレージ）
+  //   /wikidot-www/*    → www.wikidot.com（共通リソース）
+  //   /common--*等      → scp-jp.wikidot.com（絶対パスで参照される静的リソース）
   async rewrites() {
     return [
-      // 記事ページ本体
+      // 記事ページ（HTML内リンクのフォールバック）
       {
         source: "/wiki/:path*",
-        destination: `${WIKIDOT_ORIGIN}/:path*`,
+        destination: `${WIKIDOT_ORIGINS.main}/:path*`,
       },
-      // Wikidot静的リソース（CSS/JS/画像等）
-      // iframeで読み込まれたHTMLから絶対パスで参照されるリソースをプロキシ
+      // wdfiles.com ファイルストレージ（CSS/画像/カスタムテーマ）
+      {
+        source: "/wdfiles-scp-jp/:path*",
+        destination: `${WIKIDOT_ORIGINS.wdfiles}/:path*`,
+      },
+      {
+        source: "/wdfiles-scp-jp-storage/:path*",
+        destination: `${WIKIDOT_ORIGINS.wdfilesStorage}/:path*`,
+      },
+      // www.wikidot.com 共通リソース
+      {
+        source: "/wikidot-www/:path*",
+        destination: `${WIKIDOT_ORIGINS.wikidotWww}/:path*`,
+      },
+      // Wikidot静的リソース（絶対パスで参照されるCSS/JS/画像等）
       ...WIKIDOT_RESOURCE_PREFIXES.map((prefix) => ({
         source: `/${prefix}/:path*`,
-        destination: `${WIKIDOT_ORIGIN}/${prefix}/:path*`,
+        destination: `${WIKIDOT_ORIGINS.main}/${prefix}/:path*`,
       })),
     ];
   },
