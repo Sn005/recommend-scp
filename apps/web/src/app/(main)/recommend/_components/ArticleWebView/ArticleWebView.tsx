@@ -1,12 +1,26 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
 import { useArticleWebView } from "./useArticleWebView";
 import { use404Detection } from "./use404Detection";
 import { useArticleContent } from "./useArticleContent";
 import { TranslationNotFound } from "../TranslationNotFound";
 import type { ArticleWebViewProps } from "./index";
+
+/**
+ * SCP Wiki URLをHTMLプロキシエンドポイント経由のパスに変換
+ * HTTPS環境でのmixed content回避のため、iframeのsrcにはプロキシURLを使用。
+ * /api/wiki-proxy はHTML内のHTTP URLも書き換えるため、CSS/JS/画像も正常に読み込まれる。
+ */
+const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
+
+function toProxyUrl(url: string): string {
+  if (url.startsWith(SCP_JP_HTTP_ORIGIN)) {
+    return "/api/wiki-proxy" + url.slice(SCP_JP_HTTP_ORIGIN.length);
+  }
+  return url;
+}
 
 export function ArticleWebView({
   url,
@@ -20,8 +34,11 @@ export function ArticleWebView({
   const [showNotFound, setShowNotFound] = useState(false);
   const contentFetchedRef = useRef(false);
 
+  // mixed content回避: iframeにはプロキシURLを使用
+  const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
+
   const { iframeRef, isLoading, error, handleLoad, handleError, retry } = useArticleWebView({
-    url,
+    url: iframeSrc,
     onScrollEnd,
     onScrollChange,
   });
@@ -68,8 +85,8 @@ export function ArticleWebView({
     setShowNotFound(true);
   }, [articleId]);
 
-  // 404検知（articleIdが指定されている場合のみ有効）
-  const { isChecking } = use404Detection({
+  // 404検知（バックグラウンドで実行、ローディング表示をブロックしない）
+  use404Detection({
     url,
     onNotFound: handleNotFound,
   });
@@ -91,8 +108,8 @@ export function ArticleWebView({
       data-url={url}
       className={cn("relative w-full h-[calc(100vh-100px)]", className)}
     >
-      {/* ローディングインジケータ（404チェック中も表示） */}
-      {(isLoading || isChecking) && !error && (
+      {/* ローディングインジケータ（iframe読み込み中のみ） */}
+      {isLoading && !error && (
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 flex items-center justify-center bg-gray-100"
@@ -121,7 +138,7 @@ export function ArticleWebView({
           信頼できないサイトには使用しないこと */}
       <iframe
         ref={iframeRef}
-        src={url}
+        src={iframeSrc}
         className="w-full h-full border-0"
         onLoad={handleIframeLoad}
         onError={handleError}

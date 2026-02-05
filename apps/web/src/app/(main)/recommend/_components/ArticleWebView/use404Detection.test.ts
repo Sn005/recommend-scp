@@ -82,6 +82,24 @@ describe("use404Detection", () => {
       expect(result.current.isNotFound).toBe(false);
       expect(onNotFound).not.toHaveBeenCalled();
     });
+
+    it("空URLの場合、翻訳なしとして扱う", async () => {
+      // Arrange
+      global.fetch = vi.fn();
+      const onNotFound = vi.fn();
+
+      // Act
+      const { result } = renderHook(() => use404Detection({ url: "", onNotFound }));
+
+      // Assert
+      await waitFor(() => {
+        expect(result.current.isChecking).toBe(false);
+      });
+      expect(result.current.isNotFound).toBe(true);
+      expect(onNotFound).toHaveBeenCalledTimes(1);
+      // fetchは呼ばれない
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
   });
 
   describe("ローディング状態", () => {
@@ -201,7 +219,9 @@ describe("use404Detection", () => {
       // Assert
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          "/api/check-url?url=https%3A%2F%2Fscp-jp.wikidot.com%2Fscp-173"
+          "/api/check-url?url=https%3A%2F%2Fscp-jp.wikidot.com%2Fscp-173",
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          expect.objectContaining({ signal: expect.any(AbortSignal) })
         );
       });
     });

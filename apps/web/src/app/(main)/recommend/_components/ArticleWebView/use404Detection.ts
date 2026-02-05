@@ -8,6 +8,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
+const CHECK_URL_TIMEOUT_MS = 5_000;
+
 interface CheckUrlResponse {
   exists: boolean;
 }
@@ -47,12 +49,30 @@ export function use404Detection(options: Use404DetectionOptions): Use404Detectio
   onNotFoundRef.current = onNotFound;
 
   const checkUrl = useCallback(async (targetUrl: string) => {
+    // 空URLは翻訳なしとして即座に処理
+    if (!targetUrl) {
+      setIsChecking(false);
+      if (!hasCalledNotFound.current) {
+        hasCalledNotFound.current = true;
+        setIsNotFound(true);
+        void onNotFoundRef.current();
+      }
+      return;
+    }
+
     setIsChecking(true);
     setIsNotFound(false);
     hasCalledNotFound.current = false;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, CHECK_URL_TIMEOUT_MS);
+
     try {
-      const response = await fetch(`/api/check-url?url=${encodeURIComponent(targetUrl)}`);
+      const response = await fetch(`/api/check-url?url=${encodeURIComponent(targetUrl)}`, {
+        signal: controller.signal,
+      });
       const data = (await response.json()) as CheckUrlResponse;
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- race condition guard for concurrent calls
@@ -62,9 +82,9 @@ export function use404Detection(options: Use404DetectionOptions): Use404Detectio
         void onNotFoundRef.current();
       }
     } catch {
-      // ネットワークエラーは404として扱わない
-      // エラーログは本番環境では適切なロガーに置き換え
+      // ネットワークエラー・タイムアウトは404として扱わない
     } finally {
+      clearTimeout(timeoutId);
       setIsChecking(false);
     }
   }, []);

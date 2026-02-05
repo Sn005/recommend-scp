@@ -54,6 +54,7 @@ const ALLOWED_ORIGINS = [
 ];
 
 const SCROLL_END_THRESHOLD = 90;
+const IFRAME_LOAD_TIMEOUT_MS = 15_000;
 
 /**
  * スクロール率を正規化（0-100の範囲に収める）
@@ -81,6 +82,16 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     setError(null);
     setScrollPercentage(0);
     setHasTriggeredEnd(false);
+
+    // iframe読み込みタイムアウト: onLoadが発火しない場合（mixed content blocking等）に
+    // ローディング状態を強制解除する
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+    }, IFRAME_LOAD_TIMEOUT_MS);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [url]);
 
   // スクロール検知（postMessage経由）

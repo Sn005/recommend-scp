@@ -51,6 +51,20 @@ describe("ArticleWebView", () => {
       expect(iframe).toHaveAttribute("src", "https://scp-jp.wikidot.com/scp-173");
     });
 
+    it("HTTP URLがプロキシURLに変換される（mixed content回避）", () => {
+      render(<ArticleWebView url="http://scp-jp.wikidot.com/scp-173" />);
+
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe).toHaveAttribute("src", "/api/wiki-proxy/scp-173");
+    });
+
+    it("HTTPS URLはプロキシ変換されない", () => {
+      render(<ArticleWebView url="https://scp-jp.wikidot.com/scp-173" />);
+
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe).toHaveAttribute("src", "https://scp-jp.wikidot.com/scp-173");
+    });
+
     it("iframeにsandbox属性が設定される", () => {
       render(<ArticleWebView url="https://example.com" />);
 
@@ -238,7 +252,7 @@ describe("ArticleWebView", () => {
   });
 
   describe("AC: 404検知・サジェスト画面", () => {
-    it("404検知チェック中はローディングが表示される", () => {
+    it("404検知チェック中でもローディングが表示されない（バックグラウンド実行）", () => {
       mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
       mockUse404Detection.mockReturnValue({
         isChecking: true,
@@ -247,7 +261,7 @@ describe("ArticleWebView", () => {
 
       render(<ArticleWebView url="https://example.com" />);
 
-      expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
+      expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
     });
 
     it("404検知時にサジェスト画面が表示される", async () => {
