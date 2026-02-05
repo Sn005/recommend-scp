@@ -53,7 +53,25 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 const INJECTED_STYLE = "<style>#print-options{display:none!important}</style>";
 
 /**
- * HTML書き換え: URL変換 + 不要要素の非表示CSS注入
+ * 既にプロキシパスに書き換え済みのプレフィックス
+ * これらで始まるパスは rewriteAbsolutePaths で二重変換しない
+ */
+const PROXY_PATH_PREFIXES = ["wiki/", "wdfiles-", "wikidot-", "api/", "common--", "local--"];
+
+/**
+ * href="/path" 形式の絶対パスリンクを href="/wiki/path" に書き換える正規表現
+ *
+ * Wiki HTML内のドメインなし絶対パスリンク（例: href="/scp-456"）は
+ * URL_REWRITE_MAP では変換されない。
+ * そのままだとiframe内で /scp-456 に遷移し、Next.jsの404になるため、
+ * /wiki/ プレフィックスを付与して Next.js rewrites 経由でWikiにプロキシする。
+ *
+ * 否定先読みで既にプロキシパスに変換済みの href は除外する。
+ */
+const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("|")})`, "g");
+
+/**
+ * HTML書き換え: URL変換 + 不要要素の非表示CSS注入 + 絶対パスリンク修正
  */
 function rewriteHtml(html: string): string {
   // </head> 直前にCSSを注入（初回ペイント前に適用される）
@@ -61,6 +79,8 @@ function rewriteHtml(html: string): string {
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
+  // ドメインなし絶対パスリンクを /wiki/ 経由に書き換え
+  result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/wiki/');
   return result;
 }
 
