@@ -718,7 +718,12 @@
 
       // ========================================
       // ★ 遷移アニメーション
+      //   最低0.5秒 / 最大1秒 / コンテンツ準備完了で即遷移
       // ========================================
+      const CARD_MIN_MS = 500; // 最低表示時間（読める最低限）
+      const CARD_MAX_MS = 1000; // 最大表示時間（これ以上は待たせない）
+      const FADE_IN_DELAY = 150; // 記事FO後→カードFIまでの待ち
+
       function transitionToNext() {
         if (isTransitioning) return;
         isTransitioning = true;
@@ -734,41 +739,62 @@
         hcSubtitle.textContent = nextArticle.subtitle;
         updateDots(nextIndex);
 
-        // 1b. 背景画像の設定（あれば画像、なければグラデーションフォールバック）
+        // 1b. 背景画像の設定
         hcBgImg.classList.remove("loaded");
         if (nextArticle.thumbnail) {
           hcBgImg.src = nextArticle.thumbnail;
           hcBgImg.onload = () => hcBgImg.classList.add("loaded");
-          // キャッシュ済みならすぐ表示
           if (hcBgImg.complete) hcBgImg.classList.add("loaded");
         } else {
           hcBgImg.src = "";
         }
 
-        // 2. 現在の記事をフェードアウト
-        articleContainer.classList.add("fading");
+        // 2. コンテンツ準備状態の管理
+        let contentReady = false;
+        let minTimeReached = false;
+        let dismissed = false;
 
-        // 3. ヘッダーカードをフェードイン（150ms後）
+        // コンテンツを裏で準備（実プロダクトではiframe読み込み）
+        // プロトタイプではランダム遅延でシミュレート
+        const simulatedLoadTime = 200 + Math.random() * 600; // 200〜800ms
+        setTimeout(() => {
+          contentReady = true;
+          tryDismiss();
+        }, simulatedLoadTime);
+
+        // 3. 現在の記事をフェードアウト → ヘッダーカードをフェードイン
+        articleContainer.classList.add("fading");
         setTimeout(() => {
           headerCard.classList.add("visible");
-        }, 150);
+        }, FADE_IN_DELAY);
 
-        // 4. ヘッダーカードを 0.5秒 表示してからフェードアウト
+        // 4. 最低表示時間タイマー
         setTimeout(() => {
-          headerCard.classList.remove("visible");
+          minTimeReached = true;
+          tryDismiss();
+        }, FADE_IN_DELAY + CARD_MIN_MS);
 
-          // 5. 新しい記事をセット＆フェードイン
+        // 5. 最大表示時間タイマー（強制遷移）
+        setTimeout(() => {
+          tryDismiss(true);
+        }, FADE_IN_DELAY + CARD_MAX_MS);
+
+        // 6. 条件が揃ったらカードを閉じて記事表示
+        function tryDismiss(force) {
+          if (dismissed) return;
+          if (!force && (!contentReady || !minTimeReached)) return;
+          dismissed = true;
+
+          headerCard.classList.remove("visible");
           setTimeout(() => {
             currentIndex = nextIndex;
             renderArticle(currentIndex);
             articleContainer.classList.remove("fading");
-            // スクロール位置をトップに
             document.querySelector("main").scrollTop = 0;
-            // 背景画像をリセット
             hcBgImg.classList.remove("loaded");
             isTransitioning = false;
           }, 300);
-        }, 650);
+        }
       }
 
       // ========================================
