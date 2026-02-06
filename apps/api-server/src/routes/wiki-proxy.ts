@@ -47,10 +47,28 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 
 /**
  * <head>末尾に注入するCSS
- * printer--friendlyモードの印刷オプションUIを非表示にする。
+ *
+ * 1. printer--friendlyモードの印刷オプションUIを非表示
+ * 2. 記事可読性向上（line-height, font-size, spacing）
+ *    - モックアップ（header-6-minimal-2btn.html）のスタイルを参考
+ *    - 元記事のカラー・装飾は尊重し、可読性に直結するプロパティのみ上書き
+ *
  * CSSは初回ペイント前に評価されるため、レイアウトシフトが発生しない。
  */
-const INJECTED_STYLE = "<style>#print-options{display:none!important}</style>";
+const INJECTED_STYLE = [
+  "<style>",
+  // 印刷オプション非表示
+  "#print-options{display:none!important}",
+  // 記事可読性: ベースタイポグラフィ
+  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8;-webkit-text-size-adjust:100%}",
+  // 記事可読性: コンテンツ領域
+  "#page-content{font-size:15px;padding:16px;overflow-wrap:break-word;word-break:break-word}",
+  // 記事可読性: 段落間スペーシング
+  "#page-content p{margin-bottom:1em}",
+  // 記事可読性: 画像レスポンシブ化
+  "#page-content img{max-width:100%;height:auto}",
+  "</style>",
+].join("");
 
 /**
  * 既にプロキシパスに書き換え済みのプレフィックス
