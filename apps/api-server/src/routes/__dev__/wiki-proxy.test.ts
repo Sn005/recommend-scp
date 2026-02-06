@@ -196,6 +196,37 @@ describe("GET /wiki-proxy/*", () => {
       // Assert
       expect(text).toContain("#print-options{display:none!important}");
     });
+
+    it("記事可読性向上のためのline-heightとfont-sizeが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert: モックアップ準拠の可読性スタイル
+      expect(text).toContain("line-height:1.8");
+      expect(text).toContain("font-size:15px");
+    });
+
+    it("画像のレスポンシブスタイルが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert: 画像がコンテナ幅を超えないようにする
+      expect(text).toContain("#page-content img{max-width:100%;height:auto}");
+    });
   });
 
   describe("エラーハンドリング", () => {
