@@ -542,6 +542,40 @@
       // ========================================
       // 記事データ（3件のサンプル）
       // ========================================
+      // インラインSVG画像（外部依存なし・確実に表示）
+      // SCP-5000: 暗い研究施設の廊下イメージ
+      const svgScp5000 =
+        "data:image/svg+xml," +
+        encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200">
+        <defs>
+          <radialGradient id="g1" cx="30%" cy="40%"><stop offset="0%" stop-color="#1a3a2a"/><stop offset="100%" stop-color="#0a0f0d"/></radialGradient>
+          <filter id="n1"><feTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+        </defs>
+        <rect width="800" height="1200" fill="url(#g1)"/>
+        <rect width="800" height="1200" filter="url(#n1)" opacity="0.08"/>
+        <rect x="100" y="300" width="600" height="4" rx="2" fill="#10B981" opacity="0.3"/>
+        <rect x="200" y="500" width="400" height="400" rx="8" fill="none" stroke="#10B981" stroke-width="1" opacity="0.15"/>
+        <circle cx="400" cy="700" r="80" fill="none" stroke="#10B981" stroke-width="0.5" opacity="0.2"/>
+        <text x="400" y="720" text-anchor="middle" font-family="monospace" font-size="24" fill="#10B981" opacity="0.15">EXCLUDED</text>
+      </svg>`);
+
+      // SCP-682: 酸のタンク・生物学的脅威イメージ
+      const svgScp682 =
+        "data:image/svg+xml," +
+        encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200">
+        <defs>
+          <radialGradient id="g2" cx="50%" cy="60%"><stop offset="0%" stop-color="#3a1010"/><stop offset="100%" stop-color="#120505"/></radialGradient>
+          <filter id="n2"><feTurbulence baseFrequency="0.4" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+        </defs>
+        <rect width="800" height="1200" fill="url(#g2)"/>
+        <rect width="800" height="1200" filter="url(#n2)" opacity="0.1"/>
+        <line x1="0" y1="800" x2="800" y2="750" stroke="#EF4444" stroke-width="0.5" opacity="0.3"/>
+        <line x1="0" y1="820" x2="800" y2="770" stroke="#EF4444" stroke-width="0.5" opacity="0.2"/>
+        <line x1="0" y1="840" x2="800" y2="790" stroke="#EF4444" stroke-width="0.5" opacity="0.1"/>
+        <text x="400" y="600" text-anchor="middle" font-family="monospace" font-size="120" fill="#EF4444" opacity="0.06">682</text>
+        <text x="400" y="950" text-anchor="middle" font-family="monospace" font-size="14" fill="#EF4444" opacity="0.2">KETER // TERMINATION LOG</text>
+      </svg>`);
+
       const articles = [
         {
           number: "SCP-5000",
@@ -550,8 +584,7 @@
           objectClassLabel: "Safe",
           rating: "+574",
           year: "2020",
-          // ダーク・テック系（パワードスーツのイメージ）
-          thumbnail: "https://picsum.photos/seed/scp5000dark/800/1200",
+          thumbnail: svgScp5000,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -605,8 +638,7 @@
           objectClassLabel: "Keter",
           rating: "+2,100",
           year: "2008",
-          // ダーク・生物系（爬虫類のイメージ）
-          thumbnail: "https://picsum.photos/seed/scp682reptile/800/1200",
+          thumbnail: svgScp682,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
