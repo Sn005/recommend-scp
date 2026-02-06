@@ -353,6 +353,50 @@ describe("useArticleWebView", () => {
     });
   });
 
+  describe("同一オリジン（wiki-proxy経由）からのメッセージ", () => {
+    it("同一オリジンからのスクロールメッセージが処理される", () => {
+      const onScrollChange = vi.fn();
+      renderHook(() =>
+        useArticleWebView({
+          url: "https://example.com",
+          onScrollChange,
+        })
+      );
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: window.location.origin,
+            data: { type: "scroll", percentage: 60 },
+          })
+        );
+      });
+
+      expect(onScrollChange).toHaveBeenCalledWith(60);
+    });
+
+    it("同一オリジンからのスクロール90%で読了判定される", () => {
+      const onScrollEnd = vi.fn();
+      renderHook(() =>
+        useArticleWebView({
+          url: "https://example.com",
+          onScrollEnd,
+        })
+      );
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: window.location.origin,
+            data: { type: "scroll", percentage: 95 },
+          })
+        );
+      });
+
+      expect(onScrollEnd).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("エッジケース: 不正なメッセージ", () => {
     it("typeがscroll以外のメッセージは無視される", () => {
       const onScrollChange = vi.fn();

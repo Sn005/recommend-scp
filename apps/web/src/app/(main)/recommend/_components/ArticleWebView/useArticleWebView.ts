@@ -43,6 +43,9 @@ function isScrollMessage(data: unknown): data is ScrollMessage {
 /**
  * 許可するorigin（SCP Wikiサイト）
  * セキュリティ: 信頼できるサイトからのpostMessageのみ受け付ける
+ *
+ * 注意: wiki-proxyを経由したコンテンツはアプリと同一オリジンで配信されるため、
+ * 同一オリジンからのpostMessageも isAllowedOrigin() で許可する。
  */
 const ALLOWED_ORIGINS = [
   "https://scp-jp.wikidot.com",
@@ -52,6 +55,17 @@ const ALLOWED_ORIGINS = [
   "https://scp-kr.wikidot.com",
   "https://scp-wiki.net",
 ];
+
+/**
+ * メッセージのoriginが許可されているかを判定
+ * - ALLOWED_ORIGINSリスト内のSCP Wikiドメイン
+ * - wiki-proxy経由の同一オリジン（window.location.origin）
+ */
+function isAllowedOrigin(origin: string): boolean {
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (typeof window !== "undefined" && origin === window.location.origin) return true;
+  return false;
+}
 
 const SCROLL_END_THRESHOLD = 90;
 const IFRAME_LOAD_TIMEOUT_MS = 15_000;
@@ -98,7 +112,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
   useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
       // セキュリティ: 信頼できるoriginからのメッセージのみ処理
-      if (!ALLOWED_ORIGINS.includes(event.origin)) {
+      if (!isAllowedOrigin(event.origin)) {
         return;
       }
 

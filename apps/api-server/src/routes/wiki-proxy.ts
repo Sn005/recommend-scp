@@ -71,6 +71,32 @@ const INJECTED_STYLE = [
 ].join("");
 
 /**
+ * <body>末尾に注入するスクロール検知スクリプト
+ *
+ * iframe内のスクロール率を計算し、親ウィンドウにpostMessageで通知する。
+ * 親側の useArticleWebView フックが受信し、読了判定（90%）やプログレスバー更新に使用。
+ *
+ * - throttle: requestAnimationFrameで間引き（60fps以下に制限）
+ * - メッセージ形式: { type: "scroll", percentage: number }
+ * - percentage: 0-100の整数（Math.round済み）
+ */
+const INJECTED_SCROLL_SCRIPT = `<script>
+(function(){
+  var ticking=false;
+  function notify(){
+    var h=document.documentElement.scrollHeight-document.documentElement.clientHeight;
+    var pct=h>0?Math.round((window.scrollY/h)*100):0;
+    if(pct<0)pct=0;if(pct>100)pct=100;
+    window.parent.postMessage({type:"scroll",percentage:pct},"*");
+  }
+  window.addEventListener("scroll",function(){
+    if(!ticking){ticking=true;requestAnimationFrame(function(){notify();ticking=false;});}
+  });
+  notify();
+})();
+</script>`;
+
+/**
  * 既にプロキシパスに書き換え済みのプレフィックス
  * これらで始まるパスは rewriteAbsolutePaths で二重変換しない
  */
@@ -89,7 +115,7 @@ const PROXY_PATH_PREFIXES = ["wiki/", "wdfiles-", "wikidot-", "api/", "common--"
 const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("|")})`, "g");
 
 /**
- * HTML書き換え: URL変換 + 不要要素の非表示CSS注入 + 絶対パスリンク修正
+ * HTML書き換え: URL変換 + 不要要素の非表示CSS注入 + スクロール検知スクリプト注入 + 絶対パスリンク修正
  */
 function rewriteHtml(html: string): string {
   // </head> 直前にCSSを注入（初回ペイント前に適用される）
@@ -99,6 +125,8 @@ function rewriteHtml(html: string): string {
   }
   // ドメインなし絶対パスリンクを /wiki/ 経由に書き換え
   result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/wiki/');
+  // </body> 直前にスクロール検知スクリプトを注入
+  result = result.replace("</body>", `${INJECTED_SCROLL_SCRIPT}</body>`);
   return result;
 }
 

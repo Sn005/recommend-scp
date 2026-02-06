@@ -229,6 +229,40 @@ describe("GET /wiki-proxy/*", () => {
     });
   });
 
+  describe("スクロール検知スクリプト注入", () => {
+    it("スクロール検知用のpostMessageスクリプトが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body><p>content</p></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("window.parent.postMessage");
+      expect(text).toContain('"scroll"');
+      expect(text).toContain("percentage");
+    });
+
+    it("スクリプトが</body>直前に注入される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><p>content</p></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toMatch(/<\/script><\/body>/);
+    });
+  });
+
   describe("エラーハンドリング", () => {
     it("パスが指定されない場合、400エラーを返す", async () => {
       // Arrange
