@@ -159,7 +159,11 @@ export function useInfiniteArticles(
       const hasMoreData: boolean = data.hasMore ?? false;
 
       if (isMountedRef.current) {
-        setArticles((prev) => [...prev, ...newArticles]);
+        setArticles((prev) => {
+          const existingIds = new Set(prev.map((a) => a.id));
+          const uniqueNewArticles = newArticles.filter((a) => !existingIds.has(a.id));
+          return [...prev, ...uniqueNewArticles];
+        });
         setHasMore(hasMoreData);
       }
     } catch {
