@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // モックの戻り値を管理するオブジェクト
 const mockUseInfiniteArticlesResult = {
@@ -13,10 +13,13 @@ const mockUseInfiniteArticlesResult = {
   }[],
   currentIndex: 0,
   isLoading: true,
+  isLoadingMore: false,
   error: null as Error | null,
   isEmpty: false,
+  hasMore: true,
   loadMore: vi.fn(),
   goToNext: vi.fn(),
+  reset: vi.fn(),
   refetch: vi.fn(),
 };
 
@@ -43,6 +46,34 @@ vi.mock("../_hooks/useFeedback", () => ({
 // useArticleFavoriteをモック
 vi.mock("../_hooks/useArticleFavorite", () => ({
   useArticleFavorite: () => mockUseArticleFavoriteResult,
+}));
+
+// ArticleWebViewをモック（コールバック制御のため）
+vi.mock("../_components/ArticleWebView", () => ({
+  ArticleWebView: ({
+    url,
+    articleId,
+    onScrollEnd,
+  }: {
+    url: string;
+    articleId?: string;
+    onScrollEnd?: () => void;
+    onSkip?: () => void;
+    onContentLoaded?: (content: { title: string; excerpt: string }) => void;
+    className?: string;
+  }) => (
+    <div data-testid="article-webview" data-url={url} data-article-id={articleId}>
+      {onScrollEnd && (
+        <button
+          data-testid={`scroll-end-trigger-${articleId ?? "unknown"}`}
+          onClick={onScrollEnd}
+          type="button"
+        >
+          Scroll End
+        </button>
+      )}
+    </div>
+  ),
 }));
 
 // コンポーネントをインポート（モックの後）
@@ -82,9 +113,16 @@ describe("RecommendPage", () => {
     mockUseInfiniteArticlesResult.articles = [];
     mockUseInfiniteArticlesResult.currentIndex = 0;
     mockUseInfiniteArticlesResult.isLoading = true;
+    mockUseInfiniteArticlesResult.isLoadingMore = false;
     mockUseInfiniteArticlesResult.error = null;
     mockUseInfiniteArticlesResult.isEmpty = false;
+    mockUseInfiniteArticlesResult.hasMore = true;
     mockUseArticleFavoriteResult.isFavorited = false;
+  });
+
+  afterEach(() => {
+    // フェイクタイマーが残らないよう常にリアルタイマーに戻す
+    vi.useRealTimers();
   });
 
   describe("AC-1: ページ初期表示", () => {
@@ -118,8 +156,8 @@ describe("RecommendPage", () => {
       render(<RecommendPage />);
 
       await waitFor(() => {
-        const webview = screen.getByTestId("article-webview");
-        expect(webview).toHaveAttribute("data-url", mockArticle.url);
+        const webviews = screen.getAllByTestId("article-webview");
+        expect(webviews[0]).toHaveAttribute("data-url", mockArticle.url);
       });
     });
 
@@ -265,6 +303,252 @@ describe("RecommendPage", () => {
 
       expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticle.id);
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalled();
+    });
+  });
+
+  // ===== 006-02-07: 推薦拡張・無限スクロール強化 =====
+
+  describe("AC-4 (007): デュアルWebViewとスムーストランジション", () => {
+    beforeEach(() => {
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+    });
+
+    it("現在の記事と次の記事の2つのArticleWebViewが表示される", () => {
+      render(<RecommendPage />);
+
+      const webviews = screen.getAllByTestId("article-webview");
+      expect(webviews).toHaveLength(2);
+      expect(webviews[0]).toHaveAttribute("data-url", mockArticles[0].url);
+      expect(webviews[1]).toHaveAttribute("data-url", mockArticles[1].url);
+    });
+
+    it("スクロール完了時にスムーストランジションが開始される", () => {
+      vi.useFakeTimers();
+      render(<RecommendPage />);
+
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+
+      act(() => {
+        scrollEndButton.click();
+      });
+
+      // Likeが記録される
+      expect(mockUseFeedbackResult.recordLike).toHaveBeenCalledWith(mockArticles[0].id);
+
+      // 遷移開始されたがまだ完了していない
+      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
+
+      // 遷移完了（タイマー進行）
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      // goToNextが呼ばれる
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
+    });
+
+    it("最後の記事では次のArticleWebViewが表示されない", () => {
+      mockUseInfiniteArticlesResult.articles = [mockArticle];
+
+      render(<RecommendPage />);
+
+      const webviews = screen.getAllByTestId("article-webview");
+      expect(webviews).toHaveLength(1);
+    });
+
+    it("次の記事がない場合はスクロール遷移が開始されない", () => {
+      vi.useFakeTimers();
+      mockUseInfiniteArticlesResult.articles = [mockArticle];
+
+      render(<RecommendPage />);
+
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticle.id}`);
+      act(() => {
+        scrollEndButton.click();
+      });
+
+      // Likeは記録される
+      expect(mockUseFeedbackResult.recordLike).toHaveBeenCalledWith(mockArticle.id);
+
+      // タイマー進行しても遷移は発生しない
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("AC-8 (007): 過去記事のメモリ解放", () => {
+    it("DOM上に最大2つのArticleWebViewが存在する", () => {
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+
+      render(<RecommendPage />);
+
+      const webviews = screen.getAllByTestId("article-webview");
+      expect(webviews.length).toBeLessThanOrEqual(2);
+    });
+
+    it("現在の記事のみonScrollEndコールバックを持つ", () => {
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+
+      render(<RecommendPage />);
+
+      // 現在の記事のみscroll-end-triggerを持つ
+      expect(screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`)).toBeInTheDocument();
+
+      // 次の記事にはscroll-end-triggerがない
+      expect(
+        screen.queryByTestId(`scroll-end-trigger-${mockArticles[1].id}`)
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("AC-9 (007): 遷移中の操作制御", () => {
+    beforeEach(() => {
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("スクロール遷移中に「次へ」ボタン連打で二重遷移しない", () => {
+      vi.useFakeTimers();
+      render(<RecommendPage />);
+
+      // スクロール遷移を開始
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+      act(() => {
+        scrollEndButton.click();
+      });
+
+      // 遷移中に「次へ」をクリック（fireEventで同期的にクリック）
+      const nextButton = screen.getByLabelText("次の記事へ");
+      fireEvent.click(nextButton);
+
+      // 遷移中はrecordDislikeが呼ばれない（ブロック）
+      expect(mockUseFeedbackResult.recordDislike).not.toHaveBeenCalled();
+
+      // 遷移完了
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      // goToNextは遷移完了の1回のみ
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+    });
+
+    it("遷移完了後に「次へ」ボタンが再び動作する", () => {
+      vi.useFakeTimers();
+      render(<RecommendPage />);
+
+      // スクロール遷移を開始して完了
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+      act(() => {
+        scrollEndButton.click();
+      });
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+
+      // 遷移完了後に「次へ」をクリック（fireEventで同期的にクリック）
+      const nextButton = screen.getByLabelText("次の記事へ");
+      fireEvent.click(nextButton);
+
+      // goToNextが再度呼ばれる
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(2);
+      expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticles[0].id);
+    });
+
+    it("スクロール遷移を連続で開始しても1回のみ実行される", () => {
+      vi.useFakeTimers();
+      render(<RecommendPage />);
+
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+
+      // 連続クリック
+      act(() => {
+        scrollEndButton.click();
+        scrollEndButton.click();
+        scrollEndButton.click();
+      });
+
+      // 遷移完了
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      // goToNextは1回のみ
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("AC-6 (007): 下部到達時のLike記録と自動遷移", () => {
+    it("スクロール完了時にLikeが記録される", () => {
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+
+      render(<RecommendPage />);
+
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+      act(() => {
+        scrollEndButton.click();
+      });
+
+      expect(mockUseFeedbackResult.recordLike).toHaveBeenCalledWith(mockArticles[0].id);
+    });
+
+    it("スクロール完了時に次の記事への遷移が開始される", () => {
+      vi.useFakeTimers();
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+
+      render(<RecommendPage />);
+
+      const scrollEndButton = screen.getByTestId(`scroll-end-trigger-${mockArticles[0].id}`);
+      act(() => {
+        scrollEndButton.click();
+      });
+
+      // 遷移開始 - goToNextはまだ呼ばれない
+      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
+
+      // 遷移完了
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+
+      vi.useRealTimers();
+    });
+  });
+
+  describe("AC-5 (007): 「次へ」ボタンの既存挙動維持", () => {
+    it("「次へ」ボタンで即座にgoToNextが呼ばれる（アニメーションなし）", async () => {
+      const user = userEvent.setup();
+      mockUseInfiniteArticlesResult.isLoading = false;
+      mockUseInfiniteArticlesResult.articles = mockArticles;
+
+      render(<RecommendPage />);
+
+      const nextButton = await screen.findByLabelText("次の記事へ");
+      await user.click(nextButton);
+
+      // 即座にgoToNextが呼ばれる（タイマー待ちなし）
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+      expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticles[0].id);
     });
   });
 });
