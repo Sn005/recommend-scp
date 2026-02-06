@@ -97,9 +97,13 @@ export function ArticleWebView({
     onSkip?.();
   }, [onSkip]);
 
-  // サジェスト画面表示
+  // サジェスト画面表示（通常のArticleWebViewと同じ高さを維持し、次記事が見えないようにする）
   if (showNotFound) {
-    return <TranslationNotFound onSuggest={handleSuggest} />;
+    return (
+      <div className={cn("relative w-full h-[calc(100vh-100px)]", className)}>
+        <TranslationNotFound onSuggest={handleSuggest} />
+      </div>
+    );
   }
 
   return (
