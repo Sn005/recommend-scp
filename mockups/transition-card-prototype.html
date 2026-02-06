@@ -283,6 +283,31 @@
         background: linear-gradient(160deg, #ef4444 0%, #7f1d1d 100%);
       }
 
+      /* 背景画像レイヤー */
+      .header-card-bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+      .header-card-bg.has-image {
+        opacity: 1;
+      }
+      /* 画像の上にダークスクリム */
+      .header-card-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 0, 0, 0.3) 0%,
+          rgba(0, 0, 0, 0.1) 40%,
+          rgba(0, 0, 0, 0.5) 100%
+        );
+      }
+
       /* ヘッダーカード内コンテンツ */
       .header-card-content {
         text-align: center;
@@ -450,6 +475,8 @@
 
     <!-- ★ 遷移ヘッダーカード（次の記事のプレビュー） -->
     <div id="headerCard" class="header-card">
+      <!-- 背景画像レイヤー（サムネイルあり時） -->
+      <div id="hcBgImage" class="header-card-bg"></div>
       <div class="header-card-content">
         <div id="hcBadge" class="class-badge"></div>
         <div id="hcRating" class="rating"></div>
@@ -513,6 +540,8 @@
           objectClassLabel: "Safe",
           rating: "+574",
           year: "2020",
+          // 実際の SCP-5000 記事画像（絶対排除ハーネス）
+          thumbnail: "https://scp-wiki.wdfiles.com/local--files/scp-5000/5000Suitpng.png",
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -539,6 +568,8 @@
           objectClassLabel: "Euclid",
           rating: "+7,800",
           year: "2007",
+          // 画像なし → グラデーションフォールバック
+          thumbnail: null,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -564,6 +595,8 @@
           objectClassLabel: "Keter",
           rating: "+2,100",
           year: "2008",
+          // 実際の SCP-682 記事画像
+          thumbnail: "https://scp-wiki.wdfiles.com/local--files/scp-682/682.jpg",
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -600,6 +633,7 @@
       // ========================================
       const articleContainer = document.getElementById("articleContainer");
       const headerCard = document.getElementById("headerCard");
+      const hcBgImage = document.getElementById("hcBgImage");
       const hcBadge = document.getElementById("hcBadge");
       const hcRating = document.getElementById("hcRating");
       const hcNumber = document.getElementById("hcNumber");
@@ -607,6 +641,17 @@
       const progressFill = document.getElementById("progressFill");
       const favBtn = document.getElementById("favBtn");
       const nextBtn = document.getElementById("nextBtn");
+
+      // サムネイル先読みキャッシュ
+      const imageCache = new Map();
+      function preloadImage(url) {
+        if (!url || imageCache.has(url)) return;
+        const img = new Image();
+        img.src = url;
+        imageCache.set(url, img);
+      }
+      // 全記事のサムネイルを先読み
+      articles.forEach((a) => preloadImage(a.thumbnail));
 
       // ========================================
       // 記事表示
@@ -647,29 +692,39 @@
         hcSubtitle.textContent = nextArticle.subtitle;
         updateDots(nextIndex);
 
-        // 2. 現在の記事をフェードアウト（0.3秒）
+        // 1b. 背景画像の設定（あれば画像、なければグラデーションフォールバック）
+        if (nextArticle.thumbnail) {
+          hcBgImage.style.backgroundImage = `url(${nextArticle.thumbnail})`;
+          hcBgImage.classList.add("has-image");
+        } else {
+          hcBgImage.style.backgroundImage = "";
+          hcBgImage.classList.remove("has-image");
+        }
+
+        // 2. 現在の記事をフェードアウト
         articleContainer.classList.add("fading");
 
-        // 3. ヘッダーカードをフェードイン（記事フェードアウト完了後）
+        // 3. ヘッダーカードをフェードイン（150ms後）
         setTimeout(() => {
           headerCard.classList.add("visible");
-        }, 200);
+        }, 150);
 
-        // 4. ヘッダーカードを表示し続ける（0.8秒）
+        // 4. ヘッダーカードを 0.5秒 表示してからフェードアウト
         setTimeout(() => {
-          // 5. ヘッダーカードをフェードアウト
           headerCard.classList.remove("visible");
 
-          // 6. 新しい記事をセット＆フェードイン
+          // 5. 新しい記事をセット＆フェードイン
           setTimeout(() => {
             currentIndex = nextIndex;
             renderArticle(currentIndex);
             articleContainer.classList.remove("fading");
             // スクロール位置をトップに
             document.querySelector("main").scrollTop = 0;
+            // 背景画像をリセット
+            hcBgImage.classList.remove("has-image");
             isTransitioning = false;
           }, 300);
-        }, 1100);
+        }, 650);
       }
 
       // ========================================
