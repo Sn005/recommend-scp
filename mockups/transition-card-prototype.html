@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>遷移ヘッダーカード プロトタイプ - SCP Recommend</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --color-safe: #10b981;
+        --color-euclid: #f59e0b;
+        --color-keter: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W3", Meiryo, sans-serif;
+      }
+
+      /* ===================================
+     * メニューボタン（左上）
+     * =================================== */
+      .menu-btn {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      /* ===================================
+     * フローティングピル型ボトムナビ
+     * =================================== */
+      .bottom-nav {
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        padding: 8px 20px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 50px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        .bottom-nav,
+        .menu-btn {
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+      }
+
+      .nav-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        color: #6b7280;
+        transition: all 0.2s ease;
+        border-radius: 50%;
+        border: none;
+        background: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .nav-btn:active {
+        transform: scale(0.9);
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .nav-btn svg {
+        width: 26px;
+        height: 26px;
+      }
+      .nav-btn.primary {
+        color: var(--primary);
+      }
+      .nav-btn.primary svg {
+        stroke-width: 2.5;
+      }
+      .nav-btn.favorited svg {
+        fill: #ef4444;
+        stroke: #ef4444;
+        animation: heartPop 0.3s ease;
+      }
+      @keyframes heartPop {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.3);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* ===================================
+     * プログレスバー
+     * =================================== */
+      .progress-bar {
+        height: 2px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 1px;
+        margin: 0 16px 4px 16px;
+        overflow: hidden;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: var(--primary);
+        transition: width 0.3s ease;
+      }
+
+      /* ===================================
+     * ドロワーメニュー
+     * =================================== */
+      .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 100;
+      }
+      .drawer-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        background: white;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 101;
+        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
+      }
+      .drawer.open {
+        transform: translateX(0);
+      }
+      .drawer-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+        color: #374151;
+        font-size: 15px;
+        transition: background 0.2s;
+        text-decoration: none;
+      }
+      .drawer-item:hover {
+        background: #f3f4f6;
+      }
+      .drawer-item svg {
+        width: 22px;
+        height: 22px;
+        color: #6b7280;
+      }
+
+      /* ===================================
+     * SCP-JP記事スタイル
+     * =================================== */
+      .scp-wiki {
+        background: #ededed;
+        line-height: 1.8;
+      }
+      .scp-wiki .wiki-header {
+        background: #8b0000;
+        color: white;
+        font-size: 0.8rem;
+        padding: 8px 16px;
+        display: flex;
+        gap: 24px;
+      }
+      .scp-wiki .wiki-header span {
+        opacity: 0.9;
+      }
+      .scp-wiki .content {
+        padding: 20px 16px;
+        background: #f5f5f5;
+      }
+      .scp-wiki h1 {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 16px;
+      }
+      .scp-wiki .rating-box {
+        display: inline-flex;
+        align-items: center;
+        background: #8b0000;
+        color: white;
+        font-size: 0.85rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      .scp-wiki .rating-box .buttons {
+        margin-left: 12px;
+        display: flex;
+        gap: 4px;
+      }
+      .scp-wiki .rating-box .buttons span {
+        padding: 0 6px;
+        cursor: pointer;
+      }
+      .scp-wiki .field {
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        color: #333;
+      }
+      .scp-wiki .field strong {
+        color: #000;
+      }
+      .scp-wiki .field-title {
+        font-weight: bold;
+        color: #000;
+      }
+      .scp-wiki p {
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+        color: #333;
+        text-align: justify;
+      }
+      .scp-wiki a {
+        color: #8b0000;
+        text-decoration: none;
+      }
+      .scp-wiki sup {
+        font-size: 0.7rem;
+        color: #8b0000;
+      }
+      .scp-wiki hr {
+        border: none;
+        border-top: 1px solid #ccc;
+        margin: 24px 0;
+      }
+
+      /* ===================================
+     * ★ 遷移ヘッダーカード
+     * =================================== */
+      .header-card {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.3s ease,
+          visibility 0.3s ease;
+      }
+      .header-card.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* オブジェクトクラス別グラデーション背景 */
+      .header-card.safe {
+        background: linear-gradient(160deg, #10b981 0%, #065f46 100%);
+      }
+      .header-card.euclid {
+        background: linear-gradient(160deg, #f59e0b 0%, #92400e 100%);
+      }
+      .header-card.keter {
+        background: linear-gradient(160deg, #ef4444 0%, #7f1d1d 100%);
+      }
+
+      /* ヘッダーカード内コンテンツ */
+      .header-card-content {
+        text-align: center;
+        color: white;
+        transform: translateY(20px);
+        opacity: 0;
+        transition:
+          transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .header-card.visible .header-card-content {
+        transform: translateY(0);
+        opacity: 1;
+        transition-delay: 0.15s;
+      }
+
+      .header-card .class-badge {
+        display: inline-block;
+        padding: 4px 16px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 16px;
+      }
+
+      .header-card .rating {
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.8;
+        margin-bottom: 24px;
+      }
+
+      .header-card .scp-number {
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        line-height: 1.1;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .header-card .scp-subtitle {
+        font-size: 1.2rem;
+        font-weight: 400;
+        opacity: 0.9;
+        font-style: italic;
+        margin-bottom: 32px;
+      }
+
+      /* プログレスドット（何件目 / 全体） */
+      .header-card .card-meta {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+      }
+      .header-card .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .header-card .dot.active {
+        width: 20px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      /* ===================================
+     * 記事コンテンツのフェード
+     * =================================== */
+      .article-container {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+      }
+      .article-container.fading {
+        opacity: 0;
+      }
+
+      /* ===================================
+     * アクセシビリティ
+     * =================================== */
+      @media (prefers-reduced-motion: reduce) {
+        .header-card,
+        .header-card-content,
+        .article-container {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col bg-white">
+    <!-- 左上メニューボタン -->
+    <button
+      id="menuBtn"
+      class="menu-btn fixed top-4 left-4 z-50 w-10 h-10 rounded-full flex items-center justify-center"
+      aria-label="メニューを開く"
+    >
+      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+
+    <!-- ドロワーメニュー -->
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+    <div id="drawer" class="drawer">
+      <div class="pt-16 pb-4 px-5 border-b border-gray-100">
+        <h2 class="text-lg font-bold text-gray-800">SCP Recommend</h2>
+        <p class="text-sm text-gray-500 mt-1">あなた専用のSCP推薦</p>
+      </div>
+      <nav class="py-2">
+        <a href="#" class="drawer-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+          お気に入り一覧
+        </a>
+        <a href="#" class="drawer-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          閲覧履歴
+        </a>
+        <div class="my-2 border-t border-gray-100"></div>
+        <a href="#" class="drawer-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+          設定
+        </a>
+      </nav>
+    </div>
+
+    <!-- ★ 遷移ヘッダーカード（次の記事のプレビュー） -->
+    <div id="headerCard" class="header-card">
+      <div class="header-card-content">
+        <div id="hcBadge" class="class-badge"></div>
+        <div id="hcRating" class="rating"></div>
+        <div id="hcNumber" class="scp-number"></div>
+        <div id="hcSubtitle" class="scp-subtitle"></div>
+        <div class="card-meta">
+          <div class="dot" id="dot0"></div>
+          <div class="dot" id="dot1"></div>
+          <div class="dot" id="dot2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCP記事コンテンツ -->
+    <main class="flex-1 overflow-auto pb-24">
+      <div id="articleContainer" class="article-container">
+        <!-- 記事はJSで動的に差し替え -->
+      </div>
+    </main>
+
+    <!-- プログレスバー -->
+    <div class="progress-bar fixed bottom-24 left-8 right-8 z-40">
+      <div id="progressFill" class="progress-bar-fill" style="width: 20%"></div>
+    </div>
+
+    <!-- フローティングピル型ボトムナビ -->
+    <nav class="bottom-nav fixed bottom-4 z-50 flex items-center gap-6">
+      <button id="favBtn" class="nav-btn" aria-label="お気に入りに追加">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+      </button>
+      <button id="nextBtn" class="nav-btn primary" aria-label="次の記事へ">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </nav>
+
+    <!-- プロトタイプラベル -->
+    <div
+      class="fixed top-4 right-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg z-40 bg-white/90 backdrop-blur"
+    >
+      遷移カード プロトタイプ
+    </div>
+
+    <script>
+      // ========================================
+      // 記事データ（3件のサンプル）
+      // ========================================
+      const articles = [
+        {
+          number: "SCP-5000",
+          subtitle: '"Why?"',
+          objectClass: "safe",
+          objectClassLabel: "Safe",
+          rating: "+574",
+          year: "2020",
+          content: `
+          <div class="wiki-header">
+            <span>SCP記事</span>
+            <span>情報とアイフワフ</span>
+          </div>
+          <div class="content">
+            <h1>SCP-5000</h1>
+            <div class="rating-box">評価: +574<div class="buttons"><span>+</span><span>-</span><span>×</span></div></div>
+            <div class="field"><strong>アイテム番号:</strong> SCP-5000</div>
+            <div class="field"><strong>オブジェクトクラス:</strong> Safe</div>
+            <p><span class="field-title">特別収容プロトコル:</span> SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存され、アーカイブ部門の要請に応じてバックアップが閲覧可能です。</p>
+            <p><span class="field-title">説明:</span> SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。SCP-5000はかつて装着者を保護し、有益な影響を及ぼすための異常な機能を多数搭載していたと考えられていますが、過去に損傷した結果、現在では基本的なファイル保存のみが可能となっています。</p>
+            <p>SCP-5000は2020/04/12、サイト-62Cにある<a href="#">SCP-579</a>の収容チャンバーに閃光を伴って出現し、内部には財団職員ピエトロ・ウィルソンと遺伝的に一致する死体<sup>1</sup>が入っていました。</p>
+            <hr>
+            <p>以下の文書は、SCP-5000の内部ドライブから回収されたものです。</p>
+            <p style="color: #666; font-style: italic;">（記事はここから続きます...財団が全人類を敵とみなし、排除を開始した世界線の記録が展開されます。）</p>
+          </div>
+        `,
+        },
+        {
+          number: "SCP-173",
+          subtitle: '"彫刻 - オリジナル"',
+          objectClass: "euclid",
+          objectClassLabel: "Euclid",
+          rating: "+7,800",
+          year: "2007",
+          content: `
+          <div class="wiki-header">
+            <span>SCP記事</span>
+            <span>情報とアイフワフ</span>
+          </div>
+          <div class="content">
+            <h1>SCP-173</h1>
+            <div class="rating-box">評価: +7,800<div class="buttons"><span>+</span><span>-</span><span>×</span></div></div>
+            <div class="field"><strong>アイテム番号:</strong> SCP-173</div>
+            <div class="field"><strong>オブジェクトクラス:</strong> Euclid</div>
+            <p><span class="field-title">特別収容プロトコル:</span> アイテムSCP-173はサイト-19にて常時施錠されているコンテナの中に収容されています。SCP-173のコンテナに入る際にはいかなる場合でも3人以上の職員が入室しなければならず、入室後ドアは施錠されます。SCP-173との間の直接の視線接触を絶対にいかなる場合も途切れさせてはなりません。コンテナに入室している間はいつでも2人以上の人間がSCP-173に視線を向けていなければなりません。</p>
+            <p><span class="field-title">説明:</span> 1993年に搬入。由来は不明。コンクリートと鉄筋でできており、クリロン社製のスプレーペイントで塗装された痕跡があります。SCP-173は生命体です。敵対的で、通常の視覚的範囲内に生きた存在がいる場合、攻撃します。その攻撃はSCP-173がいかなる人間の直接の視界範囲に入っている限り阻まれます。視線を向けてSCP-173を「見て」いる限り、SCP-173は動きません。</p>
+            <p>SCP-173を見ていない場合、SCP-173は獲物に接近し、頭蓋骨の付け根で首を折るか、絞めつけることで殺害します。攻撃の際には極めて素早く動きます。</p>
+            <hr>
+            <p style="color: #666; font-style: italic;">（SCP財団で最初に書かれた記事。すべてのSCPの原点です。）</p>
+          </div>
+        `,
+        },
+        {
+          number: "SCP-682",
+          subtitle: '"不死身の爬虫類"',
+          objectClass: "keter",
+          objectClassLabel: "Keter",
+          rating: "+2,100",
+          year: "2008",
+          content: `
+          <div class="wiki-header">
+            <span>SCP記事</span>
+            <span>情報とアイフワフ</span>
+          </div>
+          <div class="content">
+            <h1>SCP-682</h1>
+            <div class="rating-box">評価: +2,100<div class="buttons"><span>+</span><span>-</span><span>×</span></div></div>
+            <div class="field"><strong>アイテム番号:</strong> SCP-682</div>
+            <div class="field"><strong>オブジェクトクラス:</strong> Keter</div>
+            <p><span class="field-title">特別収容プロトコル:</span> SCP-682は可能な限り迅速に破壊しなければなりません。この文書を書いている時点で、SCP-682を破壊する方法はまだ判明していません。SCP-682は25m×25m×25mの特注の部屋で12.5%の塩酸に浸けた状態で収容されます。SCP-682の部屋からの脱走の試みが起こった場合には全職員が現場に急行し最優先事項として再収容にあたること。</p>
+            <p><span class="field-title">説明:</span> SCP-682は大型の、漠然と爬虫類のような生物体で、起源は不明です。対象はあらゆる生命を嫌悪しているように思われ、SCP-682と相互に交わしたいくつかの会話はこの嫌悪を具体的に裏付けるものでした（補遺682-Bを参照）。</p>
+            <p>SCP-682は常に活発に脱走を試みます。あらゆる形態の傷害からの再生能力が高く、適応力も極めて高いです。SCP-682の物理的形態はわずかに変動しますが、一貫して大きく、頑丈で、著しく強い存在です。</p>
+            <hr>
+            <p><strong>補遺682-B:</strong></p>
+            <p>██████博士との対話記録:<br>
+            SCP-682: 「…嫌だ…お前たちが…お前たちすべてが…嫌だ…」<br>
+            ██████博士: 「何がそんなに嫌なのか」<br>
+            SCP-682: 「…全部が…全てのものの中に…醜悪さがある…」</p>
+            <p style="color: #666; font-style: italic;">（SCP財団で最も有名な「不滅」の存在。数々の破壊実験ログが人気です。）</p>
+          </div>
+        `,
+        },
+      ];
+
+      // ========================================
+      // 状態管理
+      // ========================================
+      let currentIndex = 0;
+      let isTransitioning = false;
+
+      // ========================================
+      // DOM取得
+      // ========================================
+      const articleContainer = document.getElementById("articleContainer");
+      const headerCard = document.getElementById("headerCard");
+      const hcBadge = document.getElementById("hcBadge");
+      const hcRating = document.getElementById("hcRating");
+      const hcNumber = document.getElementById("hcNumber");
+      const hcSubtitle = document.getElementById("hcSubtitle");
+      const progressFill = document.getElementById("progressFill");
+      const favBtn = document.getElementById("favBtn");
+      const nextBtn = document.getElementById("nextBtn");
+
+      // ========================================
+      // 記事表示
+      // ========================================
+      function renderArticle(index) {
+        const article = articles[index];
+        articleContainer.innerHTML = `<div class="scp-wiki">${article.content}</div>`;
+        progressFill.style.width = `${((index + 1) / articles.length) * 100}%`;
+        updateDots(index);
+        // お気に入り状態リセット
+        favBtn.classList.remove("favorited");
+      }
+
+      function updateDots(activeIndex) {
+        articles.forEach((_, i) => {
+          const dot = document.getElementById(`dot${i}`);
+          if (dot) {
+            dot.className = i === activeIndex ? "dot active" : "dot";
+          }
+        });
+      }
+
+      // ========================================
+      // ★ 遷移アニメーション
+      // ========================================
+      function transitionToNext() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        const nextIndex = (currentIndex + 1) % articles.length;
+        const nextArticle = articles[nextIndex];
+
+        // 1. ヘッダーカードの内容を設定
+        headerCard.className = `header-card ${nextArticle.objectClass}`;
+        hcBadge.textContent = nextArticle.objectClassLabel;
+        hcRating.textContent = `${nextArticle.rating}  ·  ${nextArticle.year}`;
+        hcNumber.textContent = nextArticle.number;
+        hcSubtitle.textContent = nextArticle.subtitle;
+        updateDots(nextIndex);
+
+        // 2. 現在の記事をフェードアウト（0.3秒）
+        articleContainer.classList.add("fading");
+
+        // 3. ヘッダーカードをフェードイン（記事フェードアウト完了後）
+        setTimeout(() => {
+          headerCard.classList.add("visible");
+        }, 200);
+
+        // 4. ヘッダーカードを表示し続ける（0.8秒）
+        setTimeout(() => {
+          // 5. ヘッダーカードをフェードアウト
+          headerCard.classList.remove("visible");
+
+          // 6. 新しい記事をセット＆フェードイン
+          setTimeout(() => {
+            currentIndex = nextIndex;
+            renderArticle(currentIndex);
+            articleContainer.classList.remove("fading");
+            // スクロール位置をトップに
+            document.querySelector("main").scrollTop = 0;
+            isTransitioning = false;
+          }, 300);
+        }, 1100);
+      }
+
+      // ========================================
+      // イベントハンドラ
+      // ========================================
+      nextBtn.addEventListener("click", transitionToNext);
+
+      favBtn.addEventListener("click", () => {
+        favBtn.classList.toggle("favorited");
+      });
+
+      // ドロワー
+      document.getElementById("menuBtn").addEventListener("click", () => {
+        document.getElementById("drawer").classList.add("open");
+        document.getElementById("drawerOverlay").classList.add("open");
+      });
+      document.getElementById("drawerOverlay").addEventListener("click", () => {
+        document.getElementById("drawer").classList.remove("open");
+        document.getElementById("drawerOverlay").classList.remove("open");
+      });
+
+      // キーボード操作（PC向け）
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          transitionToNext();
+        }
+        if (e.key === "f") {
+          favBtn.classList.toggle("favorited");
+        }
+      });
+
+      // ========================================
+      // 初期表示
+      // ========================================
+      renderArticle(0);
+    </script>
+  </body>
+</html>
