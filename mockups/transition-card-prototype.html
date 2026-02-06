@@ -283,41 +283,8 @@
         background: linear-gradient(160deg, #ef4444 0%, #7f1d1d 100%);
       }
 
-      /* 背景画像レイヤー */
-      .header-card-bg {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        overflow: hidden;
-      }
-      .header-card-bg img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-      }
-      .header-card-bg img.loaded {
-        opacity: 1;
-      }
-      /* 画像の上にダークスクリム */
-      .header-card-bg::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        background: linear-gradient(
-          180deg,
-          rgba(0, 0, 0, 0.3) 0%,
-          rgba(0, 0, 0, 0.1) 40%,
-          rgba(0, 0, 0, 0.5) 100%
-        );
-      }
-
       /* ヘッダーカード内コンテンツ */
       .header-card-content {
-        position: relative;
-        z-index: 2;
         text-align: center;
         color: white;
         transform: translateY(20px);
@@ -483,10 +450,6 @@
 
     <!-- ★ 遷移ヘッダーカード（次の記事のプレビュー） -->
     <div id="headerCard" class="header-card">
-      <!-- 背景画像レイヤー（サムネイルあり時） -->
-      <div id="hcBgImage" class="header-card-bg">
-        <img id="hcBgImg" src="" alt="" />
-      </div>
       <div class="header-card-content">
         <div id="hcBadge" class="class-badge"></div>
         <div id="hcRating" class="rating"></div>
@@ -542,40 +505,6 @@
       // ========================================
       // 記事データ（3件のサンプル）
       // ========================================
-      // インラインSVG画像（外部依存なし・確実に表示）
-      // SCP-5000: 暗い研究施設の廊下イメージ
-      const svgScp5000 =
-        "data:image/svg+xml," +
-        encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200">
-        <defs>
-          <radialGradient id="g1" cx="30%" cy="40%"><stop offset="0%" stop-color="#1a3a2a"/><stop offset="100%" stop-color="#0a0f0d"/></radialGradient>
-          <filter id="n1"><feTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-        </defs>
-        <rect width="800" height="1200" fill="url(#g1)"/>
-        <rect width="800" height="1200" filter="url(#n1)" opacity="0.08"/>
-        <rect x="100" y="300" width="600" height="4" rx="2" fill="#10B981" opacity="0.3"/>
-        <rect x="200" y="500" width="400" height="400" rx="8" fill="none" stroke="#10B981" stroke-width="1" opacity="0.15"/>
-        <circle cx="400" cy="700" r="80" fill="none" stroke="#10B981" stroke-width="0.5" opacity="0.2"/>
-        <text x="400" y="720" text-anchor="middle" font-family="monospace" font-size="24" fill="#10B981" opacity="0.15">EXCLUDED</text>
-      </svg>`);
-
-      // SCP-682: 酸のタンク・生物学的脅威イメージ
-      const svgScp682 =
-        "data:image/svg+xml," +
-        encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200">
-        <defs>
-          <radialGradient id="g2" cx="50%" cy="60%"><stop offset="0%" stop-color="#3a1010"/><stop offset="100%" stop-color="#120505"/></radialGradient>
-          <filter id="n2"><feTurbulence baseFrequency="0.4" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-        </defs>
-        <rect width="800" height="1200" fill="url(#g2)"/>
-        <rect width="800" height="1200" filter="url(#n2)" opacity="0.1"/>
-        <line x1="0" y1="800" x2="800" y2="750" stroke="#EF4444" stroke-width="0.5" opacity="0.3"/>
-        <line x1="0" y1="820" x2="800" y2="770" stroke="#EF4444" stroke-width="0.5" opacity="0.2"/>
-        <line x1="0" y1="840" x2="800" y2="790" stroke="#EF4444" stroke-width="0.5" opacity="0.1"/>
-        <text x="400" y="600" text-anchor="middle" font-family="monospace" font-size="120" fill="#EF4444" opacity="0.06">682</text>
-        <text x="400" y="950" text-anchor="middle" font-family="monospace" font-size="14" fill="#EF4444" opacity="0.2">KETER // TERMINATION LOG</text>
-      </svg>`);
-
       const articles = [
         {
           number: "SCP-5000",
@@ -584,7 +513,6 @@
           objectClassLabel: "Safe",
           rating: "+574",
           year: "2020",
-          thumbnail: svgScp5000,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -611,8 +539,6 @@
           objectClassLabel: "Euclid",
           rating: "+7,800",
           year: "2007",
-          // 画像なし → グラデーションフォールバック
-          thumbnail: null,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -638,7 +564,6 @@
           objectClassLabel: "Keter",
           rating: "+2,100",
           year: "2008",
-          thumbnail: svgScp682,
           content: `
           <div class="wiki-header">
             <span>SCP記事</span>
@@ -675,7 +600,6 @@
       // ========================================
       const articleContainer = document.getElementById("articleContainer");
       const headerCard = document.getElementById("headerCard");
-      const hcBgImg = document.getElementById("hcBgImg");
       const hcBadge = document.getElementById("hcBadge");
       const hcRating = document.getElementById("hcRating");
       const hcNumber = document.getElementById("hcNumber");
@@ -683,17 +607,6 @@
       const progressFill = document.getElementById("progressFill");
       const favBtn = document.getElementById("favBtn");
       const nextBtn = document.getElementById("nextBtn");
-
-      // サムネイル先読みキャッシュ
-      const imageCache = new Map();
-      function preloadImage(url) {
-        if (!url || imageCache.has(url)) return;
-        const img = new Image();
-        img.src = url;
-        imageCache.set(url, img);
-      }
-      // 全記事のサムネイルを先読み
-      articles.forEach((a) => preloadImage(a.thumbnail));
 
       // ========================================
       // 記事表示
@@ -739,16 +652,6 @@
         hcSubtitle.textContent = nextArticle.subtitle;
         updateDots(nextIndex);
 
-        // 1b. 背景画像の設定
-        hcBgImg.classList.remove("loaded");
-        if (nextArticle.thumbnail) {
-          hcBgImg.src = nextArticle.thumbnail;
-          hcBgImg.onload = () => hcBgImg.classList.add("loaded");
-          if (hcBgImg.complete) hcBgImg.classList.add("loaded");
-        } else {
-          hcBgImg.src = "";
-        }
-
         // 2. コンテンツ準備状態の管理
         let contentReady = false;
         let minTimeReached = false;
@@ -791,7 +694,6 @@
             renderArticle(currentIndex);
             articleContainer.classList.remove("fading");
             document.querySelector("main").scrollTop = 0;
-            hcBgImg.classList.remove("loaded");
             isTransitioning = false;
           }, 300);
         }
