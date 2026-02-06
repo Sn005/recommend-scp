@@ -287,12 +287,17 @@
       .header-card-bg {
         position: absolute;
         inset: 0;
-        background-size: cover;
-        background-position: center;
+        z-index: 0;
+        overflow: hidden;
+      }
+      .header-card-bg img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         opacity: 0;
         transition: opacity 0.4s ease;
       }
-      .header-card-bg.has-image {
+      .header-card-bg img.loaded {
         opacity: 1;
       }
       /* 画像の上にダークスクリム */
@@ -300,6 +305,7 @@
         content: "";
         position: absolute;
         inset: 0;
+        z-index: 1;
         background: linear-gradient(
           180deg,
           rgba(0, 0, 0, 0.3) 0%,
@@ -310,6 +316,8 @@
 
       /* ヘッダーカード内コンテンツ */
       .header-card-content {
+        position: relative;
+        z-index: 2;
         text-align: center;
         color: white;
         transform: translateY(20px);
@@ -476,7 +484,9 @@
     <!-- ★ 遷移ヘッダーカード（次の記事のプレビュー） -->
     <div id="headerCard" class="header-card">
       <!-- 背景画像レイヤー（サムネイルあり時） -->
-      <div id="hcBgImage" class="header-card-bg"></div>
+      <div id="hcBgImage" class="header-card-bg">
+        <img id="hcBgImg" src="" alt="" />
+      </div>
       <div class="header-card-content">
         <div id="hcBadge" class="class-badge"></div>
         <div id="hcRating" class="rating"></div>
@@ -633,7 +643,7 @@
       // ========================================
       const articleContainer = document.getElementById("articleContainer");
       const headerCard = document.getElementById("headerCard");
-      const hcBgImage = document.getElementById("hcBgImage");
+      const hcBgImg = document.getElementById("hcBgImg");
       const hcBadge = document.getElementById("hcBadge");
       const hcRating = document.getElementById("hcRating");
       const hcNumber = document.getElementById("hcNumber");
@@ -693,12 +703,14 @@
         updateDots(nextIndex);
 
         // 1b. 背景画像の設定（あれば画像、なければグラデーションフォールバック）
+        hcBgImg.classList.remove("loaded");
         if (nextArticle.thumbnail) {
-          hcBgImage.style.backgroundImage = `url(${nextArticle.thumbnail})`;
-          hcBgImage.classList.add("has-image");
+          hcBgImg.src = nextArticle.thumbnail;
+          hcBgImg.onload = () => hcBgImg.classList.add("loaded");
+          // キャッシュ済みならすぐ表示
+          if (hcBgImg.complete) hcBgImg.classList.add("loaded");
         } else {
-          hcBgImage.style.backgroundImage = "";
-          hcBgImage.classList.remove("has-image");
+          hcBgImg.src = "";
         }
 
         // 2. 現在の記事をフェードアウト
@@ -721,7 +733,7 @@
             // スクロール位置をトップに
             document.querySelector("main").scrollTop = 0;
             // 背景画像をリセット
-            hcBgImage.classList.remove("has-image");
+            hcBgImg.classList.remove("loaded");
             isTransitioning = false;
           }, 300);
         }, 650);
