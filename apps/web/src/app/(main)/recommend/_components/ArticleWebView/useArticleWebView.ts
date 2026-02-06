@@ -13,6 +13,8 @@ interface UseArticleWebViewReturn {
   isLoading: boolean;
   error: Error | null;
   scrollPercentage: number;
+  /** iframeコンテンツの全高（px）。postMessageで受信後に設定される */
+  contentHeight: number | null;
   handleLoad: () => void;
   handleError: () => void;
   retry: () => void;
@@ -27,6 +29,15 @@ interface ScrollMessage {
 }
 
 /**
+ * postMessageで受信するリサイズメッセージの型
+ * iframeコンテンツの全高を通知する
+ */
+interface ResizeMessage {
+  type: "resize";
+  height: number;
+}
+
+/**
  * データがScrollMessage型かどうかを判定する型ガード
  */
 function isScrollMessage(data: unknown): data is ScrollMessage {
@@ -37,6 +48,20 @@ function isScrollMessage(data: unknown): data is ScrollMessage {
     data.type === "scroll" &&
     "percentage" in data &&
     typeof data.percentage === "number"
+  );
+}
+
+/**
+ * データがResizeMessage型かどうかを判定する型ガード
+ */
+function isResizeMessage(data: unknown): data is ResizeMessage {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "type" in data &&
+    data.type === "resize" &&
+    "height" in data &&
+    typeof data.height === "number"
   );
 }
 
@@ -86,6 +111,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
   const [error, setError] = useState<Error | null>(null);
   const [scrollPercentage, setScrollPercentage] = useState(0);
   const [hasTriggeredEnd, setHasTriggeredEnd] = useState(false);
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -96,6 +122,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     setError(null);
     setScrollPercentage(0);
     setHasTriggeredEnd(false);
+    setContentHeight(null);
 
     // iframe読み込みタイムアウト: onLoadが発火しない場合（mixed content blocking等）に
     // ローディング状態を強制解除する
@@ -108,7 +135,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     };
   }, [url]);
 
-  // スクロール検知（postMessage経由）
+  // postMessage受信（スクロール検知 + コンテンツ高さ報告）
   useEffect(() => {
     const handleMessage = (event: MessageEvent<unknown>) => {
       // セキュリティ: 信頼できるoriginからのメッセージのみ処理
@@ -116,7 +143,13 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
         return;
       }
 
-      // 型安全: ScrollMessage型ガードで検証
+      // リサイズメッセージ: iframeコンテンツの全高を更新
+      if (isResizeMessage(event.data)) {
+        setContentHeight(event.data.height);
+        return;
+      }
+
+      // スクロールメッセージ: スクロール率を更新（後方互換）
       if (!isScrollMessage(event.data)) {
         return;
       }
@@ -152,6 +185,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     setIsLoading(true);
     setScrollPercentage(0);
     setHasTriggeredEnd(false);
+    setContentHeight(null);
   }, []);
 
   return {
@@ -159,6 +193,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     isLoading,
     error,
     scrollPercentage,
+    contentHeight,
     handleLoad,
     handleError,
     retry,

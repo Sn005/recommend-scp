@@ -1,11 +1,13 @@
 /**
  * @file 記事閲覧ページ
  * @description /recommend ページのメインコンポーネント
- * @see specs/006-frontend/006-02-article-reader/006-02-07.md
+ *
+ * 記事を縦に積み重ねて配置し、ページスクロールで自然に次の記事へ遷移する。
+ * iframeはコンテンツの全高に合わせて表示され、内部スクロールは発生しない。
  */
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
 import { useFeedback } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "./_hooks/useArticleFavorite";
@@ -16,24 +18,17 @@ import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "./_components/SkeletonLoader";
 
-/** 遷移アニメーションの持続時間（ms） */
-const TRANSITION_DURATION_MS = 500;
+/** 記事の読了とみなすスクロール率（%） */
+const SCROLL_END_THRESHOLD = 90;
 
 /**
  * 推薦記事閲覧ページ
  *
- * AC-1: ページ初期表示（POST /recommend APIで10件取得）
- * AC-2: 記事表示レイアウト（デュアルWebView + FloatingUI）
- * AC-3: 推薦切れ表示（EmptyState）
- * AC-4: エラー表示（ErrorState）
- * AC-5: 再試行処理
- *
- * 006-02-07 追加:
- * AC-4 (007): デュアルWebView + スムーストランジション
- * AC-5 (007): 「次へ」ボタンの即座遷移（既存挙動維持）
- * AC-6 (007): 下部到達時のLike記録 + 自動遷移
- * AC-8 (007): 過去記事のメモリ解放（最大2 iframe）
- * AC-9 (007): 遷移中の操作制御（連打防止）
+ * 縦積みスクロール方式:
+ * - 記事を縦に積み重ねて配置し、ページスクロールで連続閲覧
+ * - iframeはコンテンツの全高に合わせて表示（内部スクロールなし）
+ * - 親ページのスクロール位置から各記事の閲覧進捗を計算
+ * - 90%到達でLike記録、次記事領域に入ったらcurrentIndexを進める
  */
 export default function RecommendPage() {
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
@@ -41,15 +36,23 @@ export default function RecommendPage() {
 
   const { recordLike, recordDislike } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
-  const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite({
     articleId: currentArticle?.id,
   });
   const { add: addToHistory } = useHistory();
 
   const [isRetrying, setIsRetrying] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const transitioningRef = useRef(false);
+  const [scrollPercentage, setScrollPercentage] = useState(0);
+
+  // 各記事のDOM要素を参照するためのMap
+  const articleRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
+  // 読了済み記事のインデックスを記録（二重Like防止）
+  const scrollEndTriggeredRef = useRef<Set<number>>(new Set());
+
+  // 表示する記事の範囲: 0 〜 currentIndex + 1（現在 + 次）
+  const renderRange = useMemo(() => {
+    return articles.slice(0, currentIndex + 2);
+  }, [articles, currentIndex]);
 
   // 再試行ハンドラー
   const handleRetry = useCallback(() => {
@@ -59,39 +62,6 @@ export default function RecommendPage() {
     });
   }, [refetch]);
 
-  // 遷移完了処理
-  const completeTransition = useCallback(() => {
-    if (!transitioningRef.current) return;
-    transitioningRef.current = false;
-    goToNext();
-    setIsTransitioning(false);
-  }, [goToNext]);
-
-  // AC-4 (007): 遷移開始処理（スクロール連動の滑らかな遷移）
-  const startTransition = useCallback(() => {
-    if (transitioningRef.current || !nextArticle) return;
-    transitioningRef.current = true;
-    setIsTransitioning(true);
-  }, [nextArticle]);
-
-  // 遷移アニメーション完了検知
-  useEffect(() => {
-    if (!isTransitioning) return;
-    const timerId = setTimeout(completeTransition, TRANSITION_DURATION_MS);
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [isTransitioning, completeTransition]);
-
-  // AC-5 (007): 次へボタンハンドラー（即座に遷移 + AC-9: 遷移中ブロック）
-  const handleNext = useCallback(() => {
-    if (transitioningRef.current) return; // AC-9: 遷移中は操作をブロック
-    if (currentArticle) {
-      void recordDislike(currentArticle.id);
-    }
-    goToNext(); // AC-5: 即座に遷移（既存挙動維持）
-  }, [currentArticle, recordDislike, goToNext]);
-
   // お気に入りボタンハンドラー
   const handleFavorite = useCallback(() => {
     if (currentArticle) {
@@ -100,13 +70,18 @@ export default function RecommendPage() {
     void toggleFavorite();
   }, [currentArticle, recordLike, toggleFavorite]);
 
-  // AC-6 (007): スクロール完了ハンドラー（Like記録 + 自動遷移開始）
-  const handleScrollEnd = useCallback(() => {
+  // 次へボタンハンドラー: dislike記録 + 次の記事の位置までスクロール
+  const handleNext = useCallback(() => {
     if (currentArticle) {
-      void recordLike(currentArticle.id);
+      void recordDislike(currentArticle.id);
     }
-    startTransition(); // AC-4: 次の記事への遷移開始
-  }, [currentArticle, recordLike, startTransition]);
+    // 次の記事のDOM要素の位置までスムーズスクロール
+    const nextRef = articleRefsMap.current.get(currentIndex + 1);
+    if (nextRef) {
+      nextRef.scrollIntoView({ behavior: "smooth" });
+    }
+    goToNext();
+  }, [currentArticle, currentIndex, recordDislike, goToNext]);
 
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(
@@ -122,17 +97,61 @@ export default function RecommendPage() {
     [currentArticle, addToHistory]
   );
 
-  // AC-1: ローディング中はスケルトンUIを表示
+  // 親ページスクロールで記事の閲覧進捗を検知
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentRef = articleRefsMap.current.get(currentIndex);
+      if (!currentRef) return;
+
+      const rect = currentRef.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const articleHeight = currentRef.offsetHeight;
+
+      // 記事のスクロール進捗を計算
+      // rect.top=0 → 記事の先頭がビューポート上端にある
+      // rect.bottom=viewportHeight → 記事の末尾がビューポート下端にある
+      const scrolled = -rect.top;
+      const scrollableHeight = articleHeight - viewportHeight;
+      const pct = scrollableHeight > 0 ? Math.round((scrolled / scrollableHeight) * 100) : 0;
+      const clamped = Math.max(0, Math.min(100, pct));
+      setScrollPercentage(clamped);
+
+      // 90%到達でLike記録（1記事につき1回のみ）
+      if (clamped >= SCROLL_END_THRESHOLD && !scrollEndTriggeredRef.current.has(currentIndex)) {
+        scrollEndTriggeredRef.current.add(currentIndex);
+        const article = articles[currentIndex] as (typeof articles)[number] | undefined;
+        if (article) {
+          void recordLike(article.id);
+        }
+      }
+
+      // 次の記事が画面の半分以上を占めたらcurrentIndexを進める
+      const nextRef = articleRefsMap.current.get(currentIndex + 1);
+      if (nextRef) {
+        const nextRect = nextRef.getBoundingClientRect();
+        if (nextRect.top < viewportHeight * 0.5) {
+          goToNext();
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [currentIndex, articles, goToNext, recordLike]);
+
+  // ローディング中はスケルトンUIを表示
   if (isLoading) {
     return <SkeletonLoader />;
   }
 
-  // AC-4: エラー時はErrorStateを表示
+  // エラー時はErrorStateを表示
   if (error) {
     return <ErrorState error={error} onRetry={handleRetry} isRetrying={isRetrying} />;
   }
 
-  // AC-3: 推薦切れ時はEmptyStateを表示
+  // 推薦切れ時はEmptyStateを表示
   if (isEmpty || !currentArticle) {
     return <EmptyState />;
   }
@@ -140,29 +159,29 @@ export default function RecommendPage() {
   // 進捗計算
   const progress = ((currentIndex + 1) / articles.length) * 100;
 
-  // AC-2 + AC-4 (007): デュアルWebView + スムーストランジション
   return (
-    <div className="relative h-screen overflow-hidden" data-testid="article-viewer">
-      {/* AC-4 (007): スライドコンテナ */}
-      <div
-        className="transition-transform duration-500 ease-in-out"
-        style={{
-          transform: isTransitioning ? "translateY(calc(-100vh + 100px))" : "translateY(0)",
-        }}
-      >
-        {/* AC-8 (007): 現在の記事 */}
-        <ArticleWebView
-          url={currentArticle.url}
-          articleId={currentArticle.id}
-          onScrollEnd={handleScrollEnd}
-          onSkip={goToNext}
-          onContentLoaded={handleContentLoaded}
-        />
-        {/* AC-8 (007): 次の記事（プリレンダリング） - onScrollEndは渡さない */}
-        {nextArticle && <ArticleWebView url={nextArticle.url} articleId={nextArticle.id} />}
-      </div>
+    <div data-testid="article-viewer">
+      {/* 記事を縦に積み重ねて配置 */}
+      {renderRange.map((article, idx) => (
+        <div
+          key={article.id}
+          ref={(el) => {
+            if (el) {
+              articleRefsMap.current.set(idx, el);
+            }
+          }}
+        >
+          <ArticleWebView
+            url={article.url}
+            articleId={article.id}
+            onSkip={idx === currentIndex ? goToNext : undefined}
+            onContentLoaded={idx === currentIndex ? handleContentLoaded : undefined}
+          />
+        </div>
+      ))}
       <FloatingUI
         progress={progress}
+        scrollPercentage={scrollPercentage}
         isFavorited={isFavorited}
         onFavorite={handleFavorite}
         onNext={handleNext}

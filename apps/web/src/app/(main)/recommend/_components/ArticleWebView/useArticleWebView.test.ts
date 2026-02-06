@@ -353,6 +353,101 @@ describe("useArticleWebView", () => {
     });
   });
 
+  describe("コンテンツ高さ（resize メッセージ）", () => {
+    it("初期状態でcontentHeightがnullである", () => {
+      const { result } = renderHook(() => useArticleWebView({ url: "https://example.com" }));
+
+      expect(result.current.contentHeight).toBeNull();
+    });
+
+    it("resizeメッセージ受信でcontentHeightが更新される", () => {
+      const { result } = renderHook(() => useArticleWebView({ url: "https://example.com" }));
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: VALID_ORIGIN,
+            data: { type: "resize", height: 2500 },
+          })
+        );
+      });
+
+      expect(result.current.contentHeight).toBe(2500);
+    });
+
+    it("同一オリジンからのresizeメッセージも処理される", () => {
+      const { result } = renderHook(() => useArticleWebView({ url: "https://example.com" }));
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: window.location.origin,
+            data: { type: "resize", height: 3000 },
+          })
+        );
+      });
+
+      expect(result.current.contentHeight).toBe(3000);
+    });
+
+    it("不正なoriginからのresizeメッセージは無視される", () => {
+      const { result } = renderHook(() => useArticleWebView({ url: "https://example.com" }));
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: "https://malicious-site.com",
+            data: { type: "resize", height: 9999 },
+          })
+        );
+      });
+
+      expect(result.current.contentHeight).toBeNull();
+    });
+
+    it("URL変更時にcontentHeightがnullにリセットされる", () => {
+      const { result, rerender } = renderHook(({ url }) => useArticleWebView({ url }), {
+        initialProps: { url: "https://example.com/article1" },
+      });
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: VALID_ORIGIN,
+            data: { type: "resize", height: 2000 },
+          })
+        );
+      });
+
+      expect(result.current.contentHeight).toBe(2000);
+
+      rerender({ url: "https://example.com/article2" });
+
+      expect(result.current.contentHeight).toBeNull();
+    });
+
+    it("retry時にcontentHeightがnullにリセットされる", () => {
+      const { result } = renderHook(() => useArticleWebView({ url: "https://example.com" }));
+
+      act(() => {
+        window.dispatchEvent(
+          new MessageEvent("message", {
+            origin: VALID_ORIGIN,
+            data: { type: "resize", height: 1500 },
+          })
+        );
+      });
+
+      expect(result.current.contentHeight).toBe(1500);
+
+      act(() => {
+        result.current.retry();
+      });
+
+      expect(result.current.contentHeight).toBeNull();
+    });
+  });
+
   describe("同一オリジン（wiki-proxy経由）からのメッセージ", () => {
     it("同一オリジンからのスクロールメッセージが処理される", () => {
       const onScrollChange = vi.fn();

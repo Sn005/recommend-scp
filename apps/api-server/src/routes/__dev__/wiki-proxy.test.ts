@@ -229,8 +229,8 @@ describe("GET /wiki-proxy/*", () => {
     });
   });
 
-  describe("スクロール検知スクリプト注入", () => {
-    it("スクロール検知用のpostMessageスクリプトが注入される", async () => {
+  describe("コンテンツ高さ報告スクリプト注入", () => {
+    it("コンテンツ高さ報告用のpostMessageスクリプトが注入される", async () => {
       // Arrange
       const html = `<html><head><title>Test</title></head><body><p>content</p></body></html>`;
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
@@ -243,8 +243,23 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert
       expect(text).toContain("window.parent.postMessage");
-      expect(text).toContain('"scroll"');
-      expect(text).toContain("percentage");
+      expect(text).toContain('"resize"');
+      expect(text).toContain("height");
+    });
+
+    it("ResizeObserverでコンテンツ高さを動的に追従する", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body><p>content</p></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("ResizeObserver");
     });
 
     it("スクリプトが</body>直前に注入される", async () => {
@@ -260,6 +275,21 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert
       expect(text).toMatch(/<\/script><\/body>/);
+    });
+
+    it("iframe内スクロールを無効化するCSSが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("html{overflow:hidden!important}");
     });
   });
 

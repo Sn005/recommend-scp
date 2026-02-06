@@ -23,6 +23,7 @@ describe("ArticleWebView", () => {
     isLoading: true,
     error: null,
     scrollPercentage: 0,
+    contentHeight: null as number | null,
     handleLoad: vi.fn(),
     handleError: vi.fn(),
     retry: vi.fn(),
@@ -235,19 +236,27 @@ describe("ArticleWebView", () => {
       expect(root).toHaveClass("w-full");
     });
 
-    it("iframeがw-fullとh-fullクラスを持つ", () => {
+    it("iframeがw-fullクラスを持つ", () => {
       render(<ArticleWebView url="https://example.com" />);
 
       const iframe = screen.getByTitle("SCP記事");
       expect(iframe).toHaveClass("w-full");
-      expect(iframe).toHaveClass("h-full");
     });
 
-    it("コンテナの高さがcalc(100vh-100px)である", () => {
-      const { container } = render(<ArticleWebView url="https://example.com" />);
+    it("コンテンツ高さ未取得時はデフォルトの100vh高さが設定される", () => {
+      mockUseArticleWebView.mockReturnValue(createMockReturn({ contentHeight: null }));
+      render(<ArticleWebView url="https://example.com" />);
 
-      const root = container.firstChild;
-      expect(root).toHaveClass("h-[calc(100vh-100px)]");
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe.style.height).toBe("100vh");
+    });
+
+    it("コンテンツ高さ取得後はiframeの高さが動的に設定される", () => {
+      mockUseArticleWebView.mockReturnValue(createMockReturn({ contentHeight: 2500 }));
+      render(<ArticleWebView url="https://example.com" />);
+
+      const iframe = screen.getByTitle("SCP記事");
+      expect(iframe.style.height).toBe("2500px");
     });
   });
 

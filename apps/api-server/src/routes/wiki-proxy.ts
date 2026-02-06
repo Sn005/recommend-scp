@@ -67,32 +67,33 @@ const INJECTED_STYLE = [
   "#page-content p{margin-bottom:1em}",
   // 記事可読性: 画像レスポンシブ化
   "#page-content img{max-width:100%;height:auto}",
+  // iframe内スクロール無効化: 親ページスクロールで記事を縦に連続表示するため
+  "html{overflow:hidden!important}",
   "</style>",
 ].join("");
 
 /**
- * <body>末尾に注入するスクロール検知スクリプト
+ * <body>末尾に注入するコンテンツ高さ報告スクリプト
  *
- * iframe内のスクロール率を計算し、親ウィンドウにpostMessageで通知する。
- * 親側の useArticleWebView フックが受信し、読了判定（90%）やプログレスバー更新に使用。
+ * iframe内のコンテンツ高さを計算し、親ウィンドウにpostMessageで通知する。
+ * 親側でiframeの高さをコンテンツに合わせて設定し、iframe内スクロールを不要にする。
+ * これにより親ページのスクロールで複数記事を縦に連続閲覧できる。
  *
- * - throttle: requestAnimationFrameで間引き（60fps以下に制限）
- * - メッセージ形式: { type: "scroll", percentage: number }
- * - percentage: 0-100の整数（Math.round済み）
+ * - メッセージ形式: { type: "resize", height: number }
+ * - height: コンテンツの全高（px）
+ * - ResizeObserverで動的なコンテンツ変化（折りたたみ展開、画像読み込み等）にも追従
  */
 const INJECTED_SCROLL_SCRIPT = `<script>
 (function(){
-  var ticking=false;
-  function notify(){
-    var h=document.documentElement.scrollHeight-document.documentElement.clientHeight;
-    var pct=h>0?Math.round((window.scrollY/h)*100):0;
-    if(pct<0)pct=0;if(pct>100)pct=100;
-    window.parent.postMessage({type:"scroll",percentage:pct},"*");
+  function reportHeight(){
+    var h=document.documentElement.scrollHeight;
+    window.parent.postMessage({type:"resize",height:h},"*");
   }
-  window.addEventListener("scroll",function(){
-    if(!ticking){ticking=true;requestAnimationFrame(function(){notify();ticking=false;});}
-  });
-  notify();
+  reportHeight();
+  if(typeof ResizeObserver!=="undefined"){
+    new ResizeObserver(reportHeight).observe(document.documentElement);
+  }
+  window.addEventListener("load",reportHeight);
 })();
 </script>`;
 

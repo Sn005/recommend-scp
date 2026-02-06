@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { cn } from "@/shared/lib/utils";
 import { useArticleWebView } from "./useArticleWebView";
 import { use404Detection } from "./use404Detection";
@@ -22,6 +22,9 @@ function toProxyUrl(url: string): string {
   return url;
 }
 
+/** iframeのデフォルト高さ（コンテンツ高さ未取得時） */
+const DEFAULT_IFRAME_HEIGHT = "100vh";
+
 export function ArticleWebView({
   url,
   articleId,
@@ -29,6 +32,7 @@ export function ArticleWebView({
   onScrollChange,
   onSkip,
   onContentLoaded,
+  onHeightChange,
   className,
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
@@ -37,11 +41,19 @@ export function ArticleWebView({
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
 
-  const { iframeRef, isLoading, error, handleLoad, handleError, retry } = useArticleWebView({
-    url: iframeSrc,
-    onScrollEnd,
-    onScrollChange,
-  });
+  const { iframeRef, isLoading, error, contentHeight, handleLoad, handleError, retry } =
+    useArticleWebView({
+      url: iframeSrc,
+      onScrollEnd,
+      onScrollChange,
+    });
+
+  // コンテンツ高さ変更を親に通知
+  useEffect(() => {
+    if (contentHeight !== null && onHeightChange) {
+      onHeightChange(contentHeight);
+    }
+  }, [contentHeight, onHeightChange]);
 
   // コンテンツ取得（タイトル・本文冒頭）
   const handleContentLoaded = useCallback(
@@ -97,10 +109,14 @@ export function ArticleWebView({
     onSkip?.();
   }, [onSkip]);
 
+  // iframe高さ: コンテンツ高さが取得できたら合わせる、未取得時はviewport高さ
+  const iframeHeight =
+    contentHeight !== null ? `${String(contentHeight)}px` : DEFAULT_IFRAME_HEIGHT;
+
   // サジェスト画面表示（通常のArticleWebViewと同じ高さを維持し、次記事が見えないようにする）
   if (showNotFound) {
     return (
-      <div className={cn("relative w-full h-[calc(100vh-100px)]", className)}>
+      <div className={cn("relative w-full min-h-screen", className)}>
         <TranslationNotFound onSuggest={handleSuggest} />
       </div>
     );
@@ -110,13 +126,15 @@ export function ArticleWebView({
     <div
       data-testid="article-webview"
       data-url={url}
-      className={cn("relative w-full h-[calc(100vh-100px)]", className)}
+      className={cn("relative w-full", className)}
+      style={{ minHeight: DEFAULT_IFRAME_HEIGHT }}
     >
       {/* ローディングインジケータ（iframe読み込み中のみ） */}
       {isLoading && !error && (
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 flex items-center justify-center bg-gray-100"
+          style={{ height: DEFAULT_IFRAME_HEIGHT }}
         >
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
@@ -124,7 +142,10 @@ export function ArticleWebView({
 
       {/* エラー表示 */}
       {error && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 gap-4">
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 gap-4"
+          style={{ height: DEFAULT_IFRAME_HEIGHT }}
+        >
           <p className="text-gray-600">読み込みに失敗しました</p>
           <button
             type="button"
@@ -143,7 +164,8 @@ export function ArticleWebView({
       <iframe
         ref={iframeRef}
         src={iframeSrc}
-        className="w-full h-full border-0"
+        className="w-full border-0"
+        style={{ height: iframeHeight }}
         onLoad={handleIframeLoad}
         onError={handleError}
         title="SCP記事"
