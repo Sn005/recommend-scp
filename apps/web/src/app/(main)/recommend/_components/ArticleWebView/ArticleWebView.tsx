@@ -33,6 +33,7 @@ export function ArticleWebView({
   onSkip,
   onContentLoaded,
   onHeightChange,
+  hideLoading = false,
   className,
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
@@ -129,8 +130,8 @@ export function ArticleWebView({
       className={cn("relative w-full", className)}
       style={{ minHeight: DEFAULT_IFRAME_HEIGHT }}
     >
-      {/* ローディングインジケータ（iframe読み込み中のみ） */}
-      {isLoading && !error && (
+      {/* ローディングインジケータ（iframe読み込み中のみ、プリレンダリング時は非表示） */}
+      {isLoading && !error && !hideLoading && (
         <div
           data-testid="loading-indicator"
           className="absolute inset-0 flex items-center justify-center bg-gray-100"

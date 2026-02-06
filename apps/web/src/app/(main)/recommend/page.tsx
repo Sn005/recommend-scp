@@ -70,18 +70,13 @@ export default function RecommendPage() {
     void toggleFavorite();
   }, [currentArticle, recordLike, toggleFavorite]);
 
-  // 次へボタンハンドラー: dislike記録 + 次の記事の位置までスクロール
+  // 次へボタンハンドラー: dislike記録 + 次の記事へ移動
   const handleNext = useCallback(() => {
     if (currentArticle) {
       void recordDislike(currentArticle.id);
     }
-    // 次の記事のDOM要素の位置までスムーズスクロール
-    const nextRef = articleRefsMap.current.get(currentIndex + 1);
-    if (nextRef) {
-      nextRef.scrollIntoView({ behavior: "smooth" });
-    }
     goToNext();
-  }, [currentArticle, currentIndex, recordDislike, goToNext]);
+  }, [currentArticle, recordDislike, goToNext]);
 
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(
@@ -176,6 +171,7 @@ export default function RecommendPage() {
             articleId={article.id}
             onSkip={idx === currentIndex ? goToNext : undefined}
             onContentLoaded={idx === currentIndex ? handleContentLoaded : undefined}
+            hideLoading={idx !== currentIndex}
           />
         </div>
       ))}

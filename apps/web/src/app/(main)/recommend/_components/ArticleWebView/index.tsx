@@ -15,6 +15,8 @@ export interface ArticleWebViewProps {
   onContentLoaded?: (content: ArticleContent) => void;
   /** iframeコンテンツ高さ変更時のコールバック */
   onHeightChange?: (height: number) => void;
+  /** ローディングインジケータを非表示にする（プリレンダリング時） */
+  hideLoading?: boolean;
   /** 追加のCSSクラス */
   className?: string;
 }
