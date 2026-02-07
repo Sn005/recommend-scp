@@ -137,9 +137,6 @@ export default function RecommendPage() {
     return <EmptyState />;
   }
 
-  // 進捗計算
-  const progress = ((currentIndex + 1) / articles.length) * 100;
-
   // AC-2 + AC-4 (007): デュアルWebView + スムーストランジション
   return (
     <div className="relative h-screen overflow-hidden" data-testid="article-viewer">
@@ -161,12 +158,7 @@ export default function RecommendPage() {
         {/* AC-8 (007): 次の記事（プリレンダリング） - onScrollEndは渡さない */}
         {nextArticle && <ArticleWebView url={nextArticle.url} articleId={nextArticle.id} />}
       </div>
-      <FloatingUI
-        progress={progress}
-        isFavorited={isFavorited}
-        onFavorite={handleFavorite}
-        onNext={handleNext}
-      />
+      <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
     </div>
   );
 }

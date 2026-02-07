@@ -1,6 +1,4 @@
 export interface FloatingUIProps {
-  /** 進捗率（0-100） */
-  progress: number;
   /** お気に入り状態 */
   isFavorited: boolean;
   /** お気に入りボタンのコールバック */

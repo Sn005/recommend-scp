@@ -6,7 +6,7 @@
 | [006-05-02](./006-05-02.md) | デザイントークン・型定義拡張              | design-tokens.css全8色+グラデーション、ObjectClassBadge拡張 | pending    |
 | [006-05-03](./006-05-03.md) | 遷移ヘッダーカードコンポーネント          | TransitionCard新規実装                                      | pending    |
 | [006-05-04](./006-05-04.md) | Cascade Prefetch（3スロットiframeプール） | デュアルiframe→3スロットプール                              | completed  |
-| [006-05-05](./006-05-05.md) | プログレスバー削除                        | FloatingUIからProgressBar削除                               | pending    |
+| [006-05-05](./006-05-05.md) | プログレスバー削除                        | FloatingUIからProgressBar削除                               | completed  |
 | [006-05-06](./006-05-06.md) | フィードバック判定改善                    | Dislike廃止、暗黙的フィードバック導入                       | pending    |
 | [006-05-07](./006-05-07.md) | 遷移UX統合・結合テスト                    | page.tsxに全変更を統合                                      | pending    |
 
