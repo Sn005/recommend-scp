@@ -1,8 +1,13 @@
 /**
  * @file 記事閲覧ページ
  * @description /recommend ページのメインコンポーネント
- * @see specs/006-frontend/006-02-article-reader/006-02-07.md
- * @see specs/006-frontend/006-05-transition-ux/006-05-06.md
+ * @see specs/006-frontend/006-05-transition-ux/006-05-07.md
+ *
+ * 006-05-07: 遷移UX統合
+ * - useIframePool: 3スロットCascade Prefetchプール
+ * - TransitionCard: 遷移ヘッダーカード（フェードイン/アウト）
+ * - useFeedback: recordSkip + メタデータ（scrollDepth, dwellTime）
+ * - FloatingUI: ProgressBarなし
  */
 "use client";
 
@@ -10,36 +15,29 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
 import { useFeedback, calculateInterestLevel } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "./_hooks/useArticleFavorite";
+import { useIframePool } from "./_hooks/useIframePool";
 import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
 import { FloatingUI } from "./_components/FloatingUI";
+import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "./_components/SkeletonLoader";
 
-/** 遷移アニメーションの持続時間（ms） */
-const TRANSITION_DURATION_MS = 500;
-
 /**
  * 推薦記事閲覧ページ
  *
- * AC-1: ページ初期表示（POST /recommend APIで10件取得）
- * AC-2: 記事表示レイアウト（デュアルWebView + FloatingUI）
- * AC-3: 推薦切れ表示（EmptyState）
- * AC-4: エラー表示（ErrorState）
- * AC-5: 再試行処理
- *
- * 006-02-07 追加:
- * AC-4 (007): デュアルWebView + スムーストランジション
- * AC-5 (007): 「次へ」ボタンの即座遷移（既存挙動維持）
- * AC-6 (007): 下部到達時のLike記録 + 自動遷移
- * AC-8 (007): 過去記事のメモリ解放（最大2 iframe）
- * AC-9 (007): 遷移中の操作制御（連打防止）
- *
- * 006-05-06 追加:
- * AC-1 (006): Dislike記録の廃止 → Skip + メタデータ
- * AC-6 (006): スクロール深度の計測
- * AC-7 (006): 滞在時間の計測
+ * 006-05-07: 遷移UX統合
+ * AC-1: フルフロー遷移（フェードアウト → TransitionCard → フェードイン）
+ * AC-2: iframeプール統合（3スロット）
+ * AC-3: TransitionCardとiframePoolの連携
+ * AC-4: フィードバック統合（recordSkip + metadata）
+ * AC-5: ProgressBar非表示
+ * AC-6: 連打防止
+ * AC-7: 読了時の遷移（スクロール到達）
+ * AC-8: お気に入りボタン正常動作
+ * AC-9: 推薦切れ・エラー時の挙動
+ * AC-10: prefers-reduced-motion対応
  */
 export default function RecommendPage() {
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
@@ -47,20 +45,32 @@ export default function RecommendPage() {
 
   const { recordLike, recordSkip } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
-  const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite({
     articleId: currentArticle?.id,
   });
   const { add: addToHistory } = useHistory();
 
+  // AC-2: iframeプール（3スロット）
+  const { slots, isNextReady, advance } = useIframePool({
+    articles,
+    currentIndex,
+  });
+
   const [isRetrying, setIsRetrying] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // AC-6: 連打防止 - 遷移中フラグ（useRefで同期的にチェック）
   const transitioningRef = useRef(false);
 
-  // AC-6 (006-05-06): スクロール深度の追跡（最大到達深度を保持）
+  // AC-1: TransitionCard表示制御
+  const [showCard, setShowCard] = useState(false);
+  const [nextArticleForCard, setNextArticleForCard] = useState<(typeof articles)[number] | null>(
+    null
+  );
+
+  // AC-4: スクロール深度の追跡（最大到達深度を保持）
   const maxScrollDepthRef = useRef(0);
 
-  // AC-7 (006-05-06): 滞在時間の計測
+  // AC-4: 滞在時間の計測
   const articleStartTimeRef = useRef(0);
 
   // 記事が変わったらスクロール深度・滞在時間をリセット
@@ -69,7 +79,7 @@ export default function RecommendPage() {
     articleStartTimeRef.current = Date.now();
   }, [currentIndex]);
 
-  // スクロール深度の変更ハンドラー（AC-6: 最大到達深度を保持）
+  // スクロール深度の変更ハンドラー
   const handleScrollChange = useCallback((percentage: number) => {
     if (percentage > maxScrollDepthRef.current) {
       maxScrollDepthRef.current = percentage;
@@ -84,34 +94,36 @@ export default function RecommendPage() {
     });
   }, [refetch]);
 
-  // 遷移完了処理
-  const completeTransition = useCallback(() => {
-    if (!transitioningRef.current) return;
-    transitioningRef.current = false;
-    goToNext();
-    setIsTransitioning(false);
-  }, [goToNext]);
-
-  // AC-4 (007): 遷移開始処理（スクロール連動の滑らかな遷移）
-  const startTransition = useCallback(() => {
+  // AC-1: 遷移開始（TransitionCard表示）
+  const startTransitionWithCard = useCallback(() => {
+    const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
     if (transitioningRef.current || !nextArticle) return;
+
     transitioningRef.current = true;
-    setIsTransitioning(true);
-  }, [nextArticle]);
+    setNextArticleForCard(nextArticle);
+    setShowCard(true);
+  }, [articles, currentIndex]);
 
-  // 遷移アニメーション完了検知
-  useEffect(() => {
-    if (!isTransitioning) return;
-    const timerId = setTimeout(completeTransition, TRANSITION_DURATION_MS);
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [isTransitioning, completeTransition]);
+  // AC-1: TransitionCard dismiss完了ハンドラー
+  const handleCardDismissed = useCallback(() => {
+    setShowCard(false);
+    advance(); // AC-2: iframeプールローテーション
+    goToNext(); // currentIndex更新
 
-  // AC-5 (007) + AC-1/AC-2 (006-05-06): 次へボタンハンドラー
-  // Dislike → Skip + メタデータに変更
+    // 新しい記事用にリセット
+    maxScrollDepthRef.current = 0;
+    articleStartTimeRef.current = Date.now();
+    transitioningRef.current = false;
+  }, [advance, goToNext]);
+
+  // AC-4 + AC-6: 次へボタンハンドラー（recordSkip + TransitionCard遷移）
   const handleNext = useCallback(() => {
-    if (transitioningRef.current) return; // AC-9: 遷移中は操作をブロック
+    if (transitioningRef.current) return; // AC-6: 遷移中は操作をブロック
+
+    const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
+    if (!nextArticle) return;
+
+    // AC-4: 暗黙的フィードバック（Skip + メタデータ）
     if (currentArticle) {
       const dwellTime = (Date.now() - articleStartTimeRef.current) / 1000;
       const currentScrollDepth = maxScrollDepthRef.current;
@@ -122,10 +134,12 @@ export default function RecommendPage() {
         interestLevel,
       });
     }
-    goToNext(); // AC-5: 即座に遷移（既存挙動維持）
-  }, [currentArticle, recordSkip, goToNext]);
 
-  // お気に入りボタンハンドラー
+    // AC-1: TransitionCard経由の遷移
+    startTransitionWithCard();
+  }, [currentArticle, articles, currentIndex, recordSkip, startTransitionWithCard]);
+
+  // AC-8: お気に入りボタンハンドラー（遷移に影響しない）
   const handleFavorite = useCallback(() => {
     if (currentArticle) {
       void recordLike(currentArticle.id);
@@ -133,13 +147,14 @@ export default function RecommendPage() {
     void toggleFavorite();
   }, [currentArticle, recordLike, toggleFavorite]);
 
-  // AC-6 (007): スクロール完了ハンドラー（Like記録 + 自動遷移開始）
+  // AC-7: スクロール完了ハンドラー（Like記録 + TransitionCard経由遷移）
   const handleScrollEnd = useCallback(() => {
     if (currentArticle) {
       void recordLike(currentArticle.id);
     }
-    startTransition(); // AC-4: 次の記事への遷移開始
-  }, [currentArticle, recordLike, startTransition]);
+    // AC-7: 読了後もTransitionCard経由で次の記事へ
+    startTransitionWithCard();
+  }, [currentArticle, recordLike, startTransitionWithCard]);
 
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(
@@ -155,43 +170,66 @@ export default function RecommendPage() {
     [currentArticle, addToHistory]
   );
 
-  // AC-1: ローディング中はスケルトンUIを表示
+  // AC-9: ローディング中はスケルトンUIを表示
   if (isLoading) {
     return <SkeletonLoader />;
   }
 
-  // AC-4: エラー時はErrorStateを表示
+  // AC-9: エラー時はErrorStateを表示
   if (error) {
     return <ErrorState error={error} onRetry={handleRetry} isRetrying={isRetrying} />;
   }
 
-  // AC-3: 推薦切れ時はEmptyStateを表示
+  // AC-9: 推薦切れ時はEmptyStateを表示
   if (isEmpty || !currentArticle) {
     return <EmptyState />;
   }
 
-  // AC-2 + AC-4 (007): デュアルWebView + スムーストランジション
+  // AC-2: iframeプールに基づくレンダリング
   return (
     <div className="relative h-screen overflow-hidden" data-testid="article-viewer">
-      {/* AC-4 (007): スライドコンテナ */}
-      <div
-        className="transition-transform duration-500 ease-in-out"
-        style={{
-          transform: isTransitioning ? "translateY(calc(-100vh + 100px))" : "translateY(0)",
-        }}
-      >
-        {/* AC-8 (007): 現在の記事 */}
+      {/* AC-2: Current スロット */}
+      <ArticleWebView
+        url={slots[0].url}
+        articleId={articles[slots[0].articleIndex]?.id}
+        onScrollEnd={handleScrollEnd}
+        onScrollChange={handleScrollChange}
+        onSkip={goToNext}
+        onContentLoaded={handleContentLoaded}
+        className={showCard ? "opacity-0 transition-opacity duration-150" : "opacity-100"}
+      />
+
+      {/* AC-2: Next スロット（非表示、プリレンダリング） */}
+      {slots[1] && (
         <ArticleWebView
-          url={currentArticle.url}
-          articleId={currentArticle.id}
-          onScrollEnd={handleScrollEnd}
-          onScrollChange={handleScrollChange}
-          onSkip={goToNext}
-          onContentLoaded={handleContentLoaded}
+          url={slots[1].url}
+          articleId={articles[slots[1].articleIndex]?.id}
+          className="hidden"
         />
-        {/* AC-8 (007): 次の記事（プリレンダリング） - onScrollEndは渡さない */}
-        {nextArticle && <ArticleWebView url={nextArticle.url} articleId={nextArticle.id} />}
-      </div>
+      )}
+
+      {/* AC-2: Prefetch スロット（非表示） */}
+      {slots[2] && (
+        <ArticleWebView
+          url={slots[2].url}
+          articleId={articles[slots[2].articleIndex]?.id}
+          className="hidden"
+        />
+      )}
+
+      {/* AC-1/AC-3: TransitionCard */}
+      {nextArticleForCard && (
+        <TransitionCard
+          scpNumber={nextArticleForCard.id}
+          objectClass={nextArticleForCard.objectClass}
+          rating={nextArticleForCard.rating}
+          isVisible={showCard}
+          isContentReady={isNextReady}
+          onDismissed={handleCardDismissed}
+        />
+      )}
+
+      {/* AC-5: FloatingUI（ProgressBarなし） */}
       <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
     </div>
   );

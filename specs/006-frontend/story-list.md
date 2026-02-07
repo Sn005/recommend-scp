@@ -10,7 +10,7 @@
 | [006-03](./006-03-favorites/006-03.md)        | お気に入り管理         | お気に入り一覧・再読・解除                                 | completed  |
 | [006-04](./006-04-history/006-04.md)          | 閲覧履歴               | 履歴記録・一覧表示・遷移                                   | completed  |
 | [006-ex01](./006-ex01-design-fix/006-ex01.md) | デザイン整合性修正     | SVGアイコン化・モックアップ準拠修正                        | completed  |
-| [006-05](./006-05-transition-ux/006-05.md)    | 記事遷移UX改善         | 遷移ヘッダーカード・Cascade Prefetch・暗黙的フィードバック | pending    |
+| [006-05](./006-05-transition-ux/006-05.md)    | 記事遷移UX改善         | 遷移ヘッダーカード・Cascade Prefetch・暗黙的フィードバック | completed  |
 
 ## 依存関係グラフ
 
