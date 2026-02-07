@@ -87,6 +87,8 @@ describe("RecommendService", () => {
           similarityScore: 0.95,
           source: "preference",
           url: "http://scp-jp.wikidot.com/scp-173",
+          objectClass: "EUCLID",
+          rating: 350,
         },
         {
           id: "scp-096",
@@ -94,6 +96,8 @@ describe("RecommendService", () => {
           similarityScore: 0.87,
           source: "preference",
           url: "http://scp-jp.wikidot.com/scp-096",
+          objectClass: "EUCLID",
+          rating: 420,
         },
       ];
 
