@@ -2,12 +2,13 @@
  * @file 記事閲覧ページ
  * @description /recommend ページのメインコンポーネント
  * @see specs/006-frontend/006-02-article-reader/006-02-07.md
+ * @see specs/006-frontend/006-05-transition-ux/006-05-06.md
  */
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
-import { useFeedback } from "./_hooks/useFeedback";
+import { useFeedback, calculateInterestLevel } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "./_hooks/useArticleFavorite";
 import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
@@ -34,12 +35,17 @@ const TRANSITION_DURATION_MS = 500;
  * AC-6 (007): 下部到達時のLike記録 + 自動遷移
  * AC-8 (007): 過去記事のメモリ解放（最大2 iframe）
  * AC-9 (007): 遷移中の操作制御（連打防止）
+ *
+ * 006-05-06 追加:
+ * AC-1 (006): Dislike記録の廃止 → Skip + メタデータ
+ * AC-6 (006): スクロール深度の計測
+ * AC-7 (006): 滞在時間の計測
  */
 export default function RecommendPage() {
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
     useInfiniteArticles();
 
-  const { recordLike, recordDislike } = useFeedback();
+  const { recordLike, recordSkip } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
   const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite({
@@ -50,6 +56,25 @@ export default function RecommendPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const transitioningRef = useRef(false);
+
+  // AC-6 (006-05-06): スクロール深度の追跡（最大到達深度を保持）
+  const maxScrollDepthRef = useRef(0);
+
+  // AC-7 (006-05-06): 滞在時間の計測
+  const articleStartTimeRef = useRef(0);
+
+  // 記事が変わったらスクロール深度・滞在時間をリセット
+  useEffect(() => {
+    maxScrollDepthRef.current = 0;
+    articleStartTimeRef.current = Date.now();
+  }, [currentIndex]);
+
+  // スクロール深度の変更ハンドラー（AC-6: 最大到達深度を保持）
+  const handleScrollChange = useCallback((percentage: number) => {
+    if (percentage > maxScrollDepthRef.current) {
+      maxScrollDepthRef.current = percentage;
+    }
+  }, []);
 
   // 再試行ハンドラー
   const handleRetry = useCallback(() => {
@@ -83,14 +108,22 @@ export default function RecommendPage() {
     };
   }, [isTransitioning, completeTransition]);
 
-  // AC-5 (007): 次へボタンハンドラー（即座に遷移 + AC-9: 遷移中ブロック）
+  // AC-5 (007) + AC-1/AC-2 (006-05-06): 次へボタンハンドラー
+  // Dislike → Skip + メタデータに変更
   const handleNext = useCallback(() => {
     if (transitioningRef.current) return; // AC-9: 遷移中は操作をブロック
     if (currentArticle) {
-      void recordDislike(currentArticle.id);
+      const dwellTime = (Date.now() - articleStartTimeRef.current) / 1000;
+      const currentScrollDepth = maxScrollDepthRef.current;
+      const interestLevel = calculateInterestLevel(currentScrollDepth, dwellTime);
+      void recordSkip(currentArticle.id, {
+        scrollDepth: currentScrollDepth,
+        dwellTime,
+        interestLevel,
+      });
     }
     goToNext(); // AC-5: 即座に遷移（既存挙動維持）
-  }, [currentArticle, recordDislike, goToNext]);
+  }, [currentArticle, recordSkip, goToNext]);
 
   // お気に入りボタンハンドラー
   const handleFavorite = useCallback(() => {
@@ -152,6 +185,7 @@ export default function RecommendPage() {
           url={currentArticle.url}
           articleId={currentArticle.id}
           onScrollEnd={handleScrollEnd}
+          onScrollChange={handleScrollChange}
           onSkip={goToNext}
           onContentLoaded={handleContentLoaded}
         />

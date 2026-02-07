@@ -29,13 +29,13 @@ export class FeedbackService {
    *
    * @param visitorId - 訪問者ID
    * @param articleId - 記事ID
-   * @param type - フィードバック種別（like/dislike）
+   * @param type - フィードバック種別（like/dislike/skip）
    * @throws NotFoundError visitorIdが未登録の場合
    */
   recordFeedback = async (
     visitorId: string,
     articleId: string,
-    type: "like" | "dislike"
+    type: "like" | "dislike" | "skip"
   ): Promise<void> => {
     // visitorIdの存在確認
     const visitor = await this.visitorsRepo.findByVisitorId(visitorId);

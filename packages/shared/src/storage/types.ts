@@ -198,7 +198,7 @@ export interface Feedback {
   articleId: string;
 
   /** フィードバック種別 */
-  type: "like" | "dislike";
+  type: "like" | "dislike" | "skip";
 
   /** 作成日時（ISO 8601形式） */
   createdAt: string;

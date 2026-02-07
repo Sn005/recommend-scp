@@ -12,7 +12,7 @@ interface FeedbackRow {
   id: string;
   visitor_id: string;
   article_id: string;
-  type: "like" | "dislike";
+  type: "like" | "dislike" | "skip";
   created_at: string;
 }
 

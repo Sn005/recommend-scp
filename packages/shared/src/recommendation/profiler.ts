@@ -154,7 +154,7 @@ export class PreferenceProfiler {
    * @returns タグ名 → 重み値のマップ
    */
   private async calculateTagWeights(
-    feedbacks: { articleId: string; type: "like" | "dislike" }[],
+    feedbacks: { articleId: string; type: "like" | "dislike" | "skip" }[],
     viewHistories: { articleId: string; duration?: number }[]
   ): Promise<Record<string, number>> {
     const weights: Record<string, number> = {};
