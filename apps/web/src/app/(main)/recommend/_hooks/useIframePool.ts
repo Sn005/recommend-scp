@@ -21,6 +21,9 @@ export interface UseIframePoolOptions {
 
 type Slots = [IframeSlot, IframeSlot | null, IframeSlot | null];
 
+/** 記事が空の場合のプレースホルダースロット */
+const EMPTY_SLOT: IframeSlot = { articleIndex: -1, url: "", isLoaded: false };
+
 export interface UseIframePoolReturn {
   slots: Slots;
   isNextReady: boolean;
@@ -28,12 +31,11 @@ export interface UseIframePoolReturn {
   handleIframeLoad: (articleIndex: number) => void;
 }
 
-/** 記事インデックスからスロットを生成 */
-const createSlot = (articles: Article[], articleIndex: number): IframeSlot => ({
-  articleIndex,
-  url: articles[articleIndex].url,
-  isLoaded: false,
-});
+/** 記事インデックスからスロットを生成（範囲外の場合はnull） */
+const createSlot = (articles: Article[], articleIndex: number): IframeSlot | null => {
+  if (articleIndex < 0 || articleIndex >= articles.length) return null;
+  return { articleIndex, url: articles[articleIndex].url, isLoaded: false };
+};
 
 /** 次のスロットが作成可能か判定し、作成する */
 const tryCreateNextSlot = (
@@ -51,7 +53,11 @@ export const useIframePool = ({
   articles,
   currentIndex,
 }: UseIframePoolOptions): UseIframePoolReturn => {
-  const [slots, setSlots] = useState<Slots>(() => [createSlot(articles, currentIndex), null, null]);
+  const [slots, setSlots] = useState<Slots>(() => [
+    createSlot(articles, currentIndex) ?? EMPTY_SLOT,
+    null,
+    null,
+  ]);
 
   // Cascade読み込み: loadイベントでisLoadedを更新し、次のスロットを作成
   const handleIframeLoad = useCallback(
