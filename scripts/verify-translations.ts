@@ -99,6 +99,8 @@ async function processInBatches<T, R>(
   return results;
 }
 
+const SUPABASE_PAGE_SIZE = 1000;
+
 async function main() {
   console.log("=== 翻訳URL一括検証スクリプト ===");
   console.log(`モード: ${dryRun ? "DRY RUN（DB更新なし）" : "実行"}`);
@@ -106,108 +108,122 @@ async function main() {
   if (limit) console.log(`検証件数上限: ${limit}`);
   console.log("");
 
-  // 1. 未検証レコードを取得
-  let query = supabase
-    .from("article_translations")
-    .select("article_id, lang, url, has_translation")
-    .eq("lang", "ja")
-    .is("has_translation", null)
-    .order("article_id");
+  let totalExistsCount = 0;
+  let totalNotFoundCount = 0;
+  let pageNumber = 0;
+  let remaining = limit ?? Infinity;
 
-  if (limit) {
-    query = query.limit(limit);
-  }
+  // Supabaseのデフォルト1000件制限を回避するためループで全件処理
+  while (remaining > 0) {
+    pageNumber++;
+    const fetchSize = Math.min(SUPABASE_PAGE_SIZE, remaining);
 
-  const { data: rows, error } = (await query) as {
-    data: TranslationRow[] | null;
-    error: Error | null;
-  };
+    // 1. 未検証レコードを取得（処理済みはNULLでなくなるため、次の1000件が自動的に返る）
+    const { data: rows, error } = (await supabase
+      .from("article_translations")
+      .select("article_id, lang, url, has_translation")
+      .eq("lang", "ja")
+      .is("has_translation", null)
+      .order("article_id")
+      .limit(fetchSize)) as {
+      data: TranslationRow[] | null;
+      error: Error | null;
+    };
 
-  if (error) {
-    console.error("DB取得エラー:", error);
-    process.exit(1);
-  }
-
-  if (!rows || rows.length === 0) {
-    console.log("検証対象のレコードがありません（全件検証済み）");
-    return;
-  }
-
-  console.log(`検証対象: ${rows.length} 件`);
-  console.log("");
-
-  // 2. URL一括チェック
-  let existsCount = 0;
-  let notFoundCount = 0;
-
-  const results = await processInBatches(rows, concurrency, async (row) => {
-    const exists = await checkUrl(row.url);
-    if (exists) {
-      existsCount++;
-    } else {
-      notFoundCount++;
+    if (error) {
+      console.error("DB取得エラー:", error);
+      process.exit(1);
     }
-    return { ...row, exists };
-  });
+
+    if (!rows || rows.length === 0) {
+      if (pageNumber === 1) {
+        console.log("検証対象のレコードがありません（全件検証済み）");
+      }
+      break;
+    }
+
+    console.log(
+      `--- ページ ${pageNumber}: ${rows.length} 件取得（累計: ${totalExistsCount + totalNotFoundCount + rows.length} 件目まで） ---`
+    );
+
+    // 2. URL一括チェック
+    let existsCount = 0;
+    let notFoundCount = 0;
+
+    const results = await processInBatches(rows, concurrency, async (row) => {
+      const exists = await checkUrl(row.url);
+      if (exists) {
+        existsCount++;
+      } else {
+        notFoundCount++;
+      }
+      return { ...row, exists };
+    });
+
+    totalExistsCount += existsCount;
+    totalNotFoundCount += notFoundCount;
+
+    console.log(`  翻訳あり: ${existsCount} 件 / 翻訳なし: ${notFoundCount} 件`);
+
+    if (dryRun) {
+      const notFoundItems = results.filter((r) => !r.exists);
+      if (notFoundItems.length > 0) {
+        console.log(`  翻訳なし記事（先頭10件）:`);
+        notFoundItems.slice(0, 10).forEach((r) => {
+          console.log(`    ${r.article_id}: ${r.url}`);
+        });
+        if (notFoundItems.length > 10) {
+          console.log(`    ... 他 ${notFoundItems.length - 10} 件`);
+        }
+      }
+    } else {
+      // 3. DB更新（ページごとに即時更新）
+      const existsIds = results.filter((r) => r.exists).map((r) => r.article_id);
+      const notFoundIds = results.filter((r) => !r.exists).map((r) => r.article_id);
+
+      if (existsIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from("article_translations")
+          .update({ has_translation: true, checked_at: new Date().toISOString() })
+          .eq("lang", "ja")
+          .in("article_id", existsIds);
+
+        if (updateError) {
+          console.error("TRUE更新エラー:", updateError);
+        }
+      }
+
+      if (notFoundIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from("article_translations")
+          .update({ has_translation: false, checked_at: new Date().toISOString() })
+          .eq("lang", "ja")
+          .in("article_id", notFoundIds);
+
+        if (updateError) {
+          console.error("FALSE更新エラー:", updateError);
+        }
+      }
+
+      console.log(`  DB更新完了`);
+    }
+
+    remaining -= rows.length;
+
+    // 取得件数がページサイズ未満なら最終ページ
+    if (rows.length < fetchSize) {
+      break;
+    }
+  }
 
   console.log("");
-  console.log(`=== 結果 ===`);
-  console.log(`翻訳あり (200 OK): ${existsCount} 件`);
-  console.log(`翻訳なし (404等):  ${notFoundCount} 件`);
-  console.log("");
-
+  console.log(`=== 最終結果 ===`);
+  console.log(`翻訳あり (200 OK): ${totalExistsCount} 件`);
+  console.log(`翻訳なし (404等):  ${totalNotFoundCount} 件`);
+  console.log(`合計:              ${totalExistsCount + totalNotFoundCount} 件`);
   if (dryRun) {
     console.log("[DRY RUN] DB更新はスキップされました");
-    // 翻訳なしの一覧を表示
-    const notFoundItems = results.filter((r) => !r.exists);
-    if (notFoundItems.length > 0) {
-      console.log(`\n翻訳なし記事一覧 (先頭20件):`);
-      notFoundItems.slice(0, 20).forEach((r) => {
-        console.log(`  ${r.article_id}: ${r.url}`);
-      });
-      if (notFoundItems.length > 20) {
-        console.log(`  ... 他 ${notFoundItems.length - 20} 件`);
-      }
-    }
-    return;
   }
-
-  // 3. DB更新
-  console.log("DB更新中...");
-
-  const existsIds = results.filter((r) => r.exists).map((r) => r.article_id);
-  const notFoundIds = results.filter((r) => !r.exists).map((r) => r.article_id);
-
-  if (existsIds.length > 0) {
-    // バッチ更新: has_translation = TRUE
-    const { error: updateError } = await supabase
-      .from("article_translations")
-      .update({ has_translation: true, checked_at: new Date().toISOString() })
-      .eq("lang", "ja")
-      .in("article_id", existsIds);
-
-    if (updateError) {
-      console.error("TRUE更新エラー:", updateError);
-    } else {
-      console.log(`  has_translation = TRUE: ${existsIds.length} 件更新`);
-    }
-  }
-
-  if (notFoundIds.length > 0) {
-    // バッチ更新: has_translation = FALSE
-    const { error: updateError } = await supabase
-      .from("article_translations")
-      .update({ has_translation: false, checked_at: new Date().toISOString() })
-      .eq("lang", "ja")
-      .in("article_id", notFoundIds);
-
-    if (updateError) {
-      console.error("FALSE更新エラー:", updateError);
-    } else {
-      console.log(`  has_translation = FALSE: ${notFoundIds.length} 件更新`);
-    }
-  }
-
   console.log("\n完了");
 }
 
