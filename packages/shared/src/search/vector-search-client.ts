@@ -16,6 +16,10 @@ export interface VectorSearchResult {
   similarity: number;
   /** 日本語版URL（article_translationsから取得） */
   url: string;
+  /** オブジェクトクラス（SAFE, EUCLID, KETER等）。該当なしの場合はundefined */
+  objectClass?: string;
+  /** 記事のrating。該当なしの場合はundefined */
+  rating?: number;
 }
 
 /**

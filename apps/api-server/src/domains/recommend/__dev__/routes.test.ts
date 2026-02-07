@@ -64,6 +64,8 @@ const mockRecommendations: RecommendedArticle[] = [
     similarityScore: 0.95,
     source: "preference",
     url: "http://scp-jp.wikidot.com/scp-173",
+    objectClass: "EUCLID",
+    rating: 1200,
   },
   {
     id: "scp-096",
@@ -71,6 +73,8 @@ const mockRecommendations: RecommendedArticle[] = [
     similarityScore: 0.87,
     source: "preference",
     url: "http://scp-jp.wikidot.com/scp-096",
+    objectClass: "EUCLID",
+    rating: 800,
   },
   {
     id: "scp-999",
@@ -78,6 +82,8 @@ const mockRecommendations: RecommendedArticle[] = [
     similarityScore: 0.45,
     source: "serendipity",
     url: "http://scp-jp.wikidot.com/scp-999",
+    objectClass: "SAFE",
+    rating: 2000,
   },
 ];
 
@@ -202,7 +208,7 @@ describe("POST /recommend - レスポンス構造", () => {
     app = createTestApp(mockService);
   });
 
-  it("各記事にid, title, similarityScore, sourceが含まれる", async () => {
+  it("各記事にid, title, similarityScore, source, objectClass, ratingが含まれる", async () => {
     // Arrange
     mockService.getRecommendations.mockResolvedValue(mockRecommendations);
 
@@ -222,6 +228,8 @@ describe("POST /recommend - レスポンス構造", () => {
       expect(article).toHaveProperty("title");
       expect(article).toHaveProperty("similarityScore");
       expect(article).toHaveProperty("source");
+      expect(article).toHaveProperty("objectClass");
+      expect(article).toHaveProperty("rating");
     }
   });
 

@@ -21,6 +21,8 @@ interface SearchResultRow {
   title: string;
   similarity?: number;
   url?: string;
+  object_class?: string | null;
+  rating?: number | null;
 }
 
 /**
@@ -103,6 +105,8 @@ export class SupabaseVectorSearch implements VectorSearchClient {
       title: row.title,
       similarity: row.similarity ?? 0,
       url: row.url ?? "",
+      objectClass: row.object_class ?? undefined,
+      rating: row.rating ?? undefined,
     }));
   };
 
@@ -165,6 +169,8 @@ export class SupabaseVectorSearch implements VectorSearchClient {
       title: row.title,
       similarity: 0.5, // 未探索タグ検索では固定値
       url: row.url ?? "",
+      objectClass: row.object_class ?? undefined,
+      rating: row.rating ?? undefined,
     }));
   };
 }

@@ -122,6 +122,8 @@ describe("RecommendationEngine", () => {
         similarityScore: 0.95,
         source: "preference",
         url: "http://ja.scp-wiki.net/scp-001",
+        objectClass: null,
+        rating: null,
       });
       expect(recommendations[1].similarityScore).toBe(0.85);
       expect(recommendations[2].similarityScore).toBe(0.75);
