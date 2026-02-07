@@ -114,6 +114,8 @@ export async function getAdjacentArticles(
     similarityScore: r.similarity,
     source: "serendipity" as const,
     url: r.url,
+    objectClass: r.objectClass ?? null,
+    rating: r.rating ?? null,
   }));
 }
 
@@ -149,5 +151,7 @@ export async function getUnexploredArticles(
     similarityScore: 0, // 未探索なので類似度は0
     source: "serendipity" as const,
     url: r.url,
+    objectClass: r.objectClass ?? null,
+    rating: r.rating ?? null,
   }));
 }
