@@ -28,6 +28,10 @@ export interface RecommendedArticle {
   source: "preference" | "serendipity";
   /** 日本語版URL（article_translationsから取得） */
   url: string;
+  /** オブジェクトクラス（SAFE, EUCLID, KETER等）。該当なしの場合はnull */
+  objectClass: string | null;
+  /** 記事のrating。該当なしの場合はnull */
+  rating: number | null;
 }
 
 /**
@@ -181,6 +185,8 @@ export class RecommendationEngine {
       similarityScore: r.similarity,
       source: "preference" as const,
       url: r.url,
+      objectClass: r.objectClass ?? null,
+      rating: r.rating ?? null,
     }));
   }
 

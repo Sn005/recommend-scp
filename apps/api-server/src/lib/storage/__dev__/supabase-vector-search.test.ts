@@ -317,6 +317,210 @@ describe("SupabaseVectorSearch", () => {
         ).rejects.toThrow();
       });
     });
+
+    // ============================================
+    // AC-1, AC-2: objectClass/ratingカラム対応
+    // ============================================
+    describe("objectClass/ratingマッピング（AC-1, AC-2）", () => {
+      it("objectClassが文字列の場合、そのまま返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            similarity: 0.95,
+            url: "http://scp-jp.wikidot.com/scp-173",
+            object_class: "EUCLID",
+            rating: 100,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].objectClass).toBe("EUCLID");
+      });
+
+      it("objectClassがnullの場合、undefinedを返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-001",
+            title: "Unknown",
+            similarity: 0.8,
+            url: "http://scp-jp.wikidot.com/scp-001",
+            object_class: null,
+            rating: 50,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].objectClass).toBeUndefined();
+      });
+
+      it("ratingが正の整数の場合、そのまま返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            similarity: 0.95,
+            url: "http://scp-jp.wikidot.com/scp-173",
+            object_class: "EUCLID",
+            rating: 1234,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].rating).toBe(1234);
+      });
+
+      it("ratingが負の整数の場合、そのまま返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-999",
+            title: "Unpopular",
+            similarity: 0.6,
+            url: "http://scp-jp.wikidot.com/scp-999",
+            object_class: "SAFE",
+            rating: -15,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].rating).toBe(-15);
+      });
+
+      it("ratingがnullの場合、undefinedを返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-xxx",
+            title: "No Rating",
+            similarity: 0.5,
+            url: "http://scp-jp.wikidot.com/scp-xxx",
+            object_class: "SAFE",
+            rating: null,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].rating).toBeUndefined();
+      });
+
+      it("ratingが0の場合、0を返す（境界値）", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-000",
+            title: "Zero Rating",
+            similarity: 0.5,
+            url: "http://scp-jp.wikidot.com/scp-000",
+            object_class: "SAFE",
+            rating: 0,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].rating).toBe(0);
+      });
+
+      it("複数記事でobjectClassがそれぞれ異なる値を正しくマッピングする", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            similarity: 0.95,
+            url: "http://scp-jp.wikidot.com/scp-173",
+            object_class: "EUCLID",
+            rating: 100,
+          },
+          {
+            id: "scp-999",
+            title: "The Tickle Monster",
+            similarity: 0.85,
+            url: "http://scp-jp.wikidot.com/scp-999",
+            object_class: "SAFE",
+            rating: 500,
+          },
+          {
+            id: "scp-682",
+            title: "Hard-to-Destroy Reptile",
+            similarity: 0.75,
+            url: "http://scp-jp.wikidot.com/scp-682",
+            object_class: "KETER",
+            rating: 300,
+          },
+          {
+            id: "scp-001",
+            title: "Unknown Class",
+            similarity: 0.65,
+            url: "http://scp-jp.wikidot.com/scp-001",
+            object_class: null,
+            rating: null,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByEmbedding({
+          queryVector: [0.1, 0.2, 0.3],
+          limit: 10,
+        });
+
+        // Assert
+        expect(result[0].objectClass).toBe("EUCLID");
+        expect(result[0].rating).toBe(100);
+        expect(result[1].objectClass).toBe("SAFE");
+        expect(result[1].rating).toBe(500);
+        expect(result[2].objectClass).toBe("KETER");
+        expect(result[2].rating).toBe(300);
+        expect(result[3].objectClass).toBeUndefined();
+        expect(result[3].rating).toBeUndefined();
+      });
+    });
   });
 
   // ============================================
@@ -600,6 +804,67 @@ describe("SupabaseVectorSearch", () => {
             orderBy: "rating",
           })
         ).rejects.toThrow();
+      });
+    });
+
+    // ============================================
+    // AC-3: searchByUnexploredTags objectClass/rating対応
+    // ============================================
+    describe("objectClass/ratingマッピング（AC-3）", () => {
+      it("objectClassとratingを返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-173",
+            title: "The Sculpture",
+            object_class: "EUCLID",
+            rating: 500,
+          },
+          {
+            id: "scp-096",
+            title: "The Shy Guy",
+            object_class: "KETER",
+            rating: 300,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByUnexploredTags({
+          exploredTags: ["safe"],
+          limit: 10,
+          orderBy: "rating",
+        });
+
+        // Assert
+        expect(result[0].objectClass).toBe("EUCLID");
+        expect(result[0].rating).toBe(500);
+        expect(result[1].objectClass).toBe("KETER");
+        expect(result[1].rating).toBe(300);
+      });
+
+      it("objectClassとratingがnullの場合、undefinedを返す", async () => {
+        // Arrange
+        const mockData = [
+          {
+            id: "scp-unknown",
+            title: "Unknown",
+            object_class: null,
+            rating: null,
+          },
+        ];
+        vi.mocked(mockSupabase.rpc).mockResolvedValue(createMockRpcResponse(mockData) as never);
+
+        // Act
+        const result = await vectorSearch.searchByUnexploredTags({
+          exploredTags: [],
+          limit: 10,
+          orderBy: "random",
+        });
+
+        // Assert
+        expect(result[0].objectClass).toBeUndefined();
+        expect(result[0].rating).toBeUndefined();
       });
     });
   });
