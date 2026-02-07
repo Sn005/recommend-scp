@@ -1,19 +1,20 @@
 /**
  * @file useFeedback フック
- * @description Like/Dislike/Favoriteフィードバックを記録するフック
- * @see specs/006-frontend/006-02-article-reader/006-02-05.md
+ * @description Like/Skip/Favoriteフィードバックを記録するフック
+ * @see specs/006-frontend/006-05-transition-ux/006-05-06.md
  */
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "@/shared/lib/api-client";
 import { useVisitorId } from "@/shared/hooks/useVisitorId";
-import type { FeedbackType, UseFeedbackResult } from "../_types";
+import type { FeedbackType, SkipMetadata, UseFeedbackResult } from "../_types";
 
 /** 保留中のフィードバック */
 interface PendingFeedback {
   articleId: string;
   type: FeedbackType;
+  metadata?: SkipMetadata;
   retryCount: number;
   timestamp: number;
 }
@@ -22,12 +23,28 @@ const STORAGE_KEY = "scp-feedback-pending";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
-/** 優先度: favorite > like > dislike */
+/** 優先度: favorite > like > skip */
 const PRIORITY: Record<FeedbackType, number> = {
   favorite: 3,
   like: 2,
-  dislike: 1,
+  skip: 1,
 };
+
+/**
+ * interest_levelを算出する
+ *
+ * AC-3: scrollDepth < 10 AND dwellTime < 5 → "skip"
+ * AC-5: scrollDepth > 50 AND dwellTime > 30 → "like"
+ * AC-4: それ以外 → "neutral"
+ */
+export function calculateInterestLevel(
+  scrollDepth: number,
+  dwellTime: number
+): "skip" | "neutral" | "like" {
+  if (scrollDepth < 10 && dwellTime < 5) return "skip";
+  if (scrollDepth > 50 && dwellTime > 30) return "like";
+  return "neutral";
+}
 
 /**
  * ローカルストレージから保留中のフィードバックを読み込む
@@ -64,20 +81,23 @@ export function useFeedback(): UseFeedbackResult {
   }, [pendingQueue]);
 
   // フィードバック送信（内部）
-  // NOTE: feedback APIは like/dislike のみサポート。favoriteは別APIで管理するため、ここでは成功とみなす
+  // NOTE: feedback APIは like/skip のみサポート。favoriteは別APIで管理するため、ここでは成功とみなす
   const sendFeedback = useCallback(
-    async (articleId: string, type: FeedbackType): Promise<boolean> => {
+    async (articleId: string, type: FeedbackType, metadata?: SkipMetadata): Promise<boolean> => {
       if (!visitorId) return false;
 
       // favoriteはfeedback APIではなく別途favorites APIで管理
-      // 006-02-06（お気に入りボタン）で実装予定
       if (type === "favorite") {
         return true;
       }
 
       try {
+        const json: Record<string, unknown> = { visitorId, articleId, type };
+        if (metadata) {
+          json.metadata = metadata;
+        }
         const res = await api.feedback.$post({
-          json: { visitorId, articleId, type },
+          json: json as Parameters<typeof api.feedback.$post>[0]["json"],
         });
         return res.ok;
       } catch {
@@ -94,7 +114,7 @@ export function useFeedback(): UseFeedbackResult {
     processingRef.current = true;
 
     const [current, ...rest] = pendingQueue;
-    const success = await sendFeedback(current.articleId, current.type);
+    const success = await sendFeedback(current.articleId, current.type, current.metadata);
 
     if (success) {
       // 成功: キューから削除
@@ -133,7 +153,7 @@ export function useFeedback(): UseFeedbackResult {
 
   // フィードバック記録（共通）
   const recordFeedback = useCallback(
-    async (articleId: string, type: FeedbackType) => {
+    async (articleId: string, type: FeedbackType, metadata?: SkipMetadata) => {
       // バリデーション
       if (!articleId || !visitorId) return;
 
@@ -148,13 +168,13 @@ export function useFeedback(): UseFeedbackResult {
       setRecordedFeedbacks((prev) => new Map(prev).set(articleId, type));
 
       // API送信を試行
-      const success = await sendFeedback(articleId, type);
+      const success = await sendFeedback(articleId, type, metadata);
 
       if (!success) {
         // 失敗時はキューに追加
         setPendingQueue((prev) => [
           ...prev.filter((p) => p.articleId !== articleId),
-          { articleId, type, retryCount: 0, timestamp: Date.now() },
+          { articleId, type, metadata, retryCount: 0, timestamp: Date.now() },
         ]);
       }
     },
@@ -167,8 +187,8 @@ export function useFeedback(): UseFeedbackResult {
     [recordFeedback]
   );
 
-  const recordDislike = useCallback(
-    (articleId: string) => recordFeedback(articleId, "dislike"),
+  const recordSkip = useCallback(
+    (articleId: string, metadata: SkipMetadata) => recordFeedback(articleId, "skip", metadata),
     [recordFeedback]
   );
 
@@ -189,7 +209,7 @@ export function useFeedback(): UseFeedbackResult {
 
   return {
     recordLike,
-    recordDislike,
+    recordSkip,
     recordFavorite,
     hasRecorded,
     getFeedbackType,

@@ -46,11 +46,12 @@ export const createFeedbackRoutes = (
   /**
    * POST /feedback
    *
-   * フィードバック（Like/Dislike）を記録
+   * フィードバック（Like/Dislike/Skip）を記録
    *
    * @param visitorId - 訪問者ID（UUID）
    * @param articleId - 記事ID
-   * @param type - フィードバック種別（like/dislike）
+   * @param type - フィードバック種別（like/dislike/skip）
+   * @param metadata - スキップメタデータ（オプション）
    *
    * Response:
    * - 200 OK: フィードバック記録成功

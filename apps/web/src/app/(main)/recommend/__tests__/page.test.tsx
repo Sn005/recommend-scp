@@ -25,7 +25,11 @@ const mockUseInfiniteArticlesResult = {
 
 const mockUseFeedbackResult = {
   recordLike: vi.fn(),
-  recordDislike: vi.fn(),
+  recordSkip: vi.fn(),
+  recordFavorite: vi.fn(),
+  hasRecorded: vi.fn().mockReturnValue(false),
+  getFeedbackType: vi.fn().mockReturnValue(null),
+  pendingCount: 0,
 };
 
 const mockUseArticleFavoriteResult = {
@@ -41,6 +45,11 @@ vi.mock("../_hooks/useInfiniteArticles", () => ({
 // useFeedbackをモック
 vi.mock("../_hooks/useFeedback", () => ({
   useFeedback: () => mockUseFeedbackResult,
+  calculateInterestLevel: (scrollDepth: number, dwellTime: number) => {
+    if (scrollDepth < 10 && dwellTime < 5) return "skip";
+    if (scrollDepth > 50 && dwellTime > 30) return "like";
+    return "neutral";
+  },
 }));
 
 // useArticleFavoriteをモック
@@ -294,7 +303,7 @@ describe("RecommendPage", () => {
       expect(mockUseArticleFavoriteResult.toggleFavorite).toHaveBeenCalled();
     });
 
-    it("次へボタンをクリックするとgoToNextとrecordDislikeが呼ばれる", async () => {
+    it("次へボタンをクリックするとgoToNextとrecordSkipが呼ばれる", async () => {
       const user = userEvent.setup();
       mockUseInfiniteArticlesResult.isLoading = false;
       mockUseInfiniteArticlesResult.articles = mockArticles;
@@ -305,7 +314,15 @@ describe("RecommendPage", () => {
       const nextButton = await screen.findByLabelText("次の記事へ");
       await user.click(nextButton);
 
-      expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticle.id);
+      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledWith(
+        mockArticle.id,
+
+        expect.objectContaining({
+          scrollDepth: expect.any(Number) as number,
+          dwellTime: expect.any(Number) as number,
+          interestLevel: expect.stringMatching(/^(skip|neutral|like)$/) as string,
+        })
+      );
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalled();
     });
   });
@@ -439,8 +456,8 @@ describe("RecommendPage", () => {
       const nextButton = screen.getByLabelText("次の記事へ");
       fireEvent.click(nextButton);
 
-      // 遷移中はrecordDislikeが呼ばれない（ブロック）
-      expect(mockUseFeedbackResult.recordDislike).not.toHaveBeenCalled();
+      // 遷移中はrecordSkipが呼ばれない（ブロック）
+      expect(mockUseFeedbackResult.recordSkip).not.toHaveBeenCalled();
 
       // 遷移完了
       act(() => {
@@ -472,7 +489,15 @@ describe("RecommendPage", () => {
 
       // goToNextが再度呼ばれる
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(2);
-      expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticles[0].id);
+      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledWith(
+        mockArticles[0].id,
+
+        expect.objectContaining({
+          scrollDepth: expect.any(Number) as number,
+          dwellTime: expect.any(Number) as number,
+          interestLevel: expect.stringMatching(/^(skip|neutral|like)$/) as string,
+        })
+      );
     });
 
     it("スクロール遷移を連続で開始しても1回のみ実行される", () => {
@@ -552,7 +577,15 @@ describe("RecommendPage", () => {
 
       // 即座にgoToNextが呼ばれる（タイマー待ちなし）
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
-      expect(mockUseFeedbackResult.recordDislike).toHaveBeenCalledWith(mockArticles[0].id);
+      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledWith(
+        mockArticles[0].id,
+
+        expect.objectContaining({
+          scrollDepth: expect.any(Number) as number,
+          dwellTime: expect.any(Number) as number,
+          interestLevel: expect.stringMatching(/^(skip|neutral|like)$/) as string,
+        })
+      );
     });
   });
 });

@@ -68,14 +68,24 @@ export interface UseInfiniteArticlesResult {
 }
 
 /** フィードバック種別 */
-export type FeedbackType = "like" | "dislike" | "favorite";
+export type FeedbackType = "like" | "skip" | "favorite";
+
+/** スキップメタデータ */
+export interface SkipMetadata {
+  /** スクロール深度（0-100） */
+  scrollDepth: number;
+  /** 滞在時間（秒） */
+  dwellTime: number;
+  /** 興味度 */
+  interestLevel: "skip" | "neutral" | "like";
+}
 
 /** useFeedback フックの戻り値 */
 export interface UseFeedbackResult {
   /** Like記録（暗黙的Like） */
   recordLike: (articleId: string) => Promise<void>;
-  /** Dislike記録（スキップ） */
-  recordDislike: (articleId: string) => Promise<void>;
+  /** Skip記録（暗黙的フィードバック + メタデータ） */
+  recordSkip: (articleId: string, metadata: SkipMetadata) => Promise<void>;
   /** Favorite記録（明示的お気に入り） */
   recordFavorite: (articleId: string) => Promise<void>;
   /** 記事のフィードバック済み状態を確認 */

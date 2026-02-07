@@ -228,8 +228,8 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
         createdAt: "2026-01-20T00:00:00Z",
       };
 
-      expectTypeOf(like.type).toEqualTypeOf<"like" | "dislike">();
-      expectTypeOf(dislike.type).toEqualTypeOf<"like" | "dislike">();
+      expectTypeOf(like.type).toEqualTypeOf<"like" | "dislike" | "skip">();
+      expectTypeOf(dislike.type).toEqualTypeOf<"like" | "dislike" | "skip">();
     });
   });
 

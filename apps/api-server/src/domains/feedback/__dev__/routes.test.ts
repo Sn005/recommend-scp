@@ -373,6 +373,104 @@ describe("POST /feedback - 異常系（バリデーションエラー）", () =>
   });
 });
 
+describe("POST /feedback - AC-9: skip型対応", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      recordFeedback: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("type=skipのリクエストで200を返す", async () => {
+    // Arrange
+    mockService.recordFeedback.mockResolvedValue(undefined);
+
+    // Act
+    const res = await app.request("/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        articleId: VALID_ARTICLE_ID,
+        type: "skip",
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+
+  it("skip型フィードバックがserviceに渡される", async () => {
+    // Arrange
+    mockService.recordFeedback.mockResolvedValue(undefined);
+
+    // Act
+    await app.request("/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        articleId: VALID_ARTICLE_ID,
+        type: "skip",
+        metadata: {
+          scrollDepth: 30,
+          dwellTime: 15,
+          interestLevel: "neutral",
+        },
+      }),
+    });
+
+    // Assert: metadataはスキーマで受け付けるがserviceにはtype情報のみ渡す
+    expect(mockService.recordFeedback).toHaveBeenCalledWith(
+      VALID_VISITOR_ID,
+      VALID_ARTICLE_ID,
+      "skip"
+    );
+  });
+
+  it("metadataなしでも正常に処理される", async () => {
+    // Arrange
+    mockService.recordFeedback.mockResolvedValue(undefined);
+
+    // Act
+    const res = await app.request("/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        articleId: VALID_ARTICLE_ID,
+        type: "skip",
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+
+  it("type=dislikeが引き続き受け付けられる（後方互換性）", async () => {
+    // Arrange
+    mockService.recordFeedback.mockResolvedValue(undefined);
+
+    // Act
+    const res = await app.request("/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        articleId: VALID_ARTICLE_ID,
+        type: "dislike",
+      }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+});
+
 describe("POST /feedback - エッジケース", () => {
   let app: Hono;
   let mockService: MockService;
