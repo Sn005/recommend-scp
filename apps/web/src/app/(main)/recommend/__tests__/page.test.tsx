@@ -10,6 +10,8 @@ const mockUseInfiniteArticlesResult = {
     similarityScore: number;
     source: "preference" | "serendipity";
     url: string;
+    objectClass: string | null;
+    rating: number | null;
   }[],
   currentIndex: 0,
   isLoading: true,
@@ -95,6 +97,8 @@ const mockArticle = {
   similarityScore: 0.95,
   source: "preference" as const,
   url: "https://scp-jp.wikidot.com/scp-173",
+  objectClass: null,
+  rating: null,
 };
 
 const mockArticles = [
@@ -105,6 +109,8 @@ const mockArticles = [
     similarityScore: 0.92,
     source: "preference" as const,
     url: "https://scp-jp.wikidot.com/scp-682",
+    objectClass: null,
+    rating: null,
   },
   {
     id: "3",
@@ -112,6 +118,8 @@ const mockArticles = [
     similarityScore: 0.89,
     source: "serendipity" as const,
     url: "https://scp-jp.wikidot.com/scp-999",
+    objectClass: null,
+    rating: null,
   },
 ];
 

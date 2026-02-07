@@ -40,6 +40,8 @@ function createMockArticle(id: string, title?: string): Article {
     similarityScore: 0.9,
     source: "preference",
     url: `https://scp-jp.wikidot.com/scp-${id}`,
+    objectClass: null,
+    rating: null,
   };
 }
 

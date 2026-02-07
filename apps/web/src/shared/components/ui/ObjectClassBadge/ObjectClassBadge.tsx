@@ -1,15 +1,24 @@
 import { cn } from "@/shared/lib/utils";
 
 /** 定義済みのオブジェクトクラス */
-type KnownObjectClass = "Safe" | "Euclid" | "Keter" | "Thaumiel" | "Neutralized";
+export type KnownObjectClass =
+  | "Safe"
+  | "Euclid"
+  | "Keter"
+  | "Thaumiel"
+  | "Neutralized"
+  | "Apollyon"
+  | "Archon";
 
 /** オブジェクトクラスごとの背景色 */
 const OBJECT_CLASS_COLORS: Record<KnownObjectClass, string> = {
   Safe: "#10B981",
   Euclid: "#F59E0B",
   Keter: "#EF4444",
-  Thaumiel: "#8B5CF6",
+  Thaumiel: "#6366F1",
   Neutralized: "#6B7280",
+  Apollyon: "#DC2626",
+  Archon: "#8B5CF6",
 };
 
 /** 未定義クラスのデフォルト色 */

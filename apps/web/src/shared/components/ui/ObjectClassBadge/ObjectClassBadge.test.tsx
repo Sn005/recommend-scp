@@ -27,12 +27,12 @@ describe("ObjectClassBadge", () => {
       expect(badge).toHaveStyle({ backgroundColor: "#EF4444" });
     });
 
-    it("Thaumielバッジが紫色で表示される", () => {
+    it("Thaumielバッジがindigo色(#6366F1)で表示される", () => {
       render(<ObjectClassBadge variant="Thaumiel" />);
 
       const badge = screen.getByText("Thaumiel");
       expect(badge).toBeInTheDocument();
-      expect(badge).toHaveStyle({ backgroundColor: "#8B5CF6" });
+      expect(badge).toHaveStyle({ backgroundColor: "#6366F1" });
     });
 
     it("Neutralizedバッジが灰色で表示される", () => {
@@ -43,10 +43,26 @@ describe("ObjectClassBadge", () => {
       expect(badge).toHaveStyle({ backgroundColor: "#6B7280" });
     });
 
-    it("未定義クラスの場合、Unknown色のバッジが表示される", () => {
+    it("Apollyonバッジが暗い赤色(#DC2626)で表示される", () => {
       render(<ObjectClassBadge variant="Apollyon" />);
 
       const badge = screen.getByText("Apollyon");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveStyle({ backgroundColor: "#DC2626" });
+    });
+
+    it("Archonバッジがviolet色(#8B5CF6)で表示される", () => {
+      render(<ObjectClassBadge variant="Archon" />);
+
+      const badge = screen.getByText("Archon");
+      expect(badge).toBeInTheDocument();
+      expect(badge).toHaveStyle({ backgroundColor: "#8B5CF6" });
+    });
+
+    it("未定義クラスの場合、Unknown色のバッジが表示される", () => {
+      render(<ObjectClassBadge variant="UnknownClass" />);
+
+      const badge = screen.getByText("UnknownClass");
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveStyle({ backgroundColor: "#9CA3AF" });
     });
@@ -57,7 +73,6 @@ describe("ObjectClassBadge", () => {
       render(<ObjectClassBadge variant="Safe" />);
 
       const badge = screen.getByText("Safe");
-      // px-2 = 8px, py-0.5 = 2px, rounded = 4px
       expect(badge).toHaveStyle({
         padding: "2px 8px",
         borderRadius: "4px",
@@ -110,7 +125,6 @@ describe("ObjectClassBadge", () => {
     it("空文字列のvariantでもUnknown色で表示される", () => {
       const { container } = render(<ObjectClassBadge variant="" />);
 
-      // 空文字列の場合はspan要素自体は存在し、Unknown色で表示される
       const badge = container.querySelector("span");
       expect(badge).toBeInTheDocument();
       expect(badge).toHaveStyle({ backgroundColor: "#9CA3AF" });

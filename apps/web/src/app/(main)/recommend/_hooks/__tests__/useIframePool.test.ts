@@ -14,6 +14,8 @@ const createMockArticles = (count: number): Article[] =>
     similarityScore: 0.9 - i * 0.1,
     source: "preference" as const,
     url: `http://scp-jp.wikidot.com/scp-${String(i).padStart(3, "0")}`,
+    objectClass: null,
+    rating: null,
   }));
 
 /** 全スロットをカスケード読み込みで準備するヘルパー */

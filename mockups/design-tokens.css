@@ -34,6 +34,21 @@
   --color-safe: #10B981;              /* emerald-500 */
   --color-euclid: #F59E0B;            /* amber-500 */
   --color-keter: #EF4444;             /* red-500 */
+  --color-thaumiel: #6366F1;          /* indigo-500 */
+  --color-neutralized: #6B7280;       /* gray-500 */
+  --color-apollyon: #DC2626;          /* red-600 */
+  --color-archon: #8B5CF6;            /* violet-500 */
+  --color-unknown: #9CA3AF;           /* gray-400 */
+
+  /* Object Class Gradients - 遷移カード背景 */
+  --gradient-safe: linear-gradient(135deg, #065F46, #10B981);
+  --gradient-euclid: linear-gradient(135deg, #92400E, #F59E0B);
+  --gradient-keter: linear-gradient(135deg, #991B1B, #EF4444);
+  --gradient-thaumiel: linear-gradient(135deg, #3730A3, #6366F1);
+  --gradient-neutralized: linear-gradient(135deg, #374151, #6B7280);
+  --gradient-apollyon: linear-gradient(135deg, #450A0A, #DC2626);
+  --gradient-archon: linear-gradient(135deg, #4C1D95, #8B5CF6);
+  --gradient-unknown: linear-gradient(135deg, #4B5563, #9CA3AF);
 
   /* Semantic - 意味的な色 */
   --color-favorite: #EF4444;          /* red-500: お気に入り（塗り） */

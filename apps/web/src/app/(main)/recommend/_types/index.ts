@@ -5,7 +5,14 @@
  */
 
 /** オブジェクトクラス */
-export type ObjectClass = "Safe" | "Euclid" | "Keter" | "Thaumiel" | "Neutralized";
+export type ObjectClass =
+  | "Safe"
+  | "Euclid"
+  | "Keter"
+  | "Thaumiel"
+  | "Neutralized"
+  | "Apollyon"
+  | "Archon";
 
 /** 推薦記事 */
 export interface Article {
@@ -19,6 +26,10 @@ export interface Article {
   source: "preference" | "serendipity";
   /** 日本語版URL */
   url: string;
+  /** オブジェクトクラス */
+  objectClass: string | null;
+  /** 評価スコア */
+  rating: number | null;
 }
 
 /** POST /recommend APIレスポンス */
