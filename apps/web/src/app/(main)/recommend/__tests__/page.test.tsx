@@ -169,12 +169,14 @@ describe("RecommendPage", () => {
       });
     });
 
-    it("画面下部にProgressBarが表示される", async () => {
+    it("画面下部にProgressBarは表示されない", async () => {
       render(<RecommendPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("progressbar")).toBeInTheDocument();
+        expect(screen.getByTestId("article-viewer")).toBeInTheDocument();
       });
+
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
   });
 
@@ -265,15 +267,17 @@ describe("RecommendPage", () => {
   });
 
   describe("エッジケース", () => {
-    it("記事が1件の場合でもProgressBarが表示される", async () => {
+    it("記事が1件の場合でもProgressBarは表示されない", async () => {
       mockUseInfiniteArticlesResult.isLoading = false;
       mockUseInfiniteArticlesResult.articles = [mockArticle];
 
       render(<RecommendPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole("progressbar")).toBeInTheDocument();
+        expect(screen.getByTestId("article-viewer")).toBeInTheDocument();
       });
+
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
     it("お気に入りボタンをクリックするとtoggleFavoriteが呼ばれる", async () => {

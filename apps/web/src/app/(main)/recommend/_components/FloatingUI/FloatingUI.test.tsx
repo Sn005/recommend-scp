@@ -4,21 +4,24 @@ import { FloatingUI } from "./FloatingUI";
 
 describe("FloatingUI", () => {
   const defaultProps = {
-    progress: 30,
     isFavorited: false,
     onFavorite: vi.fn(),
     onNext: vi.fn(),
   };
 
-  describe("AC-1: 通常時表示", () => {
-    it("PillNavとProgressBarが表示される", () => {
+  describe("AC-1: ProgressBar非表示", () => {
+    it("ProgressBarは表示されない", () => {
       render(<FloatingUI {...defaultProps} />);
 
-      // ProgressBarが存在
-      const progressBar = screen.getByRole("progressbar");
-      expect(progressBar).toBeInTheDocument();
+      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("progressbar-wrapper")).not.toBeInTheDocument();
+    });
+  });
 
-      // PillNavのボタンが存在
+  describe("AC-2: FloatingUIからprogress prop削除", () => {
+    it("progress propなしでPillNavが正常に表示される", () => {
+      render(<FloatingUI {...defaultProps} />);
+
       const favoriteButton = screen.getByRole("button", {
         name: /お気に入り/,
       });
@@ -26,7 +29,9 @@ describe("FloatingUI", () => {
       expect(favoriteButton).toBeInTheDocument();
       expect(nextButton).toBeInTheDocument();
     });
+  });
 
+  describe("AC-4: PillNav正常動作", () => {
     it("表示位置は画面下部固定（fixed bottom-0）", () => {
       const { container } = render(<FloatingUI {...defaultProps} />);
 
@@ -37,26 +42,9 @@ describe("FloatingUI", () => {
     it("初期表示時はPillNavが表示される（opacity-100）", () => {
       const { container } = render(<FloatingUI {...defaultProps} scrollPercentage={0} />);
 
-      // PillNavラッパーを取得
       const pillNavWrapper = container.querySelector("[data-testid='pill-nav']");
       expect(pillNavWrapper).toHaveClass("opacity-100");
       expect(pillNavWrapper).not.toHaveClass("opacity-0");
-    });
-  });
-
-  describe("AC-2: ProgressBarの常時表示", () => {
-    it("ProgressBarは常にpointer-events-autoで表示", () => {
-      const { container } = render(<FloatingUI {...defaultProps} />);
-
-      const progressBarWrapper = container.querySelector("[data-testid='progressbar-wrapper']");
-      expect(progressBarWrapper).toHaveClass("pointer-events-auto");
-    });
-
-    it("progressプロパティが正しくProgressBarに渡される", () => {
-      render(<FloatingUI {...defaultProps} progress={75} />);
-
-      const progressBar = screen.getByRole("progressbar");
-      expect(progressBar).toHaveAttribute("aria-valuenow", "75");
     });
   });
 
