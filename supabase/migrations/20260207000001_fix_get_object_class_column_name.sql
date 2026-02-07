@@ -16,7 +16,7 @@ BEGIN
   SELECT td.canonical_value INTO oc
   FROM tag_dictionary td
   WHERE td.category = 'object_class'
-    AND td.canonical_value = ANY(article_tags)
+    AND LOWER(td.canonical_value) = ANY(article_tags)
   LIMIT 1;
   RETURN oc;
 END;
