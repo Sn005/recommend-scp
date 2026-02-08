@@ -61,12 +61,12 @@ const INJECTED_STYLE = [
   "#print-options{display:none!important}",
   // 記事可読性: ベースタイポグラフィ
   "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8;-webkit-text-size-adjust:100%}",
-  // 記事可読性: コンテンツ領域
-  "#page-content{font-size:15px;overflow-wrap:break-word;word-break:break-word}",
+  // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
+  "#page-content{font-size:15px;overflow-wrap:break-word;word-break:break-word;padding:0 16px}",
   // 記事可読性: 段落間スペーシング
   "#page-content p{margin-bottom:1em}",
-  // 記事可読性: 画像レスポンシブ化
-  "#page-content img{max-width:100%;height:auto}",
+  // 記事可読性: 画像レスポンシブ化 + 上下マージン
+  "#page-content img{max-width:100%;height:auto;display:block;margin:16px 0}",
   "</style>",
 ].join("");
 
