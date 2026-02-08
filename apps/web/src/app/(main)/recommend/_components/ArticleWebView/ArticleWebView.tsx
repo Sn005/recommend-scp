@@ -29,6 +29,7 @@ export function ArticleWebView({
   onScrollChange,
   onSkip,
   onContentLoaded,
+  onIframeLoad,
   className,
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
@@ -65,13 +66,14 @@ export function ArticleWebView({
   // WebView読み込み完了時にコンテンツ取得を実行
   const handleIframeLoad = useCallback(() => {
     handleLoad();
+    onIframeLoad?.();
 
     // articleIdが指定されており、まだ取得していない場合のみ実行
     if (articleId && onContentLoaded && !contentFetchedRef.current) {
       contentFetchedRef.current = true;
       void fetchContent();
     }
-  }, [handleLoad, articleId, onContentLoaded, fetchContent]);
+  }, [handleLoad, onIframeLoad, articleId, onContentLoaded, fetchContent]);
 
   // 404検知時の処理
   const handleNotFound = useCallback(async () => {

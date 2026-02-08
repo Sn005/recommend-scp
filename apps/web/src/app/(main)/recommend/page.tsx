@@ -67,6 +67,9 @@ export default function RecommendPage() {
     null
   );
 
+  // 遷移後のiframe読み込み待ち（旧記事のフラッシュ防止）
+  const [isSlotReady, setIsSlotReady] = useState(true);
+
   // AC-4: スクロール深度の追跡（最大到達深度を保持）
   const maxScrollDepthRef = useRef(0);
 
@@ -107,6 +110,7 @@ export default function RecommendPage() {
   // AC-1: TransitionCard dismiss完了ハンドラー
   const handleCardDismissed = useCallback(() => {
     setShowCard(false);
+    setIsSlotReady(false); // 新しいiframe読み込みまで非表示を維持
     advance(); // AC-2: iframeプールローテーション
     goToNext(); // currentIndex更新
 
@@ -115,6 +119,11 @@ export default function RecommendPage() {
     articleStartTimeRef.current = Date.now();
     transitioningRef.current = false;
   }, [advance, goToNext]);
+
+  // Current スロットのiframe読み込み完了ハンドラー
+  const handleCurrentIframeLoad = useCallback(() => {
+    setIsSlotReady(true);
+  }, []);
 
   // AC-4 + AC-6: 次へボタンハンドラー（recordSkip + TransitionCard遷移）
   const handleNext = useCallback(() => {
@@ -196,7 +205,8 @@ export default function RecommendPage() {
         onScrollChange={handleScrollChange}
         onSkip={goToNext}
         onContentLoaded={handleContentLoaded}
-        className={showCard ? "opacity-0 transition-opacity duration-150" : "opacity-100"}
+        onIframeLoad={handleCurrentIframeLoad}
+        className={showCard || !isSlotReady ? "opacity-0" : "opacity-100"}
       />
 
       {/* AC-2: Next スロット（非表示、プリレンダリング） */}
