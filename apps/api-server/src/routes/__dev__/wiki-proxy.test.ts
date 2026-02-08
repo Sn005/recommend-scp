@@ -241,8 +241,25 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      // Assert: 画像がコンテナ幅を超えないようにする
-      expect(text).toContain("#page-content img{max-width:100%;height:auto}");
+      // Assert: 画像がコンテナ幅を超えないようにする + 上下マージン
+      expect(text).toContain(
+        "#page-content img{max-width:100%;height:auto;display:block;margin:16px 0}"
+      );
+    });
+
+    it("コンテンツ領域に左右16pxのパディングが設定される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert: モック準拠の左右余白
+      expect(text).toContain("padding:0 16px");
     });
   });
 
