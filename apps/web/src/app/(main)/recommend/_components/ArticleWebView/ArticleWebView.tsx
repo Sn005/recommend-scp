@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { cn } from "@/shared/lib/utils";
 import { useArticleWebView } from "./useArticleWebView";
 import { use404Detection } from "./use404Detection";
@@ -33,6 +33,12 @@ export function ArticleWebView({
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
   const contentFetchedRef = useRef(false);
+
+  // URL変更時にshowNotFoundをリセット（EMPTY_SLOT→実URL遷移時の防御）
+  useEffect(() => {
+    setShowNotFound(false);
+    contentFetchedRef.current = false;
+  }, [url]);
 
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);

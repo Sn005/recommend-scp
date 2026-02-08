@@ -4,7 +4,7 @@
  * @see specs/006-frontend/006-05-transition-ux/006-05-04.md
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import type { Article } from "../_types";
 
@@ -58,6 +58,27 @@ export const useIframePool = ({
     null,
     null,
   ]);
+
+  // articlesとcurrentIndexの変化に応じてスロットを同期
+  // - EMPTY_SLOT→実データの初期化（articles取得完了時）
+  // - currentIndex変更時のスロット再構築（goToNext後）
+  //
+  // NOTE: 本来はhandleIframeLoadによるcascade loadingでnext/prefetchを
+  // 段階的に作成する設計だが、page.tsxからhandleIframeLoadが接続されていないため、
+  // currentIndex変更をトリガーにスロットを再構築する方式で代替する。
+  useEffect(() => {
+    if (articles.length === 0) return;
+
+    setSlots((prev) => {
+      if (prev[0].articleIndex === currentIndex) return prev;
+
+      return [
+        createSlot(articles, currentIndex) ?? EMPTY_SLOT,
+        createSlot(articles, currentIndex + 1),
+        createSlot(articles, currentIndex + 2),
+      ];
+    });
+  }, [articles, currentIndex]);
 
   // Cascade読み込み: loadイベントでisLoadedを更新し、次のスロットを作成
   const handleIframeLoad = useCallback(
