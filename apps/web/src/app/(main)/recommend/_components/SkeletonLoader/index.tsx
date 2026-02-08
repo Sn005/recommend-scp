@@ -35,9 +35,6 @@ export function SkeletonLoader() {
 
       {/* 下部UIのスケルトン */}
       <div className="fixed inset-x-0 bottom-0 z-nav flex flex-col items-center gap-3 pb-8">
-        {/* ProgressBar スケルトン */}
-        <div className="h-1 w-48 animate-pulse rounded-sm bg-gray-200" />
-
         {/* PillNav スケルトン */}
         <div className="flex h-16 w-36 animate-pulse items-center justify-center gap-6 rounded-[50px] bg-gray-200/50" />
       </div>
