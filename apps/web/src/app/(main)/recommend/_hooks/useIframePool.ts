@@ -59,15 +59,24 @@ export const useIframePool = ({
     null,
   ]);
 
-  // articles取得完了時にEMPTY_SLOTを実データで再初期化
-  // useState初期化子は最初の1回しか実行されないため、
-  // 初回レンダリング時にarticlesが空だとEMPTY_SLOTのまま固定される問題を解消
+  // articlesとcurrentIndexの変化に応じてスロットを同期
+  // - EMPTY_SLOT→実データの初期化（articles取得完了時）
+  // - currentIndex変更時のスロット再構築（goToNext後）
+  //
+  // NOTE: 本来はhandleIframeLoadによるcascade loadingでnext/prefetchを
+  // 段階的に作成する設計だが、page.tsxからhandleIframeLoadが接続されていないため、
+  // currentIndex変更をトリガーにスロットを再構築する方式で代替する。
   useEffect(() => {
+    if (articles.length === 0) return;
+
     setSlots((prev) => {
-      if (prev[0].articleIndex === -1 && articles.length > 0) {
-        return [createSlot(articles, currentIndex) ?? EMPTY_SLOT, null, null];
-      }
-      return prev;
+      if (prev[0].articleIndex === currentIndex) return prev;
+
+      return [
+        createSlot(articles, currentIndex) ?? EMPTY_SLOT,
+        createSlot(articles, currentIndex + 1),
+        createSlot(articles, currentIndex + 2),
+      ];
     });
   }, [articles, currentIndex]);
 
