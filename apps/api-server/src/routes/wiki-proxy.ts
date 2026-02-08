@@ -77,28 +77,89 @@ const INJECTED_STYLE = [
 const PROXY_PATH_PREFIXES = ["wiki/", "wdfiles-", "wikidot-", "api/", "common--", "local--"];
 
 /**
- * href="/path" 形式の絶対パスリンクを href="/wiki/path" に書き換える正規表現
+ * URL_REWRITE_MAPで /wiki/ に変換されたhrefのうち、記事リンクのみを
+ * /api/wiki-proxy/ に書き換える正規表現
+ *
+ * common--/local-- で始まるリソースパスは除外（Next.js rewritesで処理）
+ */
+const WIKI_ARTICLE_HREF_RE = /href="\/wiki\/(?!common--|local--)/g;
+
+/**
+ * </body>直前に注入するJavaScript
+ *
+ * iframe内のリンククリックをインターセプトし、記事リンクをプロキシ経由で遷移させる。
+ * HTML書き換えで対応できない動的生成リンクの安全策として機能する。
+ *
+ * 処理:
+ * 1. 既にプロキシ済みのリンク → そのまま通過
+ * 2. リソースパス（common--, local--, wdfiles, wikidot） → そのまま通過
+ * 3. /wiki/ 記事リンク → /api/wiki-proxy/ 経由に変換
+ * 4. 外部リンク（http/https） → 新しいタブで開く
+ * 5. その他の絶対パスリンク → /api/wiki-proxy/ 経由に変換
+ */
+const INJECTED_SCRIPT = [
+  "<script>",
+  "document.addEventListener('click',function(e){",
+  "var a=e.target.closest('a[href]');",
+  "if(!a)return;",
+  "var h=a.getAttribute('href');",
+  "if(!h||h.charAt(0)==='#'||h.indexOf('javascript:')===0)return;",
+  "if(h.indexOf('/api/wiki-proxy/')===0)return;",
+  "if(h.indexOf('/common--')===0||h.indexOf('/local--')===0)return;",
+  "if(h.indexOf('/wdfiles')===0||h.indexOf('/wikidot')===0)return;",
+  "if(h.indexOf('/wiki/')===0){",
+  "var p=h.slice(6);",
+  "if(p.indexOf('common--')===0||p.indexOf('local--')===0)return;",
+  "e.preventDefault();",
+  "location.href='/api/wiki-proxy/'+p;",
+  "return}",
+  "if(h.indexOf('http')===0||h.indexOf('//')===0){",
+  "e.preventDefault();",
+  "window.open(h,'_blank','noopener');",
+  "return}",
+  "if(h.charAt(0)==='/'){",
+  "e.preventDefault();",
+  "location.href='/api/wiki-proxy'+h;",
+  "return}",
+  "})",
+  "</script>",
+].join("");
+
+/**
+ * href="/path" 形式の絶対パスリンクを href="/api/wiki-proxy/path" に書き換える正規表現
  *
  * Wiki HTML内のドメインなし絶対パスリンク（例: href="/scp-456"）は
  * URL_REWRITE_MAP では変換されない。
  * そのままだとiframe内で /scp-456 に遷移し、Next.jsの404になるため、
- * /wiki/ プレフィックスを付与して Next.js rewrites 経由でWikiにプロキシする。
+ * /api/wiki-proxy/ 経由に変換して、printer--friendlyモード + CSS注入 + URL書き換えを適用する。
  *
  * 否定先読みで既にプロキシパスに変換済みの href は除外する。
  */
 const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("|")})`, "g");
 
 /**
- * HTML書き換え: URL変換 + 不要要素の非表示CSS注入 + 絶対パスリンク修正
+ * HTML書き換え: URL変換 + CSS注入 + 記事リンクのプロキシ化 + リンクインターセプトJS注入
+ *
+ * 処理順序:
+ * 1. CSS注入（</head>前、初回ペイント前に適用）
+ * 2. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
+ * 3. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
+ * 4. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
+ * 5. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
  */
 function rewriteHtml(html: string): string {
-  // </head> 直前にCSSを注入（初回ペイント前に適用される）
+  // 1. CSS注入
   let result = html.replace("</head>", `${INJECTED_STYLE}</head>`);
+  // 2. フルURL書き換え
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
-  // ドメインなし絶対パスリンクを /wiki/ 経由に書き換え
-  result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/wiki/');
+  // 3. ドメインなし絶対パスhrefをプロキシ経由に書き換え
+  result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/api/wiki-proxy/');
+  // 4. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
+  result = result.replace(WIKI_ARTICLE_HREF_RE, 'href="/api/wiki-proxy/');
+  // 5. リンクインターセプトJS注入
+  result = result.replace("</body>", `${INJECTED_SCRIPT}</body>`);
   return result;
 }
 

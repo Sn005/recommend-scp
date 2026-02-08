@@ -30,7 +30,7 @@ describe("GET /wiki-proxy/*", () => {
   }
 
   describe("絶対パスリンクの書き換え", () => {
-    it("ドメインなし絶対パスリンクが /wiki/ プレフィックス付きに書き換えられる", async () => {
+    it("ドメインなし絶対パスリンクが /api/wiki-proxy/ 経由に書き換えられる", async () => {
       // Arrange
       const html = `<html><head></head><body><a href="/scp-456">SCP-456</a></body></html>`;
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
@@ -42,7 +42,7 @@ describe("GET /wiki-proxy/*", () => {
       const text = await res.text();
 
       // Assert
-      expect(text).toContain('href="/wiki/scp-456"');
+      expect(text).toContain('href="/api/wiki-proxy/scp-456"');
       expect(text).not.toContain('href="/scp-456"');
     });
 
@@ -58,7 +58,7 @@ describe("GET /wiki-proxy/*", () => {
       const text = await res.text();
 
       // Assert
-      expect(text).toContain('href="/wiki/hoge-fuga"');
+      expect(text).toContain('href="/api/wiki-proxy/hoge-fuga"');
     });
 
     it("複数の絶対パスリンクが全て書き換えられる", async () => {
@@ -77,14 +77,14 @@ describe("GET /wiki-proxy/*", () => {
       const text = await res.text();
 
       // Assert
-      expect(text).toContain('href="/wiki/scp-173"');
-      expect(text).toContain('href="/wiki/scp-682"');
-      expect(text).toContain('href="/wiki/taboo"');
+      expect(text).toContain('href="/api/wiki-proxy/scp-173"');
+      expect(text).toContain('href="/api/wiki-proxy/scp-682"');
+      expect(text).toContain('href="/api/wiki-proxy/taboo"');
     });
   });
 
   describe("プロキシパス済みリンクは二重変換しない", () => {
-    it("既に /wiki/ プレフィックス付きのリンクは変換しない", async () => {
+    it("既に /wiki/ プレフィックス付きの記事リンクはプロキシ経由に変換される", async () => {
       // Arrange: URL_REWRITE_MAPでフルURLが /wiki/ に変換された後の状態を想定
       const html = `<html><head></head><body><a href="/wiki/scp-456">SCP-456</a></body></html>`;
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
@@ -95,9 +95,10 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      // Assert: /wiki/wiki/scp-456 にはならない
-      expect(text).toContain('href="/wiki/scp-456"');
+      // Assert: /wiki/ 記事リンクは /api/wiki-proxy/ に変換される
+      expect(text).toContain('href="/api/wiki-proxy/scp-456"');
       expect(text).not.toContain('href="/wiki/wiki/');
+      expect(text).not.toContain('href="/api/wiki-proxy/wiki/');
     });
 
     it("wdfilesプロキシパスは変換しない", async () => {
@@ -128,7 +129,7 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert: href="/common--theme/..." は書き換え対象外
       expect(text).toContain('href="/common--theme/base.css"');
-      expect(text).not.toContain('href="/wiki/common--theme/');
+      expect(text).not.toContain('href="/api/wiki-proxy/common--theme/');
     });
 
     it("local--filesパスは変換しない", async () => {
@@ -144,12 +145,12 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert
       expect(text).toContain('href="/local--files/');
-      expect(text).not.toContain('href="/wiki/local--files/');
+      expect(text).not.toContain('href="/api/wiki-proxy/local--files/');
     });
   });
 
-  describe("フルURL書き換え（既存動作）", () => {
-    it("http://scp-jp.wikidot.com/ が /wiki/ に書き換えられる", async () => {
+  describe("フルURL書き換え", () => {
+    it("http://scp-jp.wikidot.com/ のhrefリンクがプロキシ経由に書き換えられる", async () => {
       // Arrange
       const html = `<html><head></head><body><a href="http://scp-jp.wikidot.com/scp-456">SCP-456</a></body></html>`;
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
@@ -160,8 +161,24 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      // Assert
-      expect(text).toContain('href="/wiki/scp-456"');
+      // Assert: 記事hrefはプロキシ経由に変換される
+      expect(text).toContain('href="/api/wiki-proxy/scp-456"');
+      expect(text).not.toContain("scp-jp.wikidot.com");
+    });
+
+    it("http://scp-jp.wikidot.com/ のリソースリンク（common--/local--）は /wiki/ のまま", async () => {
+      // Arrange
+      const html = `<html><head></head><body><a href="http://scp-jp.wikidot.com/local--files/img.png">img</a></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert: リソースパスはプロキシに変換されない
+      expect(text).toContain('href="/wiki/local--files/img.png"');
       expect(text).not.toContain("scp-jp.wikidot.com");
     });
 
@@ -226,6 +243,41 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert: 画像がコンテナ幅を超えないようにする
       expect(text).toContain("#page-content img{max-width:100%;height:auto}");
+    });
+  });
+
+  describe("リンクインターセプトJS注入", () => {
+    it("</body>直前にリンクインターセプト用のscriptが注入される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><p>test</p></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("<script>");
+      expect(text).toContain("addEventListener('click'");
+      expect(text).toContain("/api/wiki-proxy/");
+      expect(text).toContain("</script></body>");
+    });
+
+    it("外部リンクをwindow.openで新しいタブに開くコードが含まれる", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("window.open(h,'_blank','noopener')");
     });
   });
 
