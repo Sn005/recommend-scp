@@ -71,14 +71,14 @@ export function useArticleContent(options: UseArticleContentOptions): UseArticle
       const response = await fetch(`/api/articles/${articleId}/content`);
       const { title, excerpt } = (await response.json()) as ArticleContent;
 
-      // タイトルと本文の両方が存在する場合のみコールバックを呼び出す
-      if (title && excerpt) {
-        onContentLoaded({ title, excerpt });
-      }
+      // 常にコールバックを呼び出す（空データでも呼び出し元でフォールバック処理可能にする）
+      onContentLoaded({ title: title || "", excerpt: excerpt || "" });
     } catch (error) {
       // サイレント失敗: ユーザー体験を妨げない
       // eslint-disable-next-line no-console
       console.error("Content extraction failed:", error);
+      // エラー時も空データでコールバックを呼び出し、履歴保存等のフォールバックを可能にする
+      onContentLoaded({ title: "", excerpt: "" });
     } finally {
       setIsLoading(false);
     }
