@@ -59,9 +59,24 @@ export const checkUrlRoutes = new Hono().get("/", async (c) => {
   try {
     // HEADリクエストで存在確認（軽量）
     const response = await fetch(url, { method: "HEAD" });
-    return c.json({ exists: response.ok });
+
+    // 404のみ「存在しない」と判定
+    if (response.status === 404) {
+      return c.json({ exists: false });
+    }
+
+    // 200-299は確実に存在
+    if (response.ok) {
+      return c.json({ exists: true });
+    }
+
+    // HEAD非対応サーバー（405等）や一時的エラー（403, 500等）の場合、
+    // GETで再確認して誤検知を防ぐ
+    const getResponse = await fetch(url, { method: "GET" });
+    return c.json({ exists: getResponse.status !== 404 });
   } catch {
-    // ネットワークエラーは「存在しない」として扱う
-    return c.json({ exists: false });
+    // ネットワークエラー・タイムアウトは「存在する」として扱う
+    // 誤って翻訳なし判定→DB永続化される誤検知を防ぐ
+    return c.json({ exists: true });
   }
 });
