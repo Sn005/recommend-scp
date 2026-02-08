@@ -4,7 +4,7 @@
  * @see specs/006-frontend/006-05-transition-ux/006-05-04.md
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import type { Article } from "../_types";
 
@@ -58,6 +58,18 @@ export const useIframePool = ({
     null,
     null,
   ]);
+
+  // articles取得完了時にEMPTY_SLOTを実データで再初期化
+  // useState初期化子は最初の1回しか実行されないため、
+  // 初回レンダリング時にarticlesが空だとEMPTY_SLOTのまま固定される問題を解消
+  useEffect(() => {
+    setSlots(([current]) => {
+      if (current.articleIndex === -1 && articles.length > 0) {
+        return [createSlot(articles, currentIndex) ?? EMPTY_SLOT, null, null];
+      }
+      return [current, null, null];
+    });
+  }, [articles, currentIndex]);
 
   // Cascade読み込み: loadイベントでisLoadedを更新し、次のスロットを作成
   const handleIframeLoad = useCallback(
