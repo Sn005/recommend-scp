@@ -118,22 +118,6 @@ describe("ArticleWebView", () => {
     });
   });
 
-  describe("AC-5: ローディング状態", () => {
-    it("ローディング中にローディングインジケータが表示される", () => {
-      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: true, error: null }));
-      render(<ArticleWebView url="https://example.com" />);
-
-      expect(screen.getByTestId("loading-indicator")).toBeInTheDocument();
-    });
-
-    it("読み込み完了後にローディングインジケータが非表示になる", () => {
-      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false, error: null }));
-      render(<ArticleWebView url="https://example.com" />);
-
-      expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
-    });
-  });
-
   describe("AC-7: エラーハンドリング", () => {
     it("エラー時にエラーメッセージが表示される", () => {
       mockUseArticleWebView.mockReturnValue(
@@ -173,19 +157,6 @@ describe("ArticleWebView", () => {
       fireEvent.click(screen.getByRole("button", { name: "再試行" }));
 
       expect(retry).toHaveBeenCalledTimes(1);
-    });
-
-    it("エラー時にローディングインジケータが非表示になる", () => {
-      mockUseArticleWebView.mockReturnValue(
-        createMockReturn({
-          isLoading: true,
-          error: new Error("読み込みに失敗しました"),
-        })
-      );
-      render(<ArticleWebView url="https://example.com" />);
-
-      // error が truthy の場合は loading indicator が非表示
-      expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
     });
   });
 
@@ -252,18 +223,6 @@ describe("ArticleWebView", () => {
   });
 
   describe("AC: 404検知・サジェスト画面", () => {
-    it("404検知チェック中でもローディングが表示されない（バックグラウンド実行）", () => {
-      mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
-      mockUse404Detection.mockReturnValue({
-        isChecking: true,
-        isNotFound: false,
-      });
-
-      render(<ArticleWebView url="https://example.com" />);
-
-      expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument();
-    });
-
     it("404検知時にサジェスト画面が表示される", async () => {
       mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
 

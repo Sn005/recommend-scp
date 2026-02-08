@@ -43,7 +43,7 @@ export function ArticleWebView({
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
 
-  const { iframeRef, isLoading, error, handleLoad, handleError, retry } = useArticleWebView({
+  const { iframeRef, error, handleLoad, handleError, retry } = useArticleWebView({
     url: iframeSrc,
     onScrollEnd,
     onScrollChange,
@@ -118,16 +118,6 @@ export function ArticleWebView({
       data-url={url}
       className={cn("relative w-full h-[calc(100vh-100px)]", className)}
     >
-      {/* ローディングインジケータ（iframe読み込み中のみ） */}
-      {isLoading && !error && (
-        <div
-          data-testid="loading-indicator"
-          className="absolute inset-0 flex items-center justify-center bg-gray-100"
-        >
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      )}
-
       {/* エラー表示 */}
       {error && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 gap-4">
