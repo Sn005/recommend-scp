@@ -54,21 +54,66 @@ interface TranslationRow {
 }
 
 /**
- * URLの存在確認（HEADリクエスト）
+ * URLの存在確認（HEAD → GETフォールバック）
+ *
+ * 戻り値:
+ * - true:  翻訳あり（200 OK確認済み）
+ * - false: 翻訳なし（404確認済み）
+ * - null:  判定不能（ネットワークエラー、タイムアウト等）→ NULLのまま保留
  */
-async function checkUrl(url: string): Promise<boolean> {
+async function checkUrl(url: string): Promise<boolean | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HEAD_TIMEOUT_MS);
 
   try {
-    const response = await fetch(url, {
+    // 1. HEADリクエストで軽量チェック
+    const headResponse = await fetch(url, {
       method: "HEAD",
       signal: controller.signal,
       redirect: "follow",
     });
-    return response.ok;
+
+    // 200-299: 翻訳あり
+    if (headResponse.ok) {
+      return true;
+    }
+
+    // 404: 翻訳なし（確定）
+    if (headResponse.status === 404) {
+      return false;
+    }
+
+    // 403/405/500等: HEADが拒否された可能性 → GETでフォールバック
+    clearTimeout(timeoutId);
+    const getController = new AbortController();
+    const getTimeoutId = setTimeout(() => getController.abort(), HEAD_TIMEOUT_MS);
+
+    try {
+      const getResponse = await fetch(url, {
+        method: "GET",
+        signal: getController.signal,
+        redirect: "follow",
+      });
+
+      if (getResponse.ok) {
+        return true;
+      }
+
+      if (getResponse.status === 404) {
+        return false;
+      }
+
+      // GETでも判定不能 → 保留
+      return null;
+    } catch {
+      // GETフォールバックもネットワークエラー → 保留
+      return null;
+    } finally {
+      clearTimeout(getTimeoutId);
+    }
   } catch {
-    return false;
+    // ネットワークエラー・タイムアウト → 保留（FALSEにしない）
+    return null;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -110,6 +155,7 @@ async function main() {
 
   let totalExistsCount = 0;
   let totalNotFoundCount = 0;
+  let totalSkippedCount = 0;
   let pageNumber = 0;
   let remaining = limit ?? Infinity;
 
@@ -146,27 +192,33 @@ async function main() {
       `--- ページ ${pageNumber}: ${rows.length} 件取得（累計: ${totalExistsCount + totalNotFoundCount + rows.length} 件目まで） ---`
     );
 
-    // 2. URL一括チェック
+    // 2. URL一括チェック（3値: true/false/null）
     let existsCount = 0;
     let notFoundCount = 0;
+    let skippedCount = 0;
 
     const results = await processInBatches(rows, concurrency, async (row) => {
       const exists = await checkUrl(row.url);
-      if (exists) {
+      if (exists === true) {
         existsCount++;
-      } else {
+      } else if (exists === false) {
         notFoundCount++;
+      } else {
+        skippedCount++;
       }
       return { ...row, exists };
     });
 
     totalExistsCount += existsCount;
     totalNotFoundCount += notFoundCount;
+    totalSkippedCount += skippedCount;
 
-    console.log(`  翻訳あり: ${existsCount} 件 / 翻訳なし: ${notFoundCount} 件`);
+    console.log(
+      `  翻訳あり: ${existsCount} 件 / 翻訳なし: ${notFoundCount} 件 / 判定保留: ${skippedCount} 件`
+    );
 
     if (dryRun) {
-      const notFoundItems = results.filter((r) => !r.exists);
+      const notFoundItems = results.filter((r) => r.exists === false);
       if (notFoundItems.length > 0) {
         console.log(`  翻訳なし記事（先頭10件）:`);
         notFoundItems.slice(0, 10).forEach((r) => {
@@ -176,10 +228,20 @@ async function main() {
           console.log(`    ... 他 ${notFoundItems.length - 10} 件`);
         }
       }
+      const skippedItems = results.filter((r) => r.exists === null);
+      if (skippedItems.length > 0) {
+        console.log(`  判定保留記事（先頭10件）:`);
+        skippedItems.slice(0, 10).forEach((r) => {
+          console.log(`    ${r.article_id}: ${r.url}`);
+        });
+        if (skippedItems.length > 10) {
+          console.log(`    ... 他 ${skippedItems.length - 10} 件`);
+        }
+      }
     } else {
-      // 3. DB更新（ページごとに即時更新）
-      const existsIds = results.filter((r) => r.exists).map((r) => r.article_id);
-      const notFoundIds = results.filter((r) => !r.exists).map((r) => r.article_id);
+      // 3. DB更新（ページごとに即時更新。判定保留=nullはNULLのまま残す）
+      const existsIds = results.filter((r) => r.exists === true).map((r) => r.article_id);
+      const notFoundIds = results.filter((r) => r.exists === false).map((r) => r.article_id);
 
       if (existsIds.length > 0) {
         const { error: updateError } = await supabase
@@ -208,7 +270,16 @@ async function main() {
       console.log(`  DB更新完了`);
     }
 
-    remaining -= rows.length;
+    // 判定済み件数（TRUE/FALSEに更新された件数）で残件を減算
+    // 判定保留（null）はNULLのまま残るため、remaining からは引かない
+    const resolvedCount = existsCount + notFoundCount;
+    remaining -= resolvedCount;
+
+    // 全件が判定保留だった場合、同じレコードが再取得されるため無限ループを防止
+    if (resolvedCount === 0) {
+      console.log("  ⚠ このページは全件判定保留のためスキップします");
+      break;
+    }
 
     // 取得件数がページサイズ未満なら最終ページ
     if (rows.length < fetchSize) {
@@ -218,9 +289,17 @@ async function main() {
 
   console.log("");
   console.log(`=== 最終結果 ===`);
-  console.log(`翻訳あり (200 OK): ${totalExistsCount} 件`);
-  console.log(`翻訳なし (404等):  ${totalNotFoundCount} 件`);
-  console.log(`合計:              ${totalExistsCount + totalNotFoundCount} 件`);
+  console.log(`翻訳あり (200 OK):      ${totalExistsCount} 件`);
+  console.log(`翻訳なし (404):         ${totalNotFoundCount} 件`);
+  console.log(`判定保留 (エラー等):    ${totalSkippedCount} 件`);
+  console.log(
+    `合計:                   ${totalExistsCount + totalNotFoundCount + totalSkippedCount} 件`
+  );
+  if (totalSkippedCount > 0) {
+    console.log(
+      `\n※ 判定保留の ${totalSkippedCount} 件はNULLのまま残っています。再実行で再チェックされます。`
+    );
+  }
   if (dryRun) {
     console.log("[DRY RUN] DB更新はスキップされました");
   }
