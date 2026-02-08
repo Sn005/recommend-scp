@@ -63,11 +63,11 @@ export const useIframePool = ({
   // useState初期化子は最初の1回しか実行されないため、
   // 初回レンダリング時にarticlesが空だとEMPTY_SLOTのまま固定される問題を解消
   useEffect(() => {
-    setSlots(([current]) => {
-      if (current.articleIndex === -1 && articles.length > 0) {
+    setSlots((prev) => {
+      if (prev[0].articleIndex === -1 && articles.length > 0) {
         return [createSlot(articles, currentIndex) ?? EMPTY_SLOT, null, null];
       }
-      return [current, null, null];
+      return prev;
     });
   }, [articles, currentIndex]);
 
