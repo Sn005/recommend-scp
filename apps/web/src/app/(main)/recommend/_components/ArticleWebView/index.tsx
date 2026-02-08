@@ -13,6 +13,8 @@ export interface ArticleWebViewProps {
   onSkip?: () => void;
   /** コンテンツ（タイトル・本文冒頭）取得完了時のコールバック */
   onContentLoaded?: (content: ArticleContent) => void;
+  /** iframe読み込み完了時のコールバック */
+  onIframeLoad?: () => void;
   /** 追加のCSSクラス */
   className?: string;
 }

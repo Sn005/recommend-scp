@@ -129,12 +129,15 @@ vi.mock("../_components/TransitionCard", () => ({
 }));
 
 // ArticleWebView をモック
+let capturedOnIframeLoad: (() => void) | null = null;
+
 vi.mock("../_components/ArticleWebView", () => ({
   ArticleWebView: ({
     url,
     articleId,
     onScrollEnd,
     onScrollChange,
+    onIframeLoad,
     className,
   }: {
     url: string;
@@ -143,36 +146,43 @@ vi.mock("../_components/ArticleWebView", () => ({
     onScrollChange?: (percentage: number) => void;
     onSkip?: () => void;
     onContentLoaded?: (content: { title: string; excerpt: string }) => void;
+    onIframeLoad?: () => void;
     className?: string;
-  }) => (
-    <div
-      data-testid="article-webview"
-      data-url={url}
-      data-article-id={articleId}
-      className={className}
-    >
-      {onScrollEnd && (
-        <button
-          data-testid={`scroll-end-trigger-${articleId ?? "unknown"}`}
-          onClick={onScrollEnd}
-          type="button"
-        >
-          Scroll End
-        </button>
-      )}
-      {onScrollChange && (
-        <button
-          data-testid={`scroll-change-trigger-${articleId ?? "unknown"}`}
-          onClick={() => {
-            onScrollChange(50);
-          }}
-          type="button"
-        >
-          Scroll Change
-        </button>
-      )}
-    </div>
-  ),
+  }) => {
+    // Current スロット（hidden以外）のonIframeLoadをキャプチャ
+    if (onIframeLoad && !className?.includes("hidden")) {
+      capturedOnIframeLoad = onIframeLoad;
+    }
+    return (
+      <div
+        data-testid="article-webview"
+        data-url={url}
+        data-article-id={articleId}
+        className={className}
+      >
+        {onScrollEnd && (
+          <button
+            data-testid={`scroll-end-trigger-${articleId ?? "unknown"}`}
+            onClick={onScrollEnd}
+            type="button"
+          >
+            Scroll End
+          </button>
+        )}
+        {onScrollChange && (
+          <button
+            data-testid={`scroll-change-trigger-${articleId ?? "unknown"}`}
+            onClick={() => {
+              onScrollChange(50);
+            }}
+            type="button"
+          >
+            Scroll Change
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 // useHistory をモック
@@ -252,6 +262,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedOnDismissed = null;
+    capturedOnIframeLoad = null;
     // デフォルト値にリセット
     mockUseInfiniteArticlesResult.articles = [];
     mockUseInfiniteArticlesResult.currentIndex = 0;
@@ -345,6 +356,36 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       // advance() と goToNext() が呼ばれる
       expect(mockUseIframePoolResult.advance).toHaveBeenCalledTimes(1);
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+    });
+
+    it("TransitionCard非表示後、iframe読み込み完了まで記事が非表示のままになる", async () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+
+      const nextButton = await screen.findByLabelText("次の記事へ");
+      await userEvent.click(nextButton);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("transition-card")).toBeInTheDocument();
+      });
+
+      // onDismissedを呼ぶ（カード非表示完了）
+      act(() => {
+        capturedOnDismissed?.();
+      });
+
+      // iframe読み込み完了前は非表示（opacity-0）
+      const webviews = screen.getAllByTestId("article-webview");
+      const currentSlot = webviews[0];
+      expect(currentSlot).toHaveClass("opacity-0");
+
+      // iframe読み込み完了を通知
+      act(() => {
+        capturedOnIframeLoad?.();
+      });
+
+      // 読み込み完了後は表示（opacity-100）
+      expect(currentSlot).toHaveClass("opacity-100");
     });
 
     it("遷移完了後にcurrentIndexが更新される（goToNext呼び出し確認）", async () => {
