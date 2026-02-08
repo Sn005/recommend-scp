@@ -103,7 +103,7 @@ describe("useArticleContent", () => {
       });
     });
 
-    it("タイトルまたは本文が空の場合はonContentLoadedを呼ばない", async () => {
+    it("タイトルまたは本文が空の場合でもonContentLoadedが呼ばれる（フォールバック用）", async () => {
       (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ title: "", excerpt: "" }),
@@ -120,7 +120,7 @@ describe("useArticleContent", () => {
         await result.current.fetchContent();
       });
 
-      expect(mockOnContentLoaded).not.toHaveBeenCalled();
+      expect(mockOnContentLoaded).toHaveBeenCalledWith({ title: "", excerpt: "" });
     });
   });
 
@@ -144,7 +144,7 @@ describe("useArticleContent", () => {
         })
       ).resolves.not.toThrow();
 
-      expect(mockOnContentLoaded).not.toHaveBeenCalled();
+      expect(mockOnContentLoaded).toHaveBeenCalledWith({ title: "", excerpt: "" });
       expect(consoleErrorSpy).toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
