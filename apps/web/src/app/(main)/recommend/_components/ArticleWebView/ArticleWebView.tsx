@@ -108,7 +108,7 @@ export function ArticleWebView({
   // サジェスト画面表示（通常のArticleWebViewと同じ高さを維持し、次記事が見えないようにする）
   if (showNotFound) {
     return (
-      <div className={cn("relative w-full h-[calc(100vh-100px)]", className)}>
+      <div className={cn("relative w-full h-screen", className)}>
         <TranslationNotFound onSuggest={handleSuggest} />
       </div>
     );
@@ -118,7 +118,7 @@ export function ArticleWebView({
     <div
       data-testid="article-webview"
       data-url={url}
-      className={cn("relative w-full h-[calc(100vh-100px)]", className)}
+      className={cn("relative w-full h-screen", className)}
     >
       {/* エラー表示 */}
       {error && (

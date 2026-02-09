@@ -214,11 +214,11 @@ describe("ArticleWebView", () => {
       expect(iframe).toHaveClass("h-full");
     });
 
-    it("コンテナの高さがcalc(100vh-100px)である", () => {
+    it("コンテナの高さが100vhである", () => {
       const { container } = render(<ArticleWebView url="https://example.com" />);
 
       const root = container.firstChild;
-      expect(root).toHaveClass("h-[calc(100vh-100px)]");
+      expect(root).toHaveClass("h-screen");
     });
   });
 
