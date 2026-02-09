@@ -282,6 +282,23 @@ describe("GET /wiki-proxy/*", () => {
       expect(text).toContain("</script></body>");
     });
 
+    it("collapsible-block開閉用のscriptが注入される", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-2000");
+      const text = await res.text();
+
+      // Assert: collapsible-block のトグル処理が含まれる
+      expect(text).toContain("a.collapsible-block-link");
+      expect(text).toContain(".collapsible-block-folded");
+      expect(text).toContain(".collapsible-block-unfolded");
+    });
+
     it("外部リンクをwindow.openで新しいタブに開くコードが含まれる", async () => {
       // Arrange
       const html = `<html><head></head><body></body></html>`;
