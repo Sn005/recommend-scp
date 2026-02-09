@@ -161,14 +161,23 @@ const INJECTED_SCRIPT = [
 const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("|")})`, "g");
 
 /**
+ * CloudFront URLのHTTPをHTTPSにプロトコル変換する正規表現
+ *
+ * WikidotのCDN（*.cloudfront.net）はHTTPS対応済みのため、
+ * プロキシ不要でプロトコル変換のみで mixed content を回避できる。
+ */
+const CLOUDFRONT_HTTP_RE = /http:\/\/([a-z0-9]+\.cloudfront\.net\/)/g;
+
+/**
  * HTML書き換え: URL変換 + CSS注入 + 記事リンクのプロキシ化 + リンクインターセプトJS注入
  *
  * 処理順序:
  * 1. CSS注入（</head>前、初回ペイント前に適用）
  * 2. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
- * 3. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
- * 4. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
- * 5. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
+ * 3. CloudFront URLのプロトコル変換（http:// → https://）
+ * 4. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
+ * 5. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
+ * 6. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
  */
 function rewriteHtml(html: string): string {
   // 1. CSS注入
@@ -177,11 +186,13 @@ function rewriteHtml(html: string): string {
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
-  // 3. ドメインなし絶対パスhrefをプロキシ経由に書き換え
+  // 3. CloudFront URLのプロトコル変換（HTTPS対応済みCDNなのでプロキシ不要）
+  result = result.replace(CLOUDFRONT_HTTP_RE, "https://$1");
+  // 4. ドメインなし絶対パスhrefをプロキシ経由に書き換え
   result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/api/wiki-proxy/');
-  // 4. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
+  // 5. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
   result = result.replace(WIKI_ARTICLE_HREF_RE, 'href="/api/wiki-proxy/');
-  // 5. リンクインターセプトJS注入
+  // 6. リンクインターセプトJS注入
   result = result.replace("</body>", `${INJECTED_SCRIPT}</body>`);
   return result;
 }

@@ -198,6 +198,59 @@ describe("GET /wiki-proxy/*", () => {
     });
   });
 
+  describe("CloudFront URLのプロトコル変換", () => {
+    it("http://のCloudFront URLがhttps://に変換される", async () => {
+      // Arrange
+      const html = `<html><head><link rel="stylesheet" href="http://d3g0gp89917ko0.cloudfront.net/v--7690939296dc/common--theme/base/css/style.css" /></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-096");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("https://d3g0gp89917ko0.cloudfront.net/");
+      expect(text).not.toContain("http://d3g0gp89917ko0.cloudfront.net/");
+    });
+
+    it("複数のCloudFront URLが全て変換される", async () => {
+      // Arrange
+      const html = `<html><head>
+        <link href="http://d3g0gp89917ko0.cloudfront.net/v--abc/style.css" />
+        <script src="http://d3g0gp89917ko0.cloudfront.net/v--abc/script.js"></script>
+      </head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-106");
+      const text = await res.text();
+
+      // Assert
+      expect(text).not.toContain("http://d3g0gp89917ko0.cloudfront.net/");
+      expect(text).toMatch(/https:\/\/d3g0gp89917ko0\.cloudfront\.net\//);
+    });
+
+    it("異なるCloudFrontディストリビューションIDも変換される", async () => {
+      // Arrange
+      const html = `<html><head><link href="http://abc123xyz.cloudfront.net/v--def/style.css" /></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("https://abc123xyz.cloudfront.net/");
+      expect(text).not.toContain("http://abc123xyz.cloudfront.net/");
+    });
+  });
+
   describe("CSS注入", () => {
     it("print-optionsを非表示にするCSSが注入される", async () => {
       // Arrange
