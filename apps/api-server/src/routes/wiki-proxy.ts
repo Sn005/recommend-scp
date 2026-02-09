@@ -69,6 +69,8 @@ const INJECTED_STYLE = [
   "#page-content p{margin-bottom:1em}",
   // 記事可読性: 画像レスポンシブ化 + 上下マージン
   "#page-content img{max-width:100%;height:auto;display:block;margin:16px 0}",
+  // レイアウト崩れ防止: Wikidot記事のfloatブロックを無効化
+  "#page-content .block-left,#page-content .block-right{float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
   "</style>",
 ].join("");
 
@@ -149,6 +151,18 @@ const INJECTED_SCRIPT = [
 ].join("");
 
 /**
+ * HTML要素のインラインstyle属性を除去する正規表現
+ *
+ * Wikidot記事には `style="text-align: right;"` 等のインラインスタイルが含まれることがあり、
+ * モバイル表示でレイアウト崩れを起こす。記事の装飾はInjected CSSで制御するため、
+ * インラインstyle属性は安全に除去できる。
+ *
+ * - `style="..."` （ダブルクォート）を対象
+ * - 属性前の空白ごと除去してHTML構造を保持
+ */
+const INLINE_STYLE_ATTR_RE = / style="[^"]*"/gi;
+
+/**
  * href="/path" 形式の絶対パスリンクを href="/api/wiki-proxy/path" に書き換える正規表現
  *
  * Wiki HTML内のドメインなし絶対パスリンク（例: href="/scp-456"）は
@@ -165,23 +179,26 @@ const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("
  *
  * 処理順序:
  * 1. CSS注入（</head>前、初回ペイント前に適用）
- * 2. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
- * 3. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
- * 4. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
- * 5. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
+ * 2. インラインstyle属性の除去（レイアウト崩れ防止）
+ * 3. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
+ * 4. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
+ * 5. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
+ * 6. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
  */
 function rewriteHtml(html: string): string {
   // 1. CSS注入
   let result = html.replace("</head>", `${INJECTED_STYLE}</head>`);
-  // 2. フルURL書き換え
+  // 2. インラインstyle属性の除去
+  result = result.replace(INLINE_STYLE_ATTR_RE, "");
+  // 3. フルURL書き換え
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
-  // 3. ドメインなし絶対パスhrefをプロキシ経由に書き換え
+  // 4. ドメインなし絶対パスhrefをプロキシ経由に書き換え
   result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/api/wiki-proxy/');
-  // 4. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
+  // 5. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
   result = result.replace(WIKI_ARTICLE_HREF_RE, 'href="/api/wiki-proxy/');
-  // 5. リンクインターセプトJS注入
+  // 6. リンクインターセプトJS注入
   result = result.replace("</body>", `${INJECTED_SCRIPT}</body>`);
   return result;
 }

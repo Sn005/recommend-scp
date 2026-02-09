@@ -315,6 +315,77 @@ describe("GET /wiki-proxy/*", () => {
     });
   });
 
+  describe("インラインstyle属性の除去", () => {
+    it("style属性が除去される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div style="text-align: right;">テスト</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("<div>テスト</div>");
+      expect(text).not.toContain('style="text-align: right;"');
+    });
+
+    it("複数のstyle属性が全て除去される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><p style="color: red;">赤</p><span style="float: left;">左</span></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("<p>赤</p>");
+      expect(text).toContain("<span>左</span>");
+      expect(text).not.toContain('style="');
+    });
+
+    it("他の属性は保持される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div class="test" style="margin: 0;" id="main">内容</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain('class="test"');
+      expect(text).toContain('id="main"');
+      expect(text).not.toContain('style="');
+    });
+  });
+
+  describe("block-left/block-right CSSオーバーライド", () => {
+    it("block-left/block-rightのfloat無効化CSSが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain(".block-left");
+      expect(text).toContain(".block-right");
+      expect(text).toContain("float:none!important");
+    });
+  });
+
   describe("エラーハンドリング", () => {
     it("パスが指定されない場合、400エラーを返す", async () => {
       // Arrange
