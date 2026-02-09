@@ -59,6 +59,8 @@ const INJECTED_STYLE = [
   "<style>",
   // 印刷オプション・印刷ヘッダー非表示
   "#print-options,#print-head{display:none!important}",
+  // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
+  "#container,#main-content{margin:0;padding:0;max-width:none}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px;font-weight:bold}",
   // 記事可読性: ベースタイポグラフィ
