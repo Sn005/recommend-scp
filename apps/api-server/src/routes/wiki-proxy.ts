@@ -96,6 +96,7 @@ const WIKI_ARTICLE_HREF_RE = /href="\/wiki\/(?!common--|local--)/g;
  * 3. /wiki/ 記事リンク → /api/wiki-proxy/ 経由に変換
  * 4. 外部リンク（http/https） → 新しいタブで開く
  * 5. その他の絶対パスリンク → /api/wiki-proxy/ 経由に変換
+ * 6. collapsible-block の開閉トグル（WIKIDOT.combined.js の代替）
  */
 const INJECTED_SCRIPT = [
   "<script>",
@@ -121,6 +122,26 @@ const INJECTED_SCRIPT = [
   "e.preventDefault();",
   "location.href='/api/wiki-proxy'+h;",
   "return}",
+  "});",
+  // collapsible-block 開閉（WIKIDOT.combined.js の代替）
+  // printer--friendlyモードではWIKIDOT.combined.jsが読み込まれないため、
+  // collapsible-block の開閉をバニラJSで再実装する。
+  "document.addEventListener('click',function(e){",
+  "var l=e.target.closest('a.collapsible-block-link');",
+  "if(!l)return;",
+  "e.preventDefault();",
+  "var b=l.closest('div.collapsible-block');",
+  "if(!b)return;",
+  "var f=b.querySelector('.collapsible-block-folded');",
+  "var u=b.querySelector('.collapsible-block-unfolded');",
+  "if(!f||!u)return;",
+  "if(getComputedStyle(f).display!=='none'){",
+  "f.style.display='none';",
+  "u.style.display='block'",
+  "}else{",
+  "u.style.display='none';",
+  "f.style.display='block'",
+  "}",
   "})",
   "</script>",
 ].join("");
