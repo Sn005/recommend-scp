@@ -48,7 +48,7 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 /**
  * <head>末尾に注入するCSS
  *
- * 1. printer--friendlyモードの印刷オプションUIを非表示
+ * 1. printer--friendlyモードの印刷オプションUI・印刷ヘッダー（サイト名/ソースURL）を非表示
  * 2. 記事可読性向上（line-height, font-size, spacing）
  *    - モックアップ（header-6-minimal-2btn.html）のスタイルを参考
  *    - 元記事のカラー・装飾は尊重し、可読性に直結するプロパティのみ上書き
@@ -57,8 +57,8 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
  */
 const INJECTED_STYLE = [
   "<style>",
-  // 印刷オプション非表示
-  "#print-options{display:none!important}",
+  // 印刷オプション・印刷ヘッダー非表示
+  "#print-options,#print-head{display:none!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px;font-weight:bold}",
   // 記事可読性: ベースタイポグラフィ
