@@ -58,9 +58,7 @@ const mockUseIframePoolResult = {
     { articleIndex: number; url: string; isLoaded: boolean } | null,
     { articleIndex: number; url: string; isLoaded: boolean } | null,
   ],
-  isNextReady: false,
   advance: vi.fn(),
-  handleIframeLoad: vi.fn(),
 };
 
 // ─── モック定義 ───
@@ -253,7 +251,16 @@ const setupDefaultArticles = () => {
     { articleIndex: 1, url: mockArticles[1].url, isLoaded: false },
     { articleIndex: 2, url: mockArticles[2].url, isLoaded: false },
   ];
-  mockUseIframePoolResult.isNextReady = false;
+};
+
+/** 初回TransitionCardを閉じるヘルパー（iframe読み込み完了 → カードdismiss） */
+const dismissInitialCard = () => {
+  act(() => {
+    capturedOnIframeLoad?.();
+  });
+  act(() => {
+    capturedOnDismissed?.();
+  });
 };
 
 // ─── テスト本体 ───
@@ -272,7 +279,6 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     mockUseInfiniteArticlesResult.isEmpty = false;
     mockUseInfiniteArticlesResult.hasMore = true;
     mockUseArticleFavoriteResult.isFavorited = false;
-    mockUseIframePoolResult.isNextReady = false;
     mockUseIframePoolResult.slots = [
       { articleIndex: 0, url: "https://scp-jp.wikidot.com/scp-173", isLoaded: true },
       null,
@@ -284,12 +290,52 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     vi.useRealTimers();
   });
 
+  // ===== 初回TransitionCard =====
+
+  describe("初回TransitionCard", () => {
+    it("記事到着時に初回TransitionCardが表示される", () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+
+      expect(screen.getByTestId("transition-card")).toBeInTheDocument();
+      expect(screen.getByTestId("transition-card")).toHaveAttribute("data-scp-number", "scp-173");
+    });
+
+    it("初回TransitionCardにisContentReady=falseが渡される", () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+
+      expect(screen.getByTestId("transition-card")).toHaveAttribute("data-content-ready", "false");
+    });
+
+    it("iframe読み込み完了で初回TransitionCardのisContentReady=trueになる", () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+
+      act(() => {
+        capturedOnIframeLoad?.();
+      });
+
+      expect(screen.getByTestId("transition-card")).toHaveAttribute("data-content-ready", "true");
+    });
+
+    it("初回TransitionCard dismiss後に記事が表示される", () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+      dismissInitialCard();
+
+      const webviews = screen.getAllByTestId("article-webview");
+      expect(webviews[0]).toHaveClass("opacity-100");
+    });
+  });
+
   // ===== AC-1: フルフロー遷移 =====
 
   describe("AC-1: フルフロー遷移", () => {
     it("「次へ」タップで現在の記事がフェードアウトしTransitionCardが表示される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -303,6 +349,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("TransitionCardに次記事のSCP番号が表示される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -315,6 +362,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("TransitionCardに次記事のオブジェクトクラスが表示される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -327,6 +375,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("TransitionCardに次記事のratingが表示される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -336,24 +385,15 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       });
     });
 
-    it("TransitionCard非表示後に次の記事が表示される（goToNext + advance呼び出し）", async () => {
+    it("「次へ」タップでadvanceとgoToNextが即座に呼ばれる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
-      // TransitionCardが表示される
-      await waitFor(() => {
-        expect(screen.getByTestId("transition-card")).toBeInTheDocument();
-      });
-
-      // onDismissedを呼ぶ（カード非表示完了）
-      act(() => {
-        capturedOnDismissed?.();
-      });
-
-      // advance() と goToNext() が呼ばれる
+      // advance() と goToNext() が即座に呼ばれる（カード非表示を待たない）
       expect(mockUseIframePoolResult.advance).toHaveBeenCalledTimes(1);
       expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
     });
@@ -361,6 +401,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("TransitionCard非表示後、iframe読み込み完了まで記事が非表示のままになる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -391,6 +432,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("遷移完了後にcurrentIndexが更新される（goToNext呼び出し確認）", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -422,6 +464,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("遷移完了後にスロットローテーション（advance）が実行される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -455,30 +498,41 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
   // ===== AC-3: TransitionCardとiframePoolの連携 =====
 
   describe("AC-3: TransitionCardとiframePoolの連携", () => {
-    it("TransitionCard表示中にisNextReadyの値がisContentReadyに渡される", async () => {
+    it("遷移開始時にisContentReadyがfalseでTransitionCardに渡される", async () => {
       setupDefaultArticles();
-      mockUseIframePoolResult.isNextReady = false;
-
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
+      // 遷移開始でisSlotReadyがfalseにリセットされるため、isContentReady=false
       await waitFor(() => {
         const card = screen.getByTestId("transition-card");
         expect(card).toHaveAttribute("data-content-ready", "false");
       });
     });
 
-    it("isNextReady=trueの場合はisContentReady=trueがTransitionCardに渡される", async () => {
+    it("iframe読み込み完了後にisContentReady=trueがTransitionCardに渡される", async () => {
       setupDefaultArticles();
-      mockUseIframePoolResult.isNextReady = true;
-
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
+      // 初期状態: isContentReady=false
+      await waitFor(() => {
+        const card = screen.getByTestId("transition-card");
+        expect(card).toHaveAttribute("data-content-ready", "false");
+      });
+
+      // iframe読み込み完了を通知
+      act(() => {
+        capturedOnIframeLoad?.();
+      });
+
+      // isContentReady=true に変わる
       await waitFor(() => {
         const card = screen.getByTestId("transition-card");
         expect(card).toHaveAttribute("data-content-ready", "true");
@@ -492,6 +546,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("「次へ」タップでrecordSkipがscrollDepthとdwellTimeメタデータ付きで呼ばれる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -517,6 +572,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("skipメタデータにscrollDepthとdwellTimeが含まれる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -552,6 +608,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("遷移中に「次へ」ボタンの連打が防止される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
 
@@ -574,6 +631,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("TransitionCard表示中は追加の遷移を受け付けない", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -585,13 +643,14 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       // カード表示中にクリック
       fireEvent.click(nextButton);
 
-      // goToNextはまだ呼ばれていない（カード非表示後にのみ呼ばれる）
-      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
+      // goToNextは最初の1回のみ（遷移中の追加クリックでは呼ばれない）
+      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
     });
 
     it("遷移完了後に「次へ」ボタンが再び有効になる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
 
@@ -622,6 +681,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("スクロール到達でrecordLikeが呼ばれる", () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const scrollEndButton = screen.getByTestId("scroll-end-trigger-scp-173");
       act(() => {
@@ -634,6 +694,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("読了後に遷移ヘッダーカードを経由して次の記事が表示される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const scrollEndButton = screen.getByTestId("scroll-end-trigger-scp-173");
       act(() => {
@@ -664,6 +725,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("お気に入りボタンタップで従来通りのトグル動作が実行される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const favoriteButton = await screen.findByLabelText("お気に入りに追加");
       await userEvent.click(favoriteButton);
@@ -674,6 +736,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("お気に入りボタンタップ後も遷移フローに影響しない", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       // お気に入りボタンをタップ
       const favoriteButton = await screen.findByLabelText("お気に入りに追加");
@@ -745,6 +808,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
 
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -774,6 +838,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       ];
 
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -798,6 +863,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       ];
 
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
@@ -809,7 +875,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(screen.queryByTestId("transition-rating")).not.toBeInTheDocument();
     });
 
-    it("最後の記事で「次へ」を押した時は遷移が開始されない", async () => {
+    it("最後の記事で「次へ」を押した時は追加の遷移が開始されない", async () => {
       mockUseInfiniteArticlesResult.isLoading = false;
       mockUseInfiniteArticlesResult.articles = [createMockArticle({ id: "scp-173" })];
       mockUseIframePoolResult.slots = [
@@ -819,12 +885,14 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       ];
 
       render(<RecommendPage />);
+      dismissInitialCard();
 
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
-      // TransitionCardは表示されない
-      expect(screen.queryByTestId("transition-card")).not.toBeInTheDocument();
+      // advance/goToNextは呼ばれない（次の記事がない）
+      expect(mockUseIframePoolResult.advance).not.toHaveBeenCalled();
+      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
     });
 
     it("ローディング中はスケルトンUIが表示される", () => {
@@ -837,6 +905,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("遷移完了後にスクロール深度・滞在時間がリセットされる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
+      dismissInitialCard();
 
       // スクロール深度を更新
       const scrollChangeTrigger = screen.getByTestId("scroll-change-trigger-scp-173");
