@@ -51,7 +51,7 @@ export default function RecommendPage() {
   const { add: addToHistory } = useHistory();
 
   // AC-2: iframeプール（3スロット）
-  const { slots, isNextReady, advance } = useIframePool({
+  const { slots, advance } = useIframePool({
     articles,
     currentIndex,
   });
@@ -67,8 +67,9 @@ export default function RecommendPage() {
     null
   );
 
-  // 遷移後のiframe読み込み待ち（旧記事のフラッシュ防止）
-  const [isSlotReady, setIsSlotReady] = useState(true);
+  // iframe読み込み待ち（初回表示 + 遷移後の旧記事フラッシュ防止）
+  // 初期値false: iframeのonLoad完了まで非表示にし、コンテンツ未描画状態の表示を防ぐ
+  const [isSlotReady, setIsSlotReady] = useState(false);
 
   // AC-4: スクロール深度の追跡（最大到達深度を保持）
   const maxScrollDepthRef = useRef(0);
@@ -97,33 +98,47 @@ export default function RecommendPage() {
     });
   }, [refetch]);
 
-  // AC-1: 遷移開始（TransitionCard表示）
+  // AC-1: 遷移開始（即座にスロットローテーション + TransitionCard表示）
+  // iframeの読み込みをTransitionCard表示中にバックグラウンドで実行し、
+  // カード非表示後の待ち時間を最小化する
   const startTransitionWithCard = useCallback(() => {
     const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
     if (transitioningRef.current || !nextArticle) return;
 
     transitioningRef.current = true;
+    setIsSlotReady(false);
+
+    // 即座にスロットローテーション（iframeのバックグラウンド読み込み開始）
+    advance();
+    goToNext();
+
+    // TransitionCard表示（iframe読み込み完了まで表示し続ける）
     setNextArticleForCard(nextArticle);
     setShowCard(true);
-  }, [articles, currentIndex]);
+  }, [articles, currentIndex, advance, goToNext]);
 
   // AC-1: TransitionCard dismiss完了ハンドラー
+  // advance/goToNextは遷移開始時に実行済み。カード非表示のみ行う
   const handleCardDismissed = useCallback(() => {
     setShowCard(false);
-    setIsSlotReady(false); // 新しいiframe読み込みまで非表示を維持
-    advance(); // AC-2: iframeプールローテーション
-    goToNext(); // currentIndex更新
-
-    // 新しい記事用にリセット
-    maxScrollDepthRef.current = 0;
-    articleStartTimeRef.current = Date.now();
     transitioningRef.current = false;
-  }, [advance, goToNext]);
+  }, []);
 
   // Current スロットのiframe読み込み完了ハンドラー
   const handleCurrentIframeLoad = useCallback(() => {
     setIsSlotReady(true);
   }, []);
+
+  // 初回記事表示: 記事到着時にTransitionCardを表示してiframe読み込みを待つ
+  const initialCardShownRef = useRef(false);
+  useEffect(() => {
+    if (currentArticle && !initialCardShownRef.current) {
+      initialCardShownRef.current = true;
+      setNextArticleForCard(currentArticle);
+      setShowCard(true);
+      transitioningRef.current = true;
+    }
+  }, [currentArticle]);
 
   // AC-4 + AC-6: 次へボタンハンドラー（recordSkip + TransitionCard遷移）
   const handleNext = useCallback(() => {
@@ -180,6 +195,7 @@ export default function RecommendPage() {
   );
 
   // AC-9: ローディング中はスケルトンUIを表示
+  // API応答後にTransitionCard（記事情報付き）でiframe読み込みを待つ
   if (isLoading) {
     return <SkeletonLoader />;
   }
@@ -234,7 +250,7 @@ export default function RecommendPage() {
           objectClass={nextArticleForCard.objectClass}
           rating={nextArticleForCard.rating}
           isVisible={showCard}
-          isContentReady={isNextReady}
+          isContentReady={isSlotReady}
           onDismissed={handleCardDismissed}
         />
       )}
