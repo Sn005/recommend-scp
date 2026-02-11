@@ -34,7 +34,7 @@ import { SkeletonLoader } from "./_components/SkeletonLoader";
  * AC-4: フィードバック統合（recordSkip + metadata）
  * AC-5: ProgressBar非表示
  * AC-6: 連打防止
- * AC-7: 読了時の遷移（スクロール到達）
+ * AC-7: （削除: 読了自動遷移はStory specで不採用）
  * AC-8: お気に入りボタン正常動作
  * AC-9: 推薦切れ・エラー時の挙動
  * AC-10: prefers-reduced-motion対応
@@ -171,15 +171,6 @@ export default function RecommendPage() {
     void toggleFavorite();
   }, [currentArticle, recordLike, toggleFavorite]);
 
-  // AC-7: スクロール完了ハンドラー（Like記録 + TransitionCard経由遷移）
-  const handleScrollEnd = useCallback(() => {
-    if (currentArticle) {
-      void recordLike(currentArticle.id);
-    }
-    // AC-7: 読了後もTransitionCard経由で次の記事へ
-    startTransitionWithCard();
-  }, [currentArticle, recordLike, startTransitionWithCard]);
-
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(
     (content: ArticleContent) => {
@@ -217,7 +208,6 @@ export default function RecommendPage() {
       <ArticleWebView
         url={slots[0].url}
         articleId={articles[slots[0].articleIndex]?.id}
-        onScrollEnd={handleScrollEnd}
         onScrollChange={handleScrollChange}
         onSkip={goToNext}
         onContentLoaded={handleContentLoaded}
