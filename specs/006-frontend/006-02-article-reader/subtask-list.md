@@ -9,7 +9,7 @@
 | [006-02-05](./006-02-05.md) | フィードバック記録           | Like/Dislike/Favorite API連携              | completed  |
 | [006-02-06](./006-02-06.md) | お気に入りボタン             | 状態管理・トグル処理                       | completed  |
 | [006-02-07](./006-02-07.md) | 推薦拡張・無限スクロール強化 | 初期10件化・バッファ先行取得・スムース遷移 | completed  |
-| [006-02-08](./006-02-08.md) | お気に入りボタンAPI連携      | POST/DELETE /favorites API接続             | pending    |
+| [006-02-08](./006-02-08.md) | お気に入りボタンAPI連携      | POST/DELETE /favorites API接続             | completed  |
 
 ## 依存関係
 

@@ -1,15 +1,14 @@
 /**
  * @file useArticleFavorite フック
  * @description 記事のお気に入り状態を管理するフック
- * @see specs/006-frontend/006-02-article-reader/006-02-06.md
+ * @see specs/006-frontend/006-02-article-reader/006-02-08.md
  */
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-// NOTE: favorites API は 006-03 で実装予定。現在は削除操作をスキップ
-// import { api } from "@/shared/lib/api-client";
+import { api } from "@/shared/lib/api-client";
+import { useVisitorId } from "@/shared/hooks/useVisitorId";
 import type { UseArticleFavoriteOptions, UseArticleFavoriteResult } from "../_types";
-import { useFeedback } from "./useFeedback";
 
 /**
  * ローカルキャッシュ（セッション中のお気に入り状態を保持）
@@ -37,7 +36,7 @@ export function useArticleFavorite({
   const [isProcessing, setIsProcessing] = useState(false);
   // 同期的なチェック用（連打防止）
   const isProcessingRef = useRef(false);
-  const { recordFavorite } = useFeedback();
+  const { visitorId } = useVisitorId();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // 記事切り替え時に状態を更新
@@ -71,8 +70,12 @@ export function useArticleFavorite({
     setIsProcessing(true);
 
     try {
-      // フィードバック記録（favorite）
-      await recordFavorite(articleId);
+      if (visitorId) {
+        await api.favorites[":articleId"].$post({
+          param: { articleId },
+          json: { visitorId },
+        });
+      }
     } catch {
       // ロールバック
       setIsFavorited(false);
@@ -81,7 +84,7 @@ export function useArticleFavorite({
       isProcessingRef.current = false;
       setIsProcessing(false);
     }
-  }, [articleId, isFavorited, recordFavorite]);
+  }, [articleId, isFavorited, visitorId]);
 
   // お気に入り解除
   const removeFavorite = useCallback(async () => {
@@ -99,13 +102,12 @@ export function useArticleFavorite({
     setIsProcessing(true);
 
     try {
-      // TODO: 006-03 で favorites API 実装後に有効化
-      // await api.favorites[":articleId"].$delete({
-      //   param: { articleId },
-      // });
-
-      // 暫定: 常に成功とみなす
-      await Promise.resolve();
+      if (visitorId) {
+        await api.favorites[":articleId"].$delete({
+          param: { articleId },
+          json: { visitorId },
+        });
+      }
     } catch {
       // ロールバック
       setIsFavorited(true);
@@ -114,7 +116,7 @@ export function useArticleFavorite({
       isProcessingRef.current = false;
       setIsProcessing(false);
     }
-  }, [articleId, isFavorited]);
+  }, [articleId, isFavorited, visitorId]);
 
   // トグル
   const toggleFavorite = useCallback(async () => {
