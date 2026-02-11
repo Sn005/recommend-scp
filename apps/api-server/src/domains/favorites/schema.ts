@@ -14,6 +14,13 @@ export const getFavoritesQuerySchema = z.object({
 });
 
 /**
+ * POST /favorites/:articleId リクエストボディ
+ */
+export const addFavoriteBodySchema = z.object({
+  visitorId: z.string().uuid(),
+});
+
+/**
  * DELETE /favorites/:articleId リクエストボディ
  */
 export const deleteFavoriteBodySchema = z.object({

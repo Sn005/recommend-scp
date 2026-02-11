@@ -6,7 +6,7 @@
 
 import type { FavoritesRepository } from "./repository";
 import type { VisitorsRepository } from "../visitors/repository";
-import type { FavoriteWithArticle } from "./types";
+import type { FavoriteWithArticle, AddFavoriteResult } from "./types";
 import { NotFoundError } from "../../lib/errors";
 
 /**
@@ -36,6 +36,34 @@ export class FavoritesService {
     }
 
     return this.favoritesRepository.getByVisitorId(visitorId);
+  };
+
+  /**
+   * お気に入りを追加
+   *
+   * @param visitorId - クライアント生成UUID
+   * @param articleId - 記事ID
+   * @returns { articleId, favoritedAt, isNew }
+   * @throws NotFoundError - visitorIdが存在しない場合
+   */
+  addFavorite = async (
+    visitorId: string,
+    articleId: string
+  ): Promise<{ articleId: string; favoritedAt: string; isNew: boolean }> => {
+    // visitorId存在確認
+    const visitor = await this.visitorsRepository.findByVisitorId(visitorId);
+    if (!visitor) {
+      throw new NotFoundError("Visitor", visitorId);
+    }
+
+    // Repository.addで追加（UPSERT）
+    const result: AddFavoriteResult = await this.favoritesRepository.add(visitorId, articleId);
+
+    return {
+      articleId: result.articleId,
+      favoritedAt: result.addedAt,
+      isNew: result.isNew,
+    };
   };
 
   /**
