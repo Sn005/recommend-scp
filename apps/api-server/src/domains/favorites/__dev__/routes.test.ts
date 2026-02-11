@@ -18,6 +18,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 interface MockService {
   getFavorites: ReturnType<typeof vi.fn>;
   removeFavorite: ReturnType<typeof vi.fn>;
+  addFavorite: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -66,6 +67,7 @@ describe("GET /favorites - 正常系", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -157,6 +159,7 @@ describe("GET /favorites - 異常系（バリデーション）", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -201,6 +204,7 @@ describe("GET /favorites - 異常系（404）", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -246,6 +250,7 @@ describe("DELETE /favorites/:articleId - 正常系", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -306,6 +311,7 @@ describe("DELETE /favorites/:articleId - 異常系（バリデーション）", 
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -360,6 +366,7 @@ describe("DELETE /favorites/:articleId - 異常系（404）", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -415,6 +422,210 @@ describe("DELETE /favorites/:articleId - 異常系（404）", () => {
 });
 
 // ========================================
+// POST /favorites/:articleId テスト
+// ========================================
+
+describe("POST /favorites/:articleId - 正常系", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      getFavorites: vi.fn(),
+      removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("新規お気に入り追加で201を返す", async () => {
+    // Arrange
+    mockService.addFavorite.mockResolvedValue({
+      articleId: "scp-173",
+      favoritedAt: "2025-01-20T10:00:00Z",
+      isNew: true,
+    });
+
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+
+    // Assert
+    expect(res.status).toBe(201);
+  });
+
+  it("レスポンスにarticleIdとfavoritedAtが含まれる", async () => {
+    // Arrange
+    mockService.addFavorite.mockResolvedValue({
+      articleId: "scp-173",
+      favoritedAt: "2025-01-20T10:00:00Z",
+      isNew: true,
+    });
+
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+    const json = (await res.json()) as Record<string, unknown>;
+
+    // Assert
+    expect(json).toEqual({
+      articleId: "scp-173",
+      favoritedAt: "2025-01-20T10:00:00Z",
+    });
+  });
+
+  it("重複追加時は200を返す", async () => {
+    // Arrange
+    mockService.addFavorite.mockResolvedValue({
+      articleId: "scp-173",
+      favoritedAt: "2025-01-19T08:00:00Z",
+      isNew: false,
+    });
+
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+
+    // Assert
+    expect(res.status).toBe(200);
+  });
+
+  it("ServiceのaddFavoriteが正しい引数で呼ばれる", async () => {
+    // Arrange
+    mockService.addFavorite.mockResolvedValue({
+      articleId: "scp-173",
+      favoritedAt: "2025-01-20T10:00:00Z",
+      isNew: true,
+    });
+
+    // Act
+    await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+
+    // Assert
+    expect(mockService.addFavorite).toHaveBeenCalledWith(VALID_VISITOR_ID, "scp-173");
+  });
+});
+
+describe("POST /favorites/:articleId - 異常系（バリデーション）", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      getFavorites: vi.fn(),
+      removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("visitorIdなしで400を返す", async () => {
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("無効なUUID形式で400を返す", async () => {
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: "invalid-uuid" }),
+    });
+
+    // Assert
+    expect(res.status).toBe(400);
+  });
+
+  it("RFC 7807形式のエラーを返す", async () => {
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    // Assert
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json.type).toContain("validation-error");
+    expect(json.status).toBe(400);
+  });
+});
+
+describe("POST /favorites/:articleId - 異常系（404）", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      getFavorites: vi.fn(),
+      removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("存在しないvisitorIdで404を返す", async () => {
+    // Arrange
+    mockService.addFavorite.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
+
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+
+    // Assert
+    expect(res.status).toBe(404);
+  });
+
+  it("404エラー時にRFC 7807形式で返す", async () => {
+    // Arrange
+    mockService.addFavorite.mockRejectedValue(new NotFoundError("Visitor", VALID_VISITOR_ID));
+
+    // Act
+    const res = await app.request("/favorites/scp-173", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_VISITOR_ID }),
+    });
+
+    // Assert
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json.type).toContain("not-found");
+    expect(json.status).toBe(404);
+    expect(json.detail).toContain(VALID_VISITOR_ID);
+  });
+});
+
+// ========================================
 // エッジケース
 // ========================================
 
@@ -427,6 +638,7 @@ describe("エッジケース", () => {
     mockService = {
       getFavorites: vi.fn(),
       removeFavorite: vi.fn(),
+      addFavorite: vi.fn(),
     };
     app = createTestApp(mockService);
   });

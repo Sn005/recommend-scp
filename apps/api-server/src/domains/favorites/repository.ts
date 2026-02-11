@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FavoriteWithArticle } from "./types";
+import type { FavoriteWithArticle, AddFavoriteResult } from "./types";
 import { OBJECT_CLASSES } from "./types";
 
 /** DB行の型（JOIN後のsnake_case） */
@@ -90,6 +90,50 @@ export class FavoritesRepository {
     if (error) throw error;
 
     return (count ?? 0) > 0;
+  };
+
+  /**
+   * お気に入りを追加（冪等: 既存の場合はそのまま返す）
+   *
+   * @param visitorId - クライアント生成UUID
+   * @param articleId - 記事ID
+   * @returns AddFavoriteResult（isNewで新規/既存を判別）
+   */
+  add = async (visitorId: string, articleId: string): Promise<AddFavoriteResult> => {
+    // 既存チェック
+    const { data: existing, error: selectError } = await this.supabase
+      .from("favorites")
+      .select("id, article_id, added_at")
+      .eq("visitor_id", visitorId)
+      .eq("article_id", articleId)
+      .maybeSingle();
+
+    if (selectError) throw selectError;
+
+    if (existing) {
+      return {
+        id: existing.id as string,
+        articleId: existing.article_id as string,
+        addedAt: existing.added_at as string,
+        isNew: false,
+      };
+    }
+
+    // 新規INSERT
+    const { data, error } = await this.supabase
+      .from("favorites")
+      .insert({ visitor_id: visitorId, article_id: articleId })
+      .select("id, article_id, added_at")
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id as string,
+      articleId: data.article_id as string,
+      addedAt: data.added_at as string,
+      isNew: true,
+    };
   };
 
   // ============================================

@@ -309,6 +309,111 @@ describe("FavoritesRepository", () => {
     });
   });
 
+  describe("add", () => {
+    it("新規お気に入りを追加してレコードを返す", async () => {
+      // Arrange: 既存チェック → 存在しない → INSERT
+      mockFrom
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: "fav-uuid-new",
+                  article_id: "SCP-173",
+                  added_at: "2025-01-20T10:00:00Z",
+                },
+                error: null,
+              }),
+            }),
+          }),
+        });
+
+      // Act
+      const result = await repository.add("visitor-1", "SCP-173");
+
+      // Assert
+      expect(result).toEqual({
+        id: "fav-uuid-new",
+        articleId: "SCP-173",
+        addedAt: "2025-01-20T10:00:00Z",
+        isNew: true,
+      });
+      expect(mockFrom).toHaveBeenCalledTimes(2);
+    });
+
+    it("重複時に既存レコードを返す（UPSERT）", async () => {
+      // Arrange: 既存チェック → 存在する
+      mockFrom.mockReturnValueOnce({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: {
+                  id: "fav-uuid-existing",
+                  article_id: "SCP-173",
+                  added_at: "2025-01-19T08:00:00Z",
+                },
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      });
+
+      // Act
+      const result = await repository.add("visitor-1", "SCP-173");
+
+      // Assert
+      expect(result).toEqual({
+        id: "fav-uuid-existing",
+        articleId: "SCP-173",
+        addedAt: "2025-01-19T08:00:00Z",
+        isNew: false,
+      });
+      // INSERTは呼ばれない（1回のみ）
+      expect(mockFrom).toHaveBeenCalledTimes(1);
+    });
+
+    it("DB挿入エラー時に例外をスローする", async () => {
+      // Arrange: 既存チェック → 存在しない → INSERT失敗
+      mockFrom
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: { code: "23503", message: "Foreign key violation" },
+              }),
+            }),
+          }),
+        });
+
+      // Act & Assert
+      await expect(repository.add("visitor-1", "SCP-INVALID")).rejects.toEqual({
+        code: "23503",
+        message: "Foreign key violation",
+      });
+    });
+  });
+
   describe("remove", () => {
     it("お気に入りを削除できる（true返却）", async () => {
       const queryMock = createDeleteQueryMock(1);

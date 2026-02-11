@@ -15,6 +15,7 @@ describe("FavoritesService", () => {
   let mockFavoritesRepo: {
     getByVisitorId: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
+    add: ReturnType<typeof vi.fn>;
   };
   let mockVisitorsRepo: {
     findByVisitorId: ReturnType<typeof vi.fn>;
@@ -26,6 +27,12 @@ describe("FavoritesService", () => {
     mockFavoritesRepo = {
       getByVisitorId: vi.fn().mockResolvedValue([]),
       remove: vi.fn().mockResolvedValue(true),
+      add: vi.fn().mockResolvedValue({
+        id: "fav-new",
+        articleId: "SCP-173",
+        addedAt: "2025-01-20T10:00:00Z",
+        isNew: true,
+      }),
     };
 
     mockVisitorsRepo = {
@@ -101,6 +108,60 @@ describe("FavoritesService", () => {
         expect(error).toBeInstanceOf(NotFoundError);
         expect((error as NotFoundError).detail).toContain("nonexistent-visitor-id");
       }
+    });
+  });
+
+  describe("addFavorite", () => {
+    it("visitorId存在確認後、Repository.addを呼びお気に入りを追加する", async () => {
+      // Arrange
+      mockFavoritesRepo.add.mockResolvedValue({
+        id: "fav-new",
+        articleId: "SCP-173",
+        addedAt: "2025-01-20T10:00:00Z",
+        isNew: true,
+      });
+
+      // Act
+      const result = await service.addFavorite("visitor-1", "SCP-173");
+
+      // Assert
+      expect(mockVisitorsRepo.findByVisitorId).toHaveBeenCalledWith("visitor-1");
+      expect(mockFavoritesRepo.add).toHaveBeenCalledWith("visitor-1", "SCP-173");
+      expect(result).toEqual({
+        articleId: "SCP-173",
+        favoritedAt: "2025-01-20T10:00:00Z",
+        isNew: true,
+      });
+    });
+
+    it("重複追加時はisNew: falseを返す", async () => {
+      // Arrange
+      mockFavoritesRepo.add.mockResolvedValue({
+        id: "fav-existing",
+        articleId: "SCP-173",
+        addedAt: "2025-01-19T08:00:00Z",
+        isNew: false,
+      });
+
+      // Act
+      const result = await service.addFavorite("visitor-1", "SCP-173");
+
+      // Assert
+      expect(result).toEqual({
+        articleId: "SCP-173",
+        favoritedAt: "2025-01-19T08:00:00Z",
+        isNew: false,
+      });
+    });
+
+    it("存在しないvisitorIdでNotFoundErrorをスローする", async () => {
+      // Arrange
+      mockVisitorsRepo.findByVisitorId.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(service.addFavorite("nonexistent", "SCP-173")).rejects.toThrow(NotFoundError);
+      expect(mockVisitorsRepo.findByVisitorId).toHaveBeenCalledWith("nonexistent");
+      expect(mockFavoritesRepo.add).not.toHaveBeenCalled();
     });
   });
 

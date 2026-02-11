@@ -32,3 +32,15 @@ export const OBJECT_CLASSES = [
 ] as const;
 
 export type ObjectClass = (typeof OBJECT_CLASSES)[number];
+
+/** お気に入り追加結果 */
+export interface AddFavoriteResult {
+  /** お気に入りID（UUID） */
+  id: string;
+  /** 記事ID（SCP-173等） */
+  articleId: string;
+  /** お気に入り追加日時（ISO 8601） */
+  addedAt: string;
+  /** 新規追加: true, 既存: false */
+  isNew: boolean;
+}
