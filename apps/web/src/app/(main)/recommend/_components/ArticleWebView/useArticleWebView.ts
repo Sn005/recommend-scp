@@ -18,41 +18,6 @@ interface UseArticleWebViewReturn {
   retry: () => void;
 }
 
-/**
- * postMessageで受信するスクロールメッセージの型
- */
-interface ScrollMessage {
-  type: "scroll";
-  percentage: number;
-}
-
-/**
- * データがScrollMessage型かどうかを判定する型ガード
- */
-function isScrollMessage(data: unknown): data is ScrollMessage {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "type" in data &&
-    data.type === "scroll" &&
-    "percentage" in data &&
-    typeof data.percentage === "number"
-  );
-}
-
-/**
- * 許可するorigin（SCP Wikiサイト）
- * セキュリティ: 信頼できるサイトからのpostMessageのみ受け付ける
- */
-const ALLOWED_ORIGINS = [
-  "https://scp-jp.wikidot.com",
-  "https://scp-wiki.wikidot.com",
-  "https://fondazionescp.wikidot.com",
-  "https://scp-wiki-cn.wikidot.com",
-  "https://scp-kr.wikidot.com",
-  "https://scp-wiki.net",
-];
-
 const SCROLL_END_THRESHOLD = 90;
 const IFRAME_LOAD_TIMEOUT_MS = 15_000;
 
@@ -75,6 +40,17 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // コールバックのrefを保持（スクロールハンドラー内でのstale closure防止）
+  const callbacksRef = useRef({ onScrollChange, onScrollEnd });
+  useEffect(() => {
+    callbacksRef.current = { onScrollChange, onScrollEnd };
+  }, [onScrollChange, onScrollEnd]);
+
+  const hasTriggeredEndRef = useRef(false);
+  useEffect(() => {
+    hasTriggeredEndRef.current = hasTriggeredEnd;
+  }, [hasTriggeredEnd]);
+
   // URL変更時にリセット
   // React 18ではuseEffect内のsetStateはバッチ処理されるため、パフォーマンス問題は発生しない
   useEffect(() => {
@@ -82,6 +58,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     setError(null);
     setScrollPercentage(0);
     setHasTriggeredEnd(false);
+    hasTriggeredEndRef.current = false;
 
     // iframe読み込みタイムアウト: onLoadが発火しない場合（mixed content blocking等）に
     // ローディング状態を強制解除する
@@ -94,34 +71,64 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     };
   }, [url]);
 
-  // スクロール検知（postMessage経由）
+  // iframe contentWindowのスクロールを直接検知
+  // wiki-proxy経由で同一オリジン配信のため、contentWindowに直接アクセス可能
+  // postMessage方式と異なり、iframe側へのスクリプト注入が不要
   useEffect(() => {
-    const handleMessage = (event: MessageEvent<unknown>) => {
-      // セキュリティ: 信頼できるoriginからのメッセージのみ処理
-      if (!ALLOWED_ORIGINS.includes(event.origin)) {
-        return;
-      }
+    if (isLoading) return;
 
-      // 型安全: ScrollMessage型ガードで検証
-      if (!isScrollMessage(event.data)) {
-        return;
-      }
+    const iframe = iframeRef.current;
+    if (!iframe) return;
 
-      const normalized = normalizePercentage(event.data.percentage);
-      setScrollPercentage(normalized);
-      onScrollChange?.(normalized);
+    let iframeWindow: Window | null = null;
+    try {
+      iframeWindow = iframe.contentWindow;
+    } catch {
+      // Cross-origin access denied（通常はwiki-proxy経由なので発生しない）
+      return;
+    }
+    if (!iframeWindow) return;
 
-      if (normalized >= SCROLL_END_THRESHOLD && !hasTriggeredEnd) {
-        setHasTriggeredEnd(true);
-        onScrollEnd?.();
-      }
+    let active = true;
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (ticking || !active) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (!active) return;
+        try {
+          const scrollTop = iframeWindow.scrollY;
+          const docHeight = iframeWindow.document.documentElement.scrollHeight;
+          const viewHeight = iframeWindow.innerHeight;
+          if (docHeight <= viewHeight) return;
+          const raw = (scrollTop / (docHeight - viewHeight)) * 100;
+          const normalized = normalizePercentage(raw);
+          setScrollPercentage(normalized);
+          callbacksRef.current.onScrollChange?.(normalized);
+          if (!hasTriggeredEndRef.current && normalized >= SCROLL_END_THRESHOLD) {
+            setHasTriggeredEnd(true);
+            hasTriggeredEndRef.current = true;
+            callbacksRef.current.onScrollEnd?.();
+          }
+        } catch {
+          // contentWindow access may fail if iframe navigated away
+        }
+      });
     };
 
-    window.addEventListener("message", handleMessage);
+    iframeWindow.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
-      window.removeEventListener("message", handleMessage);
+      active = false;
+      try {
+        iframeWindow.removeEventListener("scroll", handleScroll);
+      } catch {
+        // iframe may have navigated away
+      }
     };
-  }, [onScrollChange, onScrollEnd, hasTriggeredEnd]);
+  }, [isLoading, url]);
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
@@ -138,6 +145,7 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     setIsLoading(true);
     setScrollPercentage(0);
     setHasTriggeredEnd(false);
+    hasTriggeredEndRef.current = false;
   }, []);
 
   return {

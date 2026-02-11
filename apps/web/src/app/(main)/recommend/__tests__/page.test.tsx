@@ -675,47 +675,34 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     });
   });
 
-  // ===== AC-7: 読了時の遷移（スクロール到達） =====
+  // ===== AC-7: スクロール到達で自動遷移しない（仕様変更） =====
 
-  describe("AC-7: 読了時の遷移（スクロール到達）", () => {
-    it("スクロール到達でrecordLikeが呼ばれる", () => {
+  describe("AC-7: スクロール到達で自動遷移しない", () => {
+    it("スクロール到達で自動遷移が発生しない（onScrollEndが渡されていない）", () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
 
-      const scrollEndButton = screen.getByTestId("scroll-end-trigger-scp-173");
-      act(() => {
-        scrollEndButton.click();
-      });
-
-      expect(mockUseFeedbackResult.recordLike).toHaveBeenCalledWith("scp-173");
+      // onScrollEndが渡されていないため、scroll-end-triggerボタンが存在しない
+      expect(screen.queryByTestId("scroll-end-trigger-scp-173")).not.toBeInTheDocument();
     });
 
-    it("読了後に遷移ヘッダーカードを経由して次の記事が表示される", async () => {
+    it("スクロール到達でrecordLikeが呼ばれない", () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
 
-      const scrollEndButton = screen.getByTestId("scroll-end-trigger-scp-173");
-      act(() => {
-        scrollEndButton.click();
-      });
+      // onScrollEndが渡されていないため、recordLikeは呼ばれない
+      expect(mockUseFeedbackResult.recordLike).not.toHaveBeenCalled();
+    });
 
-      // Likeが記録される
-      expect(mockUseFeedbackResult.recordLike).toHaveBeenCalledWith("scp-173");
+    it("スクロール到達でgoToNextが呼ばれない", () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+      dismissInitialCard();
 
-      // TransitionCardが表示される
-      await waitFor(() => {
-        expect(screen.getByTestId("transition-card")).toBeInTheDocument();
-      });
-
-      // カード非表示完了
-      act(() => {
-        capturedOnDismissed?.();
-      });
-
-      // goToNextが呼ばれる
-      expect(mockUseInfiniteArticlesResult.goToNext).toHaveBeenCalledTimes(1);
+      // onScrollEndが渡されていないため、goToNextは呼ばれない
+      expect(mockUseInfiniteArticlesResult.goToNext).not.toHaveBeenCalled();
     });
   });
 
