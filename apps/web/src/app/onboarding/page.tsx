@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useVisitorId, ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
+import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
 import { PackSelector } from "./_components/PackSelector";
 import { ScpNumberInput } from "./_components/ScpNumberInput";
 
@@ -35,23 +36,6 @@ function TabButton({
 }
 
 /**
- * ローディングインジケーター
- */
-function LoadingIndicator() {
-  return (
-    <div
-      data-testid="loading-indicator"
-      className="flex min-h-screen flex-col items-center justify-center p-4"
-      role="status"
-      aria-label="読み込み中"
-    >
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
-      <p className="mt-4 text-gray-500">読み込み中...</p>
-    </div>
-  );
-}
-
-/**
  * エラーメッセージ
  */
 function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void }) {
@@ -79,7 +63,7 @@ function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void })
  */
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<LoadingIndicator />}>
+    <Suspense fallback={<SkeletonLoader />}>
       <OnboardingPageContent />
     </Suspense>
   );
@@ -114,7 +98,7 @@ function OnboardingPageContent() {
 
   // ローディング状態
   if (isVisitorLoading) {
-    return <LoadingIndicator />;
+    return <SkeletonLoader />;
   }
 
   // エラー状態
