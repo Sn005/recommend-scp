@@ -14,7 +14,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
 import { useFeedback, calculateInterestLevel } from "./_hooks/useFeedback";
-import { useArticleFavorite } from "./_hooks/useArticleFavorite";
+import { useArticleFavorite } from "@/shared/hooks/useArticleFavorite";
 import { useIframePool } from "./_hooks/useIframePool";
 import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";

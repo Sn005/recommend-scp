@@ -113,13 +113,13 @@ describe("FavoriteCard", () => {
   });
 
   describe("AC-2: カードタップで遷移", () => {
-    it("カードタップで/recommend?article={articleId}に遷移する", () => {
+    it("カードタップで/article/{articleId}に遷移する", () => {
       render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
 
       const card = screen.getByTestId("favorite-card");
       fireEvent.click(card);
 
-      expect(mockPush).toHaveBeenCalledWith("/recommend?article=scp-173");
+      expect(mockPush).toHaveBeenCalledWith("/article/scp-173");
     });
 
     it("articleIdに特殊文字が含まれる場合は正しくエンコードされる", () => {
@@ -130,7 +130,7 @@ describe("FavoriteCard", () => {
       fireEvent.click(card);
 
       expect(mockPush).toHaveBeenCalledWith(
-        "/recommend?article=" + encodeURIComponent("scp-173?test=1&foo=bar")
+        "/article/" + encodeURIComponent("scp-173?test=1&foo=bar")
       );
     });
   });

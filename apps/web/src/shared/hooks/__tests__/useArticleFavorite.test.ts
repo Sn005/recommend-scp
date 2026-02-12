@@ -7,14 +7,6 @@ import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useArticleFavorite, favoriteCache } from "../useArticleFavorite";
 
-// useFeedbackのモック
-const mockRecordFavorite = vi.fn();
-vi.mock("../useFeedback", () => ({
-  useFeedback: () => ({
-    recordFavorite: mockRecordFavorite,
-  }),
-}));
-
 // APIクライアントのモック
 const mockFavoritesPost = vi.fn();
 const mockFavoritesDelete = vi.fn();
@@ -49,7 +41,6 @@ describe("useArticleFavorite", () => {
     // visitorIdをデフォルトに戻す
     mockVisitorId = "test-visitor-id";
     // 成功レスポンスをデフォルトに
-    mockRecordFavorite.mockResolvedValue(undefined);
     mockFavoritesPost.mockResolvedValue({ ok: true });
     mockFavoritesDelete.mockResolvedValue({ ok: true });
   });
@@ -547,38 +538,6 @@ describe("useArticleFavorite", () => {
 
       // Assert: POST APIは1回だけ呼ばれる
       expect(mockFavoritesPost).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("AC-7(008): useFeedbackのrecordFavorite呼び出しを除去する", () => {
-    it("addFavorite呼び出し時にrecordFavoriteは呼ばれない", async () => {
-      // Arrange
-      const { result } = renderHook(() =>
-        useArticleFavorite({ articleId: "scp-173", initialFavorited: false })
-      );
-
-      // Act
-      await act(async () => {
-        await result.current.addFavorite();
-      });
-
-      // Assert
-      expect(mockRecordFavorite).not.toHaveBeenCalled();
-    });
-
-    it("toggleFavorite呼び出し時にrecordFavoriteは呼ばれない", async () => {
-      // Arrange
-      const { result } = renderHook(() =>
-        useArticleFavorite({ articleId: "scp-173", initialFavorited: false })
-      );
-
-      // Act
-      await act(async () => {
-        await result.current.toggleFavorite();
-      });
-
-      // Assert
-      expect(mockRecordFavorite).not.toHaveBeenCalled();
     });
   });
 

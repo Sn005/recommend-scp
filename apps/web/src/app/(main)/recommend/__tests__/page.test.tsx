@@ -76,7 +76,7 @@ vi.mock("../_hooks/useFeedback", () => ({
   },
 }));
 
-vi.mock("../_hooks/useArticleFavorite", () => ({
+vi.mock("@/shared/hooks/useArticleFavorite", () => ({
   useArticleFavorite: () => mockUseArticleFavoriteResult,
 }));
 

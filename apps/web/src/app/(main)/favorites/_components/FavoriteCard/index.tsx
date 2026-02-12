@@ -49,7 +49,7 @@ function formatObjectClass(objectClass: string | null): string | null {
  * - オブジェクトクラスバッジ、評価、タイトル
  *
  * AC-2: カードタップで遷移
- * - `/recommend?article={articleId}` に遷移
+ * - `/article/{articleId}` に遷移
  *
  * AC-3: 削除ボタン
  * - ×ボタンタップで `onRemove(articleId)` コールバック
@@ -82,7 +82,7 @@ export function FavoriteCard({ article, onRemove, isRemoving = false }: Favorite
   const router = useRouter();
 
   const handleCardClick = () => {
-    router.push(`/recommend?article=${encodeURIComponent(article.articleId)}`);
+    router.push(`/article/${encodeURIComponent(article.articleId)}`);
   };
 
   const handleRemoveClick = (e: React.MouseEvent) => {
