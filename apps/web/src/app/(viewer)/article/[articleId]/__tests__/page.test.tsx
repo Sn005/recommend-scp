@@ -12,15 +12,6 @@ vi.mock("next/navigation", () => ({
   useParams: () => ({ articleId: mockArticleId }),
 }));
 
-// ArticleWebView のモック
-vi.mock("@/app/(main)/recommend/_components/ArticleWebView", () => ({
-  ArticleWebView: ({ url, articleId }: { url: string; articleId?: string; className?: string }) => (
-    <div data-testid="article-webview" data-url={url} data-article-id={articleId}>
-      ArticleWebView Mock
-    </div>
-  ),
-}));
-
 // FloatingFavoriteButton のモック
 vi.mock("../_components/FloatingFavoriteButton", () => ({
   FloatingFavoriteButton: ({ articleId }: { articleId: string }) => (
@@ -35,12 +26,19 @@ describe("ArticlePage", () => {
     mockArticleId = "scp-173";
   });
 
-  it("articleIdからSCP Wiki URLを構築してArticleWebViewに渡す", () => {
+  it("articleIdからwiki-proxyのURLを構築してiframeに設定する", () => {
+    render(<ArticlePage />);
+
+    const iframe = screen.getByTitle("SCP記事");
+    expect(iframe).toHaveAttribute("src", "/api/wiki-proxy/scp-173");
+  });
+
+  it("iframeがarticle-webviewコンテナ内に配置される", () => {
     render(<ArticlePage />);
 
     const webView = screen.getByTestId("article-webview");
-    expect(webView).toHaveAttribute("data-url", "http://scp-jp.wikidot.com/scp-173");
-    expect(webView).toHaveAttribute("data-article-id", "scp-173");
+    const iframe = webView.querySelector("iframe");
+    expect(iframe).toBeInTheDocument();
   });
 
   it("FloatingFavoriteButtonにarticleIdが渡される", () => {
@@ -61,5 +59,12 @@ describe("ArticlePage", () => {
 
     const page = screen.getByTestId("article-page");
     expect(page).toBeInTheDocument();
+  });
+
+  it("iframeにsandbox属性が設定されている", () => {
+    render(<ArticlePage />);
+
+    const iframe = screen.getByTitle("SCP記事");
+    expect(iframe).toHaveAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
   });
 });
