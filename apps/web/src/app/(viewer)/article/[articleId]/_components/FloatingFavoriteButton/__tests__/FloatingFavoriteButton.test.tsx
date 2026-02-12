@@ -8,7 +8,7 @@ import { FloatingFavoriteButton } from "../index";
 
 // useArticleFavorite のモック
 const mockToggleFavorite = vi.fn();
-let mockIsFavorited = false;
+let mockIsFavorited = true;
 vi.mock("@/shared/hooks/useArticleFavorite", () => ({
   useArticleFavorite: () => ({
     isFavorited: mockIsFavorited,
@@ -22,7 +22,7 @@ vi.mock("@/shared/hooks/useArticleFavorite", () => ({
 describe("FloatingFavoriteButton", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsFavorited = false;
+    mockIsFavorited = true;
   });
 
   it("data-testid='floating-favorite-button'が設定されている", () => {
@@ -31,27 +31,27 @@ describe("FloatingFavoriteButton", () => {
     expect(screen.getByTestId("floating-favorite-button")).toBeInTheDocument();
   });
 
-  it("お気に入りボタンが表示される", () => {
+  it("初期状態でお気に入り済み（お気に入り一覧からの遷移）", () => {
     render(<FloatingFavoriteButton articleId="scp-173" />);
 
-    const button = screen.getByLabelText("お気に入りに追加");
+    const button = screen.getByLabelText("お気に入りから削除");
     expect(button).toBeInTheDocument();
   });
 
   it("ボタンをクリックするとtoggleFavoriteが呼ばれる", () => {
     render(<FloatingFavoriteButton articleId="scp-173" />);
 
-    const button = screen.getByLabelText("お気に入りに追加");
+    const button = screen.getByLabelText("お気に入りから削除");
     fireEvent.click(button);
 
     expect(mockToggleFavorite).toHaveBeenCalledTimes(1);
   });
 
-  it("お気に入り状態のときaria-labelが「お気に入りから削除」になる", () => {
-    mockIsFavorited = true;
+  it("お気に入り解除状態のときaria-labelが「お気に入りに追加」になる", () => {
+    mockIsFavorited = false;
     render(<FloatingFavoriteButton articleId="scp-173" />);
 
-    const button = screen.getByLabelText("お気に入りから削除");
+    const button = screen.getByLabelText("お気に入りに追加");
     expect(button).toBeInTheDocument();
   });
 
@@ -73,6 +73,7 @@ describe("FloatingFavoriteButton", () => {
     });
 
     it("グラスモーフィズムのスタイルが適用されている", () => {
+      mockIsFavorited = false;
       render(<FloatingFavoriteButton articleId="scp-173" />);
 
       const button = screen.getByLabelText("お気に入りに追加");
@@ -83,6 +84,7 @@ describe("FloatingFavoriteButton", () => {
     });
 
     it("ボタンサイズがw-12 h-12（48px）", () => {
+      mockIsFavorited = false;
       render(<FloatingFavoriteButton articleId="scp-173" />);
 
       const button = screen.getByLabelText("お気に入りに追加");
