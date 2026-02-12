@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { VisitorProvider } from "@/shared/contexts/VisitorProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <VisitorProvider>{children}</VisitorProvider>
+      </body>
     </html>
   );
 }
