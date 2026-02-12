@@ -197,8 +197,19 @@ const CLOUDFRONT_HTTP_RE = /http:\/\/([a-z0-9]+\.cloudfront\.net\/)/g;
  * 7. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
  */
 function rewriteHtml(html: string): string {
-  // 1. CSS注入
-  let result = html.replace("</head>", `${INJECTED_STYLE}</head>`);
+  // 1. CSS注入（大文字小文字不問 + フォールバック）
+  let result: string;
+  const headCloseRe = /<\/head>/i;
+  const bodyOpenRe = /<body[^>]*>/i;
+  if (headCloseRe.test(html)) {
+    result = html.replace(headCloseRe, `${INJECTED_STYLE}</head>`);
+  } else if (bodyOpenRe.test(html)) {
+    // </head>がない場合は<body>直後に注入
+    result = html.replace(bodyOpenRe, `$&${INJECTED_STYLE}`);
+  } else {
+    // どちらもない場合は先頭に注入
+    result = INJECTED_STYLE + html;
+  }
   // 2. インラインstyle属性の除去
   result = result.replace(INLINE_STYLE_ATTR_RE, "");
   // 3. フルURL書き換え
@@ -211,8 +222,8 @@ function rewriteHtml(html: string): string {
   result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/api/wiki-proxy/');
   // 6. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
   result = result.replace(WIKI_ARTICLE_HREF_RE, 'href="/api/wiki-proxy/');
-  // 7. リンクインターセプトJS注入
-  result = result.replace("</body>", `${INJECTED_SCRIPT}</body>`);
+  // 7. リンクインターセプトJS注入（大文字小文字不問）
+  result = result.replace(/<\/body>/i, `${INJECTED_SCRIPT}</body>`);
   return result;
 }
 

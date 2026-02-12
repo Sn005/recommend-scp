@@ -1,14 +1,34 @@
 /**
  * @file useArticleFavorite フック
- * @description 記事のお気に入り状態を管理するフック
- * @see specs/006-frontend/006-02-article-reader/006-02-08.md
+ * @description 記事のお気に入り状態を管理する共有フック
  */
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "@/shared/lib/api-client";
 import { useVisitorId } from "@/shared/hooks/useVisitorId";
-import type { UseArticleFavoriteOptions, UseArticleFavoriteResult } from "../_types";
+
+/** useArticleFavorite フックのオプション */
+export interface UseArticleFavoriteOptions {
+  /** 記事ID */
+  articleId: string | undefined;
+  /** 初期お気に入り状態 */
+  initialFavorited?: boolean;
+}
+
+/** useArticleFavorite フックの戻り値 */
+export interface UseArticleFavoriteResult {
+  /** お気に入り状態 */
+  isFavorited: boolean;
+  /** 処理中フラグ */
+  isProcessing: boolean;
+  /** お気に入りをトグル */
+  toggleFavorite: () => Promise<void>;
+  /** お気に入りを追加 */
+  addFavorite: () => Promise<void>;
+  /** お気に入りを解除 */
+  removeFavorite: () => Promise<void>;
+}
 
 /**
  * ローカルキャッシュ（セッション中のお気に入り状態を保持）

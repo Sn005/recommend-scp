@@ -300,6 +300,37 @@ describe("GET /wiki-proxy/*", () => {
       );
     });
 
+    it("大文字の</HEAD>でもCSS注入が動作する", async () => {
+      // Arrange
+      const html = `<html><HEAD><title>Test</title></HEAD><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("#print-options,#print-head{display:none!important}");
+      expect(text).toContain("<style>");
+    });
+
+    it("</head>がないHTMLでもCSS注入が動作する（<body>フォールバック）", async () => {
+      // Arrange
+      const html = `<html><body><p>No head tag</p></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("#print-options,#print-head{display:none!important}");
+    });
+
     it("コンテンツ領域に左右16pxのパディングが設定される", async () => {
       // Arrange
       const html = `<html><head><title>Test</title></head><body></body></html>`;
@@ -350,6 +381,22 @@ describe("GET /wiki-proxy/*", () => {
       expect(text).toContain("a.collapsible-block-link");
       expect(text).toContain(".collapsible-block-folded");
       expect(text).toContain(".collapsible-block-unfolded");
+    });
+
+    it("大文字の</BODY>でもJS注入が動作する", async () => {
+      // Arrange
+      const html = `<html><head></head><BODY><p>test</p></BODY></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain("<script>");
+      expect(text).toContain("addEventListener('click'");
     });
 
     it("外部リンクをwindow.openで新しいタブに開くコードが含まれる", async () => {
