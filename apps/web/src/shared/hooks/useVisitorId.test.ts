@@ -1,5 +1,7 @@
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { ReactNode } from "react";
+import { createElement } from "react";
 
 // モックをテストの前に定義
 vi.mock("../lib/api-client", () => ({
@@ -12,6 +14,7 @@ vi.mock("../lib/api-client", () => ({
 
 // useVisitorIdはモックの後でインポート
 import { useVisitorId, VISITOR_ID_KEY, ONBOARDING_COMPLETED_KEY } from "./useVisitorId";
+import { VisitorProvider } from "../contexts/VisitorProvider";
 import { api } from "../lib/api-client";
 
 const mockApi = api as unknown as {
@@ -19,6 +22,11 @@ const mockApi = api as unknown as {
     $post: ReturnType<typeof vi.fn>;
   };
 };
+
+/** VisitorProviderでラップするヘルパー */
+function wrapper({ children }: { children: ReactNode }) {
+  return createElement(VisitorProvider, null, children);
+}
 
 describe("useVisitorId", () => {
   let localStorageStore: Record<string, string>;
@@ -62,7 +70,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -84,7 +92,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -110,7 +118,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -138,7 +146,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -162,7 +170,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -184,7 +192,7 @@ describe("useVisitorId", () => {
       );
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       expect(result.current.isLoading).toBe(true);
@@ -203,7 +211,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       expect(result.current.isLoading).toBe(true);
@@ -223,7 +231,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -241,7 +249,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -255,7 +263,7 @@ describe("useVisitorId", () => {
       mockApi.visitors.$post.mockRejectedValue(new Error("Network Error"));
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -286,7 +294,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -311,7 +319,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -334,7 +342,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -359,7 +367,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -376,7 +384,17 @@ describe("useVisitorId", () => {
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
 
-      const { result } = renderHook(() => useVisitorId());
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+          }),
+      });
+
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -409,7 +427,17 @@ describe("useVisitorId", () => {
       const existingId = "existing-uuid-1234-5678-9abc-def012345678";
       localStorageStore[VISITOR_ID_KEY] = existingId;
 
-      const { result } = renderHook(() => useVisitorId());
+      mockApi.visitors.$post.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            visitorId: existingId,
+            isNew: false,
+            createdAt: "2024-01-01T00:00:00Z",
+          }),
+      });
+
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
@@ -463,7 +491,7 @@ describe("useVisitorId", () => {
       );
 
       // Act
-      const { unmount } = renderHook(() => useVisitorId());
+      const { unmount } = renderHook(() => useVisitorId(), { wrapper });
       unmount();
 
       // Promise解決後も警告が出ないことを確認
@@ -492,7 +520,7 @@ describe("useVisitorId", () => {
       });
 
       // Act
-      const { result } = renderHook(() => useVisitorId());
+      const { result } = renderHook(() => useVisitorId(), { wrapper });
 
       // Assert
       await waitFor(() => {
@@ -500,6 +528,13 @@ describe("useVisitorId", () => {
       });
       expect(result.current.error).toBeInstanceOf(Error);
       expect(result.current.error?.message).toBe("localStorage access denied");
+    });
+
+    it("VisitorProvider外で使用するとエラーがスローされる", () => {
+      // Provider無しでrenderHookを実行
+      expect(() => {
+        renderHook(() => useVisitorId());
+      }).toThrow("useVisitorId must be used within a VisitorProvider");
     });
   });
 });
