@@ -495,8 +495,6 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/");
 
       // Assert: パスが空なのでエラー
-      // extractProxyPathが空文字を返す → 400
-      // ただし Hono のルーティングで /wiki-proxy/ がマッチするか確認が必要
       expect(res.status).toBe(400);
     });
 
@@ -511,6 +509,69 @@ describe("GET /wiki-proxy/*", () => {
 
       // Assert
       expect(res.status).toBe(502);
+    });
+  });
+
+  describe("basePath経由のルーティング（Next.js API Route相当）", () => {
+    /**
+     * Next.js API Routeでは basePath("/api") でラップされた状態で
+     * wiki-proxyにリクエストが到達する。
+     * extractProxyPathはc.req.pathの完全パスからwiki-proxy以降を抽出するため、
+     * basePath有無に関わらず正しくパスを抽出できることを検証。
+     */
+    function createAppWithBasePath() {
+      return new Hono()
+        .basePath("/api")
+        .route("/", new Hono().route("/wiki-proxy", wikiProxyRoutes));
+    }
+
+    it("basePath付きでもprinter-friendlyコンテンツが返される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div id="page-content">SCP-173</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createAppWithBasePath();
+
+      // Act
+      const res = await app.request("/api/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(res.status).toBe(200);
+      expect(text).toContain("SCP-173");
+      expect(text).toContain("<style>");
+      expect(text).toContain("<script>");
+
+      // printer--friendly URLでfetchされることを確認
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://scp-jp.wikidot.com/printer--friendly/scp-173"
+      );
+    });
+
+    it("basePath付きでも絶対パスリンクが正しく書き換えられる", async () => {
+      // Arrange
+      const html = `<html><head></head><body><a href="/scp-682">SCP-682</a></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createAppWithBasePath();
+
+      // Act
+      const res = await app.request("/api/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain('href="/api/wiki-proxy/scp-682"');
+    });
+
+    it("basePath付きでパスが空の場合、400エラーを返す", async () => {
+      // Arrange
+      const app = createAppWithBasePath();
+
+      // Act
+      const res = await app.request("/api/wiki-proxy/");
+
+      // Assert
+      expect(res.status).toBe(400);
     });
   });
 });

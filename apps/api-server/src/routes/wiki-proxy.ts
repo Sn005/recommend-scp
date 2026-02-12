@@ -229,7 +229,13 @@ function rewriteHtml(html: string): string {
 
 /**
  * リクエストパスからwiki-proxy以降のパスを抽出
- * Hono basePath(/api)を含む完全パスに対応
+ *
+ * Hono basePath(/api)を含む完全パスに対応。
+ * c.req.path はルーティングコンテキスト（basePath有無）に関わらず
+ * リクエストの完全パスを返すため、正規表現で /wiki-proxy/ 以降を抽出する。
+ *
+ * 注意: Honoのワイルドカードパラメータ c.req.param("*") は
+ * .route() でネストされた場合に空になるため使用しない。
  *
  * 例: "/api/wiki-proxy/scp-173" → "scp-173"
  *     "/wiki-proxy/scp-173"     → "scp-173"
