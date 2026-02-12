@@ -505,7 +505,7 @@ describe("OnboardingPage", () => {
 
       render(<OnboardingPage />);
 
-      expect(screen.getByTestId("skeleton-loader")).toBeInTheDocument();
+      expect(screen.getByTestId("onboarding-skeleton")).toBeInTheDocument();
     });
   });
 

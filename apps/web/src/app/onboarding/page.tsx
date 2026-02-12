@@ -3,11 +3,51 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useVisitorId, ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
-import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
 import { PackSelector } from "./_components/PackSelector";
 import { ScpNumberInput } from "./_components/ScpNumberInput";
 
 type TabType = "pack" | "manual";
+
+/**
+ * オンボーディング画面専用スケルトン
+ *
+ * ヘッダー + タブ + パック一覧のレイアウトを模したスケルトンUI
+ */
+function OnboardingSkeleton() {
+  return (
+    <div data-testid="onboarding-skeleton" className="flex min-h-screen flex-col bg-gray-50">
+      {/* ヘッダースケルトン */}
+      <header className="border-b border-gray-100 bg-white">
+        <div className="px-6 pb-6 pt-12">
+          <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
+          <div className="mt-3 h-4 w-72 animate-pulse rounded bg-gray-200" />
+        </div>
+        {/* タブスケルトン */}
+        <div className="flex border-b border-gray-100">
+          <div className="flex-1 border-b-2 border-gray-200 px-5 py-3">
+            <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+          </div>
+          <div className="flex-1 border-b-2 border-transparent px-5 py-3">
+            <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+          </div>
+        </div>
+      </header>
+
+      {/* パック一覧スケルトン */}
+      <main className="flex-1 space-y-3 px-4 py-6 pb-28">
+        <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-200" />
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-2xl bg-white shadow-sm" />
+        ))}
+      </main>
+
+      {/* 開始ボタンスケルトン */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
+        <div className="h-14 w-full animate-pulse rounded-full bg-gray-200" />
+      </div>
+    </div>
+  );
+}
 
 /**
  * タブボタンコンポーネント
@@ -63,7 +103,7 @@ function ErrorMessage({ error, onRetry }: { error: Error; onRetry: () => void })
  */
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<SkeletonLoader />}>
+    <Suspense fallback={<OnboardingSkeleton />}>
       <OnboardingPageContent />
     </Suspense>
   );
@@ -98,7 +138,7 @@ function OnboardingPageContent() {
 
   // ローディング状態
   if (isVisitorLoading) {
-    return <SkeletonLoader />;
+    return <OnboardingSkeleton />;
   }
 
   // エラー状態
