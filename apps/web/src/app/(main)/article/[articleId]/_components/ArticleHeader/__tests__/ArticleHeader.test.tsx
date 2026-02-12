@@ -14,34 +14,20 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-// useArticleFavorite のモック
-const mockToggleFavorite = vi.fn();
-let mockIsFavorited = false;
-vi.mock("@/shared/hooks/useArticleFavorite", () => ({
-  useArticleFavorite: () => ({
-    isFavorited: mockIsFavorited,
-    isProcessing: false,
-    toggleFavorite: mockToggleFavorite,
-    addFavorite: vi.fn(),
-    removeFavorite: vi.fn(),
-  }),
-}));
-
 describe("ArticleHeader", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsFavorited = false;
   });
 
   it("戻るボタンが表示される", () => {
-    render(<ArticleHeader articleId="scp-173" />);
+    render(<ArticleHeader />);
 
     const backButton = screen.getByLabelText("戻る");
     expect(backButton).toBeInTheDocument();
   });
 
   it("戻るボタンをクリックするとrouter.back()が呼ばれる", () => {
-    render(<ArticleHeader articleId="scp-173" />);
+    render(<ArticleHeader />);
 
     const backButton = screen.getByLabelText("戻る");
     fireEvent.click(backButton);
@@ -49,33 +35,18 @@ describe("ArticleHeader", () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
-  it("お気に入りボタンが表示される", () => {
-    render(<ArticleHeader articleId="scp-173" />);
-
-    const favButton = screen.getByLabelText("お気に入りに追加");
-    expect(favButton).toBeInTheDocument();
-  });
-
-  it("お気に入りボタンをクリックするとtoggleFavoriteが呼ばれる", () => {
-    render(<ArticleHeader articleId="scp-173" />);
-
-    const favButton = screen.getByLabelText("お気に入りに追加");
-    fireEvent.click(favButton);
-
-    expect(mockToggleFavorite).toHaveBeenCalledTimes(1);
-  });
-
-  it("お気に入り状態のときaria-labelが「お気に入りから削除」になる", () => {
-    mockIsFavorited = true;
-    render(<ArticleHeader articleId="scp-173" />);
-
-    const favButton = screen.getByLabelText("お気に入りから削除");
-    expect(favButton).toBeInTheDocument();
-  });
-
   it("data-testid='article-header'が設定されている", () => {
-    render(<ArticleHeader articleId="scp-173" />);
+    render(<ArticleHeader />);
 
     expect(screen.getByTestId("article-header")).toBeInTheDocument();
+  });
+
+  it("グラスモーフィズムのスタイルが適用されている", () => {
+    render(<ArticleHeader />);
+
+    const header = screen.getByTestId("article-header");
+    expect(header).toHaveClass("bg-white/70");
+    expect(header).toHaveClass("backdrop-blur-glass");
+    expect(header).toHaveClass("shadow-sm");
   });
 });

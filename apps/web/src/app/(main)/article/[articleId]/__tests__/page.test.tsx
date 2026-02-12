@@ -23,9 +23,14 @@ vi.mock("@/app/(main)/recommend/_components/ArticleWebView", () => ({
 
 // ArticleHeader のモック
 vi.mock("../_components/ArticleHeader", () => ({
-  ArticleHeader: ({ articleId }: { articleId: string }) => (
-    <div data-testid="article-header" data-article-id={articleId}>
-      ArticleHeader Mock
+  ArticleHeader: () => <div data-testid="article-header">ArticleHeader Mock</div>,
+}));
+
+// FloatingFavoriteButton のモック
+vi.mock("../_components/FloatingFavoriteButton", () => ({
+  FloatingFavoriteButton: ({ articleId }: { articleId: string }) => (
+    <div data-testid="floating-favorite-button" data-article-id={articleId}>
+      FloatingFavoriteButton Mock
     </div>
   ),
 }));
@@ -43,12 +48,17 @@ describe("ArticlePage", () => {
     expect(webView).toHaveAttribute("data-article-id", "scp-173");
   });
 
-  it("ArticleHeaderにarticleIdが渡される", () => {
-    mockArticleId = "scp-682";
+  it("ArticleHeaderが表示される", () => {
     render(<ArticlePage />);
 
-    const header = screen.getByTestId("article-header");
-    expect(header).toHaveAttribute("data-article-id", "scp-682");
+    expect(screen.getByTestId("article-header")).toBeInTheDocument();
+  });
+
+  it("FloatingFavoriteButtonにarticleIdが渡される", () => {
+    render(<ArticlePage />);
+
+    const fab = screen.getByTestId("floating-favorite-button");
+    expect(fab).toHaveAttribute("data-article-id", "scp-173");
   });
 
   it("data-testid='article-page'が設定されている", () => {

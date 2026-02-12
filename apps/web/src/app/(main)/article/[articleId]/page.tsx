@@ -8,6 +8,7 @@
 import { useParams } from "next/navigation";
 import { ArticleWebView } from "@/app/(main)/recommend/_components/ArticleWebView";
 import { ArticleHeader } from "./_components/ArticleHeader";
+import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
 
 const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
 
@@ -16,8 +17,9 @@ const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
  *
  * - お気に入り一覧からの遷移先
  * - articleId（例: scp-173）からSCP Wiki URLを構築
- * - ArticleWebView（iframe + wiki-proxy）で記事を表示
- * - ArticleHeaderで戻る・お気に入りトグルを提供
+ * - ArticleWebView（iframe + wiki-proxy）で記事をprinter--friendlyモードで表示
+ * - ArticleHeaderで戻るボタンを提供
+ * - FloatingFavoriteButtonで右下にお気に入りトグルを配置
  */
 export default function ArticlePage() {
   const { articleId } = useParams<{ articleId: string }>();
@@ -25,8 +27,9 @@ export default function ArticlePage() {
 
   return (
     <div className="relative h-screen overflow-hidden" data-testid="article-page">
-      <ArticleHeader articleId={articleId} />
+      <ArticleHeader />
       <ArticleWebView url={articleUrl} articleId={articleId} />
+      <FloatingFavoriteButton articleId={articleId} />
     </div>
   );
 }
