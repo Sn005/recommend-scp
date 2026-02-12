@@ -30,21 +30,6 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
     }
   }, [isLoading, isOnboarded, error, router]);
 
-  // ローディング中はローディング表示
-  if (isLoading) {
-    return (
-      <div
-        data-testid="main-loading-indicator"
-        className="flex min-h-screen flex-col items-center justify-center"
-        role="status"
-        aria-label="読み込み中"
-      >
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-600 border-t-white" />
-        <p className="mt-4 text-gray-300">読み込み中...</p>
-      </div>
-    );
-  }
-
   // エラー時はエラー表示（オンボーディングに進めないため）
   if (error) {
     return (
@@ -66,11 +51,10 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
     );
   }
 
-  // オンボーディング未完了の場合は何も表示しない（リダイレクト中）
-  if (!isOnboarded) {
+  // ローディング完了後、オンボーディング未完了の場合は何も表示しない（リダイレクト中）
+  if (!isLoading && !isOnboarded) {
     return null;
   }
 
-  // オンボーディング完了済みの場合はchildrenを表示
   return <>{children}</>;
 }

@@ -22,7 +22,7 @@ import { FloatingUI } from "./_components/FloatingUI";
 import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
-import { SkeletonLoader } from "./_components/SkeletonLoader";
+import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
 
 /**
  * 推薦記事閲覧ページ

@@ -1,6 +1,6 @@
 /**
  * @file SkeletonLoader コンポーネント
- * @description ローディング中のスケルトンUI
+ * @description ローディング中のスケルトンUI（推薦画面の記事読み込み待ち表示）
  * @see specs/006-frontend/006-02-article-reader/006-02-01.md AC-1
  */
 

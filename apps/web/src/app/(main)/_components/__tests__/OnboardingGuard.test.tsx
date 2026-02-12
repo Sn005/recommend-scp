@@ -84,7 +84,7 @@ describe("OnboardingGuard", () => {
   });
 
   describe("ローディング状態", () => {
-    it("visitorIdの初期化中はローディングインジケーターが表示される", () => {
+    it("ローディング中はchildrenがそのまま表示される", () => {
       mockUseVisitorIdResult.isLoading = true;
       mockUseVisitorIdResult.visitorId = null;
       mockUseVisitorIdResult.isOnboarded = false;
@@ -95,8 +95,8 @@ describe("OnboardingGuard", () => {
         </OnboardingGuard>
       );
 
-      expect(screen.getByTestId("main-loading-indicator")).toBeInTheDocument();
-      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      expect(screen.queryByTestId("main-loading-indicator")).not.toBeInTheDocument();
     });
 
     it("ローディング中はリダイレクトしない", () => {
@@ -110,6 +110,31 @@ describe("OnboardingGuard", () => {
       );
 
       expect(mockRouterReplace).not.toHaveBeenCalled();
+    });
+
+    it("ローディングから未完了への状態遷移時、リダイレクトされる", async () => {
+      mockUseVisitorIdResult.isLoading = true;
+      mockUseVisitorIdResult.isOnboarded = false;
+
+      const { rerender } = render(
+        <OnboardingGuard>
+          <div>Protected Content</div>
+        </OnboardingGuard>
+      );
+
+      expect(mockRouterReplace).not.toHaveBeenCalled();
+
+      // ローディング完了 → 未オンボーディング
+      mockUseVisitorIdResult.isLoading = false;
+      rerender(
+        <OnboardingGuard>
+          <div>Protected Content</div>
+        </OnboardingGuard>
+      );
+
+      await waitFor(() => {
+        expect(mockRouterReplace).toHaveBeenCalledWith("/onboarding");
+      });
     });
   });
 
