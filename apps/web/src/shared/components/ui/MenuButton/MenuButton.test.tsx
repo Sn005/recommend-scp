@@ -28,13 +28,13 @@ describe("MenuButton", () => {
       expect(svg).toHaveAttribute("role", "img");
     });
 
-    it("fixed配置で左上に固定される", () => {
+    it("fixed配置で右上に固定される", () => {
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
       expect(button).toHaveClass("fixed");
       expect(button).toHaveClass("top-4");
-      expect(button).toHaveClass("left-4");
+      expect(button).toHaveClass("right-4");
     });
 
     it("z-indexがナビゲーションレベル（z-nav）に設定される", () => {

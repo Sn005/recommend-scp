@@ -62,7 +62,7 @@ const INJECTED_STYLE = [
   // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
   "#container,#main-content{margin:0;padding:0;max-width:none}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
-  "#page-title{font-size:24px;font-weight:bold}",
+  "#page-title{font-size:24px;font-weight:bold;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ
   "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8;-webkit-text-size-adjust:100%}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
