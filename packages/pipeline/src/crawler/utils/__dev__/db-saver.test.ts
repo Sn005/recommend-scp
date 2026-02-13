@@ -36,7 +36,7 @@ describe("DbSaver", () => {
       expect(mockClient.from).toHaveBeenCalledWith("scp_articles");
       expect(mockClient.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          article_id: "SCP-173",
+          article_id: "scp-173",
           title: "The Sculpture - The Original",
           content: "Item #: SCP-173 Object Class: Euclid...",
           rating: 7500,
@@ -44,6 +44,25 @@ describe("DbSaver", () => {
         }),
         expect.any(Object)
       );
+    });
+
+    it("大文字のarticle_idが小文字に正規化されて保存される", async () => {
+      const mockClient = createMockSupabaseClient();
+      const saver = new DbSaver(mockClient, { lang: "en" });
+      const upperCaseArticle: ArticleContent = {
+        id: "SCP-2000",
+        title: "Deus Ex Machina",
+        content: "Item #: SCP-2000...",
+        rating: 500,
+        tags: ["thaumiel"],
+        createdAt: new Date("2010-01-01T00:00:00Z"),
+        updatedAt: new Date("2010-01-01T00:00:00Z"),
+      };
+
+      await saver.saveArticle(upperCaseArticle);
+
+      const call = mockClient.upsert.mock.calls[0][0] as { article_id: string };
+      expect(call.article_id).toBe("scp-2000");
     });
 
     it("embedding_statusがpendingで保存される", async () => {

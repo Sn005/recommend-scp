@@ -102,7 +102,7 @@ export class ArticlesRepository {
     const response = (await this.supabase
       .from("scp_articles")
       .select("id, title, url, tags, rating")
-      .eq("id", id)
+      .eq("id", id.toLowerCase())
       .single()) as unknown as SupabaseResponse<ArticleDetail>;
 
     // PGRST116: 行が見つからない場合のエラーコード

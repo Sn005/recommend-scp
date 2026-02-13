@@ -414,6 +414,62 @@ describe("FavoritesRepository", () => {
     });
   });
 
+  describe("article_id小文字正規化", () => {
+    it("大文字のarticle_idでも小文字に正規化してクエリされる（add）", async () => {
+      // Arrange: 既存チェック → 存在しない → INSERT
+      const mockSelectEq2 = vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      });
+      const mockSelectEq1 = vi.fn().mockReturnValue({
+        eq: mockSelectEq2,
+      });
+      const mockInsertSingle = vi.fn().mockResolvedValue({
+        data: {
+          id: "fav-uuid-new",
+          article_id: "scp-173",
+          added_at: "2025-01-20T10:00:00Z",
+        },
+        error: null,
+      });
+
+      mockFrom
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnValue({
+            eq: mockSelectEq1,
+          }),
+        })
+        .mockReturnValueOnce({
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: mockInsertSingle,
+            }),
+          }),
+        });
+
+      // Act: 大文字で呼び出し
+      await repository.add("visitor-1", "SCP-173");
+
+      // Assert: 2つ目のeq呼び出し（article_id）が小文字になっている
+      expect(mockSelectEq2).toHaveBeenCalledWith("article_id", "scp-173");
+    });
+
+    it("大文字のarticle_idでも小文字に正規化してクエリされる（remove）", async () => {
+      const mockEq2 = vi.fn().mockResolvedValue({ count: 1, error: null });
+      const mockEq1 = vi.fn().mockReturnValue({
+        eq: mockEq2,
+      });
+      mockFrom.mockReturnValue({
+        delete: vi.fn().mockReturnValue({
+          eq: mockEq1,
+        }),
+      });
+
+      await repository.remove("visitor-1", "SCP-173");
+
+      expect(mockEq2).toHaveBeenCalledWith("article_id", "scp-173");
+    });
+  });
+
   describe("remove", () => {
     it("お気に入りを削除できる（true返却）", async () => {
       const queryMock = createDeleteQueryMock(1);

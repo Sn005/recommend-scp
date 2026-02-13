@@ -85,7 +85,7 @@ export class FavoritesRepository {
       .from("favorites")
       .delete({ count: "exact" })
       .eq("visitor_id", visitorId)
-      .eq("article_id", articleId);
+      .eq("article_id", articleId.toLowerCase());
 
     if (error) throw error;
 
@@ -105,7 +105,7 @@ export class FavoritesRepository {
       .from("favorites")
       .select("id, article_id, added_at")
       .eq("visitor_id", visitorId)
-      .eq("article_id", articleId)
+      .eq("article_id", articleId.toLowerCase())
       .maybeSingle();
 
     if (selectError) throw selectError;
@@ -122,7 +122,7 @@ export class FavoritesRepository {
     // 新規INSERT
     const { data, error } = await this.supabase
       .from("favorites")
-      .insert({ visitor_id: visitorId, article_id: articleId })
+      .insert({ visitor_id: visitorId, article_id: articleId.toLowerCase() })
       .select("id, article_id, added_at")
       .single();
 
