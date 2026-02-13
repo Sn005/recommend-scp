@@ -72,7 +72,7 @@ describe("HistoryCard", () => {
     const excerptElement = screen.getByText(
       "アイテム番号: SCP-173 オブジェクトクラス: Euclid 特別収容プロ"
     );
-    expect(excerptElement).toHaveClass("text-muted-foreground");
+    expect(excerptElement).toHaveClass("text-gray-400");
   });
 
   it("excerptが1行に収まるよう省略される（AC-4）", () => {
@@ -128,7 +128,7 @@ describe("HistoryCard", () => {
     render(<HistoryCard entry={mockEntry} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/recommend/scp-173");
+    expect(link).toHaveAttribute("href", "/article/scp-173");
   });
 
   it("SCP番号が正しくエンコードされる", () => {
@@ -140,7 +140,7 @@ describe("HistoryCard", () => {
     render(<HistoryCard entry={entryWithSpecialChars} />);
 
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/recommend/SCP-173-JP");
+    expect(link).toHaveAttribute("href", "/article/SCP-173-JP");
   });
 
   it("タップフィードバックのスタイルが適用されている（AC-2）", () => {
