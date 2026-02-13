@@ -254,11 +254,16 @@ function extractProxyPath(requestPath: string): string {
  * HTMLの場合はURL書き換えを行い、CSS/JS/画像等はそのままパススルーする。
  */
 export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
-  const path = extractProxyPath(c.req.path);
+  const rawPath = extractProxyPath(c.req.path);
 
-  if (!path) {
+  if (!rawPath) {
     return c.json({ error: "path is required" }, 400);
   }
+
+  // Wikidotのprinter--friendlyはスラッグが小文字でないと正常に動作しない。
+  // DBに大文字で格納されたarticle_id（例: "SCP-2000"）経由のリクエストに対応するため、
+  // パスを小文字に正規化する。
+  const path = rawPath.toLowerCase();
 
   // printer--friendly: サイドバー・ナビ・広告を除去して記事本文のみ取得
   const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/printer--friendly/${path}`;

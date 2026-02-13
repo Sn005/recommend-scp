@@ -486,6 +486,57 @@ describe("GET /wiki-proxy/*", () => {
     });
   });
 
+  describe("パスの大文字小文字正規化", () => {
+    it("大文字のarticle IDが小文字に正規化されてfetchされる", async () => {
+      // Arrange: お気に入り経由で大文字の "SCP-2000" が渡されるケース
+      const html = `<html><head></head><body><div id="page-content">SCP-2000</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/SCP-2000");
+
+      // Assert: printer--friendly URLが小文字で構築される
+      expect(res.status).toBe(200);
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://scp-jp.wikidot.com/printer--friendly/scp-2000"
+      );
+    });
+
+    it("混在ケース（Scp-173）も小文字に正規化される", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      await app.request("/wiki-proxy/Scp-173");
+
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://scp-jp.wikidot.com/printer--friendly/scp-173"
+      );
+    });
+
+    it("既に小文字のパスはそのままfetchされる", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      await app.request("/wiki-proxy/scp-173");
+
+      // Assert
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://scp-jp.wikidot.com/printer--friendly/scp-173"
+      );
+    });
+  });
+
   describe("エラーハンドリング", () => {
     it("パスが指定されない場合、400エラーを返す", async () => {
       // Arrange
