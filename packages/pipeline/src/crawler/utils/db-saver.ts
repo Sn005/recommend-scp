@@ -70,7 +70,7 @@ export class DbSaver {
     }
 
     const data: ArticleForDb = {
-      article_id: article.id,
+      article_id: article.id.toLowerCase(),
       lang: this.lang,
       title: article.title,
       content: article.content,
