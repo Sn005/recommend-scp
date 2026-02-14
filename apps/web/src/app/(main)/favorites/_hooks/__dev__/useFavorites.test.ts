@@ -62,6 +62,7 @@ describe("useFavorites", () => {
       isOnboarded: true,
       error: null,
       refresh: vi.fn(),
+      markOnboarded: vi.fn(),
     });
 
     // APIモックをリセット
@@ -108,6 +109,7 @@ describe("useFavorites", () => {
         isOnboarded: false,
         error: null,
         refresh: vi.fn(),
+        markOnboarded: vi.fn(),
       });
 
       const { result } = renderHook(() => useFavorites());

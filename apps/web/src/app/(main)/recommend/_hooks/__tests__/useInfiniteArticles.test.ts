@@ -77,6 +77,7 @@ describe("useInfiniteArticles", () => {
       isOnboarded: true,
       error: null,
       refresh: vi.fn(),
+      markOnboarded: vi.fn(),
     });
 
     // APIモックをリセット
@@ -207,6 +208,7 @@ describe("useInfiniteArticles", () => {
         isOnboarded: false,
         error: null,
         refresh: vi.fn(),
+        markOnboarded: vi.fn(),
       });
 
       const { result } = renderHook(() => useInfiniteArticles());

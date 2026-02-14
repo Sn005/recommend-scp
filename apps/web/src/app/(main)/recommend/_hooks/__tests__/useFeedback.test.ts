@@ -63,6 +63,7 @@ describe("useFeedback", () => {
       isOnboarded: true,
       error: null,
       refresh: vi.fn(),
+      markOnboarded: vi.fn(),
     });
 
     // APIモックをリセット
@@ -579,6 +580,7 @@ describe("useFeedback", () => {
         isOnboarded: false,
         error: null,
         refresh: vi.fn(),
+        markOnboarded: vi.fn(),
       });
 
       const { result } = renderHook(() => useFeedback());
