@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { api } from "@/shared/lib/api-client";
-import { ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
+import { useVisitorId } from "@/shared/hooks/useVisitorId";
 
 export interface ScpNumberInputProps {
   visitorId: string;
@@ -46,6 +46,7 @@ function normalizeScpNumber(input: string): string | null {
  * 5つの入力フィールドでSCP番号を入力
  */
 export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
+  const { markOnboarded } = useVisitorId();
   const [inputs, setInputs] = useState<string[]>(Array(MAX_INPUTS).fill(""));
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<Error | null>(null);
@@ -92,8 +93,8 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
         throw new Error(errorData.title ?? "エラーが発生しました");
       }
 
-      // オンボーディング完了フラグをlocalStorageに保存
-      localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
+      // オンボーディング完了をコンテキスト（+ localStorage）に反映
+      markOnboarded();
 
       onComplete();
     } catch (e) {

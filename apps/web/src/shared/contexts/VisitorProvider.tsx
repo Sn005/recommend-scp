@@ -21,6 +21,8 @@ export interface VisitorContextValue {
   error: Error | null;
   /** visitorIdをリフレッシュ（デバッグ用） */
   refresh: () => Promise<void>;
+  /** オンボーディング完了をコンテキストに反映 */
+  markOnboarded: () => void;
 }
 
 /** API レスポンスの型 */
@@ -107,12 +109,18 @@ export function VisitorProvider({ children }: VisitorProviderProps) {
     };
   }, [initialize]);
 
+  const markOnboarded = useCallback(() => {
+    localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
+    setIsOnboarded(true);
+  }, []);
+
   const value: VisitorContextValue = {
     visitorId,
     isLoading,
     isOnboarded,
     error,
     refresh: initialize,
+    markOnboarded,
   };
 
   return <VisitorContext.Provider value={value}>{children}</VisitorContext.Provider>;

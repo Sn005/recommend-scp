@@ -19,6 +19,7 @@ vi.mock("@/shared/hooks/useVisitorId", () => ({
     isOnboarded: true,
     error: null,
     refresh: vi.fn(),
+    markOnboarded: vi.fn(),
   }),
 }));
 

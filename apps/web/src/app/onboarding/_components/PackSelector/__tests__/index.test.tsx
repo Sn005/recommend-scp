@@ -25,6 +25,18 @@ vi.mock("@/shared/lib/api-client", () => ({
   },
 }));
 
+const mockMarkOnboarded = vi.fn();
+vi.mock("@/shared/hooks/useVisitorId", () => ({
+  useVisitorId: () => ({
+    visitorId: "test-visitor-id",
+    isLoading: false,
+    isOnboarded: false,
+    error: null,
+    refresh: vi.fn(),
+    markOnboarded: mockMarkOnboarded,
+  }),
+}));
+
 // コンポーネントをインポート（モックの後）
 import { PackSelector } from "../index";
 

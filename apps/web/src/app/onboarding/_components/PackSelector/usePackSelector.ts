@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { api } from "@/shared/lib/api-client";
-import { ONBOARDING_COMPLETED_KEY } from "@/shared/hooks/useVisitorId";
+import { useVisitorId } from "@/shared/hooks/useVisitorId";
 
 export interface StarterPackInfo {
   type: "classic" | "horror" | "scifi" | "heartwarming" | "mystery" | "jp";
@@ -24,6 +24,7 @@ interface UsePackSelectorResult {
 }
 
 export function usePackSelector(visitorId: string): UsePackSelectorResult {
+  const { markOnboarded } = useVisitorId();
   const [packs, setPacks] = useState<StarterPackInfo[]>([]);
   const [isLoadingPacks, setIsLoadingPacks] = useState(true);
   const [packsError, setPacksError] = useState<Error | null>(null);
@@ -100,8 +101,8 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
         throw new Error(errorData.title ?? "選択に失敗しました");
       }
 
-      // オンボーディング完了フラグをlocalStorageに保存
-      localStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
+      // オンボーディング完了をコンテキスト（+ localStorage）に反映
+      markOnboarded();
     } catch (e) {
       const error = e instanceof Error ? e : new Error("選択に失敗しました");
       setConfirmError(error);
@@ -109,7 +110,7 @@ export function usePackSelector(visitorId: string): UsePackSelectorResult {
     } finally {
       setIsConfirming(false);
     }
-  }, [selectedPacks, visitorId]);
+  }, [selectedPacks, visitorId, markOnboarded]);
 
   const retryLoadPacks = useCallback(() => {
     void loadPacks();
