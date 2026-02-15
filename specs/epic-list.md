@@ -2,19 +2,20 @@
 
 このプロジェクトで管理しているEPICの一覧です。
 
-| ID                                                        | 名前                         | 概要                                                                    | ステータス  |
-| --------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------- | ----------- |
-| [001](./001-poc/001-poc.md)                               | 技術検証（PoC）              | SCP推薦システムの技術的実現可能性を検証                                 | completed   |
-| [002](./002-quality/002-quality.md)                       | 開発環境品質基盤             | ESLint/Prettier/lefthook/CI環境を整備                                   | completed   |
-| [003](./003-data-pipeline/003-data-pipeline.md)           | データパイプライン本番化     | 全記事クロール・差分更新・タグ辞書DB管理                                | completed   |
-| [004](./004-recommend/004-recommend.md)                   | 推薦ロジック実装             | ハイブリッド推薦・80/20セレンディピティ・オンボーディング               | completed   |
-| [005](./005-backend-api/005-backend-api.md)               | バックエンドAPI              | 検索・推薦・フィードバック収集のRESTエンドポイント                      | completed   |
-| [006](./006-frontend/006-frontend.md)                     | フロントエンドUI             | オンボーディング・記事閲覧・お気に入り管理                              | planned     |
-| [007](./007-infra/007-infra.md)                           | インフラ・デプロイ           | 本番環境構築・CI/CD・シークレット管理                                   | in_progress |
-| [008](./008-observability/008-observability.md)           | 運用・監視                   | ログ収集・エラー監視・パフォーマンスダッシュボード                      | planned     |
-| [009](./009-security/009-security.md)                     | セキュリティ強化             | RLS拡充・バリデーション強化・セキュリティヘッダー・Supabaseアラート対応 | planned     |
-| [010](./010-ja-article-display/010-ja-article-display.md) | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                                | completed   |
-| [011](./011-qa-testing/011-qa-testing.md)                 | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成                             | pending     |
+| ID                                                                  | 名前                         | 概要                                                                    | ステータス  |
+| ------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------- | ----------- |
+| [001](./001-poc/001-poc.md)                                         | 技術検証（PoC）              | SCP推薦システムの技術的実現可能性を検証                                 | completed   |
+| [002](./002-quality/002-quality.md)                                 | 開発環境品質基盤             | ESLint/Prettier/lefthook/CI環境を整備                                   | completed   |
+| [003](./003-data-pipeline/003-data-pipeline.md)                     | データパイプライン本番化     | 全記事クロール・差分更新・タグ辞書DB管理                                | completed   |
+| [004](./004-recommend/004-recommend.md)                             | 推薦ロジック実装             | ハイブリッド推薦・80/20セレンディピティ・オンボーディング               | completed   |
+| [005](./005-backend-api/005-backend-api.md)                         | バックエンドAPI              | 検索・推薦・フィードバック収集のRESTエンドポイント                      | completed   |
+| [006](./006-frontend/006-frontend.md)                               | フロントエンドUI             | オンボーディング・記事閲覧・お気に入り管理                              | planned     |
+| [007](./007-infra/007-infra.md)                                     | インフラ・デプロイ           | 本番環境構築・CI/CD・シークレット管理                                   | in_progress |
+| [008](./008-observability/008-observability.md)                     | 運用・監視                   | ログ収集・エラー監視・パフォーマンスダッシュボード                      | planned     |
+| [009](./009-security/009-security.md)                               | セキュリティ強化             | RLS拡充・バリデーション強化・セキュリティヘッダー・Supabaseアラート対応 | planned     |
+| [010](./010-ja-article-display/010-ja-article-display.md)           | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                                | completed   |
+| [011](./011-qa-testing/011-qa-testing.md)                           | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成                             | pending     |
+| [012](./012-slow-query-optimization/012-slow-query-optimization.md) | スロークエリ最適化           | Supabaseスロークエリの分析・改善・Why記録                               | pending     |
 
 ## 優先順位
 
@@ -33,3 +34,4 @@
 - **007 インフラ・デプロイ**: 公開するための基盤
 - **008 運用・監視**: 安定運用のため
 - **009 セキュリティ強化**: 007と並行して進行可能
+- **012 スロークエリ最適化**: アドホック対応、他EPICと並行して随時実施
