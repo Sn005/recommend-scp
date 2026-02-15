@@ -74,6 +74,31 @@ export function useArticleFavorite({
     }
   }, [articleId, initialFavorited]);
 
+  // マウント時にAPIからお気に入り状態を取得
+  useEffect(() => {
+    if (!articleId || !visitorId) return;
+    // キャッシュに値がある場合はAPIフェッチ不要
+    if (favoriteCache.has(articleId)) return;
+
+    const fetchStatus = async () => {
+      try {
+        const res = await api.favorites.$get({ query: { visitorId } });
+        if (!res.ok) return;
+        const data: { favorites: { articleId: string }[]; total: number } = await res.json();
+        const found = data.favorites.some((f) => f.articleId === articleId);
+        // ユーザー操作（add/remove）によりキャッシュが既に更新されている場合は上書きしない
+        if (!favoriteCache.has(articleId)) {
+          favoriteCache.set(articleId, found);
+          setIsFavorited(found);
+        }
+      } catch {
+        // エラー時はフォールバック（現在の状態を維持）
+      }
+    };
+
+    void fetchStatus();
+  }, [articleId, visitorId]);
+
   // お気に入り追加
   const addFavorite = useCallback(async () => {
     // 連打防止: refで同期的にチェック

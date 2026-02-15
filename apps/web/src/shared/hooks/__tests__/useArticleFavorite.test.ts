@@ -10,9 +10,12 @@ import { useArticleFavorite, favoriteCache } from "../useArticleFavorite";
 // APIクライアントのモック
 const mockFavoritesPost = vi.fn();
 const mockFavoritesDelete = vi.fn();
+const mockFavoritesGet = vi.fn();
 vi.mock("@/shared/lib/api-client", () => ({
   api: {
     favorites: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- テスト用モック
+      $get: (...args: unknown[]) => mockFavoritesGet(...args),
       ":articleId": {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- テスト用モック
         $post: (...args: unknown[]) => mockFavoritesPost(...args),
@@ -43,6 +46,10 @@ describe("useArticleFavorite", () => {
     // 成功レスポンスをデフォルトに
     mockFavoritesPost.mockResolvedValue({ ok: true });
     mockFavoritesDelete.mockResolvedValue({ ok: true });
+    // GET /favorites のデフォルト: 解決しないPromise（他テストへの干渉を防止）
+    // APIフェッチテストでは個別にmockResolvedValueを設定する
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- 意図的に解決しないPromise
+    mockFavoritesGet.mockReturnValue(new Promise(() => {}));
   });
 
   afterEach(() => {
@@ -665,6 +672,106 @@ describe("useArticleFavorite", () => {
 
       // Assert: キャッシュからtrueが復元される
       expect(result.current.isFavorited).toBe(true);
+    });
+  });
+
+  describe("APIからお気に入り状態を取得", () => {
+    it("キャッシュが空の場合、GET /favoritesからお気に入り状態を取得する", async () => {
+      // Arrange: APIレスポンスにscp-173が含まれる
+      mockFavoritesGet.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            favorites: [{ articleId: "scp-173" }, { articleId: "scp-096" }],
+            total: 2,
+          }),
+      });
+
+      // Act
+      const { result } = renderHook(() =>
+        useArticleFavorite({ articleId: "scp-173", initialFavorited: false })
+      );
+
+      // Assert: API取得後にお気に入り状態がtrueに更新される
+      await vi.waitFor(() => {
+        expect(result.current.isFavorited).toBe(true);
+      });
+      expect(favoriteCache.get("scp-173")).toBe(true);
+    });
+
+    it("APIレスポンスに対象記事がない場合、isFavoritedはfalseのまま", async () => {
+      // Arrange: APIレスポンスにscp-999は含まれない
+      mockFavoritesGet.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            favorites: [{ articleId: "scp-173" }],
+            total: 1,
+          }),
+      });
+
+      // Act
+      const { result } = renderHook(() =>
+        useArticleFavorite({ articleId: "scp-999", initialFavorited: false })
+      );
+
+      // Assert: APIフェッチ完了後にキャッシュが更新されるのを待つ
+      await vi.waitFor(() => {
+        expect(favoriteCache.has("scp-999")).toBe(true);
+      });
+      expect(result.current.isFavorited).toBe(false);
+      expect(favoriteCache.get("scp-999")).toBe(false);
+    });
+
+    it("キャッシュに値がある場合、APIフェッチをスキップする", async () => {
+      // Arrange
+      favoriteCache.set("scp-173", true);
+
+      // Act
+      renderHook(() => useArticleFavorite({ articleId: "scp-173", initialFavorited: false }));
+
+      // Assert: API呼び出しは行われない
+      // 少し待ってからチェック
+      await act(async () => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+      });
+      expect(mockFavoritesGet).not.toHaveBeenCalled();
+    });
+
+    it("visitorIdがnullの場合、APIフェッチをスキップする", async () => {
+      // Arrange
+      mockVisitorId = null;
+
+      // Act
+      renderHook(() => useArticleFavorite({ articleId: "scp-173", initialFavorited: false }));
+
+      // Assert
+      await act(async () => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+      });
+      expect(mockFavoritesGet).not.toHaveBeenCalled();
+    });
+
+    it("APIフェッチが失敗した場合、状態はフォールバック値のまま", async () => {
+      // Arrange
+      mockFavoritesGet.mockRejectedValue(new Error("Network Error"));
+
+      // Act
+      const { result } = renderHook(() =>
+        useArticleFavorite({ articleId: "scp-173", initialFavorited: false })
+      );
+
+      // Assert
+      await act(async () => {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 50);
+        });
+      });
+      expect(result.current.isFavorited).toBe(false);
     });
   });
 
