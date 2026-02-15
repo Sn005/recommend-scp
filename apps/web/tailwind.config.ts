@@ -100,6 +100,7 @@ const config: Config = {
         glass: "0 4px 24px rgba(0, 0, 0, 0.12)",
         "glass-button": "0 2px 8px rgba(0, 0, 0, 0.08)",
         drawer: "4px 0 30px rgba(0, 0, 0, 0.2)",
+        "menu-button": "0 4px 12px rgba(0, 0, 0, 0.1), 0 1px 4px rgba(0, 0, 0, 0.08)",
       },
       backdropBlur: {
         glass: "20px",
