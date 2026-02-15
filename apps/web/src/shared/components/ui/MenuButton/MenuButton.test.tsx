@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { MenuButton } from "./MenuButton";
@@ -11,6 +11,10 @@ const renderWithProvider = (ui: React.ReactNode) => {
 };
 
 describe("MenuButton", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   describe("AC-1: 常時表示", () => {
     it("メニューボタンが表示される", () => {
       renderWithProvider(<MenuButton />);
@@ -28,20 +32,20 @@ describe("MenuButton", () => {
       expect(svg).toHaveAttribute("role", "img");
     });
 
-    it("fixed配置で右上に固定される", () => {
+    it("fixed配置でz-navが設定される", () => {
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
       expect(button).toHaveClass("fixed");
-      expect(button).toHaveClass("top-4");
-      expect(button).toHaveClass("right-4");
+      expect(button).toHaveClass("z-nav");
     });
 
-    it("z-indexがナビゲーションレベル（z-nav）に設定される", () => {
+    it("inline styleでleft/topの位置が設定される", () => {
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
-      expect(button).toHaveClass("z-nav");
+      expect(button.style.left).toBeTruthy();
+      expect(button.style.top).toBeTruthy();
     });
   });
 
@@ -67,11 +71,11 @@ describe("MenuButton", () => {
       expect(button).toHaveClass("rounded-full");
     });
 
-    it("シャドウ（shadow-sm）が適用される", () => {
+    it("強化シャドウ（shadow-menu-button）が適用される", () => {
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
-      expect(button).toHaveClass("shadow-sm");
+      expect(button).toHaveClass("shadow-menu-button");
     });
 
     it("サイズが40x40px（w-10 h-10）に設定される", () => {
@@ -193,6 +197,49 @@ describe("MenuButton", () => {
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
       expect(button).toHaveClass("active:scale-95");
+    });
+  });
+
+  describe("ドラッグ機能", () => {
+    it("touchAction: noneが設定されている", () => {
+      renderWithProvider(<MenuButton />);
+
+      const button = screen.getByRole("button", { name: /メニューを開く/ });
+      expect(button.style.touchAction).toBe("none");
+    });
+
+    it("select-noneクラスが適用されている", () => {
+      renderWithProvider(<MenuButton />);
+
+      const button = screen.getByRole("button", { name: /メニューを開く/ });
+      expect(button).toHaveClass("select-none");
+    });
+
+    it("ドラッグ操作後はドロワーが開かない", () => {
+      renderWithProvider(
+        <>
+          <MenuButton />
+          <Drawer />
+        </>
+      );
+
+      const button = screen.getByRole("button", { name: /メニューを開く/ });
+
+      // pointerdown → pointermove(閾値超え) → pointerup のシミュレーション
+      fireEvent.pointerDown(button, { clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(button, { clientX: 120, clientY: 120 });
+      fireEvent.pointerUp(button);
+      fireEvent.click(button);
+
+      // ドラッグ後はドロワーが開かない
+      expect(screen.queryByTestId("drawer")).not.toBeInTheDocument();
+    });
+
+    it("カーソルがgrabに設定されている", () => {
+      renderWithProvider(<MenuButton />);
+
+      const button = screen.getByRole("button", { name: /メニューを開く/ });
+      expect(button.style.cursor).toBe("grab");
     });
   });
 
