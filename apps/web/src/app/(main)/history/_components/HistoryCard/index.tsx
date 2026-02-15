@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { formatRelativeTime } from "@/shared/lib/date";
 import { ObjectClassBadge } from "@/shared/components/ui/ObjectClassBadge";
+import { Icon } from "@/shared/components/ui/Icon";
 import type { HistoryEntry } from "../../_types";
 
 /**
@@ -56,29 +57,34 @@ export function HistoryCard({ entry }: HistoryCardProps) {
 
   return (
     <Link
-      href={`/recommend/${encodeURIComponent(entry.scpNumber)}`}
-      className="block p-4 border-b transition-transform active:scale-[0.98]"
+      href={`/article/${encodeURIComponent(entry.scpNumber)}`}
+      className="block bg-white rounded-xl shadow-sm p-4 transition-transform active:scale-[0.98]"
       data-testid="history-card"
     >
-      <div className="flex justify-between items-start">
+      <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold">{entry.scpNumber}</h3>
-          <p className="text-sm truncate">{entry.title}</p>
+          <div className="flex items-center gap-2 mb-1">
+            {/* objectClassがある場合のみバッジを表示 */}
+            {entry.objectClass && badgeVariant && (
+              <ObjectClassBadge variant={badgeVariant} className="flex-shrink-0">
+                {entry.objectClass}
+              </ObjectClassBadge>
+            )}
+          </div>
+          <h3 className="font-semibold text-gray-800">{entry.scpNumber}</h3>
+          <p className="text-sm text-gray-500 truncate">{entry.title}</p>
           {/* 空の excerpt は表示しない */}
           {entry.excerpt && (
-            <p data-testid="excerpt" className="text-xs text-muted-foreground truncate">
+            <p data-testid="excerpt" className="text-xs text-gray-400 truncate mt-1">
               {entry.excerpt}
             </p>
           )}
+          <p className="text-xs text-gray-400 mt-1">{formatRelativeTime(entry.viewedAt)}</p>
         </div>
-        {/* objectClassがある場合のみバッジを表示 */}
-        {entry.objectClass && badgeVariant && (
-          <ObjectClassBadge variant={badgeVariant} className="ml-2 flex-shrink-0">
-            {entry.objectClass}
-          </ObjectClassBadge>
-        )}
+
+        {/* 右矢印アイコン */}
+        <Icon name="chevron-right" size={20} className="text-gray-300 flex-shrink-0 mt-2" />
       </div>
-      <p className="text-xs text-muted-foreground mt-1">{formatRelativeTime(entry.viewedAt)}</p>
     </Link>
   );
 }

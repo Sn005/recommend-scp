@@ -25,21 +25,19 @@ export default function HistoryPage() {
   const { history } = useHistory();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       {/* ヘッダー（AC-1, AC-5: 固定しない） */}
-      <div className="bg-background border-b p-4">
-        <h1 className="text-xl font-bold">閲覧履歴</h1>
-        <p className="text-sm text-muted-foreground">{String(history.length)}件</p>
+      <div className="p-4">
+        <h1 className="text-lg font-semibold text-gray-800">閲覧履歴</h1>
+        <p className="text-sm text-gray-400">{String(history.length)}件</p>
       </div>
 
       {/* 履歴一覧（AC-2） */}
-      <div>
+      <div className="space-y-3 px-4 pb-4">
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <p className="text-muted-foreground">まだ閲覧履歴がありません</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              記事を閲覧すると、ここに履歴が表示されます
-            </p>
+            <p className="text-gray-400">まだ閲覧履歴がありません</p>
+            <p className="text-sm text-gray-400 mt-1">記事を閲覧すると、ここに履歴が表示されます</p>
           </div>
         ) : (
           history.map((entry) => (
