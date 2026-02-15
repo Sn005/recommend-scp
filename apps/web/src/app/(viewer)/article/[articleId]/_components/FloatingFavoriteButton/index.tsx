@@ -20,13 +20,12 @@ interface FloatingFavoriteButtonProps {
  * - 画面右下に固定表示
  * - グラスモーフィズムの円形ボタン
  * - ハートアイコン + ポップアニメーション
- * - お気に入り一覧からの遷移のため initialFavorited: true
+ * - APIからお気に入り状態を動的に取得
  * - デザイントークン準拠: nav-button-size(48px), glassmorphism
  */
 export function FloatingFavoriteButton({ articleId }: FloatingFavoriteButtonProps) {
   const { isFavorited, toggleFavorite } = useArticleFavorite({
     articleId,
-    initialFavorited: true,
   });
 
   const [shouldAnimate, setShouldAnimate] = useState(false);
