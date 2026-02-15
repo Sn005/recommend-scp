@@ -13,17 +13,17 @@ Playwright環境を `apps/web/e2e/` に構築し、基本的なE2Eテストを�
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN 開発者がE2Eテストを実行する際
+- [x] WHEN 開発者がE2Eテストを実行する際
       GIVEN Playwrightがインストールされている場合
       THEN `pnpm --filter web test:e2e` でテストが実行される
       AND Chromiumブラウザでヘッドレス実行される
 
-- [ ] WHEN Playwright設定ファイルを参照する際
+- [x] WHEN Playwright設定ファイルを参照する際
       GIVEN `apps/web/e2e/playwright.config.ts` が存在する場合
       THEN baseURLが `http://localhost:3000` に設定されている
       AND テストディレクトリが `./specs` に設定されている
 
-- [ ] WHEN サンプルテストを実行する際
+- [x] WHEN サンプルテストを実行する際
       GIVEN `apps/web/e2e/specs/sample.spec.ts` が存在する場合
       THEN トップページへのアクセステストが成功する
 
@@ -83,12 +83,16 @@ export default defineConfig({
 
 ## テストケース
 
-- [ ] `pnpm --filter web test:e2e` が正常終了する
-- [ ] playwright.config.ts が正しく読み込まれる
-- [ ] sample.spec.ts が実行され、パスする
+- [x] `pnpm --filter web test:e2e` が正常終了する
+- [x] playwright.config.ts が正しく読み込まれる
+- [x] sample.spec.ts が実行され、パスする
 
 ## 実装メモ
 
 - `@playwright/test` を devDependencies に追加
 - Chromiumのみ使用（マルチブラウザは将来対応）
 - webServer設定でNext.js開発サーバーを自動起動
+
+## 実装状況
+
+- **status**: completed

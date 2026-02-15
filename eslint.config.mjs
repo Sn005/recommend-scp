@@ -84,6 +84,14 @@ export default tseslint.config(
       "n/no-process-env": "off",
     },
   },
+  // Playwright設定ではprocess.env.CI参照が必須
+  {
+    files: ["**/e2e/playwright.config.ts"],
+    rules: {
+      "n/no-process-env": "off",
+      "no-console": "off",
+    },
+  },
   {
     ignores: [
       "node_modules/",

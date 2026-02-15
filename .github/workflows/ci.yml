@@ -65,3 +65,45 @@ jobs:
             cat packages/poc/coverage/coverage-summary.json >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
           fi
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm --filter web build
+
+      - name: Run Critical E2E Tests
+        run: pnpm --filter web test:e2e --grep @critical
+
+      - name: Run Non-Critical E2E Tests
+        run: pnpm --filter web test:e2e --grep-invert @critical
+        continue-on-error: true
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/e2e/playwright-report/
+          retention-days: 7
