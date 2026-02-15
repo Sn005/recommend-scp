@@ -13,31 +13,31 @@ StepAction配列をPlaywright操作に変換し、順次実行するエンジン
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN `goto` アクションを実行する際
+- [x] WHEN `goto` アクションを実行する際
       GIVEN 有効なURLが指定されている場合
       THEN `page.goto(url)` が実行される
 
-- [ ] WHEN `click` アクションを実行する際
+- [x] WHEN `click` アクションを実行する際
       GIVEN testIdが指定されている場合
       THEN `page.getByTestId(testId).click()` が実行される
 
-- [ ] WHEN `fill` アクションを実行する際
+- [x] WHEN `fill` アクションを実行する際
       GIVEN testIdとvalueが指定されている場合
       THEN `page.getByTestId(testId).fill(value)` が実行される
 
-- [ ] WHEN `waitFor` アクションを実行する際
+- [x] WHEN `waitFor` アクションを実行する際
       GIVEN testIdが指定されている場合
       THEN `page.getByTestId(testId).waitFor()` が実行される
 
-- [ ] WHEN `assertVisible` アクションを実行する際
+- [x] WHEN `assertVisible` アクションを実行する際
       GIVEN testIdが指定されている場合
       THEN `expect(page.getByTestId(testId)).toBeVisible()` が実行される
 
-- [ ] WHEN `assertText` アクションを実行する際
+- [x] WHEN `assertText` アクションを実行する際
       GIVEN testIdとtextが指定されている場合
       THEN `expect(page.getByTestId(testId)).toHaveText(text)` が実行される
 
-- [ ] WHEN `assertUrl` アクションを実行する際
+- [x] WHEN `assertUrl` アクションを実行する際
       GIVEN patternが指定されている場合
       THEN `expect(page).toHaveURL(pattern)` が実行される
 
@@ -131,14 +131,18 @@ for (const tc of testCases) {
 
 ## テストケース
 
-- [ ] gotoアクションでページ遷移する
-- [ ] clickアクションでdata-testid要素をクリックする
-- [ ] fillアクションでテキスト入力する
-- [ ] waitForアクションで要素の表示を待つ
-- [ ] assertVisibleアクションで要素の可視性を検証する
-- [ ] assertTextアクションでテキストを検証する
-- [ ] assertUrlアクションでURLを検証する
-- [ ] 不明なアクションでエラーがスローされる
+- [x] gotoアクションでページ遷移する
+- [x] clickアクションでdata-testid要素をクリックする
+- [x] fillアクションでテキスト入力する
+- [x] waitForアクションで要素の表示を待つ
+- [x] assertVisibleアクションで要素の可視性を検証する
+- [x] assertTextアクションでテキストを検証する
+- [x] assertUrlアクションでURLを検証する
+- [x] 不明なアクションでエラーがスローされる
+
+## 実装状況
+
+- **status**: completed
 
 ## 実装メモ
 
