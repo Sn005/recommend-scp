@@ -46,6 +46,7 @@ const mockUseVisitorIdResult = {
   isOnboarded: false,
   error: null as Error | null,
   refresh: vi.fn(),
+  markOnboarded: vi.fn(),
 };
 
 vi.mock("@/shared/hooks/useVisitorId", () => ({

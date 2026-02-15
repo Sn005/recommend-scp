@@ -43,7 +43,7 @@ describe("OnboardingApiService", () => {
   // ============================================
 
   describe("getStarterPacks", () => {
-    it("6種類のスターターパックを返す", () => {
+    it("5種類のスターターパックを返す（JP除外）", () => {
       const mockVisitorsRepo = {} as unknown as VisitorsRepository;
       const mockOnboardingService = {} as unknown as OnboardingService;
 
@@ -54,7 +54,7 @@ describe("OnboardingApiService", () => {
       );
       const packs = service.getStarterPacks();
 
-      expect(packs).toHaveLength(6);
+      expect(packs).toHaveLength(5);
     });
 
     it("各パックにtype, displayName, description, primaryTagsが含まれる", () => {
