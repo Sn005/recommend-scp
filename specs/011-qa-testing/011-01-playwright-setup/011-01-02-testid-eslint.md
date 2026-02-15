@@ -13,15 +13,15 @@ data-testid属性の命名規則をESLintで検証し、一貫したセレクタ
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN コンポーネントにdata-testid属性を追加する際
+- [x] WHEN コンポーネントにdata-testid属性を追加する際
       GIVEN kebab-case形式でない場合
       THEN ESLintが警告を出す
 
-- [ ] WHEN data-testid属性を使用する際
+- [x] WHEN data-testid属性を使用する際
       GIVEN `{component}-{element}-{variant?}` パターンに従う場合
       THEN ESLintエラーが発生しない
 
-- [ ] WHERE data-testid属性
+- [x] WHERE data-testid属性
       IF 命名規則ドキュメントが存在する場合
       THE SYSTEM SHALL 命名パターンを明文化する
 
@@ -75,11 +75,16 @@ ESLintルール実装が複雑な場合、命名規則ドキュメントを作�
 
 ## テストケース
 
-- [ ] 正しい命名（kebab-case）でESLintエラーが出ない
-- [ ] 不正な命名でESLint警告/エラーが出る
-- [ ] 命名規則ドキュメントが存在する
+- [x] 正しい命名（kebab-case）でESLintエラーが出ない
+- [x] 不正な命名でESLint警告/エラーが出る
+- [x] 命名規則ドキュメントが存在する
 
 ## 実装メモ
 
-- MVP段階では命名規則ドキュメント + PRレビューでも可
-- 将来的にはカスタムESLintルールを検討
+- カスタムESLintルール `local/data-testid-naming` で自動検証を実装
+- 命名規則ドキュメント `apps/web/TESTING.md` を作成
+- 既存コードは全てkebab-case準拠済み
+
+## 実装状況
+
+- **status**: completed
