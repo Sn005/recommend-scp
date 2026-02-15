@@ -117,7 +117,7 @@ export const useDraggable = () => {
   const handlePointerUp = useCallback(() => {
     if (dragRef.current?.isDragging) {
       setPosition((prev) => {
-        savePosition(prev);
+        if (prev) savePosition(prev);
         return prev;
       });
     }
