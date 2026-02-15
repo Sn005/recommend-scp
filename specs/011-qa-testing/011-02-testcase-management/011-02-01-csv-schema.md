@@ -13,16 +13,16 @@
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN テストケースを定義する際
+- [x] WHEN テストケースを定義する際
       GIVEN CSV/TSVファイルを作成する場合
       THEN 以下のカラムが使用できる:
       `id, name, steps, expected, tags, result`
 
-- [ ] WHEN テストケースIDを付与する際
+- [x] WHEN テストケースIDを付与する際
       GIVEN 新規テストケースの場合
       THEN `TC-{epic}-{story}-{連番}` 形式で命名される
 
-- [ ] WHEN 型定義を参照する際
+- [x] WHEN 型定義を参照する際
       GIVEN `apps/web/e2e/lib/types.ts` が存在する場合
       THEN TestCase型とStepAction型が定義されている
 
@@ -78,9 +78,13 @@ TC-006-02-001,推薦カード表示,"[{""action"":""goto"",""url"":""/recommend"
 
 ## テストケース
 
-- [ ] types.ts に TestCase 型が定義されている
-- [ ] types.ts に StepAction 型が定義されている
-- [ ] サンプルCSVがスキーマに従っている
+- [x] types.ts に TestCase 型が定義されている
+- [x] types.ts に StepAction 型が定義されている
+- [x] サンプルCSVがスキーマに従っている
+
+## 実装状況
+
+- **status**: completed
 
 ## 実装メモ
 

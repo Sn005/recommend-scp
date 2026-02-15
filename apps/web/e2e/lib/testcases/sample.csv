@@ -1,0 +1,3 @@
+id,name,steps,expected,tags,result
+TC-006-01-001,オンボーディング完了フロー,"[{""action"":""goto"",""url"":""/onboarding""},{""action"":""click"",""testId"":""pack-horror""},{""action"":""click"",""testId"":""complete-button""}]",推薦画面に遷移する,critical,
+TC-006-02-001,推薦カード表示,"[{""action"":""goto"",""url"":""/recommend""},{""action"":""waitFor"",""testId"":""article-card""}]",記事カードが表示される,critical,

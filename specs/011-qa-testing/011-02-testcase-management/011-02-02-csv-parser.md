@@ -13,19 +13,19 @@ CSVファイルを読み込み、TestCase型の配列にパースする機能を
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN CSVファイルを読み込む際
+- [x] WHEN CSVファイルを読み込む際
       GIVEN 有効なCSVファイルが存在する場合
       THEN TestCase[]型の配列が返される
 
-- [ ] WHEN steps列をパースする際
+- [x] WHEN steps列をパースする際
       GIVEN JSON形式の文字列が含まれている場合
       THEN StepAction[]型にデシリアライズされる
 
-- [ ] WHEN tags列をパースする際
+- [x] WHEN tags列をパースする際
       GIVEN カンマ区切りの文字列が含まれている場合
       THEN string[]型の配列に変換される
 
-- [ ] WHEN 不正なCSVを読み込む際
+- [x] WHEN 不正なCSVを読み込む際
       GIVEN JSON形式が壊れている場合
       THEN 適切なエラーメッセージを出力する
 
@@ -91,11 +91,15 @@ function parseRow(row: Record<string, string>): TestCase {
 
 ## テストケース
 
-- [ ] 有効なCSVをパースしてTestCase[]が返る
-- [ ] steps列のJSONが正しくパースされる
-- [ ] tags列がstring[]に変換される
-- [ ] 空のtags列が空配列になる
-- [ ] 不正なJSONでエラーがスローされる
+- [x] 有効なCSVをパースしてTestCase[]が返る
+- [x] steps列のJSONが正しくパースされる
+- [x] tags列がstring[]に変換される
+- [x] 空のtags列が空配列になる
+- [x] 不正なJSONでエラーがスローされる
+
+## 実装状況
+
+- **status**: completed
 
 ## 実装メモ
 

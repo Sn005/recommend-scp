@@ -13,9 +13,13 @@ CSV/TSV形式でテストケースを管理し、Playwrightから読み込んで
 
 ## 受け入れ条件（Storyレベル）
 
-- [ ] CSV/TSVスキーマが定義されている
-- [ ] CSVファイルをパースしてTestCase型に変換できる
-- [ ] steps列のJSONをPlaywright操作として実行できる
+- [x] CSV/TSVスキーマが定義されている
+- [x] CSVファイルをパースしてTestCase型に変換できる
+- [x] steps列のJSONをPlaywright操作として実行できる
+
+## 実装状況
+
+- **status**: completed
 
 ## 関連Subtask
 
