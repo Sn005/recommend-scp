@@ -16,7 +16,7 @@ import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
  * - articleId（例: scp-173）からwiki-proxyのURLを直接構築
  * - wiki-proxyがprinter--friendlyモード + CSS注入 + URL書き換えを適用
  * - FloatingFavoriteButtonで右下にお気に入りトグルを配置
- * - ヘッダーなし（推薦画面と同じフルスクリーンレイアウト）
+ * - レイアウトでMenuButton/Drawerを配置（他ページへの導線）
  */
 export default function ArticlePage() {
   const { articleId } = useParams<{ articleId: string }>();
