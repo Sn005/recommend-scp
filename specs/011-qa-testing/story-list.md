@@ -1,11 +1,11 @@
 # EPIC-011: QAテスト基盤 - Story一覧
 
-| ID                                                                   | 名前               | 概要                                             | ステータス |
-| -------------------------------------------------------------------- | ------------------ | ------------------------------------------------ | ---------- |
-| [011-01](./011-01-playwright-setup/011-01-playwright-setup.md)       | Playwright環境構築 | Playwright導入、ESLintルール、CI統合             | completed  |
-| [011-02](./011-02-testcase-management/011-02-testcase-management.md) | テストケース管理   | CSV/TSVスキーマ、パーサー、実行エンジン          | completed  |
-| [011-03](./011-03-ai-generation/011-03-ai-generation.md)             | AIテストケース生成 | プロンプト設計、生成CLIコマンド                  | completed  |
-| [011-04](./011-04-screen-tests/011-04-screen-tests.md)               | 画面別テストケース | オンボーディング、推薦、お気に入りの正常系テスト | pending    |
+| ID                                                                   | 名前               | 概要                                                       | ステータス |
+| -------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------- | ---------- |
+| [011-01](./011-01-playwright-setup/011-01-playwright-setup.md)       | Playwright環境構築 | Playwright導入、ESLintルール、CI統合                       | completed  |
+| [011-02](./011-02-testcase-management/011-02-testcase-management.md) | テストケース管理   | CSV/TSVスキーマ、パーサー、実行エンジン                    | completed  |
+| [011-03](./011-03-ai-generation/011-03-ai-generation.md)             | AIテストケース生成 | プロンプト設計、生成CLIコマンド                            | completed  |
+| [011-04](./011-04-screen-tests/011-04-screen-tests.md)               | 画面別テストケース | オンボーディング、推薦、お気に入り、閲覧履歴の正常系テスト | completed  |
 
 ## 依存関係
 

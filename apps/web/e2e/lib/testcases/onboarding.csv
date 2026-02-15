@@ -1,0 +1,4 @@
+id,name,steps,expected,tags,result
+TC-006-01-001,オンボーディング画面表示,"[{""action"":""goto"",""url"":""/onboarding""},{""action"":""waitFor"",""testId"":""pack-selector"",""timeout"":5000},{""action"":""assertVisible"",""testId"":""pack-selector""}]",オンボーディング画面とジャンル選択UIが表示される,critical,
+TC-006-01-002,ジャンルパック選択,"[{""action"":""goto"",""url"":""/onboarding""},{""action"":""waitFor"",""testId"":""pack-selector"",""timeout"":5000},{""action"":""click"",""testId"":""pack-horror""},{""action"":""assertVisible"",""testId"":""pack-check""}]",ホラーパックが選択状態になりチェックマークが表示される,critical,
+TC-006-01-003,オンボーディング完了フロー,"[{""action"":""goto"",""url"":""/onboarding""},{""action"":""waitFor"",""testId"":""pack-selector"",""timeout"":5000},{""action"":""click"",""testId"":""pack-horror""},{""action"":""click"",""testId"":""complete-button""},{""action"":""assertUrl"",""pattern"":""/recommend""}]",推薦画面に遷移する,critical,

@@ -13,17 +13,17 @@
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] WHEN オンボーディングページにアクセスする際
+- [x] WHEN オンボーディングページにアクセスする際
       GIVEN 初回ユーザーの場合
       THEN オンボーディング画面が表示される
       AND ジャンル選択UIが表示される
 
-- [ ] WHEN ジャンルパックを選択する際
+- [x] WHEN ジャンルパックを選択する際
       GIVEN 「ホラー」パックをクリックした場合
       THEN パックが選択状態になる
       AND 次へボタンが活性化する
 
-- [ ] WHEN オンボーディングを完了する際
+- [x] WHEN オンボーディングを完了する際
       GIVEN 必要なジャンルを選択した場合
       THEN 推薦画面に遷移する
       AND ユーザー設定が保存される
@@ -86,3 +86,7 @@ test.describe("オンボーディング画面", () => {
 - 既存コンポーネントにdata-testidを追加する必要あり
 - 選択状態の検出: `[data-testid="pack-horror"][data-selected="true"]` など
 - LocalStorageのクリアが必要な場合はfixture追加
+
+## 実装状況
+
+- **status**: completed
