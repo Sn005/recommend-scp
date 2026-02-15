@@ -72,7 +72,7 @@ describe("gen-testcases.md プロンプト検証", () => {
     }
 
     it("JSON配列形式のサンプルがある", () => {
-      expect(promptContent).toMatch(/\[.*\{.*"action".*\}.*\]/s);
+      expect(promptContent).toMatch(/\[[\s\S]*\{[\s\S]*"action"[\s\S]*\}[\s\S]*\]/);
     });
   });
 
