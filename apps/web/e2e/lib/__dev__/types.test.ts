@@ -160,15 +160,14 @@ describe("型制約の検証（@ts-expect-error）", () => {
   });
 
   it("不正なresult値はコンパイルエラーになる", () => {
-    const invalidResult = "invalid" as const;
-    // @ts-expect-error result は 'pass' | 'fail' | 'skip' のみ
     const testCase: TestCase = {
       id: "TC-006-01-001",
       name: "テスト",
       steps: [],
       expected: "成功",
       tags: [],
-      result: invalidResult,
+      // @ts-expect-error result は 'pass' | 'fail' | 'skip' のみ
+      result: "invalid" as const,
     };
     expect(testCase).toBeDefined();
   });
