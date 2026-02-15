@@ -16,6 +16,16 @@ export const MenuButton = () => {
     toggle();
   };
 
+  const positionStyle: React.CSSProperties = position
+    ? {
+        left: `${String(position.x)}px`,
+        top: `${String(position.y)}px`,
+      }
+    : {
+        right: "16px",
+        top: "16px",
+      };
+
   return (
     <button
       type="button"
@@ -26,8 +36,7 @@ export const MenuButton = () => {
                  flex items-center justify-center
                  active:scale-95 select-none"
       style={{
-        left: `${String(position.x)}px`,
-        top: `${String(position.y)}px`,
+        ...positionStyle,
         cursor: isDragging ? "grabbing" : "grab",
         transition: isDragging ? "none" : "box-shadow 0.2s ease",
         touchAction: "none",

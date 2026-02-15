@@ -54,15 +54,17 @@ const getDefaultPosition = (): Position => {
 };
 
 export const useDraggable = () => {
-  const [position, setPosition] = useState<Position>(() => loadPosition(getDefaultPosition()));
+  const [position, setPosition] = useState<Position | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<DragState | null>(null);
   const wasDraggedRef = useRef(false);
 
-  // Recalculate on resize
+  // Initialize position on mount and handle resize
   useEffect(() => {
+    setPosition(loadPosition(getDefaultPosition()));
+
     const handleResize = () => {
-      setPosition((prev) => clampPosition(prev.x, prev.y));
+      setPosition((prev) => (prev ? clampPosition(prev.x, prev.y) : null));
     };
     window.addEventListener("resize", handleResize);
     return () => {
@@ -70,13 +72,9 @@ export const useDraggable = () => {
     };
   }, []);
 
-  // Re-initialize position from localStorage on mount (SSR hydration fix)
-  useEffect(() => {
-    setPosition(loadPosition(getDefaultPosition()));
-  }, []);
-
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (!position) return;
       dragRef.current = {
         startX: e.clientX,
         startY: e.clientY,

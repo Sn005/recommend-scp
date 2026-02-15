@@ -40,12 +40,15 @@ describe("MenuButton", () => {
       expect(button).toHaveClass("z-nav");
     });
 
-    it("inline styleでleft/topの位置が設定される", () => {
+    it("初期位置が右上（right:16px, top:16px相当）に配置される", () => {
+      Object.defineProperty(window, "innerWidth", { value: 375, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 667, writable: true });
       renderWithProvider(<MenuButton />);
 
       const button = screen.getByRole("button", { name: /メニューを開く/ });
-      expect(button.style.left).toBeTruthy();
-      expect(button.style.top).toBeTruthy();
+      // window.innerWidth(375) - 40(button w-10) - 16(right margin) = 319
+      expect(button.style.left).toBe("319px");
+      expect(button.style.top).toBe("16px");
     });
   });
 
