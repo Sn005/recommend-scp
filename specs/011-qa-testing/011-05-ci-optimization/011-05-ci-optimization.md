@@ -2,85 +2,95 @@
 
 ## 概要
 
-現在PRとmainプッシュの両方で実行されているE2Eテストの二重実行を解消し、コスト効率の良い実行戦略に最適化する。
+E2Eテストの実行対象をローカルビルドからリモート環境（本番URL/プレビューURL）に完全移行し、実際のデプロイ環境に対する品質保証を実現する。
 
 ## 背景
 
-### 現状の問題
+### 現状の課題
 
 ```
-PR作成/更新 → ci (unit/lint) → e2e (Playwright) ← 品質ゲート
+現状:
+PR作成/更新 → ci → e2e (localhost:3000) ← ローカルビルド
      ↓ マージ
-Main push   → ci (unit/lint) → e2e (Playwright) ← 同一コードで再実行
+Main push   → ci → e2e (localhost:3000) ← 同一ローカルビルドで再実行
 ```
 
-- E2Eジョブはコストが高い（Playwright install + build + ブラウザ起動: 3-5分）
-- PRで検証済みのコードがmainマージ時に再テストされる
-- unit testは安価（数秒）のため二重実行の影響は小さい
+1. E2Eテストはローカルビルド（`localhost:3000`）に対して実行される
+2. 本番環境（Vercel）固有の問題（ルーティング、環境変数、ビルド最適化等）を検知できない
+3. PRとmain pushで同じローカルビルドに対する二重テストが発生
+4. ローカルビルドは本番環境と異なるため、テスト結果の信頼性が低い
 
-### E2Eのテスト対象
+### 新方針
 
-現在のE2Eは**ローカルビルド**に対して実行される:
-
-```typescript
-// playwright.config.ts
-baseURL: "http://localhost:3000";
-webServer: {
-  command: "pnpm dev";
-}
+```
+目標:
+PR作成/更新 → ci → e2e (Vercelプレビュー URL) ← デプロイ済み環境を検証
+     ↓ マージ
+Main push   → ci → e2e (本番 URL)             ← 本番環境を検証
 ```
 
-Vercelデプロイ（プレビュー/本番）への対向テストは行っていない。
+- **mainマージ時**: 本番URL対向E2E（**必須**）
+- **PR作成時**: VercelプレビューURL対向E2E（**URL取得が可能な場合**）
+- **ローカルビルドE2E**: **廃止**（CIでは実行しない）
 
 ## ユーザーストーリー
 
 **ペルソナ**: 開発者
-**目的**: CI実行コストを最適化しつつ品質ゲートを維持する
-**価値**: GitHub Actionsの実行時間を削減できる
-**理由**: 同一コードの二重テストはコストに見合わない
+**目的**: E2Eテストを実際のデプロイ環境に対して実行する
+**価値**: 本番環境と同一の条件でテストすることで、デプロイ後の問題を事前に検知できる
+**理由**: ローカルビルドではVercel環境特有の挙動を再現できず、テスト結果が本番の品質を保証しない
 
 ## 受け入れ条件（Storyレベル）
 
-- [ ] PR時にE2Eテストが品質ゲートとして実行される
-- [ ] mainプッシュ時にE2Eテストがスキップされる
+- [ ] mainマージ時にE2Eテストが本番URLに対して実行される
+- [ ] playwright.config.tsが環境変数（`PLAYWRIGHT_BASE_URL`）でbaseURLを切り替え可能
+- [ ] CIのE2Eジョブからローカルビルド（Build ステップ、webServer起動）が除去される
+- [ ] （オプション）PR時にVercelプレビューURLに対してE2Eが実行される
 - [ ] mainプッシュ時にunit test/lint/type-checkは引き続き実行される
 
 ## 関連Subtask
 
-- [011-05-01: E2Eテスト実行タイミングの最適化](./011-05-01-e2e-trigger-optimization.md)
+- [011-05-01: 本番URL対向E2Eテスト](./011-05-01-production-e2e.md)
+- [011-05-02: PRプレビューURL対向E2Eテスト](./011-05-02-preview-e2e.md)
 
 ## 技術メモ
 
-### 設計判断: ローカルビルド vs Vercelデプロイ対向
-
-| 方式                   | メリット                 | デメリット                    |
-| ---------------------- | ------------------------ | ----------------------------- |
-| ローカルビルド（現状） | 高速、安定、Vercel非依存 | Vercel固有問題を検知不可      |
-| Vercelプレビュー対向   | 本番同等環境でテスト     | 遅い（デプロイ待ち）、動的URL |
-
-**結論**: 現段階ではローカルビルドを維持。Vercel固有問題はプレビューURLの目視確認で対応。本番運用で課題が出た場合にVercel対向テストを検討する。
-
-### Vercelプレビュー対向テスト（将来オプション）
-
-Vercelデプロイ完了を待ってE2Eを実行する場合の設計メモ:
-
-```yaml
-# deployment_status イベントを利用
-on:
-  deployment_status:
-
-jobs:
-  e2e-preview:
-    if: github.event.deployment_status.state == 'success'
-    steps:
-      - run: pnpm --filter web test:e2e
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ github.event.deployment_status.target_url }}
-```
+### Playwright設定の変更方針
 
 ```typescript
-// playwright.config.ts の変更
-baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+// playwright.config.ts（修正後）
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+const isRemote = !!process.env.PLAYWRIGHT_BASE_URL;
+
+export default defineConfig({
+  use: { baseURL },
+  // リモートURL時はローカルサーバーを起動しない
+  // ローカル開発時（PLAYWRIGHT_BASE_URL未設定）のみwebServer起動
+  ...(isRemote
+    ? {}
+    : {
+        webServer: {
+          command: "pnpm dev",
+          url: "http://localhost:3000",
+          reuseExistingServer: !process.env.CI,
+        },
+      }),
+});
 ```
 
-この方式では `webServer` 設定を条件分岐させる必要がある（外部URLの場合はローカルサーバー起動不要）。
+### VercelプレビューURL取得方法の比較
+
+| 方式                                     | 信頼性 | 複雑さ | 備考                                        |
+| ---------------------------------------- | ------ | ------ | ------------------------------------------- |
+| `deployment_status` イベント             | 中     | 低     | Vercel GitHub Appが必要、タイミング問題あり |
+| `zentered/vercel-preview-url` アクション | 高     | 中     | Vercel API経由、ポーリング可能              |
+| Vercel CLI デプロイ                      | 高     | 高     | GitHub App不要だが設定が複雑                |
+
+### 本番URL管理
+
+本番URLはGitHub Secretsで管理する:
+
+```yaml
+env:
+  PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+```
