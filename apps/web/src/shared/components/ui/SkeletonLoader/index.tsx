@@ -13,7 +13,7 @@ import { cn } from "@/shared/lib/utils";
  */
 export function SkeletonLoader() {
   return (
-    <div data-testid="skeleton-loader" className="flex h-full w-full flex-col">
+    <div data-testid="skeleton-loader" className="flex h-screen w-full flex-col">
       {/* 記事エリアのスケルトン */}
       <div className="flex-1 animate-pulse bg-gray-100 p-6">
         {/* タイトル */}
