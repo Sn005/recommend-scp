@@ -5,10 +5,10 @@ story_id: "009-02"
 epic_title: "セキュリティ強化"
 story_title: "API入力バリデーション強化"
 title: "Zodスキーマ制約強化"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
-updated_at: "2026-02-15"
-completed_at: null
+updated_at: "2026-02-16"
+completed_at: "2026-02-16"
 ---
 
 # Subtask: Zodスキーマ制約強化
@@ -30,31 +30,31 @@ completed_at: null
 
 ### AC-1: articleIdの制約追加
 
-- [ ] WHEN articleIdフィールドを含むリクエストが送信される際
+- [x] WHEN articleIdフィールドを含むリクエストが送信される際
       THE SYSTEM SHALL 最大100文字の長さ制限を適用する
       AND 英数字・ハイフン・アンダースコアのみを許可するパターン制限を適用する
 
-- [ ] WHEN articleIdに不正な文字（例: `<script>`, スペース, 日本語）が含まれる場合
+- [x] WHEN articleIdに不正な文字（例: `<script>`, スペース, 日本語）が含まれる場合
       THEN 400 Bad RequestをRFC 7807形式で返す
 
 ### AC-2: 検索クエリの制約追加
 
-- [ ] WHEN 検索クエリ（q）フィールドが送信される際
+- [x] WHEN 検索クエリ（q）フィールドが送信される際
       THE SYSTEM SHALL 最大200文字の長さ制限を適用する（既存のmin: 2は維持）
 
 ### AC-3: メタデータの制約追加
 
-- [ ] WHEN フィードバックのmetadata.dwellTimeが送信される際
+- [x] WHEN フィードバックのmetadata.dwellTimeが送信される際
       THE SYSTEM SHALL 最大86400（24時間）の上限制限を適用する
 
 ### AC-4: 既存テストの維持
 
-- [ ] WHEN 制約追加後に `pnpm test` を実行した際
+- [x] WHEN 制約追加後に `pnpm test` を実行した際
       THEN 全既存テストがパスする
 
 ### AC-5: 新規バリデーションテスト
 
-- [ ] 追加した各制約に対して、境界値テスト（正常値・境界値・異常値）が存在する
+- [x] 追加した各制約に対して、境界値テスト（正常値・境界値・異常値）が存在する
 
 ## 設計
 
@@ -128,11 +128,15 @@ describe("Zodスキーマ制約強化", () => {
 });
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日: （完了時に記入）
-- 確認者: （完了時に記入）
-- 備考: （完了時に記入）
+- 確認日: 2026-02-16
+- 確認者: Claude Code
+- 備考: 全613テストパス（既存593 + 新規20）。feedback/articles/favorites/onboardingの4ドメインのスキーマを強化。
 
 ## 参照ドキュメント
 

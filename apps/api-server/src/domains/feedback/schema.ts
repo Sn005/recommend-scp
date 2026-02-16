@@ -12,7 +12,7 @@ import { z } from "zod";
  */
 const feedbackMetadataSchema = z.object({
   scrollDepth: z.number().min(0).max(100),
-  dwellTime: z.number().min(0),
+  dwellTime: z.number().min(0).max(86400),
   interestLevel: z.enum(["skip", "neutral", "like"]),
 });
 
@@ -24,7 +24,11 @@ const feedbackMetadataSchema = z.object({
  */
 export const recordFeedbackSchema = z.object({
   visitorId: z.string().uuid(),
-  articleId: z.string().min(1),
+  articleId: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-zA-Z0-9\-_]+$/),
   type: z.enum(["like", "dislike", "skip"]),
   metadata: feedbackMetadataSchema.optional(),
 });
