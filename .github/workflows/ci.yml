@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint, Type Check & Test
+    name: Lint, Type Check, Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +43,9 @@ jobs:
 
       - name: Type Check
         run: pnpm type-check
+
+      - name: Build
+        run: pnpm build
 
       - name: Test with Coverage
         run: pnpm test:coverage
