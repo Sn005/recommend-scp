@@ -42,11 +42,11 @@ Main push   → ci → e2e (本番 URL)             ← 本番環境を検証
 
 ## 受け入れ条件（Storyレベル）
 
-- [ ] mainマージ時にE2Eテストが本番URLに対して実行される
-- [ ] playwright.config.tsが環境変数（`PLAYWRIGHT_BASE_URL`）でbaseURLを切り替え可能
-- [ ] CIのE2Eジョブからローカルビルド（Build ステップ、webServer起動）が除去される
-- [ ] （オプション）PR時にVercelプレビューURLに対してE2Eが実行される
-- [ ] mainプッシュ時にunit test/lint/type-checkは引き続き実行される
+- [x] mainマージ時にE2Eテストが本番URLに対して実行される
+- [x] playwright.config.tsが環境変数（`PLAYWRIGHT_BASE_URL`）でbaseURLを切り替え可能
+- [x] CIのE2Eジョブからローカルビルド（Build ステップ、webServer起動）が除去される
+- [x] （オプション）PR時にVercelプレビューURLに対してE2Eが実行される
+- [x] mainプッシュ時にunit test/lint/type-checkは引き続き実行される
 
 ## 関連Subtask
 

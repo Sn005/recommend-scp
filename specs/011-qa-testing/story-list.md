@@ -6,7 +6,7 @@
 | [011-02](./011-02-testcase-management/011-02-testcase-management.md) | テストケース管理       | CSV/TSVスキーマ、パーサー、実行エンジン                    | completed  |
 | [011-03](./011-03-ai-generation/011-03-ai-generation.md)             | AIテストケース生成     | プロンプト設計、生成CLIコマンド                            | completed  |
 | [011-04](./011-04-screen-tests/011-04-screen-tests.md)               | 画面別テストケース     | オンボーディング、推薦、お気に入り、閲覧履歴の正常系テスト | completed  |
-| [011-05](./011-05-ci-optimization/011-05-ci-optimization.md)         | CI E2E実行戦略の最適化 | 本番URL対向E2E、VercelプレビューURL対向E2E                 | pending    |
+| [011-05](./011-05-ci-optimization/011-05-ci-optimization.md)         | CI E2E実行戦略の最適化 | 本番URL対向E2E、VercelプレビューURL対向E2E                 | completed  |
 
 ## 依存関係
 

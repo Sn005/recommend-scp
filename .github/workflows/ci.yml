@@ -70,7 +70,6 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: ci
-    if: github.event_name == 'push'
 
     steps:
       - name: Checkout
@@ -93,20 +92,73 @@ jobs:
 
       # Build不要（リモートURL対向のため）
 
+      # --- プレビューURL取得（PR時のみ） ---
+      - name: Get Vercel Preview URL
+        if: github.event_name == 'pull_request'
+        uses: zentered/vercel-preview-url@v1.1.9
+        id: vercel_preview_url
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        with:
+          vercel_project_id: ${{ secrets.VERCEL_PROJECT_ID }}
+        continue-on-error: true
+
+      - name: Wait for Preview Deployment
+        if: github.event_name == 'pull_request' && steps.vercel_preview_url.outcome == 'success'
+        id: wait_preview
+        run: |
+          PREVIEW_URL="https://${{ steps.vercel_preview_url.outputs.preview_url }}"
+          echo "Waiting for $PREVIEW_URL to be ready..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Preview is ready!"
+              echo "ready=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "Attempt $i: status=$STATUS, waiting 10s..."
+            sleep 10
+          done
+          echo "Preview URL not ready after 5 minutes"
+          echo "ready=false" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # --- E2E対象URL決定 ---
+      - name: Set E2E Target URL
+        id: e2e_target
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "url=${{ secrets.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Using production URL"
+          elif [ "${{ steps.vercel_preview_url.outcome }}" = "success" ] && \
+               [ "${{ steps.wait_preview.outputs.ready }}" = "true" ]; then
+            echo "url=https://${{ steps.vercel_preview_url.outputs.preview_url }}" >> $GITHUB_OUTPUT
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "Using Vercel preview URL"
+          else
+            echo "url=" >> $GITHUB_OUTPUT
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping E2E: no remote URL available"
+          fi
+
+      # --- E2E実行（リモートURLが取得できた場合のみ） ---
       - name: Run Critical E2E Tests
+        if: steps.e2e_target.outputs.skip != 'true'
         run: pnpm --filter web test:e2e --grep @critical
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
 
       - name: Run Non-Critical E2E Tests
+        if: steps.e2e_target.outputs.skip != 'true'
         run: pnpm --filter web test:e2e --grep-invert @critical
         continue-on-error: true
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+          PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.e2e_target.outputs.skip != 'true'
         with:
           name: playwright-report
           path: apps/web/playwright-report/
@@ -114,8 +166,13 @@ jobs:
 
       - name: Upload Test Results (Traces)
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.e2e_target.outputs.skip != 'true'
         with:
           name: playwright-test-results
           path: apps/web/e2e/test-results/
           retention-days: 7
+
+      - name: E2E Skipped Notice
+        if: steps.e2e_target.outputs.skip == 'true'
+        run: |
+          echo "::notice title=E2E Tests Skipped::Vercel preview URL not available. E2E tests will run after merge to main."
