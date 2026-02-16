@@ -1,0 +1,4 @@
+id,name,steps,expected,tags,result
+TC-006-03-001,お気に入り一覧表示,"[{""action"":""goto"",""url"":""/favorites""},{""action"":""waitFor"",""testId"":""favorites-page"",""timeout"":3000},{""action"":""assertVisible"",""testId"":""favorite-list""}]",お気に入り一覧が表示される,critical,
+TC-006-03-002,お気に入りカード内容表示,"[{""action"":""goto"",""url"":""/favorites""},{""action"":""waitFor"",""testId"":""favorite-card"",""timeout"":3000},{""action"":""assertVisible"",""testId"":""favorite-card""}]",記事タイトルとオブジェクトクラスが表示される,critical,
+TC-006-03-003,お気に入り記事詳細遷移,"[{""action"":""goto"",""url"":""/favorites""},{""action"":""waitFor"",""testId"":""favorite-card"",""timeout"":3000},{""action"":""click"",""testId"":""favorite-card""},{""action"":""assertUrl"",""pattern"":""/article/""}]",記事詳細画面に遷移する,critical,

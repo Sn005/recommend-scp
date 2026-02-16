@@ -70,6 +70,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     needs: ci
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout
@@ -90,20 +91,31 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm --filter web exec playwright install --with-deps chromium
 
-      - name: Build
-        run: pnpm --filter web build
+      # Build不要（リモートURL対向のため）
 
       - name: Run Critical E2E Tests
         run: pnpm --filter web test:e2e --grep @critical
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
 
       - name: Run Non-Critical E2E Tests
         run: pnpm --filter web test:e2e --grep-invert @critical
         continue-on-error: true
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
 
-      - name: Upload Test Results
+      - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
-          path: apps/web/e2e/playwright-report/
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+      - name: Upload Test Results (Traces)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: apps/web/e2e/test-results/
           retention-days: 7
