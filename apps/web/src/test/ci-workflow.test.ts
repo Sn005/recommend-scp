@@ -89,7 +89,7 @@ describe("GitHub Actions CI設定 - E2Eジョブ", () => {
 
   it("テスト失敗時もレポートが保存される", () => {
     const uploadStep = findStep(config.jobs.e2e.steps, "Upload");
-    expect(uploadStep?.if).toBe("always()");
+    expect(uploadStep?.if).toBe("always() && steps.e2e_target.outputs.skip != 'true'");
   });
 
   it("レポート保持期間が7日に設定されている", () => {
