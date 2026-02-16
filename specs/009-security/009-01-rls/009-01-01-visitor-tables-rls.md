@@ -5,10 +5,10 @@ story_id: "009-01"
 epic_title: "セキュリティ強化"
 story_title: "RLS拡充・DB層セキュリティ"
 title: "visitorデータテーブルRLS設定"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
-completed_at: null
+completed_at: "2026-02-16"
 ---
 
 # Subtask: visitorデータテーブルRLS設定
@@ -30,7 +30,7 @@ completed_at: null
 
 ### AC-1: visitors テーブルRLS
 
-- [ ] WHILE visitors テーブルがアクセスされる際
+- [x] WHILE visitors テーブルがアクセスされる際
       THE SYSTEM SHALL RLSが有効化されている
       AND SELECT は全ユーザーに許可される（`USING (true)`）
       AND INSERT は `auth.role() = 'service_role'` のみ許可される
@@ -39,36 +39,36 @@ completed_at: null
 
 ### AC-2: view_history テーブルRLS
 
-- [ ] WHILE view_history テーブルがアクセスされる際
+- [x] WHILE view_history テーブルがアクセスされる際
       THE SYSTEM SHALL RLSが有効化されている
       AND SELECT, INSERT, UPDATE, DELETE に対して visitors テーブルと同じポリシーが適用される
 
 ### AC-3: feedback テーブルRLS
 
-- [ ] WHILE feedback テーブルがアクセスされる際
+- [x] WHILE feedback テーブルがアクセスされる際
       THE SYSTEM SHALL RLSが有効化されている
       AND SELECT, INSERT, UPDATE, DELETE に対して visitors テーブルと同じポリシーが適用される
 
 ### AC-4: recommendation_log テーブルRLS
 
-- [ ] WHILE recommendation_log テーブルがアクセスされる際
+- [x] WHILE recommendation_log テーブルがアクセスされる際
       THE SYSTEM SHALL RLSが有効化されている
       AND SELECT, INSERT, UPDATE, DELETE に対して visitors テーブルと同じポリシーが適用される
 
 ### AC-5: favorites テーブルRLS
 
-- [ ] WHILE favorites テーブルがアクセスされる際
+- [x] WHILE favorites テーブルがアクセスされる際
       THE SYSTEM SHALL RLSが有効化されている
       AND SELECT, INSERT, UPDATE, DELETE に対して visitors テーブルと同じポリシーが適用される
 
 ### AC-6: マイグレーションファイル
 
-- [ ] `supabase/migrations/` に新規マイグレーションファイルが作成されている
+- [x] `supabase/migrations/` に新規マイグレーションファイルが作成されている
       AND `supabase db push` で適用可能である
 
 ### AC-7: 既存機能への影響なし
 
-- [ ] WHEN RLS設定後にAPIサーバー経由で各エンドポイントを実行した際
+- [x] WHEN RLS設定後にAPIサーバー経由で各エンドポイントを実行した際
       THEN service_roleキーによるアクセスは全て正常に動作する
 
 ## 設計
@@ -133,9 +133,13 @@ describe("visitorデータテーブルRLS設定", () => {
 
 ## 完了確認
 
-- 確認日: （完了時に記入）
-- 確認者: （完了時に記入）
-- 備考: （完了時に記入）
+- 確認日: 2026-02-16
+- 確認者: Claude
+- 備考: 静的テスト29件全パス。5テーブル×4ポリシー=20ポリシー設定済み。
+
+## 実装状況
+
+- **status**: completed
 
 ## 参照ドキュメント
 
