@@ -1,8 +1,10 @@
 import { test } from "@playwright/test";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "node:url";
 import { parseTestCaseCsv } from "../lib/csv-parser";
 import { executeSteps } from "../lib/step-executor";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const testCases = parseTestCaseCsv(join(__dirname, "../lib/testcases/recommend.csv"));
 
 test.describe("推薦画面", () => {
