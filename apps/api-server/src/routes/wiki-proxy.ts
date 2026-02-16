@@ -106,6 +106,8 @@ const WIKI_ARTICLE_HREF_RE = /href="\/wiki\/(?!common--|local--)/g;
  * 4. 外部リンク（http/https） → 新しいタブで開く
  * 5. その他の絶対パスリンク → /api/wiki-proxy/ 経由に変換
  * 6. collapsible-block の開閉トグル（WIKIDOT.combined.js の代替）
+ * 7. colmod（coltop/colend）ネスト可能折りたたみの開閉トグル
+ * 8. YUI TabView のタブ切り替え
  */
 const INJECTED_SCRIPT = [
   "<script>",
@@ -151,6 +153,42 @@ const INJECTED_SCRIPT = [
   "u.style.display='none';",
   "f.style.display='block'",
   "}",
+  "});",
+  // colmod（coltop/colend）開閉（WIKIDOT.combined.js の代替）
+  // Boyu12氏がSCP-JP向けに開発したネスト可能折りたたみコンポーネント。
+  // 標準の[[collapsible]]とは異なるHTML構造を使用:
+  //   .colmod-block > ul > li.folded/.unfolded > .colmod-link-top > a
+  // li要素のクラスを folded ↔ unfolded で切り替えることで開閉する。
+  "document.addEventListener('click',function(e){",
+  "var a=e.target.closest('.colmod-link-top a,.colmod-link-end a');",
+  "if(!a)return;",
+  "e.preventDefault();",
+  "var li=a.closest('li');",
+  "if(!li)return;",
+  "if(li.classList.contains('folded')){",
+  "li.classList.replace('folded','unfolded')",
+  "}else if(li.classList.contains('unfolded')){",
+  "li.classList.replace('unfolded','folded')",
+  "}",
+  "});",
+  // YUI TabView タブ切り替え（WIKIDOT.combined.js の代替）
+  // Wikidotの[[tabview]]構文が生成するYUI TabViewウィジェットのタブ切り替えを
+  // バニラJSで再実装する。.yui-nav内のタブクリックで.yui-content内のパネルを切り替え。
+  "document.addEventListener('click',function(e){",
+  "var a=e.target.closest('.yui-nav a');",
+  "if(!a)return;",
+  "e.preventDefault();",
+  "var ns=a.closest('.yui-navset');",
+  "if(!ns)return;",
+  "var li=a.closest('li');",
+  "if(!li)return;",
+  "var tabs=ns.querySelectorAll('.yui-nav>li');",
+  "var idx=Array.prototype.indexOf.call(tabs,li);",
+  "if(idx<0)return;",
+  "tabs.forEach(function(t){t.classList.remove('selected')});",
+  "li.classList.add('selected');",
+  "var panels=ns.querySelectorAll('.yui-content>div');",
+  "panels.forEach(function(p,i){p.style.display=i===idx?'block':'none'})",
   "})",
   "</script>",
 ].join("");
