@@ -413,6 +413,42 @@ describe("GET /wiki-proxy/*", () => {
       // Assert
       expect(text).toContain("window.open(h,'_blank','noopener')");
     });
+
+    it("colmod（coltop/colend）開閉用のscriptが注入される", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-7992");
+      const text = await res.text();
+
+      // Assert: colmod のトグル処理が含まれる
+      expect(text).toContain(".colmod-link-top a");
+      expect(text).toContain(".colmod-link-end a");
+      expect(text).toContain("classList.replace('folded','unfolded')");
+      expect(text).toContain("classList.replace('unfolded','folded')");
+    });
+
+    it("YUI TabView切り替え用のscriptが注入される", async () => {
+      // Arrange
+      const html = `<html><head></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-7992");
+      const text = await res.text();
+
+      // Assert: YUI TabView のタブ切り替え処理が含まれる
+      expect(text).toContain(".yui-nav a");
+      expect(text).toContain(".yui-navset");
+      expect(text).toContain(".yui-content>div");
+      expect(text).toContain("classList.add('selected')");
+    });
   });
 
   describe("インラインstyle属性の除去", () => {
