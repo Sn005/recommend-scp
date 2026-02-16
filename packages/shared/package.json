@@ -4,56 +4,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./lib/env": {
-      "types": "./dist/lib/env.d.ts",
-      "import": "./dist/lib/env.js",
-      "source": "./src/lib/env.ts"
-    },
-    "./lib/supabase": {
-      "types": "./dist/lib/supabase.d.ts",
-      "import": "./dist/lib/supabase.js",
-      "source": "./src/lib/supabase.ts"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js",
-      "source": "./src/types.ts"
-    },
-    "./embedding": {
-      "types": "./dist/embedding/index.d.ts",
-      "import": "./dist/embedding/index.js",
-      "source": "./src/embedding/index.ts"
-    },
-    "./tagging": {
-      "types": "./dist/tagging/index.d.ts",
-      "import": "./dist/tagging/index.js",
-      "source": "./src/tagging/index.ts"
-    },
-    "./search": {
-      "types": "./dist/search/index.d.ts",
-      "import": "./dist/search/index.js",
-      "source": "./src/search/index.ts"
-    },
-    "./onboarding": {
-      "types": "./dist/onboarding/index.d.ts",
-      "import": "./dist/onboarding/index.js",
-      "source": "./src/onboarding/index.ts"
-    },
-    "./storage": {
-      "types": "./dist/storage/index.d.ts",
-      "import": "./dist/storage/index.js",
-      "source": "./src/storage/index.ts"
-    },
-    "./storage/server": {
-      "types": "./dist/storage/server.d.ts",
-      "import": "./dist/storage/server.js",
-      "source": "./src/storage/server.ts"
-    },
-    "./recommendation": {
-      "types": "./dist/recommendation/index.d.ts",
-      "import": "./dist/recommendation/index.js",
-      "source": "./src/recommendation/index.ts"
-    }
+    "./lib/env": "./src/lib/env.ts",
+    "./lib/supabase": "./src/lib/supabase.ts",
+    "./types": "./src/types.ts",
+    "./embedding": "./src/embedding/index.ts",
+    "./tagging": "./src/tagging/index.ts",
+    "./search": "./src/search/index.ts",
+    "./onboarding": "./src/onboarding/index.ts",
+    "./storage": "./src/storage/index.ts",
+    "./storage/server": "./src/storage/server.ts",
+    "./recommendation": "./src/recommendation/index.ts"
   },
   "scripts": {
     "build": "tsup",
