@@ -18,23 +18,23 @@ PR作成時にVercelプレビューURLを取得し、プレビュー環境に対
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] AC1: WHEN PRが作成/更新された際
+- [x] AC1: WHEN PRが作成/更新された際
       GIVEN Vercelプレビューデプロイが完了している場合
       THEN プレビューURLが取得される
       AND e2e ジョブがプレビューURLに対して実行される
       AND `PLAYWRIGHT_BASE_URL` にプレビューURLが設定される
 
-- [ ] AC2: WHEN プレビューURL取得ステップが実行された際
+- [x] AC2: WHEN プレビューURL取得ステップが実行された際
       GIVEN Vercelデプロイがまだ完了していない場合
       THEN デプロイ完了までポーリングで待機する（最大5分）
       AND タイムアウト時はe2eジョブをスキップする
 
-- [ ] AC3: WHEN プレビューURLの取得に失敗した際
+- [x] AC3: WHEN プレビューURLの取得に失敗した際
       GIVEN ネットワークエラー、Vercel API障害、またはシークレット未設定の場合
       THEN e2eジョブがスキップされる
       AND CI全体は失敗にならない（ci ジョブは影響を受けない）
 
-- [ ] AC4: WHEN プレビューURL対向E2Eが実行される際
+- [x] AC4: WHEN プレビューURL対向E2Eが実行される際
       GIVEN プレビューURLが正常に取得された場合
       THEN Build ステップはスキップされる
       AND `webServer` は起動しない
@@ -193,12 +193,16 @@ mainプッシュ:
 
 ## テストケース
 
-- [ ] PR時にVercelプレビューURLが取得される
-- [ ] PR時にプレビューURL対向でE2Eが実行される
-- [ ] プレビューURL取得失敗時にE2Eがスキップされる（ローカルビルドなし）
-- [ ] プレビューURL取得失敗時にCIが失敗しない
-- [ ] mainプッシュ時の本番URL対向E2Eに影響がない
-- [ ] `VERCEL_TOKEN` 未設定時にCIが失敗しない
+- [x] PR時にVercelプレビューURLが取得される
+- [x] PR時にプレビューURL対向でE2Eが実行される
+- [x] プレビューURL取得失敗時にE2Eがスキップされる（ローカルビルドなし）
+- [x] プレビューURL取得失敗時にCIが失敗しない
+- [x] mainプッシュ時の本番URL対向E2Eに影響がない
+- [x] `VERCEL_TOKEN` 未設定時にCIが失敗しない
+
+## 実装状況
+
+- **status**: completed
 
 ## 実装メモ
 
