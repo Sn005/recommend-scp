@@ -13,22 +13,22 @@
 
 ## 受け入れ条件（EARS記法）
 
-- [ ] AC1: WHEN mainブランチにプッシュされた際
+- [x] AC1: WHEN mainブランチにプッシュされた際
       GIVEN `PRODUCTION_URL` シークレットが設定されている場合
       THEN e2e ジョブが本番URLに対して実行される
       AND `PLAYWRIGHT_BASE_URL` に本番URLが設定される
 
-- [ ] AC2: WHEN `PLAYWRIGHT_BASE_URL` 環境変数が設定されている場合
+- [x] AC2: WHEN `PLAYWRIGHT_BASE_URL` 環境変数が設定されている場合
       GIVEN playwright.config.ts が読み込まれた際
       THEN `baseURL` が環境変数の値に設定される
       AND `webServer` が起動しない（ローカルサーバー不要）
 
-- [ ] AC3: WHEN CIのe2eジョブが実行される際
+- [x] AC3: WHEN CIのe2eジョブが実行される際
       GIVEN リモートURL対向で実行する場合
       THEN Build ステップ（`pnpm --filter web build`）がスキップされる
       AND ローカルサーバーが起動しない
 
-- [ ] AC4: WHEN PRが作成/更新された際
+- [x] AC4: WHEN PRが作成/更新された際
       GIVEN 011-05-02が未実装の場合
       THEN e2e ジョブはスキップされる（ローカルビルドE2Eは実行しない）
       AND ci ジョブ（lint, format, type-check, unit test）は実行される
@@ -152,13 +152,17 @@ e2e:
 
 ## テストケース
 
-- [ ] `PLAYWRIGHT_BASE_URL` 設定時に `baseURL` が環境変数の値になる
-- [ ] `PLAYWRIGHT_BASE_URL` 設定時に `webServer` が起動しない
-- [ ] `PLAYWRIGHT_BASE_URL` 未設定時に `baseURL` が `localhost:3000` になる（ローカル開発用）
-- [ ] mainプッシュ時にe2eジョブが本番URLに対して実行される
-- [ ] PRプッシュ時にe2eジョブがスキップされる
-- [ ] mainプッシュ時にciジョブは引き続き実行される
-- [ ] e2eジョブのBuildステップが除去されている
+- [x] `PLAYWRIGHT_BASE_URL` 設定時に `baseURL` が環境変数の値になる
+- [x] `PLAYWRIGHT_BASE_URL` 設定時に `webServer` が起動しない
+- [x] `PLAYWRIGHT_BASE_URL` 未設定時に `baseURL` が `localhost:3000` になる（ローカル開発用）
+- [x] mainプッシュ時にe2eジョブが本番URLに対して実行される
+- [x] PRプッシュ時にe2eジョブがスキップされる
+- [x] mainプッシュ時にciジョブは引き続き実行される
+- [x] e2eジョブのBuildステップが除去されている
+
+## 実装状況
+
+- **status**: completed
 
 ## 実装メモ
 
