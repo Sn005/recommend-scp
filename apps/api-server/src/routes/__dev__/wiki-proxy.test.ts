@@ -446,7 +446,68 @@ describe("GET /wiki-proxy/*", () => {
       // Assert
       expect(text).toContain("<p>赤</p>");
       expect(text).toContain("<span>左</span>");
-      expect(text).not.toContain('style="');
+      expect(text).not.toContain('style="color: red;"');
+      expect(text).not.toContain('style="float: left;"');
+    });
+
+    it("display:noneを含むstyle属性は保持される", async () => {
+      // Arrange: Wikidotコンポーネントの隠し要素パターン
+      const html = `<html><head></head><body><div style="display: none;"><div class="collapsible-block">コード</div></div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain('style="display: none;"');
+    });
+
+    it("display:none（スペースなし）を含むstyle属性も保持される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div style="display:none"><span>隠し要素</span></div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain('style="display:none"');
+    });
+
+    it("display:noneと他のプロパティが混在するstyle属性も保持される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div style="margin: 0; display: none; color: red;">隠し</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain('style="margin: 0; display: none; color: red;"');
+    });
+
+    it("display:block等のnone以外のdisplay値は除去される", async () => {
+      // Arrange
+      const html = `<html><head></head><body><div style="display: block;">表示要素</div></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).not.toContain('style="display: block;"');
     });
 
     it("他の属性は保持される", async () => {
@@ -463,7 +524,26 @@ describe("GET /wiki-proxy/*", () => {
       // Assert
       expect(text).toContain('class="test"');
       expect(text).toContain('id="main"');
-      expect(text).not.toContain('style="');
+      expect(text).not.toContain('style="margin: 0;"');
+    });
+  });
+
+  describe("コンポーネントコードビューア非表示CSS", () => {
+    it("コンポーネントコードビューアを非表示にするCSSが注入される", async () => {
+      // Arrange
+      const html = `<html><head><title>Test</title></head><body></body></html>`;
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+
+      // Act
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // Assert
+      expect(text).toContain(
+        ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}"
+      );
     });
   });
 

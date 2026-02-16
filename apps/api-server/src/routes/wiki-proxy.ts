@@ -73,6 +73,9 @@ const INJECTED_STYLE = [
   "#page-content img{max-width:100%;height:auto;display:block;margin:16px 0}",
   // レイアウト崩れ防止: Wikidot記事のfloatブロックを無効化
   "#page-content .block-left,#page-content .block-right{float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
+  // コンポーネントコードビューア非表示: テーマ等のコンポーネントincludeに付随する
+  // CSSソースコード表示用collapsible-blockを非表示にする（記事本文ではない）
+  ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}",
   "</style>",
 ].join("");
 
@@ -159,10 +162,15 @@ const INJECTED_SCRIPT = [
  * モバイル表示でレイアウト崩れを起こす。記事の装飾はInjected CSSで制御するため、
  * インラインstyle属性は安全に除去できる。
  *
+ * ただし `display: none` を含むstyle属性は保持する。
+ * Wikidotのコンポーネント（テーマCSS等）は親divの `style="display: none;"` で
+ * コード表示ブロックを隠しており、除去すると本来非表示のUIが表示されてしまう。
+ *
  * - `style="..."` （ダブルクォート）を対象
  * - 属性前の空白ごと除去してHTML構造を保持
+ * - 否定先読みで `display: none` / `display:none` を含む属性をスキップ
  */
-const INLINE_STYLE_ATTR_RE = / style="[^"]*"/gi;
+const INLINE_STYLE_ATTR_RE = / style="(?![^"]*display\s*:\s*none)[^"]*"/gi;
 
 /**
  * href="/path" 形式の絶対パスリンクを href="/api/wiki-proxy/path" に書き換える正規表現
