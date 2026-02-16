@@ -198,6 +198,91 @@
 2. 「Workflow permissions」で「Read and write permissions」を選択
 3. 「Save」をクリック
 
+## GitHub Secrets の設定（CI E2E連携）
+
+CI ワークフローの E2E テストで Vercel 環境に対してテストを実行するため、GitHub リポジトリに以下の Secrets を設定します。
+
+### 必要な Secrets 一覧
+
+| Secret 名           | 用途                                     | 必須 | 使用タイミング           |
+| ------------------- | ---------------------------------------- | ---- | ------------------------ |
+| `PRODUCTION_URL`    | 本番 URL（E2E テスト対象）               | Yes  | main プッシュ時          |
+| `VERCEL_TOKEN`      | Vercel API アクセストークン              | Yes  | PR 時プレビュー URL 取得 |
+| `VERCEL_PROJECT_ID` | Vercel プロジェクト ID（`prj_xxx` 形式） | Yes  | PR 時プレビュー URL 取得 |
+
+### Step 1: PRODUCTION_URL を設定
+
+本番デプロイ完了後の URL を設定します。
+
+1. Vercel ダッシュボードでプロジェクトの本番 URL を確認
+   - 例: `https://recommend-scp.vercel.app`
+2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
+3. **New repository secret** をクリック
+4. 以下を入力して **Add secret**:
+   - Name: `PRODUCTION_URL`
+   - Secret: `https://recommend-scp.vercel.app`（実際の本番 URL）
+
+### Step 2: VERCEL_TOKEN を取得・設定
+
+Vercel API にアクセスするためのトークンを発行します。
+
+1. [Vercel Account Settings](https://vercel.com/account/tokens) を開く
+2. **Create Token** をクリック
+3. 以下を入力:
+   - Token Name: `github-actions-e2e`（任意）
+   - Scope: `Full Account`
+   - Expiration: `No Expiration`（または適切な期限）
+4. **Create** をクリックしてトークンをコピー
+5. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
+6. **New repository secret** をクリック
+7. 以下を入力して **Add secret**:
+   - Name: `VERCEL_TOKEN`
+   - Secret: コピーしたトークン
+
+> **注意**: トークンは一度しか表示されません。必ずコピーしてから画面を閉じてください。
+
+### Step 3: VERCEL_PROJECT_ID を取得・設定
+
+Vercel プロジェクトの ID を取得します。
+
+1. Vercel ダッシュボードで対象プロジェクトを開く
+2. **Settings** → **General** を開く
+3. **Project ID** をコピー（`prj_` で始まる文字列）
+4. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
+5. **New repository secret** をクリック
+6. 以下を入力して **Add secret**:
+   - Name: `VERCEL_PROJECT_ID`
+   - Secret: コピーした Project ID
+
+### 設定確認
+
+すべての Secrets が正しく登録されているか確認します。
+
+1. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
+2. 以下の 3 つが **Repository secrets** に表示されていることを確認:
+   - `PRODUCTION_URL`
+   - `VERCEL_TOKEN`
+   - `VERCEL_PROJECT_ID`
+
+### 動作確認
+
+#### main プッシュ時（本番 URL 対向 E2E）
+
+1. `main` ブランチにコードをマージ
+2. **Actions** タブで CI ワークフローを確認
+3. `e2e` ジョブの `Set E2E Target URL` ステップで `Using production URL` と表示されること
+4. E2E テストが本番 URL に対して実行されること
+
+#### PR 作成時（プレビュー URL 対向 E2E）
+
+1. PR を作成または更新
+2. **Actions** タブで CI ワークフローを確認
+3. `Get Vercel Preview URL` ステップでプレビュー URL が取得されること
+4. `Wait for Preview Deployment` ステップでデプロイ完了を待機すること
+5. E2E テストがプレビュー URL に対して実行されること
+
+> **Note**: Secrets が未設定の場合、PR 時の E2E テストはスキップされますが CI 全体は失敗しません。本番 URL 対向 E2E（main プッシュ時）には `PRODUCTION_URL` が必須です。
+
 ## 参考リンク
 
 - [Vercel Documentation - Monorepos](https://vercel.com/docs/monorepos)
