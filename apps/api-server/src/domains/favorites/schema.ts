@@ -26,3 +26,16 @@ export const addFavoriteBodySchema = z.object({
 export const deleteFavoriteBodySchema = z.object({
   visitorId: z.string().uuid(),
 });
+
+/**
+ * :articleId パスパラメータスキーマ
+ *
+ * 最大100文字、英数字・ハイフン・アンダースコアのみ許可
+ */
+export const articleIdParamSchema = z.object({
+  articleId: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-zA-Z0-9\-_]+$/),
+});

@@ -27,7 +27,15 @@ export const selectPackSchema = z.object({
  */
 export const selectCustomSchema = z.object({
   visitorId: z.string().uuid(),
-  articleIds: z.array(z.string().min(1)).min(3, "At least 3 articles must be selected"),
+  articleIds: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(100)
+        .regex(/^[a-zA-Z0-9\-_]+$/)
+    )
+    .min(3, "At least 3 articles must be selected"),
 });
 
 /** スターターパック選択入力型 */
