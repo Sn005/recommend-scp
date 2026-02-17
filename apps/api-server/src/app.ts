@@ -12,6 +12,7 @@
 import { Hono } from "hono";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { corsMiddleware } from "./middleware/cors";
+import { securityHeaders } from "./middleware/security-headers";
 import { errorHandler } from "./middleware/error-handler";
 import { DatabaseError } from "./lib/errors";
 import { healthRoutes } from "./routes/health";
@@ -74,6 +75,8 @@ export const createApp = (supabase: SupabaseClient) => {
   const app = new Hono()
     // CORSミドルウェア（全ルートに適用）
     .use(corsMiddleware)
+    // セキュリティヘッダーミドルウェア（CORSの後に適用）
+    .use(securityHeaders)
     // Supabase PostgrestError等の非Errorオブジェクトをラップするミドルウェア
     //
     // Supabase PostgREST のエラーは Error を継承しないプレーンオブジェクト

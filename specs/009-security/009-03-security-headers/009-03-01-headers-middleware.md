@@ -5,7 +5,7 @@ story_id: "009-03"
 epic_title: "セキュリティ強化"
 story_title: "セキュリティヘッダー"
 title: "セキュリティヘッダーミドルウェア実装"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 completed_at: null
@@ -30,22 +30,22 @@ completed_at: null
 
 ### AC-1: ミドルウェアファイル作成
 
-- [ ] `apps/api-server/src/middleware/security-headers.ts` が作成されている
+- [x] `apps/api-server/src/middleware/security-headers.ts` が作成されている
       AND `createMiddleware` を使用したHonoミドルウェアとして実装されている
 
 ### AC-2: セキュリティヘッダーの設定
 
-- [ ] WHILE ミドルウェアがレスポンスを処理する際
+- [x] WHILE ミドルウェアがレスポンスを処理する際
       THE SYSTEM SHALL 以下のヘッダーを設定する: - `X-Content-Type-Options: nosniff` - `X-Frame-Options: DENY` - `X-XSS-Protection: 0` - `Referrer-Policy: strict-origin-when-cross-origin` - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
 
 ### AC-3: app.tsへの組み込み
 
-- [ ] `apps/api-server/src/app.ts` のミドルウェアチェーンに `securityHeaders` が追加されている
+- [x] `apps/api-server/src/app.ts` のミドルウェアチェーンに `securityHeaders` が追加されている
       AND CORSミドルウェアの後に配置されている
 
 ### AC-4: テスト
 
-- [ ] セキュリティヘッダーミドルウェアの単体テストが存在する
+- [x] セキュリティヘッダーミドルウェアの単体テストが存在する
       AND 全5ヘッダーの付与を検証するテストがある
       AND 既存レスポンスヘッダーに影響しないことを検証するテストがある
 
@@ -105,11 +105,15 @@ describe("セキュリティヘッダーミドルウェア", () => {
 });
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日: （完了時に記入）
-- 確認者: （完了時に記入）
-- 備考: （完了時に記入）
+- 確認日: 2026-02-17
+- 確認者: Claude Code
+- 備考: 全AC充足、11テスト全パス、code-reviewer APPROVE
 
 ## 参照ドキュメント
 
