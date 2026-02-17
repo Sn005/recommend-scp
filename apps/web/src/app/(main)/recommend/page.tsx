@@ -51,7 +51,11 @@ export default function RecommendPage() {
   const { add: addToHistory } = useHistory();
 
   // AC-2: iframeプール（3スロット）
-  const { slots, advance } = useIframePool({
+  const {
+    slots,
+    advance,
+    handleIframeLoad: poolHandleIframeLoad,
+  } = useIframePool({
     articles,
     currentIndex,
   });
@@ -70,6 +74,18 @@ export default function RecommendPage() {
   // iframe読み込み待ち（初回表示 + 遷移後の旧記事フラッシュ防止）
   // 初期値false: iframeのonLoad完了まで非表示にし、コンテンツ未描画状態の表示を防ぐ
   const [isSlotReady, setIsSlotReady] = useState(false);
+
+  // プリロード済みスロットがcurrentに昇格した場合、即座にisSlotReadyをtrueにする
+  // 初回レンダリング時はスキップ（初回はhandleCurrentIframeLoadで処理）
+  const currentSlotArticleIndex = slots[0].articleIndex;
+  const currentSlotLoaded = slots[0].isLoaded;
+  const prevSlotIndexRef = useRef(currentSlotArticleIndex);
+  useEffect(() => {
+    if (currentSlotArticleIndex !== prevSlotIndexRef.current && currentSlotLoaded) {
+      setIsSlotReady(true);
+    }
+    prevSlotIndexRef.current = currentSlotArticleIndex;
+  }, [currentSlotArticleIndex, currentSlotLoaded]);
 
   // AC-4: スクロール深度の追跡（最大到達深度を保持）
   const maxScrollDepthRef = useRef(0);
@@ -204,34 +220,36 @@ export default function RecommendPage() {
   // AC-2: iframeプールに基づくレンダリング
   return (
     <div className="relative h-screen overflow-hidden" data-testid="article-viewer">
-      {/* AC-2: Current スロット */}
-      <ArticleWebView
-        url={slots[0].url}
-        articleId={articles[slots[0].articleIndex]?.id}
-        onScrollChange={handleScrollChange}
-        onSkip={goToNext}
-        onContentLoaded={handleContentLoaded}
-        onIframeLoad={handleCurrentIframeLoad}
-        className={showCard || !isSlotReady ? "opacity-0" : "opacity-100"}
-      />
+      {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
+      {slots.map((slot, i) => {
+        if (!slot) return null;
+        const isCurrent = i === 0;
+        const isVisible = isCurrent && !showCard && isSlotReady;
 
-      {/* AC-2: Next スロット（非表示、プリレンダリング） */}
-      {slots[1] && (
-        <ArticleWebView
-          url={slots[1].url}
-          articleId={articles[slots[1].articleIndex]?.id}
-          className="hidden"
-        />
-      )}
-
-      {/* AC-2: Prefetch スロット（非表示） */}
-      {slots[2] && (
-        <ArticleWebView
-          url={slots[2].url}
-          articleId={articles[slots[2].articleIndex]?.id}
-          className="hidden"
-        />
-      )}
+        return (
+          <ArticleWebView
+            key={`slot-${String(slot.articleIndex)}`}
+            url={slot.url}
+            articleId={articles[slot.articleIndex]?.id}
+            onScrollChange={isCurrent ? handleScrollChange : undefined}
+            onSkip={isCurrent ? goToNext : undefined}
+            onContentLoaded={isCurrent ? handleContentLoaded : undefined}
+            onIframeLoad={() => {
+              poolHandleIframeLoad(slot.articleIndex);
+              if (isCurrent) {
+                handleCurrentIframeLoad();
+              }
+            }}
+            className={
+              isVisible
+                ? "absolute inset-0 opacity-100 z-10"
+                : isCurrent
+                  ? "absolute inset-0 opacity-0 z-10"
+                  : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+            }
+          />
+        );
+      })}
 
       {/* AC-1/AC-3: TransitionCard */}
       {nextArticleForCard && (

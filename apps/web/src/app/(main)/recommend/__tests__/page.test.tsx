@@ -59,6 +59,7 @@ const mockUseIframePoolResult = {
     { articleIndex: number; url: string; isLoaded: boolean } | null,
   ],
   advance: vi.fn(),
+  handleIframeLoad: vi.fn(),
 };
 
 // ─── モック定義 ───
@@ -147,8 +148,8 @@ vi.mock("../_components/ArticleWebView", () => ({
     onIframeLoad?: () => void;
     className?: string;
   }) => {
-    // Current スロット（hidden以外）のonIframeLoadをキャプチャ
-    if (onIframeLoad && !className?.includes("hidden")) {
+    // Current スロット（pointer-events-none以外）のonIframeLoadをキャプチャ
+    if (onIframeLoad && !className?.includes("pointer-events-none")) {
       capturedOnIframeLoad = onIframeLoad;
     }
     return (
@@ -325,7 +326,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       dismissInitialCard();
 
       const webviews = screen.getAllByTestId("article-webview");
-      expect(webviews[0]).toHaveClass("opacity-100");
+      expect(webviews[0]).toHaveClass("opacity-100", "z-10");
     });
   });
 
@@ -415,18 +416,18 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         capturedOnDismissed?.();
       });
 
-      // iframe読み込み完了前は非表示（opacity-0）
+      // iframe読み込み完了前は非表示（opacity-0 z-10）
       const webviews = screen.getAllByTestId("article-webview");
       const currentSlot = webviews[0];
-      expect(currentSlot).toHaveClass("opacity-0");
+      expect(currentSlot).toHaveClass("opacity-0", "z-10");
 
       // iframe読み込み完了を通知
       act(() => {
         capturedOnIframeLoad?.();
       });
 
-      // 読み込み完了後は表示（opacity-100）
-      expect(currentSlot).toHaveClass("opacity-100");
+      // 読み込み完了後は表示（opacity-100 z-10）
+      expect(currentSlot).toHaveClass("opacity-100", "z-10");
     });
 
     it("遷移完了後にcurrentIndexが更新される（goToNext呼び出し確認）", async () => {
