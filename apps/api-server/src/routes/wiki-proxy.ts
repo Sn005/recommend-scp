@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { JSDOM } from "jsdom";
+import type { JSDOM as JSDOMType } from "jsdom";
 
 /**
  * 許可するWikidotドメイン（セキュリティのため制限）
@@ -302,7 +302,8 @@ function isArticleScript(script: { src: string; textContent: string | null }): b
  * 3. <head>内の<link rel="stylesheet">タグ（外部CSS）
  * 4. 記事固有の<script>タグ（プラットフォームスクリプトを除外）
  */
-function extractContent(html: string): ExtractedContent {
+async function extractContent(html: string): Promise<ExtractedContent> {
+  const { JSDOM } = (await import("jsdom")) as { JSDOM: typeof JSDOMType };
   const dom = new JSDOM(html);
   const doc = dom.window.document;
 
@@ -395,8 +396,8 @@ function rewriteUrls(html: string): string {
  *
  * 通常のWikidotページHTMLを受け取り、最適化されたプロキシHTMLを生成する。
  */
-function processHtml(html: string): string {
-  const content = extractContent(html);
+async function processHtml(html: string): Promise<string> {
+  const content = await extractContent(html);
   const rebuilt = buildHtml(content);
   return rewriteUrls(rebuilt);
 }
@@ -450,7 +451,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     // HTMLレスポンス: DOM抽出 + HTML再構築 + URL書き換え
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      const processed = processHtml(html);
+      const processed = await processHtml(html);
 
       return new Response(processed, {
         status: response.status,

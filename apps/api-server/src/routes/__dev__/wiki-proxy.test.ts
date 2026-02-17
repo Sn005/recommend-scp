@@ -98,14 +98,14 @@ describe("GET /wiki-proxy/*", () => {
   // DOM抽出（extractContent）
   // ----------------------------------------------------------
   describe("DOM抽出（extractContent）", () => {
-    it("#main-contentのouterHTMLが抽出される", () => {
+    it("#main-contentのouterHTMLが抽出される", async () => {
       const html = createWikidotHtml({
         pageTitle: "SCP-173",
         pageContent: "<p>彫刻</p>",
         platformScripts: false,
       });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       expect(result.mainContentHtml).toContain('id="main-content"');
       expect(result.mainContentHtml).toContain('id="page-title"');
@@ -114,47 +114,47 @@ describe("GET /wiki-proxy/*", () => {
       expect(result.mainContentHtml).toContain("<p>彫刻</p>");
     });
 
-    it("サイドバー・フッターは抽出されない", () => {
+    it("サイドバー・フッターは抽出されない", async () => {
       const html = createWikidotHtml({ platformScripts: false });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       expect(result.mainContentHtml).not.toContain("Sidebar");
       expect(result.mainContentHtml).not.toContain("Footer");
     });
 
-    it("#main-contentが存在しない場合、body全体にフォールバック", () => {
+    it("#main-contentが存在しない場合、body全体にフォールバック", async () => {
       const html = "<html><head></head><body><p>No main content</p></body></html>";
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       expect(result.mainContentHtml).toContain("<p>No main content</p>");
     });
 
-    it("head内のstyleタグが収集される", () => {
+    it("head内のstyleタグが収集される", async () => {
       const html = createWikidotHtml({
         headStyles: [".custom-theme { color: red; }"],
         platformScripts: false,
       });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       expect(result.headStyleTags).toHaveLength(1);
       expect(result.headStyleTags[0]).toContain(".custom-theme { color: red; }");
     });
 
-    it("head内の複数のstyleタグが全て収集される", () => {
+    it("head内の複数のstyleタグが全て収集される", async () => {
       const html = createWikidotHtml({
         headStyles: ["body { background: black; }", ".title { color: white; }"],
         platformScripts: false,
       });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       expect(result.headStyleTags).toHaveLength(2);
     });
 
-    it("head内のlink[rel=stylesheet]タグが収集される", () => {
+    it("head内のlink[rel=stylesheet]タグが収集される", async () => {
       const html = createWikidotHtml({
         headLinks: [
           '<link rel="stylesheet" href="http://scp-jp.wikidot.com/local--files/component:theme/style.css">',
@@ -162,17 +162,17 @@ describe("GET /wiki-proxy/*", () => {
         platformScripts: false,
       });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       // headLinksで指定した1つ（platformScripts=falseなのでプラットフォームCSSなし）
       expect(result.headLinkTags).toHaveLength(1);
       expect(result.headLinkTags[0]).toContain("component:theme/style.css");
     });
 
-    it("プラットフォームのlink[rel=stylesheet]も収集される", () => {
+    it("プラットフォームのlink[rel=stylesheet]も収集される", async () => {
       const html = createWikidotHtml({ platformScripts: true });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       // プラットフォームのbase CSSリンクが含まれる
       expect(result.headLinkTags.length).toBeGreaterThanOrEqual(1);
@@ -258,13 +258,13 @@ describe("GET /wiki-proxy/*", () => {
   // DOM抽出経由のスクリプトフィルタリング
   // ----------------------------------------------------------
   describe("DOM抽出経由のスクリプトフィルタリング", () => {
-    it("プラットフォームスクリプトが除外され記事スクリプトが保持される", () => {
+    it("プラットフォームスクリプトが除外され記事スクリプトが保持される", async () => {
       const html = createWikidotHtml({
         platformScripts: true,
         bodyScripts: ["// カスタムアニメーション\nvar x = 1;"],
       });
 
-      const result = extractContent(html);
+      const result = await extractContent(html);
 
       // プラットフォームスクリプト（WIKIDOT.combined.js, WIKIDOT.page=...）は除外
       const allScripts = result.articleScripts.join("");
@@ -280,8 +280,8 @@ describe("GET /wiki-proxy/*", () => {
   // HTML再構築（buildHtml）
   // ----------------------------------------------------------
   describe("HTML再構築（buildHtml）", () => {
-    it("正しいHTML構造が生成される", () => {
-      const content = extractContent(
+    it("正しいHTML構造が生成される", async () => {
+      const content = await extractContent(
         createWikidotHtml({
           pageTitle: "SCP-173",
           pageContent: "<p>彫刻</p>",
@@ -302,16 +302,16 @@ describe("GET /wiki-proxy/*", () => {
       expect(result).toContain("</body></html>");
     });
 
-    it("WIKIDOTスタブが注入される", () => {
-      const content = extractContent(createWikidotHtml({ platformScripts: false }));
+    it("WIKIDOTスタブが注入される", async () => {
+      const content = await extractContent(createWikidotHtml({ platformScripts: false }));
 
       const result = buildHtml(content);
 
       expect(result).toContain("window.WIKIDOT={page:{listeners:{}},modules:{}}");
     });
 
-    it("記事CSSの後に注入CSSが配置される", () => {
-      const content = extractContent(
+    it("記事CSSの後に注入CSSが配置される", async () => {
+      const content = await extractContent(
         createWikidotHtml({
           headStyles: [".article-css { color: red; }"],
           platformScripts: false,
@@ -325,8 +325,8 @@ describe("GET /wiki-proxy/*", () => {
       expect(articleCssPos).toBeLessThan(injectedCssPos);
     });
 
-    it("注入JSが末尾に配置される", () => {
-      const content = extractContent(createWikidotHtml({ platformScripts: false }));
+    it("注入JSが末尾に配置される", async () => {
+      const content = await extractContent(createWikidotHtml({ platformScripts: false }));
 
       const result = buildHtml(content);
 
