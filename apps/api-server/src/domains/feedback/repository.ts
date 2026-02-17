@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Feedback } from "@recommend-scp/shared/storage/server";
+import { DatabaseError } from "../../lib/errors";
 
 /** DB行の型（snake_case） */
 interface FeedbackRow {
@@ -50,7 +51,7 @@ export class FeedbackRepository {
       .select("id, visitor_id, article_id, type, created_at")
       .single();
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return this.toFeedback(data as unknown as FeedbackRow);
   };
@@ -67,7 +68,7 @@ export class FeedbackRepository {
       .select("id, visitor_id, article_id, type, created_at")
       .eq("visitor_id", visitorId);
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return (data as unknown as FeedbackRow[]).map(this.toFeedback);
   };

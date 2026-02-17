@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { VisitorsRepository } from "../repository";
+import { DatabaseError } from "../../../lib/errors";
 
 // Supabaseクエリビルダーのモック作成ヘルパー
 const createQueryMock = (result: { data: unknown; error: unknown }) => ({
@@ -82,9 +83,10 @@ describe("VisitorsRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.findByVisitorId("test")).rejects.toEqual({
+      await expect(repository.findByVisitorId("test")).rejects.toBeInstanceOf(DatabaseError);
+      await expect(repository.findByVisitorId("test")).rejects.toMatchObject({
         code: "PGRST500",
-        message: "DB Error",
+        detail: "DB Error",
       });
     });
   });
@@ -116,9 +118,10 @@ describe("VisitorsRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.create("existing-visitor")).rejects.toEqual({
+      await expect(repository.create("existing-visitor")).rejects.toBeInstanceOf(DatabaseError);
+      await expect(repository.create("existing-visitor")).rejects.toMatchObject({
         code: "23505",
-        message: "UNIQUE constraint violation",
+        detail: "UNIQUE constraint violation",
       });
     });
   });
@@ -159,9 +162,10 @@ describe("VisitorsRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.existsByVisitorId("test")).rejects.toEqual({
+      await expect(repository.existsByVisitorId("test")).rejects.toBeInstanceOf(DatabaseError);
+      await expect(repository.existsByVisitorId("test")).rejects.toMatchObject({
         code: "PGRST500",
-        message: "DB Error",
+        detail: "DB Error",
       });
     });
   });

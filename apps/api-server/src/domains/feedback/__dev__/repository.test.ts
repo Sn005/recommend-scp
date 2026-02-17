@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Feedback } from "@recommend-scp/shared/storage/server";
 import { FeedbackRepository } from "../repository";
+import { DatabaseError } from "../../../lib/errors";
 
 /** モック用DB行の型 */
 interface MockFeedbackRow {
@@ -131,7 +132,7 @@ describe("FeedbackRepository", () => {
           type: "like",
           createdAt: "2025-01-20T10:00:00Z",
         })
-      ).rejects.toEqual({ code: "PGRST500", message: "DB Error" });
+      ).rejects.toBeInstanceOf(DatabaseError);
     });
   });
 
@@ -183,10 +184,7 @@ describe("FeedbackRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.getByVisitorId("visitor-1")).rejects.toEqual({
-        code: "PGRST500",
-        message: "DB Error",
-      });
+      await expect(repository.getByVisitorId("visitor-1")).rejects.toBeInstanceOf(DatabaseError);
     });
   });
 });

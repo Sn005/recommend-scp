@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../logger";
+import { DatabaseError } from "../errors";
 import { parseVectorField } from "./parse-vector";
 import type {
   PreferenceStorage,
@@ -51,7 +52,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       .from("visitors")
       .upsert(this.toVisitorRow(profile), { onConflict: "visitor_id" });
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -69,7 +70,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     }
 
     const result = await query;
-    if (result.error) throw result.error;
+    if (result.error) throw new DatabaseError(result.error);
     const rows = (result.data as DbRow[] | null) ?? [];
     return rows.map(this.toViewHistory);
   };
@@ -84,7 +85,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       viewed_at: history.viewedAt,
       duration: history.duration,
     });
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -93,7 +94,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
   getFeedback = async (visitorId: string): Promise<Feedback[]> => {
     const result = await this.supabase.from("feedback").select("*").eq("visitor_id", visitorId);
 
-    if (result.error) throw result.error;
+    if (result.error) throw new DatabaseError(result.error);
     const rows = (result.data as DbRow[] | null) ?? [];
     return rows.map(this.toFeedback);
   };
@@ -126,7 +127,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       },
       { onConflict: "visitor_id,article_id" }
     );
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -147,7 +148,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     }
 
     const result = await query;
-    if (result.error) throw result.error;
+    if (result.error) throw new DatabaseError(result.error);
     const rows = (result.data as DbRow[] | null) ?? [];
     return rows.map(this.toRecommendationLog);
   };
@@ -163,7 +164,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       recommended_at: log.recommendedAt,
       clicked: log.clicked,
     });
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -176,7 +177,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       .eq("visitor_id", visitorId)
       .eq("type", "dislike");
 
-    if (result.error) throw result.error;
+    if (result.error) throw new DatabaseError(result.error);
     const rows = (result.data as DbRow[] | null) ?? [];
     return rows.map((d) => d.article_id as string);
   };
@@ -208,7 +209,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       .eq("visitor_id", visitorId)
       .order("added_at", { ascending: false });
 
-    if (result.error) throw result.error;
+    if (result.error) throw new DatabaseError(result.error);
     const rows = (result.data as DbRow[] | null) ?? [];
     return rows.map(this.toFavorite);
   };
@@ -225,7 +226,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       },
       { onConflict: "visitor_id,article_id" }
     );
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -237,7 +238,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       .delete()
       .eq("visitor_id", visitorId)
       .eq("article_id", articleId);
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -245,7 +246,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
    */
   clearViewHistory = async (visitorId: string): Promise<void> => {
     const { error } = await this.supabase.from("view_history").delete().eq("visitor_id", visitorId);
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -256,7 +257,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       .from("recommendation_log")
       .delete()
       .eq("visitor_id", visitorId);
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   /**
@@ -264,7 +265,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
    */
   clearFeedback = async (visitorId: string): Promise<void> => {
     const { error } = await this.supabase.from("feedback").delete().eq("visitor_id", visitorId);
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
   };
 
   // ============================================

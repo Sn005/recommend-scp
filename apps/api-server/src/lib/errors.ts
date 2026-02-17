@@ -69,3 +69,38 @@ export class OnboardingRequiredError extends AppError {
     );
   }
 }
+
+/**
+ * Supabase PostgrestError のインターフェース
+ *
+ * Supabase の PostgREST エラーは Error クラスを継承しておらず、
+ * プレーンオブジェクトとして返される。Hono の onError ハンドラは
+ * Error インスタンスのみをキャッチするため、そのまま throw すると
+ * エラーハンドラをすり抜けて 500 になる。
+ */
+interface PostgrestErrorLike {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}
+
+/**
+ * データベースエラー
+ *
+ * Supabase PostgREST のエラーオブジェクト（プレーンオブジェクト）を
+ * Error インスタンスにラップし、Hono の onError ハンドラで
+ * キャッチ可能にする。
+ *
+ * @example
+ * const { data, error } = await supabase.from("visitors").select("*");
+ * if (error) throw new DatabaseError(error);
+ */
+export class DatabaseError extends AppError {
+  readonly code: string;
+
+  constructor(supabaseError: PostgrestErrorLike) {
+    super(`${BASE_URI}/internal-error`, "Database Error", 500, supabaseError.message);
+    this.code = supabaseError.code ?? "";
+  }
+}

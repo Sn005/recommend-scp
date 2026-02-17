@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { VectorSearchClientResult } from "@recommend-scp/shared/search";
+import { DatabaseError } from "../../lib/errors";
 
 /**
  * Supabaseエラー型
@@ -88,7 +89,7 @@ export class ArticlesRepository {
       match_count: options.limit ?? 10,
     })) as unknown as SupabaseResponse<VectorSearchClientResult[]>;
 
-    if (response.error !== null) throw response.error;
+    if (response.error !== null) throw new DatabaseError(response.error);
     return response.data ?? [];
   };
 
@@ -107,7 +108,7 @@ export class ArticlesRepository {
 
     // PGRST116: 行が見つからない場合のエラーコード
     if (response.error?.code === "PGRST116") return null;
-    if (response.error !== null) throw response.error;
+    if (response.error !== null) throw new DatabaseError(response.error);
     return response.data;
   };
 
@@ -137,7 +138,7 @@ export class ArticlesRepository {
 
     // PGRST116: 行が見つからない場合のエラーコード
     if (response.error?.code === "PGRST116") return null;
-    if (response.error !== null) throw response.error;
+    if (response.error !== null) throw new DatabaseError(response.error);
     return response.data;
   };
 }

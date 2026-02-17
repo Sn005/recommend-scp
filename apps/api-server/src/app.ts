@@ -13,6 +13,7 @@ import { Hono } from "hono";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { corsMiddleware } from "./middleware/cors";
 import { errorHandler } from "./middleware/error-handler";
+import { DatabaseError } from "./lib/errors";
 import { healthRoutes } from "./routes/health";
 import { checkUrlRoutes } from "./routes/check-url";
 import { wikiProxyRoutes } from "./routes/wiki-proxy";
@@ -73,6 +74,27 @@ export const createApp = (supabase: SupabaseClient) => {
   const app = new Hono()
     // CORSミドルウェア（全ルートに適用）
     .use(corsMiddleware)
+    // Supabase PostgrestError等の非Errorオブジェクトをラップするミドルウェア
+    //
+    // Supabase PostgREST のエラーは Error を継承しないプレーンオブジェクト
+    // ({ message, details, hint, code }) として返される。
+    // Hono の onError ハンドラは Error インスタンスのみキャッチするため、
+    // そのまま throw すると onError をすり抜けて 500 になる。
+    // このミドルウェアで非Error を DatabaseError にラップし、
+    // onError で適切にハンドリングできるようにする。
+    .use(async (_, next) => {
+      try {
+        await next();
+      } catch (err) {
+        if (err instanceof Error) throw err;
+        if (typeof err === "object" && err !== null && "message" in err) {
+          throw new DatabaseError(
+            err as { message: string; details?: string; hint?: string; code?: string }
+          );
+        }
+        throw new Error(String(err));
+      }
+    })
     // RFC 7807 Problem Details形式のエラーハンドリング
     .onError(errorHandler)
     // ルートをマウント

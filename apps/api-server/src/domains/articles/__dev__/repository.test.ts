@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ArticlesRepository } from "../repository";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { DatabaseError } from "../../../lib/errors";
 
 describe("ArticlesRepository", () => {
   let repository: ArticlesRepository;
@@ -90,7 +91,7 @@ describe("ArticlesRepository", () => {
       const mockError = { code: "ERROR", message: "RPC function not found" };
       mockSupabase.rpc.mockResolvedValue({ data: null, error: mockError });
 
-      await expect(repository.searchByEmbedding([0.1, 0.2])).rejects.toEqual(mockError);
+      await expect(repository.searchByEmbedding([0.1, 0.2])).rejects.toBeInstanceOf(DatabaseError);
     });
   });
 
@@ -160,7 +161,7 @@ describe("ArticlesRepository", () => {
       };
       mockSupabase.from.mockReturnValue(mockChain);
 
-      await expect(repository.getArticleById("test")).rejects.toEqual(mockError);
+      await expect(repository.getArticleById("test")).rejects.toBeInstanceOf(DatabaseError);
     });
   });
 });
