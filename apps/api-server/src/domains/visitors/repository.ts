@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Visitor } from "./types";
+import { DatabaseError } from "../../lib/errors";
 
 /** DB行の型（snake_case） */
 interface VisitorRow {
@@ -39,7 +40,7 @@ export class VisitorsRepository {
 
     // Not found (PGRST116)
     if (error?.code === "PGRST116") return null;
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return this.toVisitor(data as VisitorRow);
   };
@@ -58,7 +59,7 @@ export class VisitorsRepository {
       .select("id, visitor_id, created_at, updated_at")
       .single();
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return this.toVisitor(data as VisitorRow);
   };
@@ -75,7 +76,7 @@ export class VisitorsRepository {
       .select("*", { count: "exact", head: true })
       .eq("visitor_id", visitorId);
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return (count ?? 0) > 0;
   };

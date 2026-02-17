@@ -11,6 +11,7 @@ import type {
   VectorSearchClientResult,
   UnexploredTagsSearchParams,
 } from "@recommend-scp/shared/search";
+import { DatabaseError } from "../errors";
 import { parseVectorField } from "./parse-vector";
 
 /**
@@ -96,7 +97,7 @@ export class SupabaseVectorSearch implements VectorSearchClient {
     )) as unknown as SupabaseResponse<SearchResultRow[]>;
 
     if (response.error !== null) {
-      throw response.error;
+      throw new DatabaseError(response.error);
     }
 
     const rows = response.data ?? [];
@@ -160,7 +161,7 @@ export class SupabaseVectorSearch implements VectorSearchClient {
     )) as unknown as SupabaseResponse<SearchResultRow[]>;
 
     if (response.error !== null) {
-      throw response.error;
+      throw new DatabaseError(response.error);
     }
 
     const rows = response.data ?? [];

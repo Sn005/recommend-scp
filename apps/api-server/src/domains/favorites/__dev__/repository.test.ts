@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FavoritesRepository } from "../repository";
 import type { FavoriteWithArticle } from "../types";
+import { DatabaseError } from "../../../lib/errors";
 
 /** DB行の型（JOIN後のsnake_case） */
 interface MockFavoriteRow {
@@ -152,10 +153,7 @@ describe("FavoritesRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.getByVisitorId("visitor-1")).rejects.toEqual({
-        code: "PGRST500",
-        message: "DB Error",
-      });
+      await expect(repository.getByVisitorId("visitor-1")).rejects.toBeInstanceOf(DatabaseError);
     });
 
     describe("ObjectClass抽出", () => {
@@ -407,10 +405,9 @@ describe("FavoritesRepository", () => {
         });
 
       // Act & Assert
-      await expect(repository.add("visitor-1", "SCP-INVALID")).rejects.toEqual({
-        code: "23503",
-        message: "Foreign key violation",
-      });
+      await expect(repository.add("visitor-1", "SCP-INVALID")).rejects.toBeInstanceOf(
+        DatabaseError
+      );
     });
   });
 
@@ -497,10 +494,7 @@ describe("FavoritesRepository", () => {
       });
       mockFrom.mockReturnValue(queryMock);
 
-      await expect(repository.remove("visitor-1", "SCP-173")).rejects.toEqual({
-        code: "PGRST500",
-        message: "DB Error",
-      });
+      await expect(repository.remove("visitor-1", "SCP-173")).rejects.toBeInstanceOf(DatabaseError);
     });
   });
 });

@@ -7,6 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { FavoriteWithArticle, AddFavoriteResult } from "./types";
 import { OBJECT_CLASSES } from "./types";
+import { DatabaseError } from "../../lib/errors";
 
 /** DB行の型（JOIN後のsnake_case） */
 interface FavoriteRow {
@@ -68,7 +69,7 @@ export class FavoritesRepository {
       .eq("visitor_id", visitorId)
       .order("added_at", { ascending: false });
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return (data as unknown as FavoriteRow[]).map((row) => this.toFavoriteWithArticle(row));
   };
@@ -87,7 +88,7 @@ export class FavoritesRepository {
       .eq("visitor_id", visitorId)
       .eq("article_id", articleId.toLowerCase());
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return (count ?? 0) > 0;
   };
@@ -108,7 +109,7 @@ export class FavoritesRepository {
       .eq("article_id", articleId.toLowerCase())
       .maybeSingle();
 
-    if (selectError) throw selectError;
+    if (selectError) throw new DatabaseError(selectError);
 
     if (existing) {
       return {
@@ -126,7 +127,7 @@ export class FavoritesRepository {
       .select("id, article_id, added_at")
       .single();
 
-    if (error) throw error;
+    if (error) throw new DatabaseError(error);
 
     return {
       id: data.id as string,
