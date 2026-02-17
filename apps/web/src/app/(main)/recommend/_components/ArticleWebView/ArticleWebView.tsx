@@ -22,6 +22,61 @@ function toProxyUrl(url: string): string {
   return url;
 }
 
+/** iframe内画像の読み込みタイムアウト（個別画像ごと） */
+const IMAGE_LOAD_TIMEOUT_MS = 10_000;
+
+/**
+ * iframe内の全画像が読み込み完了するまで待機
+ *
+ * wiki-proxy経由の同一オリジンiframeなので contentDocument にアクセス可能。
+ * 各imgの .complete を確認し、未完了のものは load/error イベントで完了を待つ。
+ * 個別画像のタイムアウト（10秒）を設け、永久待ちを防止する。
+ */
+function waitForIframeImages(iframe: HTMLIFrameElement): Promise<void> {
+  return new Promise((resolve) => {
+    let doc: Document | null = null;
+    try {
+      doc = iframe.contentDocument;
+    } catch {
+      // Cross-origin（通常はwiki-proxy経由なので発生しない）
+      resolve();
+      return;
+    }
+    if (!doc) {
+      resolve();
+      return;
+    }
+
+    const images = Array.from(doc.querySelectorAll("img"));
+    const incompleteImages = images.filter((img) => !img.complete);
+
+    if (incompleteImages.length === 0) {
+      resolve();
+      return;
+    }
+
+    let remaining = incompleteImages.length;
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+
+    const onDone = () => {
+      remaining--;
+      if (remaining <= 0) {
+        timeoutIds.forEach((id) => {
+          clearTimeout(id);
+        });
+        resolve();
+      }
+    };
+
+    incompleteImages.forEach((img) => {
+      img.addEventListener("load", onDone, { once: true });
+      img.addEventListener("error", onDone, { once: true });
+      // 個別画像タイムアウト: ネットワーク障害等で永久に読み込めない画像の安全弁
+      timeoutIds.push(setTimeout(onDone, IMAGE_LOAD_TIMEOUT_MS));
+    });
+  });
+}
+
 export function ArticleWebView({
   url,
   articleId,
@@ -30,6 +85,7 @@ export function ArticleWebView({
   onSkip,
   onContentLoaded,
   onIframeLoad,
+  onContentFullyReady,
   className,
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
@@ -66,14 +122,22 @@ export function ArticleWebView({
   // WebView読み込み完了時にコンテンツ取得を実行
   const handleIframeLoad = useCallback(() => {
     handleLoad();
-    onIframeLoad?.();
+    onIframeLoad?.(); // 即時: プールカスケード制御用
 
     // articleIdが指定されており、まだ取得していない場合のみ実行
     if (articleId && onContentLoaded && !contentFetchedRef.current) {
       contentFetchedRef.current = true;
       void fetchContent();
     }
-  }, [handleLoad, onIframeLoad, articleId, onContentLoaded, fetchContent]);
+
+    // 画像含む全サブリソース読み込み完了を待ってから通知
+    const iframe = iframeRef.current;
+    if (iframe && onContentFullyReady) {
+      void waitForIframeImages(iframe).then(() => {
+        onContentFullyReady();
+      });
+    }
+  }, [handleLoad, onIframeLoad, onContentFullyReady, articleId, onContentLoaded, fetchContent]);
 
   // 404検知時の処理
   const handleNotFound = useCallback(async () => {

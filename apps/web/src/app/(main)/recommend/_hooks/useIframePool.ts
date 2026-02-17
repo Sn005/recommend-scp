@@ -11,7 +11,10 @@ import type { Article } from "../_types";
 export interface IframeSlot {
   articleIndex: number;
   url: string;
+  /** iframe onLoad 発火済み（カスケード先読み制御用） */
   isLoaded: boolean;
+  /** 画像含む全サブリソース読み込み完了（表示切替用） */
+  isFullyLoaded: boolean;
 }
 
 export interface UseIframePoolOptions {
@@ -22,19 +25,20 @@ export interface UseIframePoolOptions {
 type Slots = [IframeSlot, IframeSlot | null, IframeSlot | null];
 
 /** 記事が空の場合のプレースホルダースロット */
-const EMPTY_SLOT: IframeSlot = { articleIndex: -1, url: "", isLoaded: false };
+const EMPTY_SLOT: IframeSlot = { articleIndex: -1, url: "", isLoaded: false, isFullyLoaded: false };
 
 export interface UseIframePoolReturn {
   slots: Slots;
   isNextReady: boolean;
   advance: () => void;
   handleIframeLoad: (articleIndex: number) => void;
+  handleIframeFullyLoaded: (articleIndex: number) => void;
 }
 
 /** 記事インデックスからスロットを生成（範囲外の場合はnull） */
 const createSlot = (articles: Article[], articleIndex: number): IframeSlot | null => {
   if (articleIndex < 0 || articleIndex >= articles.length) return null;
-  return { articleIndex, url: articles[articleIndex].url, isLoaded: false };
+  return { articleIndex, url: articles[articleIndex].url, isLoaded: false, isFullyLoaded: false };
 };
 
 /** 次のスロットが作成可能か判定し、作成する */
@@ -104,6 +108,20 @@ export const useIframePool = ({
     [articles]
   );
 
+  // 画像含む全サブリソース読み込み完了: isFullyLoadedをtrueに更新
+  const handleIframeFullyLoaded = useCallback((articleIndex: number) => {
+    setSlots(([current, next, prefetch]) => {
+      const markFully = (slot: IframeSlot): IframeSlot =>
+        slot.articleIndex === articleIndex && !slot.isFullyLoaded
+          ? { ...slot, isFullyLoaded: true }
+          : slot;
+      const markFullyNullable = (slot: IframeSlot | null): IframeSlot | null =>
+        slot ? markFully(slot) : null;
+
+      return [markFully(current), markFullyNullable(next), markFullyNullable(prefetch)];
+    });
+  }, []);
+
   // スロットローテーション: Current破棄、Next→Current、Prefetch→Next
   const advance = useCallback(() => {
     setSlots(([current, next, prefetch]) => {
@@ -121,5 +139,5 @@ export const useIframePool = ({
 
   const isNextReady = slots[1]?.isLoaded ?? false;
 
-  return { slots, isNextReady, advance, handleIframeLoad };
+  return { slots, isNextReady, advance, handleIframeLoad, handleIframeFullyLoaded };
 };

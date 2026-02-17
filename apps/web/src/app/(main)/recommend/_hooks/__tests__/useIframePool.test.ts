@@ -287,6 +287,92 @@ describe("useIframePool", () => {
       });
       expect(result.current.slots[0].isLoaded).toBe(true);
     });
+
+    it("初期状態でisFullyLoadedがfalseである", () => {
+      const articles = createMockArticles(3);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      expect(result.current.slots[0].isFullyLoaded).toBe(false);
+    });
+
+    it("handleIframeFullyLoaded()で対象スロットのisFullyLoadedがtrueになる", () => {
+      const articles = createMockArticles(3);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      expect(result.current.slots[0].isFullyLoaded).toBe(false);
+
+      act(() => {
+        result.current.handleIframeFullyLoaded(0);
+      });
+
+      expect(result.current.slots[0].isFullyLoaded).toBe(true);
+    });
+
+    it("handleIframeFullyLoaded()はNextスロットにも適用される", async () => {
+      const articles = createMockArticles(3);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      // Current読み込み完了 → Next作成
+      act(() => {
+        result.current.handleIframeLoad(0);
+      });
+      await waitFor(() => {
+        expect(result.current.slots[1]).not.toBeNull();
+      });
+
+      act(() => {
+        result.current.handleIframeFullyLoaded(1);
+      });
+
+      expect(result.current.slots[1]?.isFullyLoaded).toBe(true);
+    });
+
+    it("存在しないarticleIndexでhandleIframeFullyLoaded()を呼んでも無視される", () => {
+      const articles = createMockArticles(3);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      act(() => {
+        result.current.handleIframeFullyLoaded(999);
+      });
+
+      expect(result.current.slots[0].isFullyLoaded).toBe(false);
+    });
+
+    it("handleIframeFullyLoaded()は冪等に動作する", () => {
+      const articles = createMockArticles(3);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      act(() => {
+        result.current.handleIframeFullyLoaded(0);
+      });
+      expect(result.current.slots[0].isFullyLoaded).toBe(true);
+
+      act(() => {
+        result.current.handleIframeFullyLoaded(0);
+      });
+      expect(result.current.slots[0].isFullyLoaded).toBe(true);
+    });
+
+    it("isFullyLoadedはadvance()後のスロットローテーションで引き継がれる", async () => {
+      const articles = createMockArticles(5);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      await loadAllSlots(result);
+
+      // Nextスロットを完全読み込み完了に設定
+      act(() => {
+        result.current.handleIframeFullyLoaded(1);
+      });
+      expect(result.current.slots[1]?.isFullyLoaded).toBe(true);
+
+      // advance() → 旧Nextが新Currentに昇格
+      act(() => {
+        result.current.advance();
+      });
+
+      // 新CurrentのisFullyLoadedが引き継がれている
+      expect(result.current.slots[0].isFullyLoaded).toBe(true);
+    });
   });
 
   // ============================

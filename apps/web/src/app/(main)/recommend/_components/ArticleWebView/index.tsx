@@ -13,8 +13,10 @@ export interface ArticleWebViewProps {
   onSkip?: () => void;
   /** コンテンツ（タイトル・本文冒頭）取得完了時のコールバック */
   onContentLoaded?: (content: ArticleContent) => void;
-  /** iframe読み込み完了時のコールバック */
+  /** iframe読み込み完了時のコールバック（カスケード先読み用、onLoad即時発火） */
   onIframeLoad?: () => void;
+  /** iframe内の画像含む全サブリソース読み込み完了時のコールバック（表示切替用） */
+  onContentFullyReady?: () => void;
   /** 追加のCSSクラス */
   className?: string;
 }
