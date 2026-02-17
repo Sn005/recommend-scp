@@ -7,6 +7,7 @@
 import type { ArticlesRepository } from "./repository";
 import { createEmbedding } from "../../lib/openai";
 import { NotFoundError } from "../../lib/errors";
+import { parseHTML } from "linkedom";
 
 /**
  * 記事検索結果の1件
@@ -131,10 +132,8 @@ export class ArticlesService {
       const response = await fetch(url);
       const html = await response.text();
 
-      // jsdomでDOM解析
-      const { JSDOM } = await import("jsdom");
-      const dom = new JSDOM(html);
-      const doc = dom.window.document;
+      // linkedomでDOM解析
+      const { document: doc } = parseHTML(html);
 
       const titleText = doc.querySelector("#page-title")?.textContent ?? "";
       const contentText = doc.querySelector("#page-content")?.textContent ?? "";
