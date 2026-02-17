@@ -1,10 +1,13 @@
 /**
  * @file Wikiプロキシエンドポイント
  * @description SCP Wiki (HTTP) コンテンツをHTTPS経由で配信するリバースプロキシ。
+ * 通常ページからDOM抽出で記事本文を取得し、記事固有CSS/JSを保持しつつ
+ * Wikidotプラットフォーム要素を除去した最適化HTMLを配信する。
  * HTMLレスポンス内のHTTP URLをプロキシパスに書き換え、mixed contentを完全に回避する。
  */
 
 import { Hono } from "hono";
+import type { JSDOM as JSDOMType } from "jsdom";
 
 /**
  * 許可するWikidotドメイン（セキュリティのため制限）
@@ -46,31 +49,28 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 ];
 
 /**
- * <head>末尾に注入するCSS
+ * 注入CSS: 記事可読性向上スタイル
  *
- * 1. printer--friendlyモードの印刷オプションUI・印刷ヘッダー（サイト名/ソースURL）を非表示
- * 2. 記事可読性向上（line-height, font-size, spacing）
- *    - モックアップ（header-6-minimal-2btn.html）のスタイルを参考
- *    - 元記事のカラー・装飾は尊重し、可読性に直結するプロパティのみ上書き
+ * 記事固有CSSの後に配置されるため、可読性に直結するプロパティに !important を付与。
+ * 元記事のカラー・装飾は尊重し、レイアウト・タイポグラフィのみ上書きする。
  *
- * CSSは初回ペイント前に評価されるため、レイアウトシフトが発生しない。
+ * - モックアップ（header-6-minimal-2btn.html）のスタイルを参考
+ * - CSSは初回ペイント前に評価されるため、レイアウトシフトが発生しない
  */
 const INJECTED_STYLE = [
   "<style>",
-  // 印刷オプション・印刷ヘッダー非表示
-  "#print-options,#print-head{display:none!important}",
   // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
-  "#container,#main-content{margin:0;padding:0;max-width:none}",
+  "#main-content{margin:0!important;padding:0!important;max-width:none!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
-  "#page-title{font-size:24px;font-weight:bold;padding:0 8px}",
+  "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ
-  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8;-webkit-text-size-adjust:100%}",
+  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
-  "#page-content{font-size:15px;overflow-wrap:break-word;word-break:break-word;padding:0 16px}",
+  "#page-content{font-size:15px!important;overflow-wrap:break-word;word-break:break-word;padding:0 16px!important}",
   // 記事可読性: 段落間スペーシング
-  "#page-content p{margin-bottom:1em}",
+  "#page-content p{margin-bottom:1em!important}",
   // 記事可読性: 画像レスポンシブ化 + 上下マージン
-  "#page-content img{max-width:100%;height:auto;display:block;margin:16px 0}",
+  "#page-content img{max-width:100%!important;height:auto!important;display:block;margin:16px 0}",
   // レイアウト崩れ防止: Wikidot記事のfloatブロックを無効化
   "#page-content .block-left,#page-content .block-right{float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
   // コンポーネントコードビューア非表示: テーマ等のコンポーネントincludeに付随する
@@ -81,7 +81,7 @@ const INJECTED_STYLE = [
 
 /**
  * 既にプロキシパスに書き換え済みのプレフィックス
- * これらで始まるパスは rewriteAbsolutePaths で二重変換しない
+ * これらで始まるパスは rewriteUrls で二重変換しない
  */
 const PROXY_PATH_PREFIXES = ["wiki/", "wdfiles-", "wikidot-", "api/", "common--", "local--"];
 
@@ -135,7 +135,7 @@ const INJECTED_SCRIPT = [
   "return}",
   "});",
   // collapsible-block 開閉（WIKIDOT.combined.js の代替）
-  // printer--friendlyモードではWIKIDOT.combined.jsが読み込まれないため、
+  // 通常ページからDOM抽出するためWIKIDOT.combined.jsは除去される。
   // collapsible-block の開閉をバニラJSで再実装する。
   "document.addEventListener('click',function(e){",
   "var l=e.target.closest('a.collapsible-block-link');",
@@ -194,6 +194,15 @@ const INJECTED_SCRIPT = [
 ].join("");
 
 /**
+ * WIKIDOTグローバルオブジェクトのスタブ
+ *
+ * 記事固有JSがWIKIDOTオブジェクトを参照する場合のReferenceError防止。
+ * プラットフォームスクリプト（WIKIDOT.combined.js）は除去するが、
+ * 記事内のインラインスクリプトがWIKIDOT.page等を参照するケースに対応。
+ */
+const WIKIDOT_STUB = "<script>window.WIKIDOT={page:{listeners:{}},modules:{}};</script>";
+
+/**
  * HTML要素のインラインstyle属性を除去する正規表現
  *
  * Wikidot記事には `style="text-align: right;"` 等のインラインスタイルが含まれることがあり、
@@ -216,7 +225,7 @@ const INLINE_STYLE_ATTR_RE = / style="(?![^"]*display\s*:\s*none)[^"]*"/gi;
  * Wiki HTML内のドメインなし絶対パスリンク（例: href="/scp-456"）は
  * URL_REWRITE_MAP では変換されない。
  * そのままだとiframe内で /scp-456 に遷移し、Next.jsの404になるため、
- * /api/wiki-proxy/ 経由に変換して、printer--friendlyモード + CSS注入 + URL書き換えを適用する。
+ * /api/wiki-proxy/ 経由に変換する。
  *
  * 否定先読みで既にプロキシパスに変換済みの href は除外する。
  */
@@ -231,46 +240,166 @@ const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("
 const CLOUDFRONT_HTTP_RE = /http:\/\/([a-z0-9]+\.cloudfront\.net\/)/g;
 
 /**
- * HTML書き換え: URL変換 + CSS注入 + 記事リンクのプロキシ化 + リンクインターセプトJS注入
+ * プラットフォームスクリプトのsrc URLパターン
+ *
+ * Wikidotプラットフォームが提供する外部スクリプト（WIKIDOT.combined.js等）を識別。
+ * これらはDOM抽出後の再構築HTMLでは不要なため除外する。
+ */
+const PLATFORM_SCRIPT_SRC_RE = /cloudfront\.net|wikidot\.com|wdfiles\.com/i;
+
+/**
+ * プラットフォームスクリプトのインラインコードパターン
+ *
+ * WIKIDOT/OZONE/YAHOOグローバルオブジェクトへの代入を含むインラインスクリプトを識別。
+ * これらはプラットフォーム初期化コードであり、再構築HTMLでは不要。
+ */
+const PLATFORM_SCRIPT_CONTENT_RE = /\bWIKIDOT\.\w+\s*=|\bOZONE\.\w+\s*=|\bYAHOO\.\w+\s*=/;
+
+// ============================================================
+// DOM抽出・再構築
+// ============================================================
+
+/**
+ * DOM抽出結果
+ */
+interface ExtractedContent {
+  /** #main-content の outerHTML（フォールバック: body innerHTML） */
+  mainContentHtml: string;
+  /** <head>内の記事固有<style>タグ（outerHTML配列） */
+  headStyleTags: string[];
+  /** <head>内の<link rel="stylesheet">タグ（outerHTML配列） */
+  headLinkTags: string[];
+  /** フィルタ済み記事固有<script>タグ（outerHTML配列） */
+  articleScripts: string[];
+}
+
+/**
+ * 指定されたスクリプト要素が記事固有のものかどうかを判定
+ *
+ * プラットフォームスクリプト（外部CDN、WIKIDOT/OZONE/YAHOO初期化コード）を除外し、
+ * 記事著者が埋め込んだカスタムJSのみを保持する。
+ */
+function isArticleScript(script: { src: string; textContent: string | null }): boolean {
+  // 外部スクリプト: プラットフォームURLなら除外
+  if (script.src) {
+    return !PLATFORM_SCRIPT_SRC_RE.test(script.src);
+  }
+  const content = script.textContent ?? "";
+  // 空のスクリプトは除外
+  if (!content.trim()) {
+    return false;
+  }
+  // プラットフォーム初期化コードなら除外
+  return !PLATFORM_SCRIPT_CONTENT_RE.test(content);
+}
+
+/**
+ * HTMLからDOM解析して記事コンテンツを抽出
+ *
+ * 通常のWikidotページから以下を抽出:
+ * 1. #main-content（#page-title + #page-content を含む記事本体）
+ * 2. <head>内の<style>タグ（記事テーマCSS）
+ * 3. <head>内の<link rel="stylesheet">タグ（外部CSS）
+ * 4. 記事固有の<script>タグ（プラットフォームスクリプトを除外）
+ */
+async function extractContent(html: string): Promise<ExtractedContent> {
+  const { JSDOM } = (await import("jsdom")) as { JSDOM: typeof JSDOMType };
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  // #main-content の outerHTML（フォールバック: body innerHTML）
+  const mainContent = doc.querySelector("#main-content");
+  const mainContentHtml = mainContent?.outerHTML ?? doc.body.innerHTML;
+
+  // <head>内の<style>タグを収集
+  const headStyleTags: string[] = [];
+  doc.querySelectorAll("head style").forEach((style) => {
+    headStyleTags.push(style.outerHTML);
+  });
+
+  // <head>内の<link rel="stylesheet">タグを収集
+  const headLinkTags: string[] = [];
+  doc.querySelectorAll('head link[rel="stylesheet"]').forEach((link) => {
+    headLinkTags.push(link.outerHTML);
+  });
+
+  // <script>タグをフィルタリング（プラットフォームスクリプトを除外）
+  const articleScripts: string[] = [];
+  doc.querySelectorAll("script").forEach((script) => {
+    if (isArticleScript(script)) {
+      articleScripts.push(script.outerHTML);
+    }
+  });
+
+  return { mainContentHtml, headStyleTags, headLinkTags, articleScripts };
+}
+
+/**
+ * 抽出されたコンテンツから最適化HTMLを再構築
+ *
+ * 構築順序:
+ * 1. meta（charset, viewport）
+ * 2. 外部CSS（<link>タグ）
+ * 3. 記事固有CSS（<style>タグ）
+ * 4. 注入CSS（可読性スタイル、!importantで記事CSSをオーバーライド）
+ * 5. 記事本文（#main-content）
+ * 6. WIKIDOTスタブ（ReferenceError防止）
+ * 7. 記事固有JS
+ * 8. 注入JS（リンクインターセプト + コンポーネント開閉）
+ */
+function buildHtml(content: ExtractedContent): string {
+  return [
+    "<!DOCTYPE html>",
+    '<html><head><meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    ...content.headLinkTags,
+    ...content.headStyleTags,
+    INJECTED_STYLE,
+    "</head><body>",
+    content.mainContentHtml,
+    WIKIDOT_STUB,
+    ...content.articleScripts,
+    INJECTED_SCRIPT,
+    "</body></html>",
+  ].join("");
+}
+
+/**
+ * HTML内のURLを書き換え + インラインstyle除去
  *
  * 処理順序:
- * 1. CSS注入（</head>前、初回ペイント前に適用）
- * 2. インラインstyle属性の除去（レイアウト崩れ防止）
- * 3. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
- * 4. CloudFront URLのプロトコル変換（http:// → https://）
- * 5. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
- * 6. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
- * 7. リンクインターセプトJS注入（</body>前、動的リンクの安全策）
+ * 1. インラインstyle属性の除去（レイアウト崩れ防止）
+ * 2. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
+ * 3. CloudFront URLのプロトコル変換（http:// → https://）
+ * 4. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
+ * 5. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
  */
-function rewriteHtml(html: string): string {
-  // 1. CSS注入（大文字小文字不問 + フォールバック）
-  let result: string;
-  const headCloseRe = /<\/head>/i;
-  const bodyOpenRe = /<body[^>]*>/i;
-  if (headCloseRe.test(html)) {
-    result = html.replace(headCloseRe, `${INJECTED_STYLE}</head>`);
-  } else if (bodyOpenRe.test(html)) {
-    // </head>がない場合は<body>直後に注入
-    result = html.replace(bodyOpenRe, `$&${INJECTED_STYLE}`);
-  } else {
-    // どちらもない場合は先頭に注入
-    result = INJECTED_STYLE + html;
-  }
-  // 2. インラインstyle属性の除去
+function rewriteUrls(html: string): string {
+  let result = html;
+  // 1. インラインstyle属性の除去
   result = result.replace(INLINE_STYLE_ATTR_RE, "");
-  // 3. フルURL書き換え
+  // 2. フルURL書き換え
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }
-  // 4. CloudFront URLのプロトコル変換（HTTPS対応済みCDNなのでプロキシ不要）
+  // 3. CloudFront URLのプロトコル変換（HTTPS対応済みCDNなのでプロキシ不要）
   result = result.replace(CLOUDFRONT_HTTP_RE, "https://$1");
-  // 5. ドメインなし絶対パスhrefをプロキシ経由に書き換え
+  // 4. ドメインなし絶対パスhrefをプロキシ経由に書き換え
   result = result.replace(ABSOLUTE_PATH_HREF_RE, 'href="/api/wiki-proxy/');
-  // 6. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
+  // 5. URL_REWRITE_MAPで /wiki/ に変換された記事hrefをプロキシ経由に変換
   result = result.replace(WIKI_ARTICLE_HREF_RE, 'href="/api/wiki-proxy/');
-  // 7. リンクインターセプトJS注入（大文字小文字不問）
-  result = result.replace(/<\/body>/i, `${INJECTED_SCRIPT}</body>`);
   return result;
+}
+
+/**
+ * HTML処理パイプライン: DOM抽出 → HTML再構築 → URL書き換え
+ *
+ * 通常のWikidotページHTMLを受け取り、最適化されたプロキシHTMLを生成する。
+ */
+async function processHtml(html: string): Promise<string> {
+  const content = await extractContent(html);
+  const rebuilt = buildHtml(content);
+  return rewriteUrls(rebuilt);
 }
 
 /**
@@ -294,9 +423,9 @@ function extractProxyPath(requestPath: string): string {
 /**
  * GET /wiki-proxy/*
  *
- * SCP Wikiページをprinter--friendlyモードでプロキシ配信。
- * printer--friendlyはサイドバー・トップバー・ナビゲーションを除去し、
- * 記事本文のみを返すWikidot組み込み機能。
+ * SCP Wikiページを通常モードで取得し、DOM抽出で記事本文・CSS・JSを抽出。
+ * Wikidotプラットフォーム要素（サイドバー・ヘッダー・フッター等）を除去し、
+ * 記事固有のカスタマイズ（テーマCSS・装飾JS）を保持した最適化HTMLを配信。
  * HTMLの場合はURL書き換えを行い、CSS/JS/画像等はそのままパススルーする。
  */
 export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
@@ -306,25 +435,25 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     return c.json({ error: "path is required" }, 400);
   }
 
-  // Wikidotのprinter--friendlyはスラッグが小文字でないと正常に動作しない。
+  // Wikidotはスラッグが小文字でないと正常に動作しない。
   // DBに大文字で格納されたarticle_id（例: "SCP-2000"）経由のリクエストに対応するため、
   // パスを小文字に正規化する。
   const path = rawPath.toLowerCase();
 
-  // printer--friendly: サイドバー・ナビ・広告を除去して記事本文のみ取得
-  const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/printer--friendly/${path}`;
+  // 通常ページを取得（記事固有CSS/JSを含む完全なHTML）
+  const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/${path}`;
 
   try {
     const response = await fetch(targetUrl);
 
     const contentType = response.headers.get("content-type") ?? "";
 
-    // HTMLレスポンス: URL書き換えを適用
+    // HTMLレスポンス: DOM抽出 + HTML再構築 + URL書き換え
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      const rewritten = rewriteHtml(html);
+      const processed = await processHtml(html);
 
-      return new Response(rewritten, {
+      return new Response(processed, {
         status: response.status,
         headers: {
           "content-type": contentType,
@@ -345,3 +474,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     return c.json({ error: "Failed to fetch wiki content" }, 502);
   }
 });
+
+// テスト用エクスポート
+export { extractContent, buildHtml, rewriteUrls, processHtml, isArticleScript };
+export type { ExtractedContent };

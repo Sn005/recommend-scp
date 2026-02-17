@@ -221,6 +221,18 @@ apps/web/src/
 - 読了自動遷移を廃止。遷移は「次へ」ボタンタップのみ
 - 詳細: `specs/006-frontend/006-05-transition-ux/006-05.md` の仕様変更履歴を参照
 
+### 2026-02-16: wiki-proxyアーキテクチャ変更（printer--friendly → DOM抽出方式）
+
+**変更前**: SCP Wikiの `printer--friendly` URL（印刷用ページ）を取得し、正規表現でHTML加工
+**変更後**: 通常ページを取得し、jsdomでDOM解析 → `#main-content` を抽出して再構築
+
+- **背景**: printer--friendly モードでは記事固有のCSS（テーマ、装飾）とJS（インタラクティブ演出）が除外されていた
+- **DOM抽出方式**: 通常ページをjsdomでパースし、`#main-content`（`#page-title` + `#page-content`）を抽出。記事固有の `<style>`, `<link rel="stylesheet">`, `<script>` を収集し、プラットフォームスクリプト（WIKIDOT.combined.js, OZONE等）のみフィルタリング
+- **CSS !important戦略**: 可読性のための注入CSS（max-width, padding, font-size等）に `!important` を付与し、記事テーマCSSとの共存を実現
+- **WIKIDOT stub注入**: 記事JSが参照する `window.WIKIDOT` グローバルオブジェクトのスタブを注入し、ReferenceError を防止
+- **フロントエンドへの影響**: iframe内に記事固有テーマ・装飾JSが反映されるため、SCP Wikiの雰囲気がより忠実に再現される。スクロール検知（contentWindow直接アクセス）は変更なし
+- 詳細: `apps/api-server/src/routes/wiki-proxy.ts`
+
 ### 2026-02-11: スクロール検知方式変更
 
 **変更前**: Intersection Observer API / postMessage方式
