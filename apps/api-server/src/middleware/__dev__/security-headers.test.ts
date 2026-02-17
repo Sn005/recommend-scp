@@ -17,6 +17,7 @@ describe("セキュリティヘッダーミドルウェア", () => {
     app.use(securityHeaders);
     app.get("/test", (c) => c.json({ ok: true }));
     app.post("/test", (c) => c.json({ ok: true }));
+    app.get("/api/wiki-proxy/*", (c) => c.html("<html></html>"));
     return app;
   };
 
@@ -116,6 +117,20 @@ describe("セキュリティヘッダーミドルウェア", () => {
       });
 
       expect(res.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      expect(res.headers.get("X-Frame-Options")).toBe("DENY");
+    });
+  });
+
+  describe("wiki-proxy: iframe埋め込み許可", () => {
+    it("wiki-proxyルートではX-Frame-OptionsがSAMEORIGINに設定される", async () => {
+      const app = createApp();
+      const res = await app.request("/api/wiki-proxy/scp-173");
+      expect(res.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    });
+
+    it("wiki-proxy以外のルートではX-Frame-OptionsがDENYのまま", async () => {
+      const app = createApp();
+      const res = await app.request("/test");
       expect(res.headers.get("X-Frame-Options")).toBe("DENY");
     });
   });
