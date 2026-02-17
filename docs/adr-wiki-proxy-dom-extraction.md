@@ -118,6 +118,22 @@ printer--friendly ページを取得した上で、通常ページから CSS/JS 
 - 記事固有 JS の実行を許可するため、理論上は予期しない動作の可能性がある
 - `!important` の使用は CSS の一般的なベストプラクティスに反するが、サードパーティ CSS との共存という制約上やむを得ない
 
+### 補足: jsdom から linkedom への移行（2026-02-17）
+
+Vercel の Node.js ランタイムで jsdom の依存 `html-encoding-sniffer` → `@exodus/bytes` が ESM/CJS 互換性エラー（`ERR_REQUIRE_ESM`）を起こし、wiki-proxy が 502 を返す問題が発生した。
+
+動的 import（`await import("jsdom")`）でも jsdom 内部の `require()` チェーンが CJS コンテキストで ESM モジュールを読み込もうとするため解決できなかった。
+
+**対応**: jsdom を [linkedom](https://github.com/WebReflection/linkedom) に置き換え。
+
+- **ESM ネイティブ**: CJS/ESM 互換性問題が発生しない
+- **軽量**: jsdom の約 1/10 のサイズ。Vercel serverless function のコールドスタートが改善
+- **DOM API 互換**: `querySelector`, `querySelectorAll`, `outerHTML`, `innerHTML`, `textContent` 等、`extractContent()` が使用する API を全てサポート
+- **同期 API**: `parseHTML()` は同期関数であり、`extractContent()` / `processHtml()` を非同期から同期に簡素化
+- **テスト全件パス**: 既存 67 テストケースが変更なしで全てパス
+
+`articles/service.ts` の `getContent()` でも同様に linkedom に統一した。
+
 ### 将来の検討事項
 
 | 項目                                 | トリガー                   | 対応案                                                           |
