@@ -5,7 +5,7 @@ import { ObjectClassBadge } from "@/shared/components/ui/ObjectClassBadge";
 
 /** タイミング定数 */
 const CARD_MIN_MS = 500;
-const CARD_MAX_MS = 1000;
+const CARD_SAFETY_TIMEOUT_MS = 15_000;
 const FADE_DURATION_MS = 150;
 
 /** グラデーションマッピング */
@@ -136,10 +136,10 @@ export function TransitionCard({
       }
     }, CARD_MIN_MS);
 
-    // Max time → force fade out
+    // Safety timeout → iframe読み込みタイムアウトに合わせた安全弁（15秒）
     addTimer(() => {
       startFadeOut();
-    }, CARD_MAX_MS);
+    }, CARD_SAFETY_TIMEOUT_MS);
 
     return () => {
       cancelAnimationFrame(rafId);

@@ -142,16 +142,36 @@ describe("TransitionCard", () => {
   });
 
   // ===========================================
-  // AC-5: 適応型タイミング（最大表示時間）
+  // AC-5: iframe読み込み完了まで表示し続ける
   // ===========================================
-  describe("AC-5: 適応型タイミング（最大表示時間）", () => {
-    it("1000ms経過でiframe未完了でも強制的にフェードアウトする", () => {
+  describe("AC-5: iframe読み込み完了まで表示し続ける", () => {
+    it("1000ms経過でもiframe未完了なら表示し続ける", () => {
       const onDismissed = vi.fn();
       render(<TransitionCard {...defaultProps} isContentReady={false} onDismissed={onDismissed} />);
 
       // 1000ms経過
       act(() => {
         vi.advanceTimersByTime(1000);
+      });
+
+      // フェードアウトしない
+      expect(onDismissed).not.toHaveBeenCalled();
+
+      // 3000ms経過してもiframe未完了なら表示し続ける
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+
+      expect(onDismissed).not.toHaveBeenCalled();
+    });
+
+    it("安全弁タイムアウト（15秒）で強制フェードアウトする", () => {
+      const onDismissed = vi.fn();
+      render(<TransitionCard {...defaultProps} isContentReady={false} onDismissed={onDismissed} />);
+
+      // 15000ms経過
+      act(() => {
+        vi.advanceTimersByTime(15000);
       });
 
       // フェードアウト完了（150ms）
@@ -162,12 +182,12 @@ describe("TransitionCard", () => {
       expect(onDismissed).toHaveBeenCalledTimes(1);
     });
 
-    it("999ms時点では強制フェードアウトしない", () => {
+    it("14999ms時点では強制フェードアウトしない", () => {
       const onDismissed = vi.fn();
       render(<TransitionCard {...defaultProps} isContentReady={false} onDismissed={onDismissed} />);
 
       act(() => {
-        vi.advanceTimersByTime(999);
+        vi.advanceTimersByTime(14999);
       });
 
       expect(onDismissed).not.toHaveBeenCalled();
