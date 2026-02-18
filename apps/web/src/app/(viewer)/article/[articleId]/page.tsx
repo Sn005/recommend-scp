@@ -6,6 +6,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useRef, useCallback } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
 
@@ -21,15 +22,37 @@ import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
 export default function ArticlePage() {
   const { articleId } = useParams<{ articleId: string }>();
   const iframeSrc = `/api/wiki-proxy/${articleId}`;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
+  // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
+  // DevToolsでh-screenのチェックを外す→戻す操作で治ることから、
+  // 2回のペイントサイクルを経てheightをトグルする必要がある（double rAF）。
+  const handleIframeLoad = useCallback(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.style.height = "auto";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.style.height = "";
+        });
+      });
+    }
+  }, []);
 
   return (
     <div className="relative h-screen overflow-hidden" data-testid="article-page">
-      <div data-testid="article-webview" className={cn("relative w-full h-screen")}>
+      <div
+        ref={containerRef}
+        data-testid="article-webview"
+        className={cn("relative w-full h-screen")}
+      >
         <iframe
           src={iframeSrc}
           className="w-full h-full border-0"
           title="SCP記事"
           sandbox="allow-scripts allow-same-origin allow-popups"
+          onLoad={handleIframeLoad}
         />
       </div>
       <FloatingFavoriteButton articleId={articleId} />

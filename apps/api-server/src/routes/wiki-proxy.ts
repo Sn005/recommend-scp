@@ -63,7 +63,9 @@ const INJECTED_STYLE = [
   "#main-content{margin:0!important;padding:0!important;max-width:none!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
-  // 記事可読性: ベースタイポグラフィ
+  // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正
+  // Wikidot CSSがbody/htmlにoverflow:hiddenを設定し、iOS Safariのiframe内スクロールを阻害するため上書き
+  "html,body{overflow:visible!important}",
   "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
   "#page-content{font-size:15px!important;overflow-wrap:break-word;word-break:break-word;padding:0 16px!important}",
@@ -189,7 +191,7 @@ const INJECTED_SCRIPT = [
   "li.classList.add('selected');",
   "var panels=ns.querySelectorAll('.yui-content>div');",
   "panels.forEach(function(p,i){p.style.display=i===idx?'block':'none'})",
-  "})",
+  "});",
   "</script>",
 ].join("");
 

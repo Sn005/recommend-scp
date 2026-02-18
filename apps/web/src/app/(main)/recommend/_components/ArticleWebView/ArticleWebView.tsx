@@ -86,16 +86,54 @@ export function ArticleWebView({
   onContentLoaded,
   onIframeLoad,
   onContentFullyReady,
+  isVisible,
   className,
 }: ArticleWebViewProps) {
   const [showNotFound, setShowNotFound] = useState(false);
   const contentFetchedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // URL変更時にshowNotFoundをリセット（EMPTY_SLOT→実URL遷移時の防御）
   useEffect(() => {
     setShowNotFound(false);
     contentFetchedRef.current = false;
   }, [url]);
+
+  // iOS Safari/Chrome: プリロード→表示昇格時のスクロール復元
+  // pointer-events-none + opacity-0状態で読み込まれたiframeは、iOS WebKitでスクロール
+  // 領域が正しく計算されない。表示に切り替わったタイミングで以下を実施:
+  // 1. containerのheightトグルによるリフロー強制
+  // 2. iframeのwidthを微小変更→復元でiframe自体のレイアウト再計算
+  // 3. contentWindowのscrollTo(0,0)でスクロールエンジンの初期化
+  const prevVisibleRef = useRef(false);
+  useEffect(() => {
+    if (isVisible && !prevVisibleRef.current) {
+      const container = containerRef.current;
+      const iframe = iframeRef.current;
+      if (container) {
+        container.style.height = "auto";
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            container.style.height = "";
+            // iframe自体のサイズを微小変更→復元でレイアウト再計算を強制
+            if (iframe) {
+              iframe.style.width = "calc(100% - 1px)";
+              requestAnimationFrame(() => {
+                iframe.style.width = "";
+                // contentWindowのスクロールエンジンをリセット
+                try {
+                  iframe.contentWindow?.scrollTo(0, 0);
+                } catch {
+                  // cross-origin fallback
+                }
+              });
+            }
+          });
+        });
+      }
+    }
+    prevVisibleRef.current = !!isVisible;
+  }, [isVisible]);
 
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
@@ -124,6 +162,22 @@ export function ArticleWebView({
     handleLoad();
     onIframeLoad?.(); // 即時: プールカスケード制御用
 
+    const iframe = iframeRef.current;
+
+    // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
+    // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
+    // DevToolsでh-screenのチェックを外す→戻す操作で治ることから、
+    // 2回のペイントサイクルを経てheightをトグルする必要がある（double rAF）。
+    const container = containerRef.current;
+    if (container) {
+      container.style.height = "auto";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.style.height = "";
+        });
+      });
+    }
+
     // articleIdが指定されており、まだ取得していない場合のみ実行
     if (articleId && onContentLoaded && !contentFetchedRef.current) {
       contentFetchedRef.current = true;
@@ -131,7 +185,6 @@ export function ArticleWebView({
     }
 
     // 画像含む全サブリソース読み込み完了を待ってから通知
-    const iframe = iframeRef.current;
     if (iframe && onContentFullyReady) {
       void waitForIframeImages(iframe).then(() => {
         onContentFullyReady();
@@ -180,6 +233,7 @@ export function ArticleWebView({
 
   return (
     <div
+      ref={containerRef}
       data-testid="article-webview"
       data-url={url}
       className={cn("relative w-full h-screen", className)}

@@ -221,7 +221,7 @@ export default function RecommendPage() {
 
   // AC-2: iframeプールに基づくレンダリング
   return (
-    <div className="relative h-screen overflow-hidden" data-testid="article-viewer">
+    <div className="relative h-screen overflow-clip" data-testid="article-viewer">
       {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
       {slots.map((slot, i) => {
         if (!slot) return null;
@@ -233,6 +233,7 @@ export default function RecommendPage() {
             key={`slot-${String(slot.articleIndex)}`}
             url={slot.url}
             articleId={articles[slot.articleIndex]?.id}
+            isVisible={isVisible}
             onScrollChange={isCurrent ? handleScrollChange : undefined}
             onSkip={isCurrent ? goToNext : undefined}
             onContentLoaded={isCurrent ? handleContentLoaded : undefined}

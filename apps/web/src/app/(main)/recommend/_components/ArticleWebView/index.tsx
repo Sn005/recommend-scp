@@ -17,6 +17,8 @@ export interface ArticleWebViewProps {
   onIframeLoad?: () => void;
   /** iframe内の画像含む全サブリソース読み込み完了時のコールバック（表示切替用） */
   onContentFullyReady?: () => void;
+  /** iframeが表示状態かどうか（iOS scroll fix: プリロード→表示昇格時のリフロー用） */
+  isVisible?: boolean;
   /** 追加のCSSクラス */
   className?: string;
 }
