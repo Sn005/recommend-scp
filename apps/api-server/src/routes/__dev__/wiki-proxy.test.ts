@@ -589,6 +589,21 @@ describe("GET /wiki-proxy/*", () => {
       expect(text).toContain("padding:0 16px!important");
     });
 
+    it("html/bodyにスクロール確保CSSが注入される（テーマCSSのoverflow:hidden対策）", async () => {
+      const html = createWikidotHtml();
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // html: height:100% + overflow:auto!important
+      expect(text).toContain("html{height:100%;overflow:auto!important}");
+      // body: overflow-y:auto!important + min-height:100% + margin:0
+      expect(text).toContain("overflow-y:auto!important");
+      expect(text).toContain("min-height:100%");
+    });
+
     it("#main-contentのレイアウトリセットが!important付きで注入される", async () => {
       const html = createWikidotHtml();
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
