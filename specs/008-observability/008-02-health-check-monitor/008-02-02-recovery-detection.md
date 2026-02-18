@@ -5,10 +5,10 @@ story_id: "008-02"
 epic_title: "運用・監視"
 story_title: "ヘルスチェック定期監視"
 title: "復旧検知・Issue自動更新"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
-completed_at: null
+completed_at: "2026-02-18"
 ---
 
 # Subtask: 復旧検知・Issue自動更新
@@ -28,12 +28,12 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHEN ヘルスチェックが正常（HTTP 200）を返した際
+- [x] WHEN ヘルスチェックが正常（HTTP 200）を返した際
       GIVEN `health:degraded` ラベル付きのOpenなIssueが存在する場合
       THEN 既存Issueに復旧コメントを追加する
       AND コメントには復旧時刻が含まれる
 
-- [ ] WHEN ヘルスチェックが正常（HTTP 200）を返した際
+- [x] WHEN ヘルスチェックが正常（HTTP 200）を返した際
       GIVEN `health:degraded` ラベル付きのOpenなIssueが存在しない場合
       THEN 何も行わない（正常動作）
 

@@ -1,0 +1,135 @@
+# GitHub Actions Health Check Monitor
+# Subtask: 008-02-01, 008-02-02
+#
+# APIサーバーのヘルスチェックを1時間おきに実行し、
+# 障害検知時にGitHub Issueを自動作成するワークフロー。
+
+name: Health Check Monitor
+
+on:
+  schedule:
+    - cron: "0 * * * *" # 毎時0分（UTC）
+  workflow_dispatch: {} # 手動テスト用
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check health endpoint
+        id: health
+        run: |
+          STATUS_CODE=$(curl -s -o /tmp/health.json -w "%{http_code}" \
+            --max-time 30 \
+            "${{ vars.API_BASE_URL }}/health" 2>/dev/null || echo "000")
+          echo "status_code=$STATUS_CODE" >> $GITHUB_OUTPUT
+
+          if [ -f /tmp/health.json ]; then
+            BODY=$(cat /tmp/health.json)
+            echo "response_body=$BODY" >> $GITHUB_OUTPUT
+          fi
+
+          echo "ヘルスチェック結果: HTTP $STATUS_CODE"
+
+      - name: Handle unhealthy status
+        if: steps.health.outputs.status_code != '200'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const statusCode = '${{ steps.health.outputs.status_code }}';
+            const apiUrl = '${{ vars.API_BASE_URL }}/health';
+            const timestamp = new Date().toISOString();
+
+            // 重複チェック: health:degraded ラベル付きのOpenなIssueを検索
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,health:degraded',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            if (existingIssues.length > 0) {
+              // 既存Issueにコメント追加
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: [
+                  `## 継続障害報告`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| ステータスコード | ${statusCode} |`,
+                  `| エンドポイント | ${apiUrl} |`,
+                  `| 検知時刻 | ${timestamp} |`,
+                ].join('\n')
+              });
+              core.info(`Issue #${existingIssues[0].number} に継続障害コメントを追加しました`);
+            } else {
+              // 新規Issue作成
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Health Check] API障害検知 - HTTP ${statusCode}`,
+                body: [
+                  `## ヘルスチェック障害レポート`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| ステータスコード | ${statusCode} |`,
+                  `| エンドポイント | ${apiUrl} |`,
+                  `| 検知時刻 | ${timestamp} |`,
+                  ``,
+                  `### 対応手順`,
+                  `1. Vercelダッシュボードでデプロイ状態を確認`,
+                  `2. \`/health\` エンドポイントに手動アクセスして状態確認`,
+                  `3. SupabaseダッシュボードでDB状態を確認`,
+                  `4. 必要に応じて再デプロイ`,
+                ].join('\n'),
+                labels: ['type:ops', 'health:degraded']
+              });
+              core.info('新規障害Issueを作成しました');
+            }
+
+      - name: Handle recovery
+        if: steps.health.outputs.status_code == '200'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const timestamp = new Date().toISOString();
+
+            // health:degraded ラベル付きのOpenなIssueを検索
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,health:degraded',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: [
+                  `## 復旧確認`,
+                  ``,
+                  `ヘルスチェックが正常に戻りました。`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| 復旧時刻 | ${timestamp} |`,
+                  `| ステータス | 正常 (HTTP 200) |`,
+                  ``,
+                  `> このIssueは手動でクローズしてください。`,
+                ].join('\n')
+              });
+              core.info(`Issue #${existingIssues[0].number} に復旧コメントを追加しました`);
+            }
