@@ -135,6 +135,43 @@ export function ArticleWebView({
     prevVisibleRef.current = !!isVisible;
   }, [isVisible]);
 
+  // iOS Safari フォールバック: 初回タッチ時のリフロー強制
+  // 表示昇格時のリフローだけではタイミングが合わずスクロール不可になるケースがある。
+  // ユーザーが最初にタッチした瞬間にリフローを再実行し、確実にスクロール可能にする。
+  // once: trueで1回だけ発火し、以降はオーバーヘッドなし。
+  useEffect(() => {
+    if (!isVisible) return;
+    const iframe = iframeRef.current;
+    const container = containerRef.current;
+    if (!iframe || !container) return;
+
+    let iframeWindow: Window | null = null;
+    try {
+      iframeWindow = iframe.contentWindow;
+    } catch {
+      return;
+    }
+    if (!iframeWindow) return;
+
+    const onFirstTouch = () => {
+      container.style.height = "auto";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          container.style.height = "";
+        });
+      });
+    };
+
+    iframeWindow.addEventListener("touchstart", onFirstTouch, { once: true, passive: true });
+    return () => {
+      try {
+        iframeWindow.removeEventListener("touchstart", onFirstTouch);
+      } catch {
+        // iframe may have navigated away
+      }
+    };
+  }, [isVisible]);
+
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
 
