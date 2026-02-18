@@ -129,31 +129,63 @@ jobs:
 
             Please check the logs for details.
 
-      - name: Create failure issue
+      - name: Create or update failure issue
         if: failure()
         uses: actions/github-script@v7
         with:
           script: |
             const mode = '${{ inputs.mode || 'diff' }}';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
 
-            await github.rest.issues.create({
+            // 重複チェック: pipeline:failure ラベル付きOpenなIssueを検索
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `[Pipeline] 失敗 - ${mode}モード`,
-              body: [
-                `## パイプライン失敗レポート`,
-                ``,
-                `| 項目 | 値 |`,
-                `| --- | --- |`,
-                `| モード | ${mode} |`,
-                `| 実行URL | ${runUrl} |`,
-                `| 発生時刻 | ${new Date().toISOString()} |`,
-                ``,
-                `### 対応手順`,
-                `1. [ワークフロー実行ログ](${runUrl})を確認`,
-                `2. エラー内容を特定`,
-                `3. 必要に応じて手動再実行`,
-              ].join('\n'),
-              labels: ['type:ops', 'pipeline:failure']
+              labels: 'type:ops,pipeline:failure',
+              state: 'open',
+              per_page: 1
             });
+
+            if (existingIssues.length > 0) {
+              // 既存Issueにコメント追加
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: [
+                  `## 再発報告`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| モード | ${mode} |`,
+                  `| 実行URL | ${runUrl} |`,
+                  `| 発生時刻 | ${timestamp} |`,
+                ].join('\n')
+              });
+              core.info(`既存Issue #${existingIssues[0].number} にコメントを追加しました`);
+            } else {
+              // 新規Issue作成
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Pipeline] 失敗 - ${mode}モード`,
+                body: [
+                  `## パイプライン失敗レポート`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| モード | ${mode} |`,
+                  `| 実行URL | ${runUrl} |`,
+                  `| 発生時刻 | ${timestamp} |`,
+                  ``,
+                  `### 対応手順`,
+                  `1. [ワークフロー実行ログ](${runUrl})を確認`,
+                  `2. エラー内容を特定`,
+                  `3. 必要に応じて手動再実行`,
+                  `4. 対応完了後、このIssueをクローズ`,
+                ].join('\n'),
+                labels: ['type:ops', 'pipeline:failure']
+              });
+              core.info(`Issue #${issue.number} を作成しました`);
+            }
