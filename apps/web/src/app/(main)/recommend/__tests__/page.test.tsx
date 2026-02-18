@@ -50,16 +50,22 @@ const mockUseArticleFavoriteResult = {
 
 const mockUseIframePoolResult = {
   slots: [
-    { articleIndex: 0, url: "https://scp-jp.wikidot.com/scp-173", isLoaded: true },
+    {
+      articleIndex: 0,
+      url: "https://scp-jp.wikidot.com/scp-173",
+      isLoaded: true,
+      isFullyLoaded: false,
+    },
     null,
     null,
   ] as [
-    { articleIndex: number; url: string; isLoaded: boolean },
-    { articleIndex: number; url: string; isLoaded: boolean } | null,
-    { articleIndex: number; url: string; isLoaded: boolean } | null,
+    { articleIndex: number; url: string; isLoaded: boolean; isFullyLoaded: boolean },
+    { articleIndex: number; url: string; isLoaded: boolean; isFullyLoaded: boolean } | null,
+    { articleIndex: number; url: string; isLoaded: boolean; isFullyLoaded: boolean } | null,
   ],
   advance: vi.fn(),
   handleIframeLoad: vi.fn(),
+  handleIframeFullyLoaded: vi.fn(),
 };
 
 // ─── モック定義 ───
@@ -128,7 +134,7 @@ vi.mock("../_components/TransitionCard", () => ({
 }));
 
 // ArticleWebView をモック
-let capturedOnIframeLoad: (() => void) | null = null;
+let capturedOnContentFullyReady: (() => void) | null = null;
 
 vi.mock("../_components/ArticleWebView", () => ({
   ArticleWebView: ({
@@ -136,7 +142,7 @@ vi.mock("../_components/ArticleWebView", () => ({
     articleId,
     onScrollEnd,
     onScrollChange,
-    onIframeLoad,
+    onContentFullyReady,
     className,
   }: {
     url: string;
@@ -146,11 +152,12 @@ vi.mock("../_components/ArticleWebView", () => ({
     onSkip?: () => void;
     onContentLoaded?: (content: { title: string; excerpt: string }) => void;
     onIframeLoad?: () => void;
+    onContentFullyReady?: () => void;
     className?: string;
   }) => {
-    // Current スロット（pointer-events-none以外）のonIframeLoadをキャプチャ
-    if (onIframeLoad && !className?.includes("pointer-events-none")) {
-      capturedOnIframeLoad = onIframeLoad;
+    // Current スロット（pointer-events-none以外）のonContentFullyReadyをキャプチャ
+    if (onContentFullyReady && !className?.includes("pointer-events-none")) {
+      capturedOnContentFullyReady = onContentFullyReady;
     }
     return (
       <div
@@ -248,16 +255,16 @@ const setupDefaultArticles = () => {
   mockUseInfiniteArticlesResult.isEmpty = false;
   mockUseInfiniteArticlesResult.error = null;
   mockUseIframePoolResult.slots = [
-    { articleIndex: 0, url: mockArticles[0].url, isLoaded: true },
-    { articleIndex: 1, url: mockArticles[1].url, isLoaded: false },
-    { articleIndex: 2, url: mockArticles[2].url, isLoaded: false },
+    { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
+    { articleIndex: 1, url: mockArticles[1].url, isLoaded: false, isFullyLoaded: false },
+    { articleIndex: 2, url: mockArticles[2].url, isLoaded: false, isFullyLoaded: false },
   ];
 };
 
-/** 初回TransitionCardを閉じるヘルパー（iframe読み込み完了 → カードdismiss） */
+/** 初回TransitionCardを閉じるヘルパー（画像含む全リソース読み込み完了 → カードdismiss） */
 const dismissInitialCard = () => {
   act(() => {
-    capturedOnIframeLoad?.();
+    capturedOnContentFullyReady?.();
   });
   act(() => {
     capturedOnDismissed?.();
@@ -270,7 +277,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedOnDismissed = null;
-    capturedOnIframeLoad = null;
+    capturedOnContentFullyReady = null;
     // デフォルト値にリセット
     mockUseInfiniteArticlesResult.articles = [];
     mockUseInfiniteArticlesResult.currentIndex = 0;
@@ -281,7 +288,12 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     mockUseInfiniteArticlesResult.hasMore = true;
     mockUseArticleFavoriteResult.isFavorited = false;
     mockUseIframePoolResult.slots = [
-      { articleIndex: 0, url: "https://scp-jp.wikidot.com/scp-173", isLoaded: true },
+      {
+        articleIndex: 0,
+        url: "https://scp-jp.wikidot.com/scp-173",
+        isLoaded: true,
+        isFullyLoaded: false,
+      },
       null,
       null,
     ];
@@ -309,12 +321,12 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(screen.getByTestId("transition-card")).toHaveAttribute("data-content-ready", "false");
     });
 
-    it("iframe読み込み完了で初回TransitionCardのisContentReady=trueになる", () => {
+    it("全リソース読み込み完了で初回TransitionCardのisContentReady=trueになる", () => {
       setupDefaultArticles();
       render(<RecommendPage />);
 
       act(() => {
-        capturedOnIframeLoad?.();
+        capturedOnContentFullyReady?.();
       });
 
       expect(screen.getByTestId("transition-card")).toHaveAttribute("data-content-ready", "true");
@@ -416,14 +428,14 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         capturedOnDismissed?.();
       });
 
-      // iframe読み込み完了前は非表示（opacity-0 z-10）
+      // 全リソース読み込み完了前は非表示（opacity-0 z-10）
       const webviews = screen.getAllByTestId("article-webview");
       const currentSlot = webviews[0];
       expect(currentSlot).toHaveClass("opacity-0", "z-10");
 
-      // iframe読み込み完了を通知
+      // 全リソース読み込み完了を通知
       act(() => {
-        capturedOnIframeLoad?.();
+        capturedOnContentFullyReady?.();
       });
 
       // 読み込み完了後は表示（opacity-100 z-10）
@@ -484,9 +496,9 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
     it("最大3つのiframeのみがDOMに存在する", () => {
       setupDefaultArticles();
       mockUseIframePoolResult.slots = [
-        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true },
-        { articleIndex: 1, url: mockArticles[1].url, isLoaded: true },
-        { articleIndex: 2, url: mockArticles[2].url, isLoaded: false },
+        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
+        { articleIndex: 1, url: mockArticles[1].url, isLoaded: true, isFullyLoaded: false },
+        { articleIndex: 2, url: mockArticles[2].url, isLoaded: false, isFullyLoaded: false },
       ];
 
       render(<RecommendPage />);
@@ -514,7 +526,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       });
     });
 
-    it("iframe読み込み完了後にisContentReady=trueがTransitionCardに渡される", async () => {
+    it("全リソース読み込み完了後にisContentReady=trueがTransitionCardに渡される", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
@@ -528,9 +540,9 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         expect(card).toHaveAttribute("data-content-ready", "false");
       });
 
-      // iframe読み込み完了を通知
+      // 全リソース読み込み完了を通知
       act(() => {
-        capturedOnIframeLoad?.();
+        capturedOnContentFullyReady?.();
       });
 
       // isContentReady=true に変わる
@@ -820,8 +832,8 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         createMockArticle({ id: "scp-682", objectClass: null }),
       ];
       mockUseIframePoolResult.slots = [
-        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true },
-        { articleIndex: 1, url: mockArticles[1].url, isLoaded: false },
+        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
+        { articleIndex: 1, url: mockArticles[1].url, isLoaded: false, isFullyLoaded: false },
         null,
       ];
 
@@ -845,8 +857,8 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         createMockArticle({ id: "scp-682", rating: null }),
       ];
       mockUseIframePoolResult.slots = [
-        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true },
-        { articleIndex: 1, url: mockArticles[1].url, isLoaded: false },
+        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
+        { articleIndex: 1, url: mockArticles[1].url, isLoaded: false, isFullyLoaded: false },
         null,
       ];
 
@@ -867,7 +879,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       mockUseInfiniteArticlesResult.isLoading = false;
       mockUseInfiniteArticlesResult.articles = [createMockArticle({ id: "scp-173" })];
       mockUseIframePoolResult.slots = [
-        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true },
+        { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
         null,
         null,
       ];

@@ -55,6 +55,7 @@ export default function RecommendPage() {
     slots,
     advance,
     handleIframeLoad: poolHandleIframeLoad,
+    handleIframeFullyLoaded: poolHandleFullyLoaded,
   } = useIframePool({
     articles,
     currentIndex,
@@ -75,17 +76,18 @@ export default function RecommendPage() {
   // 初期値false: iframeのonLoad完了まで非表示にし、コンテンツ未描画状態の表示を防ぐ
   const [isSlotReady, setIsSlotReady] = useState(false);
 
-  // プリロード済みスロットがcurrentに昇格した場合、即座にisSlotReadyをtrueにする
-  // 初回レンダリング時はスキップ（初回はhandleCurrentIframeLoadで処理）
+  // プリロード済みスロットがcurrentに昇格した場合、isFullyLoadedを確認してからisSlotReadyをtrueにする
+  // isLoaded（onLoad発火）ではなくisFullyLoaded（画像含む全リソース完了）を使用し、
+  // 記事の部分表示状態でのTransitionCard非表示を防止する
   const currentSlotArticleIndex = slots[0].articleIndex;
-  const currentSlotLoaded = slots[0].isLoaded;
+  const currentSlotFullyLoaded = slots[0].isFullyLoaded;
   const prevSlotIndexRef = useRef(currentSlotArticleIndex);
   useEffect(() => {
-    if (currentSlotArticleIndex !== prevSlotIndexRef.current && currentSlotLoaded) {
+    if (currentSlotArticleIndex !== prevSlotIndexRef.current && currentSlotFullyLoaded) {
       setIsSlotReady(true);
     }
     prevSlotIndexRef.current = currentSlotArticleIndex;
-  }, [currentSlotArticleIndex, currentSlotLoaded]);
+  }, [currentSlotArticleIndex, currentSlotFullyLoaded]);
 
   // AC-4: スクロール深度の追跡（最大到達深度を保持）
   const maxScrollDepthRef = useRef(0);
@@ -236,6 +238,9 @@ export default function RecommendPage() {
             onContentLoaded={isCurrent ? handleContentLoaded : undefined}
             onIframeLoad={() => {
               poolHandleIframeLoad(slot.articleIndex);
+            }}
+            onContentFullyReady={() => {
+              poolHandleFullyLoaded(slot.articleIndex);
               if (isCurrent) {
                 handleCurrentIframeLoad();
               }
