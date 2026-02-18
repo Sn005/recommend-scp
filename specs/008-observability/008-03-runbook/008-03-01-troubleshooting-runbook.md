@@ -5,7 +5,7 @@ story_id: "008-03"
 epic_title: "運用・監視"
 story_title: "運用Runbook整備"
 title: "トラブルシューティングRunbook作成"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 completed_at: null
@@ -28,15 +28,15 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] `docs/runbook.md` ファイルが作成されていること
+- [x] `docs/runbook.md` ファイルが作成されていること
 
-- [ ] WHEN 「APIがダウンしたとき」セクションを参照した際
+- [x] WHEN 「APIがダウンしたとき」セクションを参照した際
       THEN Vercelダッシュボード確認、ヘルスチェック手動実行、デプロイログ確認の手順が記載されている
 
-- [ ] WHEN 「パイプラインが失敗したとき」セクションを参照した際
+- [x] WHEN 「パイプラインが失敗したとき」セクションを参照した際
       THEN GitHub Actionsログ確認、モード確認、手動再実行手順、コスト確認の手順が記載されている
 
-- [ ] WHEN 「DBが応答しないとき」セクションを参照した際
+- [x] WHEN 「DBが応答しないとき」セクションを参照した際
       THEN Supabaseダッシュボード確認、接続情報確認、復旧手順が記載されている
 
 ## 設計
@@ -96,11 +96,15 @@ completed_at: null
 # 5. 各セクションがチェックリスト形式であること
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日:
-- 確認者:
-- 備考:
+- 確認日: 2026-02-18
+- 確認者: Claude
+- 備考: 全AC充足、全レビュー確認項目パス
 
 ## 参照ドキュメント
 
