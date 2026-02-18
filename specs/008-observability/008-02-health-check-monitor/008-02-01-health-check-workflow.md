@@ -5,10 +5,10 @@ story_id: "008-02"
 epic_title: "運用・監視"
 story_title: "ヘルスチェック定期監視"
 title: "ヘルスチェック監視ワークフロー作成"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
-completed_at: null
+completed_at: "2026-02-18"
 ---
 
 # Subtask: ヘルスチェック監視ワークフロー作成
@@ -28,20 +28,20 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHILE GitHub Actions cronワークフローが稼働中
+- [x] WHILE GitHub Actions cronワークフローが稼働中
       THE SYSTEM SHALL 毎時0分にヘルスチェックエンドポイントを `curl` で呼び出す
       AND タイムアウトは30秒とする
 
-- [ ] WHEN ヘルスチェックのHTTPステータスが200以外（503, タイムアウト, 接続エラー等）の場合
+- [x] WHEN ヘルスチェックのHTTPステータスが200以外（503, タイムアウト, 接続エラー等）の場合
       THEN `actions/github-script@v7` でGitHub Issueを自動作成する
       AND Issueにはレスポンスステータスコード・タイムスタンプ・エンドポイントURLが含まれる
       AND `type:ops` および `health:degraded` ラベルが付与される
 
-- [ ] WHEN ヘルスチェック失敗Issueを作成する前に
+- [x] WHEN ヘルスチェック失敗Issueを作成する前に
       GIVEN `health:degraded` ラベル付きのOpenなIssueが既に存在する場合
       THEN 新規Issueは作成せず、既存Issueにコメントを追加する
 
-- [ ] WHEN `workflow_dispatch` で手動実行した場合
+- [x] WHEN `workflow_dispatch` で手動実行した場合
       THEN 通常のcron実行と同じ動作をする（テスト用）
 
 ## 設計

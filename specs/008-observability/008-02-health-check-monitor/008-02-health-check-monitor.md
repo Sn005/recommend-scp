@@ -3,7 +3,7 @@ id: "008-02"
 epic_id: "008"
 epic_title: "運用・監視"
 title: "ヘルスチェック定期監視"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 ---
@@ -25,18 +25,18 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [ ] WHILE GitHub Actions cronワークフローが稼働中
+- [x] WHILE GitHub Actions cronワークフローが稼働中
       THE SYSTEM SHALL 1時間おきにヘルスチェックエンドポイントを呼び出す
 
-- [ ] WHEN ヘルスチェックがdegradedまたはエラーを返した際
+- [x] WHEN ヘルスチェックがdegradedまたはエラーを返した際
       THEN システムはGitHub Issueを自動作成する
       AND Issueにはレスポンスステータス・タイムスタンプ・エンドポイントURLが含まれる
 
-- [ ] WHEN ヘルスチェック失敗Issueが作成される際
+- [x] WHEN ヘルスチェック失敗Issueが作成される際
       GIVEN 同一エンドポイント起因のOpenなIssueが既に存在する場合
       THEN 新規Issueは作成せず、既存Issueにコメントを追加する
 
-- [ ] WHEN ヘルスチェックが正常に戻った際
+- [x] WHEN ヘルスチェックが正常に戻った際
       GIVEN 当該エンドポイントのOpenなIssueが存在する場合
       THEN 復旧コメントを追加する
 
