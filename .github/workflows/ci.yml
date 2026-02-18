@@ -179,3 +179,93 @@ jobs:
         if: steps.e2e_target.outputs.skip == 'true'
         run: |
           echo "::notice title=E2E Tests Skipped::Vercel preview URL not available. E2E tests will run after merge to main."
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: e2e
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: mockups
+
+      - name: Download Playwright Report
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: _site/e2e-report
+        continue-on-error: true
+
+      - name: Assemble Site
+        run: |
+          mkdir -p _site/mockups
+          cp -r mockups/* _site/mockups/
+
+          if [ -d "_site/e2e-report" ] && [ -f "_site/e2e-report/index.html" ]; then
+            E2E_STATUS="available"
+          else
+            E2E_STATUS="unavailable"
+          fi
+
+          DEPLOY_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          cat > _site/index.html <<'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="ja">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>SCP Recommend - Project Pages</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+          </head>
+          <body class="bg-neutral-100 text-neutral-800 min-h-screen p-6">
+            <h1 class="text-2xl font-bold mb-2">SCP Recommend - Project Pages</h1>
+            <p id="deploy-time" class="text-sm text-neutral-500 mb-6"></p>
+            <div class="grid gap-4 max-w-xl">
+              <a href="./mockups/" class="block p-6 bg-white rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow">
+                <div class="font-medium text-lg">Mockups</div>
+                <div class="text-sm text-neutral-500 mt-2">UI design mockups and color comparisons</div>
+              </a>
+              <div id="e2e-link"></div>
+            </div>
+            <script>
+              document.getElementById('deploy-time').textContent = 'Last deployed: __DEPLOY_TIME__';
+              var status = '__E2E_STATUS__';
+              var container = document.getElementById('e2e-link');
+              if (status === 'available') {
+                container.innerHTML = '<a href="./e2e-report/" class="block p-6 bg-white rounded-lg shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow"><div class="font-medium text-lg">E2E Test Report</div><div class="text-sm text-neutral-500 mt-2">Playwright HTML report (latest main branch run)</div></a>';
+              } else {
+                container.innerHTML = '<div class="block p-6 bg-neutral-50 rounded-lg shadow-sm border-l-4 border-neutral-300"><div class="font-medium text-lg text-neutral-400">E2E Test Report</div><div class="text-sm text-neutral-400 mt-2">No report available (e2e tests were skipped or failed)</div></div>';
+              }
+            </script>
+          </body>
+          </html>
+          HTMLEOF
+
+          sed -i "s|__DEPLOY_TIME__|${DEPLOY_TIME}|g" _site/index.html
+          sed -i "s|__E2E_STATUS__|${E2E_STATUS}|g" _site/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
