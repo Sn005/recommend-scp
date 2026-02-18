@@ -59,17 +59,12 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
  */
 const INJECTED_STYLE = [
   "<style>",
-  // スクロール確保: WikidotテーマCSSが body/html に overflow:hidden を設定する場合があるが、
-  // wiki-proxyでは #main-content のみを抽出して body 直下に配置するため、
-  // 元のスクロールコンテナ(#container-wrap等)が存在しない。
-  // body/html の overflow を明示的に上書きしてスクロール可能にする。
-  "html{height:100%;overflow:auto!important}",
   // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
   "#main-content{margin:0!important;padding:0!important;max-width:none!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ
-  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%;min-height:100%;overflow-y:auto!important;margin:0}",
+  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
   "#page-content{font-size:15px!important;overflow-wrap:break-word;word-break:break-word;padding:0 16px!important}",
   // 記事可読性: 段落間スペーシング
