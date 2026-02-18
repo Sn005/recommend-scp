@@ -5,7 +5,7 @@ story_id: "008-01"
 epic_title: "運用・監視"
 story_title: "パイプライン失敗通知"
 title: "パイプライン失敗時Issue自動起票"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 completed_at: null
@@ -28,16 +28,16 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHEN データパイプラインGitHub Actionsワークフローが失敗した際
+- [x] WHEN データパイプラインGitHub Actionsワークフローが失敗した際
       THEN `actions/github-script@v7` ステップが実行される
       AND GitHub Issueが自動作成される
 
-- [ ] WHEN 失敗Issueが作成される際
+- [x] WHEN 失敗Issueが作成される際
       THEN Issueタイトルに失敗モード（diff/full/embedding/tagging）が含まれる
       AND Issue本文にワークフロー実行URL（`github.server_url/.../runs/run_id`）が含まれる
       AND Issue本文にタイムスタンプ（UTC）が含まれる
 
-- [ ] WHEN 失敗Issueが作成される際
+- [x] WHEN 失敗Issueが作成される際
       THEN `type:ops` および `pipeline:failure` ラベルが付与される
 
 ## 設計
@@ -103,11 +103,15 @@ completed_at: null
 # 6. シークレットを正しい値に戻す
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日:
-- 確認者:
-- 備考:
+- 確認日: 2026-02-18
+- 確認者: Claude
+- 備考: data-pipeline.ymlにgithub-scriptステップを追加
 
 ## 参照ドキュメント
 
