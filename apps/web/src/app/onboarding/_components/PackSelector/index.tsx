@@ -114,6 +114,7 @@ export function PackSelector({ visitorId, onComplete }: PackSelectorProps) {
       {/* 開始ボタン（固定フッター） */}
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
         <button
+          data-testid="complete-button"
           onClick={() => {
             void handleConfirm();
           }}

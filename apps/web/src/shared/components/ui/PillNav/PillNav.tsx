@@ -47,6 +47,7 @@ export const PillNav = ({ onFavorite, onNext, isFavorited }: PillNavProps) => {
       {/* お気に入りボタン */}
       <button
         type="button"
+        data-testid="floating-favorite-button"
         onClick={onFavorite}
         aria-label={isFavorited ? "お気に入りから削除" : "お気に入りに追加"}
         className={cn(
