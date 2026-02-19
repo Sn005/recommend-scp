@@ -17,6 +17,7 @@ const MAX_HISTORY_ITEMS = 100;
  */
 export type HistoryEntryInput = Omit<HistoryEntry, "viewedAt"> & {
   excerpt?: string;
+  rating?: number | null;
 };
 
 /**
@@ -41,6 +42,7 @@ export function addHistory(entry: HistoryEntryInput): HistoryEntry {
     title: entry.title,
     excerpt: entry.excerpt || "",
     objectClass: entry.objectClass,
+    rating: entry.rating ?? null,
     viewedAt: new Date().toISOString(),
   };
 
@@ -98,6 +100,7 @@ export function getHistory(): HistoryEntry[] {
         title: record.title as string,
         excerpt: typeof record.excerpt === "string" ? record.excerpt : "",
         objectClass: record.objectClass as ObjectClass,
+        rating: typeof record.rating === "number" ? record.rating : null,
         viewedAt: record.viewedAt as string,
       };
     });

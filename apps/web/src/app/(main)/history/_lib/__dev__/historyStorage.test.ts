@@ -95,6 +95,34 @@ describe("historyStorage", () => {
       expect(result.excerpt).toBe("");
     });
 
+    it("ratingが保存される", () => {
+      const entry = {
+        scpNumber: "scp-173",
+        title: "彫刻",
+        excerpt: "",
+        objectClass: "Euclid" as const,
+        rating: 4102,
+      };
+
+      const result = addHistory(entry);
+
+      expect(result.rating).toBe(4102);
+      const history = getHistory();
+      expect(history[0].rating).toBe(4102);
+    });
+
+    it("ratingが未指定の場合はnullになる", () => {
+      const entry = {
+        scpNumber: "scp-173",
+        title: "彫刻",
+        objectClass: "Safe" as const,
+      };
+
+      const result = addHistory(entry as Parameters<typeof addHistory>[0]);
+
+      expect(result.rating).toBeNull();
+    });
+
     it("同じSCP番号の履歴は更新される（重複排除）", () => {
       addHistory({
         scpNumber: "scp-173",
@@ -207,6 +235,26 @@ describe("historyStorage", () => {
 
       expect(history).toHaveLength(1);
       expect(history[0].excerpt).toBe(""); // 空文字がデフォルト
+      expect(history[0].scpNumber).toBe("scp-173");
+    });
+
+    it("後方互換性: ratingがないデータでもエラーにならない", () => {
+      // 古い形式のデータ（ratingなし）を直接localStorageに書き込む
+      const oldData = [
+        {
+          scpNumber: "scp-173",
+          title: "彫刻",
+          excerpt: "テスト",
+          objectClass: "Euclid",
+          viewedAt: "2024-01-15T10:00:00.000Z",
+        },
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(oldData));
+
+      const history = getHistory();
+
+      expect(history).toHaveLength(1);
+      expect(history[0].rating).toBeNull();
       expect(history[0].scpNumber).toBe("scp-173");
     });
 

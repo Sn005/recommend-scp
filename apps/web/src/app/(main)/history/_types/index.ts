@@ -20,10 +20,12 @@ export interface HistoryEntry {
   scpNumber: string;
   /** 記事タイトル */
   title: string;
-  /** 本文冒頭（最大50文字） */
+  /** 本文冒頭（最大50文字）@deprecated excerptはカードに表示しない */
   excerpt: string;
   /** オブジェクトクラス（オプショナル） */
   objectClass?: ObjectClass;
+  /** 評価スコア（オプショナル） */
+  rating?: number | null;
   /** 閲覧日時（ISO 8601形式） */
   viewedAt: string;
 }
