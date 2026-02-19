@@ -1,7 +1,7 @@
 ---
 id: "008"
 title: "運用・監視"
-status: "in_progress"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 ---
@@ -19,10 +19,10 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [ ] パイプライン失敗時にGitHub Issueが自動作成され、エラー情報が含まれること
-- [ ] ヘルスチェックが1時間おきに実行され、障害時にGitHub Issueで通知されること
-- [ ] 同一原因の重複Issueが防止されること
-- [ ] トラブルシューティングRunbookが整備されていること
+- [x] パイプライン失敗時にGitHub Issueが自動作成され、エラー情報が含まれること
+- [x] ヘルスチェックが1時間おきに実行され、障害時にGitHub Issueで通知されること
+- [x] 同一原因の重複Issueが防止されること
+- [x] トラブルシューティングRunbookが整備されていること
 
 ## 設計制約
 

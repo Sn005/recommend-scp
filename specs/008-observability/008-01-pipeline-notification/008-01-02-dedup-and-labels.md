@@ -5,7 +5,7 @@ story_id: "008-01"
 epic_title: "運用・監視"
 story_title: "パイプライン失敗通知"
 title: "重複防止・ラベル管理"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 completed_at: null
@@ -28,15 +28,15 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHEN パイプライン失敗Issueを作成する前に
+- [x] WHEN パイプライン失敗Issueを作成する前に
       THEN `pipeline:failure` ラベル付きのOpenなIssueが検索される
 
-- [ ] WHEN 同一ラベルのOpenなIssueが存在する場合
+- [x] WHEN 同一ラベルのOpenなIssueが存在する場合
       GIVEN パイプラインが再び失敗した場合
       THEN 新規Issueは作成せず、既存Issueにコメントを追加する
       AND コメントには失敗時刻・モード・ワークフロー実行URLが含まれる
 
-- [ ] WHEN 同一ラベルのOpenなIssueが存在しない場合
+- [x] WHEN 同一ラベルのOpenなIssueが存在しない場合
       GIVEN パイプラインが失敗した場合
       THEN 新規Issueを作成する（008-01-01の仕様通り）
 
@@ -128,11 +128,15 @@ completed_at: null
 # 5. Issueをクローズ後、再度失敗させ、新規Issueが作成されることを確認
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日:
-- 確認者:
-- 備考:
+- 確認日: 2026-02-18
+- 確認者: Claude
+- 備考: 008-01-01のステップを重複防止ロジックに拡張
 
 ## 参照ドキュメント
 

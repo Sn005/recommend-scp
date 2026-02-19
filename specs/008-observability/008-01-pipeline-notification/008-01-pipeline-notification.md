@@ -3,7 +3,7 @@ id: "008-01"
 epic_id: "008"
 epic_title: "運用・監視"
 title: "パイプライン失敗通知"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 ---
@@ -25,15 +25,15 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [ ] WHEN データパイプラインGitHub Actionsワークフローが失敗した際
+- [x] WHEN データパイプラインGitHub Actionsワークフローが失敗した際
       THEN システムはGitHub Issueを自動作成する
       AND Issueにはエラー内容・失敗モード・ワークフロー実行URLが含まれる
 
-- [ ] WHEN パイプライン失敗Issueが作成される際
+- [x] WHEN パイプライン失敗Issueが作成される際
       GIVEN 同一ワークフロー起因のOpenなIssueが既に存在する場合
       THEN 新規Issueは作成せず、既存Issueにコメントを追加する
 
-- [ ] WHEN パイプライン失敗Issueが作成される際
+- [x] WHEN パイプライン失敗Issueが作成される際
       THEN `type:ops` および `pipeline:failure` ラベルが付与される
 
 ## 関連Subtask

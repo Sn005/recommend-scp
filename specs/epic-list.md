@@ -11,7 +11,7 @@
 | [005](./005-backend-api/005-backend-api.md)                         | バックエンドAPI              | 検索・推薦・フィードバック収集のRESTエンドポイント                      | completed   |
 | [006](./006-frontend/006-frontend.md)                               | フロントエンドUI             | オンボーディング・記事閲覧・お気に入り管理                              | completed   |
 | [007](./007-infra/007-infra.md)                                     | インフラ・デプロイ           | 本番環境構築・CI/CD・シークレット管理                                   | in_progress |
-| [008](./008-observability/008-observability.md)                     | 運用・監視                   | パイプライン失敗通知・ヘルスチェック監視・運用Runbook                   | in_progress |
+| [008](./008-observability/008-observability.md)                     | 運用・監視                   | パイプライン失敗通知・ヘルスチェック監視・運用Runbook                   | completed   |
 | [009](./009-security/009-security.md)                               | セキュリティ強化             | RLS拡充・バリデーション強化・セキュリティヘッダー・Supabaseアラート対応 | completed   |
 | [010](./010-ja-article-display/010-ja-article-display.md)           | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                                | completed   |
 | [011](./011-qa-testing/011-qa-testing.md)                           | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成                             | completed   |

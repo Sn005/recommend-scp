@@ -4,5 +4,5 @@
 
 | ID                                                 | 名前                            | 概要                                           | ステータス | 依存      |
 | -------------------------------------------------- | ------------------------------- | ---------------------------------------------- | ---------- | --------- |
-| [008-01-01](./008-01-01-pipeline-failure-issue.md) | パイプライン失敗時Issue自動起票 | data-pipeline.ymlにgithub-scriptステップを追加 | pending    | -         |
-| [008-01-02](./008-01-02-dedup-and-labels.md)       | 重複防止・ラベル管理            | 同一原因のOpen Issue検索・コメント追加ロジック | pending    | 008-01-01 |
+| [008-01-01](./008-01-01-pipeline-failure-issue.md) | パイプライン失敗時Issue自動起票 | data-pipeline.ymlにgithub-scriptステップを追加 | completed  | -         |
+| [008-01-02](./008-01-02-dedup-and-labels.md)       | 重複防止・ラベル管理            | 同一原因のOpen Issue検索・コメント追加ロジック | completed  | 008-01-01 |
