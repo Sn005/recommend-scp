@@ -65,7 +65,11 @@ export class RecommendService {
    * @throws NotFoundError - visitorIdが未登録の場合
    * @throws OnboardingRequiredError - オンボーディング未完了の場合
    */
-  getRecommendations = async (visitorId: string, limit = 10): Promise<RecommendedArticle[]> => {
+  getRecommendations = async (
+    visitorId: string,
+    limit = 10,
+    excludeIds: string[] = []
+  ): Promise<RecommendedArticle[]> => {
     // visitorIdの存在確認
     const visitor = await this.visitorsRepo.findByVisitorId(visitorId);
     if (!visitor) {
@@ -85,7 +89,7 @@ export class RecommendService {
 
     // RecommendationEngineで推薦取得
     try {
-      return await this.engine.getRecommendations(visitorId, limit);
+      return await this.engine.getRecommendations(visitorId, limit, excludeIds);
     } catch (error) {
       // preferenceEmbedding関連のエラーはOnboardingRequiredErrorに変換
       if (error instanceof Error && error.message.includes("preferenceEmbedding")) {

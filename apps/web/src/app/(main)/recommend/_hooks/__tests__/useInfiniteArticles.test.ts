@@ -300,8 +300,13 @@ describe("useInfiniteArticles", () => {
       });
 
       // DEFAULT_LOAD_MORE_COUNT = 5
+      // loadMore時は既存記事のIDをexcludeIdsとして送信する
       expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
-        json: { visitorId: "test-visitor-id", limit: 5 },
+        json: {
+          visitorId: "test-visitor-id",
+          limit: 5,
+          excludeIds: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+        },
       });
     });
 
@@ -320,8 +325,13 @@ describe("useInfiniteArticles", () => {
         await result.current.loadMore();
       });
 
+      // loadMore時は既存記事のIDをexcludeIdsとして送信する
       expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
-        json: { visitorId: "test-visitor-id", limit: 3 },
+        json: {
+          visitorId: "test-visitor-id",
+          limit: 3,
+          excludeIds: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+        },
       });
     });
   });
