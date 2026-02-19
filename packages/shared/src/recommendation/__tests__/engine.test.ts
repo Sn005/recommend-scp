@@ -116,7 +116,12 @@ describe("RecommendationEngine", () => {
       const recommendations = await engine.getRecommendations(visitorId, 10);
 
       expect(recommendations).toHaveLength(3);
-      expect(recommendations[0]).toEqual({
+      // シャッフルにより順序は不定だが、全記事が含まれマッピングが正しいことを確認
+      const ids = recommendations.map((r) => r.id).sort();
+      expect(ids).toEqual(["article-1", "article-2", "article-3"]);
+
+      const article1 = recommendations.find((r) => r.id === "article-1")!;
+      expect(article1).toEqual({
         id: "article-1",
         title: "記事1",
         similarityScore: 0.95,
@@ -125,8 +130,9 @@ describe("RecommendationEngine", () => {
         objectClass: null,
         rating: null,
       });
-      expect(recommendations[1].similarityScore).toBe(0.85);
-      expect(recommendations[2].similarityScore).toBe(0.75);
+
+      const scores = recommendations.map((r) => r.similarityScore).sort((a, b) => b - a);
+      expect(scores).toEqual([0.95, 0.85, 0.75]);
     });
 
     it("嗜好ベクトルが存在しない場合、エラーがスローされる", async () => {
@@ -901,6 +907,216 @@ describe("RecommendationEngine", () => {
 
         expect(recommendations[0].source).toBe("preference");
       });
+    });
+  });
+
+  describe("候補プールランダムサンプリング", () => {
+    it("candidatePoolMultiplierに応じて多めに候補を取得する", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+        candidatePoolMultiplier: 3,
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // limit(10) * multiplier(3) = 30件を要求
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 30,
+        })
+      );
+    });
+
+    it("候補プールから指定件数のみ返却される", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+        candidatePoolMultiplier: 3,
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+    });
+
+    it("候補プールが要求数より少ない場合、全件返却される", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 5 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+        candidatePoolMultiplier: 3,
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(5);
+    });
+
+    it("candidatePoolMultiplier未指定時はデフォルト値3が使用される", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      // candidatePoolMultiplierを明示的に指定しない
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // デフォルトのmultiplier(3)で30件を要求
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledWith(
+        expect.objectContaining({
+          limit: 30,
+        })
+      );
+    });
+
+    it("シャッフルにより結果の順序が変化する可能性がある", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+        candidatePoolMultiplier: 3,
+      });
+
+      // 複数回実行して、少なくとも1回は順序が異なることを確認
+      const resultSets: string[][] = [];
+      for (let i = 0; i < 20; i++) {
+        const recommendations = await engine.getRecommendations(visitorId, 10);
+        resultSets.push(recommendations.map((r) => r.id));
+      }
+
+      // 全結果セットが同一でないことを確認（20回中1回でも異なればOK）
+      const firstResult = JSON.stringify(resultSets[0]);
+      const hasDifferent = resultSets.some((set) => JSON.stringify(set) !== firstResult);
+      expect(hasDifferent).toBe(true);
+    });
+
+    it("全結果が候補プール内の記事のみで構成される", async () => {
+      const poolIds = new Set(Array.from({ length: 30 }, (_, i) => `article-${i}`));
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+        candidatePoolMultiplier: 3,
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      // 返却された全記事が候補プール内に含まれることを確認
+      for (const rec of recommendations) {
+        expect(poolIds.has(rec.id)).toBe(true);
+      }
     });
   });
 });
