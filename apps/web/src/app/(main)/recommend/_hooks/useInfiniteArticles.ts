@@ -54,6 +54,7 @@ export function useInfiniteArticles(
   const isFetchingRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
   const isMountedRef = useRef(true);
+  const articlesRef = useRef<Article[]>([]);
 
   // マウント状態管理
   useEffect(() => {
@@ -62,6 +63,11 @@ export function useInfiniteArticles(
       isMountedRef.current = false;
     };
   }, []);
+
+  // articlesRefを同期（loadMoreでのexcludeIds取得用）
+  useEffect(() => {
+    articlesRef.current = articles;
+  }, [articles]);
 
   // 初回読み込み
   const fetchArticles = useCallback(
@@ -145,8 +151,9 @@ export function useInfiniteArticles(
     }, FETCH_TIMEOUT_MS);
 
     try {
+      const existingArticleIds = articlesRef.current.map((a) => a.id);
       const res = await api.recommend.$post({
-        json: { visitorId, limit: loadMoreCount },
+        json: { visitorId, limit: loadMoreCount, excludeIds: existingArticleIds },
       });
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
@@ -165,9 +172,20 @@ export function useInfiniteArticles(
       const hasMoreData: boolean = data.hasMore ?? false;
 
       if (isMountedRef.current) {
+        // 新規記事が0件の場合は追加記事なしと判断
+        if (newArticles.length === 0) {
+          setHasMore(false);
+          return;
+        }
+
         setArticles((prev) => {
           const existingIds = new Set(prev.map((a) => a.id));
           const uniqueNewArticles = newArticles.filter((a) => !existingIds.has(a.id));
+          // 全件重複の場合も追加記事なし
+          if (uniqueNewArticles.length === 0) {
+            setHasMore(false);
+            return prev;
+          }
           return [...prev, ...uniqueNewArticles];
         });
         setHasMore(hasMoreData);

@@ -54,9 +54,9 @@ export const createRecommendRoutes = (
     "/",
     zValidator("json", getRecommendationsSchema, throwOnValidationError),
     async (c) => {
-      const { visitorId, limit } = c.req.valid("json");
+      const { visitorId, limit, excludeIds } = c.req.valid("json");
 
-      const recommendations = await service.getRecommendations(visitorId, limit);
+      const recommendations = await service.getRecommendations(visitorId, limit, excludeIds);
 
       return c.json(
         {

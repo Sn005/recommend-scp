@@ -154,7 +154,7 @@ describe("POST /recommend - 正常系", () => {
 
     // Assert
     expect(res.status).toBe(200);
-    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 1);
+    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 1, []);
     expect(json.count).toBe(1);
   });
 
@@ -172,7 +172,7 @@ describe("POST /recommend - 正常系", () => {
     });
 
     // Assert
-    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 10);
+    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 10, []);
   });
 
   it("推薦結果が0件でも200を返す", async () => {
@@ -473,7 +473,7 @@ describe("POST /recommend - バリデーション", () => {
 
     // Assert
     expect(res.status).toBe(200);
-    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 1);
+    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 1, []);
   });
 
   it("limit=50で正常に動作（境界値）", async () => {
@@ -492,7 +492,7 @@ describe("POST /recommend - バリデーション", () => {
 
     // Assert
     expect(res.status).toBe(200);
-    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 50);
+    expect(mockService.getRecommendations).toHaveBeenCalledWith(VALID_VISITOR_ID, 50, []);
   });
 
   it("RFC 7807形式のバリデーションエラーを返す", async () => {

@@ -86,7 +86,11 @@ export class RecommendationEngine {
    * @returns 推薦記事リスト（類似度降順）
    * @throws オンボーディング未完了の場合
    */
-  async getRecommendations(visitorId: string, limit: number = 10): Promise<RecommendedArticle[]> {
+  async getRecommendations(
+    visitorId: string,
+    limit: number = 10,
+    additionalExcludeIds: string[] = []
+  ): Promise<RecommendedArticle[]> {
     // 嗜好ベクトルを再計算（即時反映）
     if (this.config.recalculateOnRequest) {
       await this.recalculatePreferenceVector(visitorId);
@@ -97,8 +101,9 @@ export class RecommendationEngine {
       throw new Error("Onboarding not completed: preferenceEmbedding is missing");
     }
 
-    // 除外対象を取得
-    const excludedIds = await this.getExcludedIds(visitorId);
+    // 除外対象を取得（DB上の履歴 + フロントエンドから渡された既取得記事ID）
+    const baseExcludedIds = await this.getExcludedIds(visitorId);
+    const excludedIds = [...new Set([...baseExcludedIds, ...additionalExcludeIds])];
 
     // 連続類似検出（80/20判定より優先）
     const forceSerendipity = await this.shouldForceSerendipity(visitorId);
