@@ -8,13 +8,30 @@ export interface PackSelectorProps {
   onComplete: () => void;
 }
 
+function PackCardSkeleton() {
+  return (
+    <div className="w-full rounded-2xl border-2 border-transparent bg-white p-4 shadow-sm">
+      <div className="flex items-center gap-3">
+        {/* アイコンスケルトン */}
+        <div className="h-9 w-9 flex-shrink-0 animate-pulse rounded-full bg-gray-200" />
+        <div className="flex-1 space-y-2">
+          {/* タイトルスケルトン */}
+          <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
+          {/* 説明文スケルトン */}
+          <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PackSelectorSkeleton() {
   return (
     <>
       <main className="flex-1 space-y-3 px-4 py-6 pb-28" data-testid="pack-selector-skeleton">
         <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-200" />
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-2xl bg-white shadow-sm" />
+          <PackCardSkeleton key={i} />
         ))}
       </main>
       {/* 開始ボタン（固定フッター） */}
