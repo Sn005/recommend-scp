@@ -83,3 +83,13 @@ export const PATCH = (req: Request) => handle(getApp())(req);
  * Edge Runtime対応は別Subtaskで対応予定。
  */
 export const runtime = "nodejs";
+
+/**
+ * 動的レンダリングを強制
+ *
+ * Next.js 16のルートハンドラ最適化により、catch-all APIルートが
+ * 静的に最適化される場合がある。POSTリクエストは通常動的だが、
+ * 明示的にforce-dynamicを指定して2回目以降のリクエストでの
+ * 404エラーを防止する。
+ */
+export const dynamic = "force-dynamic";

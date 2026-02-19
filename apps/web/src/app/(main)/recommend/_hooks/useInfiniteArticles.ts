@@ -151,7 +151,13 @@ export function useInfiniteArticles(
 
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
       if (!res.ok) {
-        throw new Error(`API error: ${String(res.status)}`);
+        // 404の場合は追加記事なし（visitor未登録やルーティングエラー）と判断し、リトライを停止
+
+        if ((res.status as number) === 404 && isMountedRef.current) {
+          setHasMore(false);
+        }
+        // AC-7: バックグラウンド取得失敗時はユーザーの閲覧体験を中断しない
+        return;
       }
 
       const data = (await res.json()) as RecommendResponse;
@@ -168,7 +174,7 @@ export function useInfiniteArticles(
       }
     } catch {
       // AC-7: バックグラウンド取得失敗時はユーザーの閲覧体験を中断しない
-      // エラーステートに設定せず、次の遷移時にリトライする
+      // ネットワークエラー等の一時的なエラーは次の遷移時にリトライする
     } finally {
       clearTimeout(timeoutId);
       if (isMountedRef.current) {
