@@ -16,6 +16,7 @@
 | [010](./010-ja-article-display/010-ja-article-display.md)           | 日本語記事表示・閲覧履歴改善 | 日本語URL管理・WebView対応・履歴本文表示                                | completed  |
 | [011](./011-qa-testing/011-qa-testing.md)                           | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成                             | completed  |
 | [012](./012-slow-query-optimization/012-slow-query-optimization.md) | スロークエリ最適化           | Supabaseスロークエリの分析・改善・Why記録                               | pending    |
+| [013](./013-preference-reset/013-preference-reset.md)               | 嗜好リセット機能             | 嗜好データリセット・オンボーディング再開                                | pending    |
 
 ## 優先順位
 
