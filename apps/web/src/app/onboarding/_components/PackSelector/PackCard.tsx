@@ -22,6 +22,7 @@ const icons: Record<string, string> = {
 export function PackCard({ pack, isSelected, onSelect, disabled }: PackCardProps) {
   return (
     <button
+      data-testid={`pack-${pack.type}`}
       onClick={onSelect}
       disabled={disabled}
       className={`relative w-full rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition-all ${
