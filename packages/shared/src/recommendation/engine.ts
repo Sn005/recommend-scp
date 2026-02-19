@@ -42,13 +42,21 @@ export interface RecommendationEngineConfig {
   recalculateOnRequest: boolean;
   /** セレンディピティ設定（省略時はデフォルト設定を使用） */
   serendipity?: Partial<SerendipityConfig>;
+  /** 候補プール倍率（デフォルト: 3）。limitのN倍の候補を取得し、ランダムサンプリングで多様性を確保する */
+  candidatePoolMultiplier?: number;
 }
+
+/**
+ * デフォルトの候補プール倍率
+ */
+const DEFAULT_CANDIDATE_POOL_MULTIPLIER = 3;
 
 /**
  * デフォルト設定
  */
 const DEFAULT_CONFIG: RecommendationEngineConfig = {
   recalculateOnRequest: true,
+  candidatePoolMultiplier: DEFAULT_CANDIDATE_POOL_MULTIPLIER,
 };
 
 /**
@@ -162,6 +170,9 @@ export class RecommendationEngine {
   /**
    * 好み推薦（Exploitation）を取得
    *
+   * 候補プール倍率（candidatePoolMultiplier）に基づいてlimitより多めの候補を取得し、
+   * シャッフルしてからlimit件を返却する。これにより毎回異なる組み合わせが提供される。
+   *
    * @param profile ユーザープロファイル
    * @param excludedIds 除外する記事ID
    * @param limit 取得件数上限
@@ -172,14 +183,17 @@ export class RecommendationEngine {
     excludedIds: string[],
     limit: number
   ): Promise<RecommendedArticle[]> {
-    // Embeddingベースの類似度検索
+    const multiplier = this.config.candidatePoolMultiplier ?? DEFAULT_CANDIDATE_POOL_MULTIPLIER;
+    const poolSize = limit * multiplier;
+
+    // 候補プールを多めに取得
     const results = await this.vectorSearch.searchByEmbedding({
       queryVector: profile.preferenceEmbedding!,
       excludeIds: excludedIds,
-      limit,
+      limit: poolSize,
     });
 
-    return results.map((r) => ({
+    const articles = results.map((r) => ({
       id: r.id,
       title: r.title,
       similarityScore: r.similarity,
@@ -188,6 +202,26 @@ export class RecommendationEngine {
       objectClass: r.objectClass ?? null,
       rating: r.rating ?? null,
     }));
+
+    // シャッフルしてlimit件を返却
+    return this.shuffleArray(articles).slice(0, limit);
+  }
+
+  /**
+   * 配列をFisher-Yatesアルゴリズムでシャッフル
+   *
+   * 元の配列は変更せず、新しい配列を返す。
+   *
+   * @param array シャッフル対象の配列
+   * @returns シャッフルされた新しい配列
+   */
+  private shuffleArray<T>(array: readonly T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   /**
