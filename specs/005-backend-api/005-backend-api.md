@@ -7,7 +7,7 @@ Hono独立サーバーによるバックエンドAPIを実装し、フロント�
 
 ## ステータス
 
-- **status**: planned
+- **status**: completed
 
 ## ユーザーストーリー
 
