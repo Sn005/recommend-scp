@@ -175,7 +175,14 @@ export function ArticleWebView({
   // mixed content回避: iframeにはプロキシURLを使用
   const iframeSrc = useMemo(() => toProxyUrl(url), [url]);
 
-  const { iframeRef, error, handleLoad, handleError, retry } = useArticleWebView({
+  const {
+    iframeRef,
+    isLoading: isIframeLoading,
+    error,
+    handleLoad,
+    handleError,
+    retry,
+  } = useArticleWebView({
     url: iframeSrc,
     onScrollEnd,
     onScrollChange,
@@ -193,6 +200,17 @@ export function ArticleWebView({
     articleId: articleId ?? "",
     onContentLoaded: handleContentLoaded,
   });
+
+  // プリロード済みスロットがcurrentに昇格した際のコンテンツ取得
+  // iframeのonLoadは一度しか発火しないため、non-currentスロットとしてロードされた場合、
+  // current昇格時にonContentLoadedが有効になってもhandleIframeLoadは再発火しない。
+  // このEffectで昇格後のfetchContentを補完する。
+  useEffect(() => {
+    if (!isIframeLoading && articleId && onContentLoaded && !contentFetchedRef.current) {
+      contentFetchedRef.current = true;
+      void fetchContent();
+    }
+  }, [isIframeLoading, articleId, onContentLoaded, fetchContent]);
 
   // WebView読み込み完了時にコンテンツ取得を実行
   const handleIframeLoad = useCallback(() => {
