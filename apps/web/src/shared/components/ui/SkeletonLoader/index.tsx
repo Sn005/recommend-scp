@@ -14,8 +14,8 @@ import { cn } from "@/shared/lib/utils";
 export function SkeletonLoader() {
   return (
     <div data-testid="skeleton-loader" className="flex h-screen w-full flex-col">
-      {/* 記事エリアのスケルトン（pb-28でピルナビ領域を確保） */}
-      <div className="flex-1 animate-pulse overflow-hidden bg-gray-100 px-6 pt-6 pb-28">
+      {/* 記事エリアのスケルトン */}
+      <div className="flex-1 animate-pulse overflow-hidden bg-gray-100 px-6 pt-6 pb-6">
         {/* タイトル */}
         <div className="mb-6 h-8 w-48 rounded bg-gray-200" />
 
@@ -53,12 +53,6 @@ export function SkeletonLoader() {
           <SkeletonLine width="w-full" />
           <SkeletonLine width="w-9/12" />
         </div>
-      </div>
-
-      {/* 下部UIのスケルトン */}
-      <div className="fixed inset-x-0 bottom-0 z-nav flex flex-col items-center gap-3 pb-4">
-        {/* PillNav スケルトン */}
-        <div className="flex h-16 w-36 animate-pulse items-center justify-center gap-6 rounded-[50px] bg-gray-200/50" />
       </div>
     </div>
   );
