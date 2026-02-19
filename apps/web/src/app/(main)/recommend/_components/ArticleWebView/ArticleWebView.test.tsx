@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { ArticleWebView } from "./ArticleWebView";
 
 // useArticleWebViewのモック
@@ -7,15 +7,27 @@ vi.mock("./useArticleWebView", () => ({
   useArticleWebView: vi.fn(),
 }));
 
-// use404Detectionのモック
-vi.mock("./use404Detection", () => ({
-  use404Detection: vi.fn(),
+// useIosSafariScrollFixのモック（副作用のみのフック）
+vi.mock("./useIosSafariScrollFix", () => ({
+  useIosSafariScrollFix: vi.fn(),
+}));
+
+// useNotFoundStateのモック
+vi.mock("./useNotFoundState", () => ({
+  useNotFoundState: vi.fn(),
+}));
+
+// useIframeLoadHandlerのモック
+vi.mock("./useIframeLoadHandler", () => ({
+  useIframeLoadHandler: vi.fn(),
 }));
 
 import { useArticleWebView } from "./useArticleWebView";
-import { use404Detection } from "./use404Detection";
+import { useNotFoundState } from "./useNotFoundState";
+import { useIframeLoadHandler } from "./useIframeLoadHandler";
 const mockUseArticleWebView = vi.mocked(useArticleWebView);
-const mockUse404Detection = vi.mocked(use404Detection);
+const mockUseNotFoundState = vi.mocked(useNotFoundState);
+const mockUseIframeLoadHandler = vi.mocked(useIframeLoadHandler);
 
 describe("ArticleWebView", () => {
   const createMockReturn = (overrides = {}) => ({
@@ -31,10 +43,12 @@ describe("ArticleWebView", () => {
 
   beforeEach(() => {
     mockUseArticleWebView.mockReturnValue(createMockReturn());
-    // use404Detectionのデフォルトモック（存在するURLとして扱う）
-    mockUse404Detection.mockReturnValue({
-      isChecking: false,
-      isNotFound: false,
+    mockUseNotFoundState.mockReturnValue({
+      showNotFound: false,
+      handleSuggest: vi.fn(),
+    });
+    mockUseIframeLoadHandler.mockReturnValue({
+      handleIframeLoad: vi.fn(),
     });
   });
 
@@ -195,6 +209,42 @@ describe("ArticleWebView", () => {
         expect.objectContaining({ onScrollChange })
       );
     });
+
+    it("useNotFoundStateにurl/articleId/onSkipが渡される", () => {
+      const onSkip = vi.fn();
+      render(<ArticleWebView url="https://example.com" articleId="scp-173" onSkip={onSkip} />);
+
+      expect(mockUseNotFoundState).toHaveBeenCalledWith({
+        url: "https://example.com",
+        articleId: "scp-173",
+        onSkip,
+      });
+    });
+
+    it("useIframeLoadHandlerに必要なオプションが渡される", () => {
+      const onContentLoaded = vi.fn();
+      const onIframeLoad = vi.fn();
+      const onContentFullyReady = vi.fn();
+      render(
+        <ArticleWebView
+          url="https://example.com"
+          articleId="scp-173"
+          onContentLoaded={onContentLoaded}
+          onIframeLoad={onIframeLoad}
+          onContentFullyReady={onContentFullyReady}
+        />
+      );
+
+      expect(mockUseIframeLoadHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: "https://example.com",
+          articleId: "scp-173",
+          onContentLoaded,
+          onIframeLoad,
+          onContentFullyReady,
+        })
+      );
+    });
   });
 
   describe("レイアウト", () => {
@@ -223,54 +273,35 @@ describe("ArticleWebView", () => {
   });
 
   describe("AC: 404検知・サジェスト画面", () => {
-    it("404検知時にサジェスト画面が表示される", async () => {
+    it("404検知時にサジェスト画面が表示される", () => {
       mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
-
-      // onNotFoundコールバックをキャプチャして後から呼び出す
-      let capturedOnNotFound: (() => void | Promise<void>) | undefined;
-      mockUse404Detection.mockImplementation(({ onNotFound }) => {
-        capturedOnNotFound = onNotFound;
-        return {
-          isChecking: false,
-          isNotFound: false,
-        };
+      mockUseNotFoundState.mockReturnValue({
+        showNotFound: true,
+        handleSuggest: vi.fn(),
       });
 
       render(
         <ArticleWebView url="https://example.com" articleId="test-article" onSkip={vi.fn()} />
       );
 
-      // コールバックをact内で呼び出す
-      await act(async () => {
-        await capturedOnNotFound?.();
-      });
-
       expect(screen.getByTestId("translation-not-found")).toBeInTheDocument();
     });
 
-    it("サジェスト画面でボタンクリック後にonSkipが呼ばれる", async () => {
-      const onSkip = vi.fn();
+    it("サジェスト画面でボタンクリック後にhandleSuggestが呼ばれる", () => {
+      const handleSuggest = vi.fn();
       mockUseArticleWebView.mockReturnValue(createMockReturn({ isLoading: false }));
-
-      let capturedOnNotFound: (() => void | Promise<void>) | undefined;
-      mockUse404Detection.mockImplementation(({ onNotFound }) => {
-        capturedOnNotFound = onNotFound;
-        return {
-          isChecking: false,
-          isNotFound: false,
-        };
+      mockUseNotFoundState.mockReturnValue({
+        showNotFound: true,
+        handleSuggest,
       });
 
-      render(<ArticleWebView url="https://example.com" articleId="test-article" onSkip={onSkip} />);
-
-      // コールバックをact内で呼び出してサジェスト画面を表示
-      await act(async () => {
-        await capturedOnNotFound?.();
-      });
+      render(
+        <ArticleWebView url="https://example.com" articleId="test-article" onSkip={vi.fn()} />
+      );
 
       fireEvent.click(screen.getByRole("button", { name: "別の記事をおすすめ" }));
 
-      expect(onSkip).toHaveBeenCalledTimes(1);
+      expect(handleSuggest).toHaveBeenCalledTimes(1);
     });
   });
 });

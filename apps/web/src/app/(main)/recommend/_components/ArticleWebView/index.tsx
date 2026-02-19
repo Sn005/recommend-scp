@@ -27,6 +27,9 @@ export { ArticleWebView } from "./ArticleWebView";
 export { useArticleWebView } from "./useArticleWebView";
 export { use404Detection } from "./use404Detection";
 export { useArticleContent } from "./useArticleContent";
+export { useIosSafariScrollFix } from "./useIosSafariScrollFix";
+export { useNotFoundState } from "./useNotFoundState";
+export { useIframeLoadHandler } from "./useIframeLoadHandler";
 export type {
   ArticleContent,
   UseArticleContentOptions,
