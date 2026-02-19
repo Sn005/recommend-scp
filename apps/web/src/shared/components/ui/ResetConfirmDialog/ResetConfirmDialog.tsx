@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@/shared/components/ui/Icon";
 import { useResetPreference } from "./useResetPreference";
 
@@ -48,7 +49,7 @@ export const ResetConfirmDialog = ({ visitorId, onConfirm, onCancel }: ResetConf
     });
   };
 
-  return (
+  return createPortal(
     <div
       data-testid="reset-dialog-overlay"
       className="fixed inset-0 z-modal flex items-center justify-center bg-black/50"
@@ -107,6 +108,7 @@ export const ResetConfirmDialog = ({ visitorId, onConfirm, onCancel }: ResetConf
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
