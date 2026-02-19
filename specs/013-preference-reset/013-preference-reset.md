@@ -4,7 +4,7 @@
 
 蓄積された趣味嗜好データをリセットし、オンボーディング（スターターパック選択）からやり直せる機能を実装する。
 
-**status**: pending
+**status**: completed
 
 ## ユーザーストーリー
 
@@ -51,19 +51,19 @@
 
 ## EPIC-level Acceptance Criteria
 
-- [ ] 嗜好データ（preference_vector, tag_weights, object_class_preference, starter_pack, onboarding_completed_at）がリセットされる
-- [ ] feedback、recommendation_logが削除される
-- [ ] favorites、view_historyは保持される
-- [ ] ドロワーメニューからリセットを実行できる
-- [ ] 確認ダイアログで誤操作が防止される
-- [ ] リセット後にオンボーディング画面にリダイレクトされる
-- [ ] リセット操作が冪等である
+- [x] 嗜好データ（preference_vector, tag_weights, object_class_preference, starter_pack, onboarding_completed_at）がリセットされる
+- [x] feedback、recommendation_logが削除される
+- [x] favorites、view_historyは保持される
+- [x] ドロワーメニューからリセットを実行できる
+- [x] 確認ダイアログで誤操作が防止される
+- [x] リセット後にオンボーディング画面にリダイレクトされる
+- [x] リセット操作が冪等である
 
 ## Story一覧
 
 | ID                                            | 名前         | 概要                                            | ステータス |
 | --------------------------------------------- | ------------ | ----------------------------------------------- | ---------- |
-| [013-01](./013-01-preference-reset/013-01.md) | 嗜好リセット | API・共通インターフェース・フロントエンドUI実装 | pending    |
+| [013-01](./013-01-preference-reset/013-01.md) | 嗜好リセット | API・共通インターフェース・フロントエンドUI実装 | completed  |
 
 ## 技術設計
 
