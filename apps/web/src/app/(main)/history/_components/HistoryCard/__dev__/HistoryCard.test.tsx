@@ -9,11 +9,6 @@ import { render, screen } from "@testing-library/react";
 import { HistoryCard } from "../index";
 import type { HistoryEntry } from "../../../_types";
 
-// formatRelativeTime のモック
-vi.mock("@/shared/lib/date", () => ({
-  formatRelativeTime: vi.fn(() => "2時間前"),
-}));
-
 // next/link のモック
 vi.mock("next/link", () => ({
   default: ({
@@ -36,8 +31,9 @@ describe("HistoryCard", () => {
   const mockEntry: HistoryEntry = {
     scpNumber: "scp-173",
     title: "彫刻 - オリジナル",
-    excerpt: "アイテム番号: SCP-173 オブジェクトクラス: Euclid 特別収容プロ",
+    excerpt: "",
     objectClass: "Euclid",
+    rating: 4102,
     viewedAt: "2024-01-15T10:00:00.000Z",
   };
 
@@ -51,51 +47,6 @@ describe("HistoryCard", () => {
     expect(screen.getByText("scp-173")).toBeInTheDocument();
   });
 
-  it("タイトルが表示される", () => {
-    render(<HistoryCard entry={mockEntry} />);
-
-    expect(screen.getByText("彫刻 - オリジナル")).toBeInTheDocument();
-  });
-
-  it("excerptがタイトル下に表示される（AC-4）", () => {
-    render(<HistoryCard entry={mockEntry} />);
-
-    const excerptElement = screen.getByText(
-      "アイテム番号: SCP-173 オブジェクトクラス: Euclid 特別収容プロ"
-    );
-    expect(excerptElement).toBeInTheDocument();
-  });
-
-  it("excerptがグレーのテキストカラーで表示される（AC-4）", () => {
-    render(<HistoryCard entry={mockEntry} />);
-
-    const excerptElement = screen.getByText(
-      "アイテム番号: SCP-173 オブジェクトクラス: Euclid 特別収容プロ"
-    );
-    expect(excerptElement).toHaveClass("text-gray-400");
-  });
-
-  it("excerptが1行に収まるよう省略される（AC-4）", () => {
-    render(<HistoryCard entry={mockEntry} />);
-
-    const excerptElement = screen.getByText(
-      "アイテム番号: SCP-173 オブジェクトクラス: Euclid 特別収容プロ"
-    );
-    expect(excerptElement).toHaveClass("truncate");
-  });
-
-  it("excerptが空の場合は表示しない（AC-5）", () => {
-    const entryWithoutExcerpt: HistoryEntry = {
-      ...mockEntry,
-      excerpt: "",
-    };
-
-    render(<HistoryCard entry={entryWithoutExcerpt} />);
-
-    // excerptの親要素（data-testid="excerpt"）が存在しないことを確認
-    expect(screen.queryByTestId("excerpt")).not.toBeInTheDocument();
-  });
-
   it("オブジェクトクラスバッジが表示される", () => {
     render(<HistoryCard entry={mockEntry} />);
 
@@ -106,22 +57,66 @@ describe("HistoryCard", () => {
     const entryWithoutObjectClass: HistoryEntry = {
       scpNumber: "scp-173",
       title: "彫刻 - オリジナル",
-      excerpt: "テスト",
+      excerpt: "",
       viewedAt: "2024-01-15T10:00:00.000Z",
     };
 
     render(<HistoryCard entry={entryWithoutObjectClass} />);
 
-    // Euclidなどのオブジェクトクラステキストが存在しないことを確認
     expect(screen.queryByText("Euclid")).not.toBeInTheDocument();
     expect(screen.queryByText("Safe")).not.toBeInTheDocument();
     expect(screen.queryByText("Keter")).not.toBeInTheDocument();
   });
 
-  it("閲覧時刻が相対時間で表示される", () => {
+  it("スター数がフォーマットされて表示される", () => {
     render(<HistoryCard entry={mockEntry} />);
 
-    expect(screen.getByText("2時間前")).toBeInTheDocument();
+    expect(screen.getByText("+4,102")).toBeInTheDocument();
+  });
+
+  it("スター数が負数の場合はマイナス符号付きで表示される", () => {
+    const entryWithNegativeRating: HistoryEntry = {
+      ...mockEntry,
+      rating: -15,
+    };
+
+    render(<HistoryCard entry={entryWithNegativeRating} />);
+
+    expect(screen.getByText("-15")).toBeInTheDocument();
+  });
+
+  it("スター数がnullの場合は表示しない", () => {
+    const entryWithoutRating: HistoryEntry = {
+      ...mockEntry,
+      rating: null,
+    };
+
+    render(<HistoryCard entry={entryWithoutRating} />);
+
+    // +4,102 が表示されていないことを確認
+    expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
+  });
+
+  it("スター数がundefinedの場合は表示しない", () => {
+    const entryWithoutRating: HistoryEntry = {
+      ...mockEntry,
+      rating: undefined,
+    };
+
+    render(<HistoryCard entry={entryWithoutRating} />);
+
+    expect(screen.queryByText(/^\+/)).not.toBeInTheDocument();
+  });
+
+  it("excerptは表示されない", () => {
+    const entryWithExcerpt: HistoryEntry = {
+      ...mockEntry,
+      excerpt: "アイテム番号: SCP-173",
+    };
+
+    render(<HistoryCard entry={entryWithExcerpt} />);
+
+    expect(screen.queryByText("アイテム番号: SCP-173")).not.toBeInTheDocument();
   });
 
   it("カードをクリックすると記事詳細画面に遷移する（AC-1）", () => {

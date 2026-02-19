@@ -17,6 +17,7 @@ import { useFeedback, calculateInterestLevel } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "@/shared/hooks/useArticleFavorite";
 import { useIframePool } from "./_hooks/useIframePool";
 import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
+import type { HistoryEntry } from "@/app/(main)/history/_types";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
 import { FloatingUI } from "./_components/FloatingUI";
 import { TransitionCard } from "./_components/TransitionCard";
@@ -197,6 +198,8 @@ export default function RecommendPage() {
           scpNumber: currentArticle.id,
           title: content.title || currentArticle.title,
           excerpt: content.excerpt,
+          objectClass: (currentArticle.objectClass as HistoryEntry["objectClass"]) ?? undefined,
+          rating: currentArticle.rating,
         });
       }
     },
