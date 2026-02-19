@@ -15,12 +15,12 @@ export function SkeletonLoader() {
   return (
     <div data-testid="skeleton-loader" className="flex h-screen w-full flex-col">
       {/* 記事エリアのスケルトン */}
-      <div className="flex-1 animate-pulse overflow-hidden bg-gray-100 px-6 pt-6 pb-6">
+      <div className="flex min-h-0 flex-1 animate-pulse flex-col bg-gray-100 px-6 pt-6 pb-6">
         {/* タイトル */}
-        <div className="mb-6 h-8 w-48 rounded bg-gray-200" />
+        <div className="mb-6 h-8 w-48 shrink-0 rounded bg-gray-200" />
 
         {/* 本文行 */}
-        <div className="space-y-3">
+        <div className="min-h-0 flex-1 space-y-3 overflow-hidden">
           {/* 段落1 */}
           <SkeletonLine width="w-full" />
           <SkeletonLine width="w-11/12" />
