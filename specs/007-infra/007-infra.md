@@ -57,5 +57,5 @@ SO THAT 手動作業を減らし、安定したサービス運用を実現でき
 
 ## ステータス
 
-- **status**: in_progress
+- **status**: completed
 - **開始日**: 2025-01-18

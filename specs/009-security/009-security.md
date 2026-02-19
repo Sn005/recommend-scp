@@ -1,7 +1,7 @@
 ---
 id: "009"
 title: "セキュリティ強化"
-status: "planned"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
 ---
