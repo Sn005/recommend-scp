@@ -1,9 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDrawer } from "./useDrawer";
 import { Icon, type IconName } from "@/shared/components/ui/Icon";
+import { ResetConfirmDialog } from "@/shared/components/ui/ResetConfirmDialog";
+import { useVisitorId } from "@/shared/hooks/useVisitorId";
 
 interface MenuItem {
   href: string;
@@ -19,10 +22,19 @@ const menuItems: MenuItem[] = [
 
 export const DrawerMenu = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { close } = useDrawer();
+  const { visitorId } = useVisitorId();
+  const [showResetDialog, setShowResetDialog] = useState(false);
 
   const handleClick = () => {
     close();
+  };
+
+  const handleResetConfirm = () => {
+    setShowResetDialog(false);
+    close();
+    router.push("/onboarding");
   };
 
   return (
@@ -61,7 +73,32 @@ export const DrawerMenu = () => {
             );
           })}
         </ul>
+
+        {/* 区切り線 + リセットボタン */}
+        <div className="mx-3 my-2 border-t border-gray-200" />
+        <button
+          data-testid="reset-preference-button"
+          type="button"
+          onClick={() => {
+            setShowResetDialog(true);
+          }}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          <Icon name="refresh-cw" size={22} className="text-gray-500" />
+          <span>推薦をリセット</span>
+        </button>
       </nav>
+
+      {/* 確認ダイアログ */}
+      {showResetDialog && visitorId && (
+        <ResetConfirmDialog
+          visitorId={visitorId}
+          onConfirm={handleResetConfirm}
+          onCancel={() => {
+            setShowResetDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 };
