@@ -385,6 +385,59 @@ export class IndexedDBStorage implements PreferenceStorage {
   }
 
   /**
+   * 嗜好データをリセット
+   *
+   * preferences, feedback, recommendationLog ストアから該当visitorのデータを削除。
+   * favorites, viewHistory は保持。
+   */
+  async resetPreference(visitorId: string): Promise<void> {
+    // プロファイルを削除
+    await this.withStore(STORE_NAMES.preferences, "readwrite", (store) => {
+      return new Promise<void>((resolve, reject) => {
+        const request = store.delete(visitorId);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    });
+
+    // feedback を全件削除
+    const feedbacks = await this.getFeedback(visitorId);
+    if (feedbacks.length > 0) {
+      await this.withStore(STORE_NAMES.feedback, "readwrite", (store) => {
+        return new Promise<void>((resolve, reject) => {
+          let remaining = feedbacks.length;
+          for (const fb of feedbacks) {
+            const request = store.delete(fb.id);
+            request.onsuccess = () => {
+              remaining--;
+              if (remaining === 0) resolve();
+            };
+            request.onerror = () => reject(request.error);
+          }
+        });
+      });
+    }
+
+    // recommendation_log を全件削除
+    const logs = await this.getRecommendationLog(visitorId);
+    if (logs.length > 0) {
+      await this.withStore(STORE_NAMES.recommendationLog, "readwrite", (store) => {
+        return new Promise<void>((resolve, reject) => {
+          let remaining = logs.length;
+          for (const log of logs) {
+            const request = store.delete(log.id);
+            request.onsuccess = () => {
+              remaining--;
+              if (remaining === 0) resolve();
+            };
+            request.onerror = () => reject(request.error);
+          }
+        });
+      });
+    }
+  }
+
+  /**
    * オブジェクトストアを使用した操作のヘルパー
    */
   private async withStore<T>(

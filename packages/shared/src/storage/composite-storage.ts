@@ -153,4 +153,8 @@ export class CompositeStorage implements PreferenceStorage {
   removeFavorite(visitorId: string, articleId: string): Promise<void> {
     return this.localStorage.removeFavorite(visitorId, articleId);
   }
+
+  resetPreference(visitorId: string): Promise<void> {
+    return this.localStorage.resetPreference(visitorId);
+  }
 }

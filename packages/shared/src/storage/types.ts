@@ -106,6 +106,18 @@ export interface PreferenceStorage {
    * @param articleId 記事ID
    */
   removeFavorite(visitorId: string, articleId: string): Promise<void>;
+
+  /**
+   * 嗜好データをリセット
+   * - visitors: preference_vector, tag_weights, object_class_preference,
+   *   starter_pack, onboarding_completed_at を初期化
+   * - feedback: 全行削除
+   * - recommendation_log: 全行削除
+   * - favorites, view_history: 保持
+   *
+   * @param visitorId 訪問者ID
+   */
+  resetPreference(visitorId: string): Promise<void>;
 }
 
 /**

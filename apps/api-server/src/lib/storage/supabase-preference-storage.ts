@@ -261,6 +261,32 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
   };
 
   /**
+   * 嗜好データをリセット
+   *
+   * visitors テーブルの嗜好カラムを初期化し、
+   * feedback・recommendation_log を全件削除する。
+   * favorites・view_history は保持される。
+   */
+  resetPreference = async (visitorId: string): Promise<void> => {
+    const { error: updateError } = await this.supabase
+      .from("visitors")
+      .update({
+        preference_vector: null,
+        tag_weights: {},
+        object_class_preference: {},
+        starter_pack: null,
+        onboarding_completed_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("visitor_id", visitorId);
+
+    if (updateError) throw new DatabaseError(updateError);
+
+    await this.clearFeedback(visitorId);
+    await this.clearRecommendationLog(visitorId);
+  };
+
+  /**
    * フィードバックを全件削除（好み再設定時に使用）
    */
   clearFeedback = async (visitorId: string): Promise<void> => {
