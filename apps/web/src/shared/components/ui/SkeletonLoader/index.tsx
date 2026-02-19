@@ -34,7 +34,7 @@ export function SkeletonLoader() {
       </div>
 
       {/* 下部UIのスケルトン */}
-      <div className="fixed inset-x-0 bottom-0 z-nav flex flex-col items-center gap-3 pb-8">
+      <div className="fixed inset-x-0 bottom-0 z-nav flex flex-col items-center gap-3 pb-4">
         {/* PillNav スケルトン */}
         <div className="flex h-16 w-36 animate-pulse items-center justify-center gap-6 rounded-[50px] bg-gray-200/50" />
       </div>
