@@ -8,9 +8,10 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import type { ZodError } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { registerVisitorSchema } from "./schema";
+import { registerVisitorSchema, resetPreferenceSchema } from "./schema";
 import { VisitorsService } from "./service";
 import { VisitorsRepository } from "./repository";
+import { SupabasePreferenceStorage } from "../../lib/storage/supabase-preference-storage";
 
 /**
  * zValidatorのバリデーションエラー時にZodErrorをスロー
@@ -37,7 +38,10 @@ export const createVisitorsRoutes = (
   serviceFactory?: (repo: VisitorsRepository) => VisitorsService
 ) => {
   const repository = new VisitorsRepository(supabase);
-  const service = serviceFactory ? serviceFactory(repository) : new VisitorsService(repository);
+  const storage = new SupabasePreferenceStorage(supabase);
+  const service = serviceFactory
+    ? serviceFactory(repository)
+    : new VisitorsService(repository, storage);
 
   /**
    * POST /visitors
@@ -52,15 +56,21 @@ export const createVisitorsRoutes = (
    * - 200 OK: 既存visitorId取得
    * - 400 Bad Request: バリデーションエラー
    */
-  return new Hono().post(
-    "/",
-    zValidator("json", registerVisitorSchema, throwOnValidationError),
-    async (c) => {
+  return new Hono()
+    .post("/", zValidator("json", registerVisitorSchema, throwOnValidationError), async (c) => {
       const { visitorId } = c.req.valid("json");
       const result = await service.registerVisitor(visitorId);
 
       const status = result.isNew ? 201 : 200;
       return c.json(result, status);
-    }
-  );
+    })
+    .post(
+      "/reset",
+      zValidator("json", resetPreferenceSchema, throwOnValidationError),
+      async (c) => {
+        const { visitorId } = c.req.valid("json");
+        await service.resetPreference(visitorId);
+        return c.json({ success: true, visitorId }, 200);
+      }
+    );
 };

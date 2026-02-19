@@ -19,3 +19,17 @@ export const registerVisitorSchema = z.object({
  * POST /visitors リクエストボディの型
  */
 export type RegisterVisitorInput = z.infer<typeof registerVisitorSchema>;
+
+/**
+ * POST /visitors/reset リクエストボディスキーマ
+ *
+ * visitorIdはUUID形式であること。
+ */
+export const resetPreferenceSchema = z.object({
+  visitorId: z.string().uuid("visitorIdはUUID形式である必要があります"),
+});
+
+/**
+ * POST /visitors/reset リクエストボディの型
+ */
+export type ResetPreferenceInput = z.infer<typeof resetPreferenceSchema>;
