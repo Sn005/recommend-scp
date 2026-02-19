@@ -20,7 +20,7 @@ export function FloatingUI({
       {/* PillNav - スクロールで表示/非表示 */}
       <div
         className={cn(
-          "flex justify-center pb-8 transition-opacity duration-300",
+          "flex justify-center pb-4 transition-opacity duration-300",
           isPillNavVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         data-testid="pill-nav"
