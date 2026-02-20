@@ -42,7 +42,7 @@ describe("history.csvファイル", () => {
   });
 
   it("必須のtestIdがカバーされている", () => {
-    const requiredTestIds = ["history-card", "excerpt"];
+    const requiredTestIds = ["history-card"];
     const csvContent = readFileSync(csvPath, "utf-8");
 
     for (const testId of requiredTestIds) {

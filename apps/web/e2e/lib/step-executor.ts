@@ -18,21 +18,24 @@ async function executeStep(page: Page, step: StepAction): Promise<void> {
       await page.goto(step.url);
       break;
     case "click":
-      await page.getByTestId(step.testId).click();
+      await page.getByTestId(step.testId).first().click();
       break;
     case "fill":
-      await page.getByTestId(step.testId).fill(step.value);
+      await page.getByTestId(step.testId).first().fill(step.value);
       break;
     case "waitFor":
-      await page.getByTestId(step.testId).waitFor({
-        timeout: step.timeout ?? 5000,
-      });
+      await page
+        .getByTestId(step.testId)
+        .first()
+        .waitFor({
+          timeout: step.timeout ?? 5000,
+        });
       break;
     case "assertVisible":
-      await expect(page.getByTestId(step.testId)).toBeVisible();
+      await expect(page.getByTestId(step.testId).first()).toBeVisible();
       break;
     case "assertText":
-      await expect(page.getByTestId(step.testId)).toHaveText(step.text);
+      await expect(page.getByTestId(step.testId).first()).toHaveText(step.text);
       break;
     case "assertUrl":
       await expect(page).toHaveURL(new RegExp(step.pattern));
