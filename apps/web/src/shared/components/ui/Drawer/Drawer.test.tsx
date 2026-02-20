@@ -274,7 +274,7 @@ describe("Drawer", () => {
 
       // API成功後にリダイレクト
       await vi.waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith("/onboarding");
+        expect(mockPush).toHaveBeenCalledWith("/onboarding?reset=true");
       });
     });
   });
