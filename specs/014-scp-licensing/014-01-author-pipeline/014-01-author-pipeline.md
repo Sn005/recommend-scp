@@ -3,7 +3,7 @@ id: "014-01"
 epic_id: "014"
 epic_title: "SCPライセンス・帰属表示"
 title: "著者情報データパイプライン対応"
-status: "pending"
+status: "completed"
 created_at: "2026-02-20"
 updated_at: "2026-02-20"
 ---
@@ -25,9 +25,9 @@ updated_at: "2026-02-20"
 
 ## Acceptance Criteria
 
-- [ ] `scp_articles` テーブルに `author` TEXT カラムが追加されていること
-- [ ] クローラーがSCP Data APIの `creator` フィールドを `author` にマッピングして保存すること
-- [ ] 既存データに対してバックフィルスクリプトで著者情報が補完されること
+- [x] `scp_articles` テーブルに `author` TEXT カラムが追加されていること
+- [x] クローラーがSCP Data APIの `creator` フィールドを `author` にマッピングして保存すること
+- [x] 既存データに対してバックフィルスクリプトで著者情報が補完されること
 
 ## 関連Subtask
 

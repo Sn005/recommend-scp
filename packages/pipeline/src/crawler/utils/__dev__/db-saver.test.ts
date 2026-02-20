@@ -119,6 +119,34 @@ describe("DbSaver", () => {
       expect(savedAt.getTime()).toBeGreaterThanOrEqual(beforeSave.getTime());
     });
 
+    it("articleにauthorが存在する場合、authorカラムに値が保存される", async () => {
+      const mockClient = createMockSupabaseClient();
+      const saver = new DbSaver(mockClient, { lang: "en" });
+      const articleWithAuthor: ArticleContent = {
+        ...mockArticle,
+        author: "Dr. Bright",
+      };
+
+      await saver.saveArticle(articleWithAuthor);
+
+      expect(mockClient.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          author: "Dr. Bright",
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it("articleのauthorがundefinedの場合、authorカラムはnullで保存される", async () => {
+      const mockClient = createMockSupabaseClient();
+      const saver = new DbSaver(mockClient, { lang: "en" });
+
+      await saver.saveArticle(mockArticle);
+
+      const savedData = mockClient.upsert.mock.calls[0][0] as Record<string, unknown>;
+      expect(savedData.author).toBeNull();
+    });
+
     it("upsertで既存記事を更新する", async () => {
       const mockClient = createMockSupabaseClient();
       const saver = new DbSaver(mockClient, { lang: "en" });

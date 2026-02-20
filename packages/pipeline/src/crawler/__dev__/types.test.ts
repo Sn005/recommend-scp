@@ -4,7 +4,13 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { ArticleIndex, ArticleContent, CrawlProgress, BranchCrawler } from "../types";
+import type {
+  ArticleIndex,
+  ArticleContent,
+  ArticleForDb,
+  CrawlProgress,
+  BranchCrawler,
+} from "../types";
 
 /** テスト用のデフォルトArticleContent */
 const createMockArticleContent = (overrides?: Partial<ArticleContent>): ArticleContent => ({
@@ -69,6 +75,70 @@ describe("クローラー型定義", () => {
       };
 
       expect(content.sourceHash).toBe("abc123def456");
+    });
+
+    it("オプショナルなauthorプロパティを持てる", () => {
+      const content: ArticleContent = {
+        id: "SCP-173",
+        title: "The Sculpture",
+        content: "SCP-173 is to be kept in a locked container...",
+        rating: 7500,
+        tags: ["euclid", "sculpture", "autonomous"],
+        createdAt: new Date("2007-06-22"),
+        updatedAt: new Date("2023-01-15"),
+        author: "Anonymous",
+      };
+
+      expect(content.author).toBe("Anonymous");
+    });
+
+    it("authorプロパティはオプショナルなので省略できる", () => {
+      const content: ArticleContent = {
+        id: "SCP-173",
+        title: "The Sculpture",
+        content: "SCP-173 is to be kept in a locked container...",
+        rating: 7500,
+        tags: ["euclid"],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      expect(content.author).toBeUndefined();
+    });
+  });
+
+  describe("ArticleForDb", () => {
+    it("オプショナルなauthorプロパティを持てる", () => {
+      const forDb: ArticleForDb = {
+        article_id: "scp-173",
+        lang: "en",
+        title: "The Sculpture",
+        content: "...",
+        rating: 7500,
+        tags: ["euclid"],
+        fetched_at: new Date().toISOString(),
+        embedding_status: "pending",
+        tagging_status: "pending",
+        author: "Anonymous",
+      };
+
+      expect(forDb.author).toBe("Anonymous");
+    });
+
+    it("authorプロパティはオプショナルなので省略できる", () => {
+      const forDb: ArticleForDb = {
+        article_id: "scp-173",
+        lang: "en",
+        title: "The Sculpture",
+        content: "...",
+        rating: 7500,
+        tags: ["euclid"],
+        fetched_at: new Date().toISOString(),
+        embedding_status: "pending",
+        tagging_status: "pending",
+      };
+
+      expect(forDb.author).toBeUndefined();
     });
   });
 

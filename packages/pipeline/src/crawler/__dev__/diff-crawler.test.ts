@@ -382,10 +382,10 @@ describe("DiffCrawler", () => {
       await diffCrawler.run();
 
       // SCP-002（新規）のみ本文取得
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mockCrawler.fetchArticleContent).toHaveBeenCalledWith("SCP-002");
       // SCP-001（変更なし）は本文取得しない
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mockCrawler.fetchArticleContent).not.toHaveBeenCalledWith("SCP-001");
     });
   });

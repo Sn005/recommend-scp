@@ -31,21 +31,23 @@ export default tseslint.config(
       "n/no-process-env": "error",
     },
   },
-  // CLIスクリプトではconsole使用を許可
+  // CLIスクリプトではconsole使用とprocess.env参照を許可
   {
     files: ["**/scripts/**/*.ts"],
     rules: {
       "no-console": "off",
+      "n/no-process-env": "off",
     },
   },
   // テストファイルではconsole使用とprocess.env操作を許可
-  // また、テストの可読性のためtype assertion styleを緩和
+  // また、テストの可読性のためtype assertion styleとunbound-methodを緩和
   {
     files: ["**/__dev__/**/*.test.ts", "**/*.test.ts"],
     rules: {
       "no-console": "off",
       "n/no-process-env": "off",
       "@typescript-eslint/non-nullable-type-assertion-style": "off",
+      "@typescript-eslint/unbound-method": "off",
     },
   },
   // env.ts, env.client.ts, vitest.config.tsでは process.env アクセスを許可
