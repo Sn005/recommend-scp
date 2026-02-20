@@ -34,7 +34,7 @@ export const DrawerMenu = () => {
   const handleResetConfirm = () => {
     setShowResetDialog(false);
     close();
-    router.push("/onboarding");
+    router.push("/onboarding?reset=true");
   };
 
   return (
