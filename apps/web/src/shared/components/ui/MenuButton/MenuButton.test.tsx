@@ -5,6 +5,14 @@ import { MenuButton } from "./MenuButton";
 import { DrawerProvider } from "../Drawer";
 import { Drawer } from "../Drawer";
 
+// useVisitorIdのモック（DrawerMenu内で使用）
+vi.mock("@/shared/hooks/useVisitorId", () => ({
+  useVisitorId: () => ({
+    visitorId: "test-visitor-id",
+    isLoading: false,
+  }),
+}));
+
 // テスト用ラッパー
 const renderWithProvider = (ui: React.ReactNode) => {
   return render(<DrawerProvider>{ui}</DrawerProvider>);

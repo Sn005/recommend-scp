@@ -95,6 +95,10 @@ class MockPreferenceStorage implements PreferenceStorage {
     // no-op for this mock
   }
 
+  async resetPreference(_visitorId: string): Promise<void> {
+    // no-op for this mock
+  }
+
   // テスト用ヘルパーメソッド
   setArticleTags(articleId: string, tags: string[]): void {
     this.articleTags.set(articleId, tags);

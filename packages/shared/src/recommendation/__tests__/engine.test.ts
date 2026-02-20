@@ -34,6 +34,7 @@ function createMockStorage(overrides: Partial<PreferenceStorage> = {}): Preferen
     getFavorites: vi.fn().mockResolvedValue([]),
     addFavorite: vi.fn().mockResolvedValue(undefined),
     removeFavorite: vi.fn().mockResolvedValue(undefined),
+    resetPreference: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }

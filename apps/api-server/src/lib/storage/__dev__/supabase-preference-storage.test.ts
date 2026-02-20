@@ -157,6 +157,7 @@ describe("SupabasePreferenceStorage", () => {
       expect(typeof storage.getFavorites).toBe("function");
       expect(typeof storage.addFavorite).toBe("function");
       expect(typeof storage.removeFavorite).toBe("function");
+      expect(typeof storage.resetPreference).toBe("function");
     });
   });
 
@@ -682,6 +683,170 @@ describe("SupabasePreferenceStorage", () => {
       expect(mockFrom).toHaveBeenCalledWith("favorites");
       expect(eqVisitorMock).toHaveBeenCalledWith("visitor_id", "visitor-123");
       expect(eqArticleMock).toHaveBeenCalledWith("article_id", "SCP-173");
+    });
+  });
+
+  describe("resetPreference", () => {
+    it("visitorsテーブルの嗜好カラムを初期化する", async () => {
+      const eqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: eqMock });
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        return { delete: deleteMock };
+      });
+
+      await storage.resetPreference("visitor-123");
+
+      expect(mockFrom).toHaveBeenCalledWith("visitors");
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          preference_vector: null,
+          tag_weights: {},
+          object_class_preference: {},
+          starter_pack: null,
+          onboarding_completed_at: null,
+        })
+      );
+      expect(eqMock).toHaveBeenCalledWith("visitor_id", "visitor-123");
+    });
+
+    it("feedbackテーブルの該当行を全件削除する", async () => {
+      const feedbackEqMock = vi.fn().mockResolvedValue({ error: null });
+      const feedbackDeleteMock = vi.fn().mockReturnValue({ eq: feedbackEqMock });
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const genericDeleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        if (table === "feedback") return { delete: feedbackDeleteMock };
+        return { delete: genericDeleteMock };
+      });
+
+      await storage.resetPreference("visitor-123");
+
+      expect(mockFrom).toHaveBeenCalledWith("feedback");
+      expect(feedbackDeleteMock).toHaveBeenCalled();
+      expect(feedbackEqMock).toHaveBeenCalledWith("visitor_id", "visitor-123");
+    });
+
+    it("recommendation_logテーブルの該当行を全件削除する", async () => {
+      const recLogEqMock = vi.fn().mockResolvedValue({ error: null });
+      const recLogDeleteMock = vi.fn().mockReturnValue({ eq: recLogEqMock });
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const genericDeleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        if (table === "recommendation_log") return { delete: recLogDeleteMock };
+        return { delete: genericDeleteMock };
+      });
+
+      await storage.resetPreference("visitor-123");
+
+      expect(mockFrom).toHaveBeenCalledWith("recommendation_log");
+      expect(recLogDeleteMock).toHaveBeenCalled();
+      expect(recLogEqMock).toHaveBeenCalledWith("visitor_id", "visitor-123");
+    });
+
+    it("初期状態のvisitorに対して実行してもエラーにならない（冪等性）", async () => {
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        return { delete: deleteMock };
+      });
+
+      await expect(storage.resetPreference("visitor-456")).resolves.not.toThrow();
+    });
+
+    it("同じvisitorに対して2回連続で実行しても両方成功する", async () => {
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        return { delete: deleteMock };
+      });
+
+      await expect(storage.resetPreference("visitor-123")).resolves.not.toThrow();
+      await expect(storage.resetPreference("visitor-123")).resolves.not.toThrow();
+    });
+
+    it("visitorsテーブルのDB操作失敗時にDatabaseErrorがスローされる", async () => {
+      const updateEqMock = vi.fn().mockResolvedValue({
+        error: { message: "DB connection failed", code: "500" },
+      });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        return {
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        };
+      });
+
+      await expect(storage.resetPreference("visitor-123")).rejects.toThrow();
+    });
+
+    it("feedback削除のDB操作失敗時にDatabaseErrorがスローされる", async () => {
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const feedbackDeleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          error: { message: "Delete failed", code: "500" },
+        }),
+      });
+      const genericDeleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ error: null }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        if (table === "feedback") return { delete: feedbackDeleteMock };
+        return { delete: genericDeleteMock };
+      });
+
+      await expect(storage.resetPreference("visitor-123")).rejects.toThrow();
+    });
+
+    it("recommendation_log削除のDB操作失敗時にDatabaseErrorがスローされる", async () => {
+      const updateEqMock = vi.fn().mockResolvedValue({ error: null });
+      const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock });
+      const recLogDeleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          error: { message: "Delete failed", code: "500" },
+        }),
+      });
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === "visitors") return { update: updateMock };
+        if (table === "recommendation_log") return { delete: recLogDeleteMock };
+        return {
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        };
+      });
+
+      await expect(storage.resetPreference("visitor-123")).rejects.toThrow();
     });
   });
 });

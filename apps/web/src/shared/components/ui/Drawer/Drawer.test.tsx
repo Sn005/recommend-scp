@@ -22,6 +22,27 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+// useVisitorIdのモック
+vi.mock("@/shared/hooks/useVisitorId", () => ({
+  useVisitorId: () => ({
+    visitorId: "test-visitor-id",
+    isLoading: false,
+  }),
+}));
+
+// APIクライアントのモック
+const mockResetPost = vi.fn();
+vi.mock("@/shared/lib/api-client", () => ({
+  api: {
+    visitors: {
+      reset: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- テスト用モック
+        $post: (...args: unknown[]) => mockResetPost(...args),
+      },
+    },
+  },
+}));
+
 // ドロワーを開くためのヘルパーコンポーネント
 const OpenDrawerButton = () => {
   const { open } = useDrawer();
@@ -46,6 +67,8 @@ describe("Drawer", () => {
   beforeEach(() => {
     mockPathname = "/";
     mockPush.mockClear();
+    mockResetPost.mockClear();
+    mockResetPost.mockResolvedValue({ ok: true });
   });
 
   describe("AC-1: ドロワー開閉", () => {
@@ -119,10 +142,10 @@ describe("Drawer", () => {
 
       await user.click(screen.getByTestId("open-drawer"));
 
-      // SVGアイコンが含まれているか確認（3つのメニュー項目）
+      // SVGアイコンが含まれているか確認（3つのメニュー項目 + 1つのリセットボタン）
       const drawer = screen.getByTestId("drawer");
       const svgIcons = drawer.querySelectorAll("svg");
-      expect(svgIcons.length).toBe(3);
+      expect(svgIcons.length).toBe(4);
     });
 
     it("現在のページ（/recommend）がハイライトされる", async () => {
@@ -182,6 +205,77 @@ describe("Drawer", () => {
 
       // ドロワーが閉じる
       expect(screen.queryByTestId("drawer")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("AC-1（013-01-03）: ドロワーメニュー リセットボタン", () => {
+    it("ドロワーメニューに「推薦をリセット」が表示される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      expect(screen.getByText("推薦をリセット")).toBeInTheDocument();
+    });
+
+    it("「推薦をリセット」ボタンにrefresh-cwアイコンが表示される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const resetButton = screen.getByTestId("reset-preference-button");
+      const svg = resetButton.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+    });
+
+    it("閲覧履歴の下に区切り線が表示される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      // 区切り線（border-t）がドロワー内に存在する
+      const drawer = screen.getByTestId("drawer");
+      const separator = drawer.querySelector(".border-t.border-gray-200");
+      expect(separator).toBeInTheDocument();
+    });
+
+    it("「推薦をリセット」タップで確認ダイアログが開く", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+      await user.click(screen.getByTestId("reset-preference-button"));
+
+      expect(screen.getByTestId("reset-dialog")).toBeInTheDocument();
+    });
+
+    it("確認ダイアログでキャンセルするとダイアログが閉じる", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+      await user.click(screen.getByTestId("reset-preference-button"));
+      expect(screen.getByTestId("reset-dialog")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("reset-cancel"));
+
+      expect(screen.queryByTestId("reset-dialog")).not.toBeInTheDocument();
+    });
+
+    it("リセット成功後に/onboardingにリダイレクトされる", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+      await user.click(screen.getByTestId("reset-preference-button"));
+      await user.click(screen.getByTestId("reset-confirm"));
+
+      // API成功後にリダイレクト
+      await vi.waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith("/onboarding?reset=true");
+      });
     });
   });
 

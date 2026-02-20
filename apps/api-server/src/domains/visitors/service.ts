@@ -4,8 +4,10 @@
  * @see specs/005-backend-api/005-03-visitors-api/005-03-01.md
  */
 
+import type { PreferenceStorage } from "@recommend-scp/shared/storage/server";
 import type { VisitorsRepository } from "./repository";
 import type { RegisterVisitorResult } from "./types";
+import { NotFoundError } from "../../lib/errors";
 
 /** Supabase UNIQUE制約違反エラーコード */
 const UNIQUE_VIOLATION_CODE = "23505";
@@ -27,7 +29,10 @@ const isUniqueViolationError = (error: unknown): boolean => {
  * レースコンディション対策としてUNIQUE制約違反時のリトライを実装。
  */
 export class VisitorsService {
-  constructor(private readonly repository: VisitorsRepository) {}
+  constructor(
+    private readonly repository: VisitorsRepository,
+    private readonly storage?: PreferenceStorage
+  ) {}
 
   /**
    * visitorを登録または既存取得
@@ -78,5 +83,25 @@ export class VisitorsService {
       // その他のエラーは伝播
       throw error;
     }
+  };
+
+  /**
+   * 嗜好データをリセット
+   *
+   * 1. visitorIdの存在確認
+   * 2. PreferenceStorage.resetPreference() 呼び出し
+   *
+   * @param visitorId - 訪問者UUID
+   * @throws NotFoundError visitorが存在しない場合
+   */
+  resetPreference = async (visitorId: string): Promise<void> => {
+    const exists = await this.repository.existsByVisitorId(visitorId);
+    if (!exists) {
+      throw new NotFoundError("Visitor", visitorId);
+    }
+    if (!this.storage) {
+      throw new Error("PreferenceStorage is not configured");
+    }
+    await this.storage.resetPreference(visitorId);
   };
 }

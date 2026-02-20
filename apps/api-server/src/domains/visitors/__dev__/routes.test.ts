@@ -10,12 +10,14 @@ import { createVisitorsRoutes } from "../routes";
 import { createErrorHandler } from "../../../middleware/error-handler";
 import type { VisitorsService } from "../service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NotFoundError } from "../../../lib/errors";
 
 /**
  * モックサービスの型
  */
 interface MockService {
   registerVisitor: ReturnType<typeof vi.fn>;
+  resetPreference: ReturnType<typeof vi.fn>;
 }
 
 /**
@@ -59,6 +61,7 @@ describe("POST /visitors - 正常系（新規登録）", () => {
     vi.clearAllMocks();
     mockService = {
       registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -132,6 +135,7 @@ describe("POST /visitors - 正常系（既存登録）", () => {
     vi.clearAllMocks();
     mockService = {
       registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -184,6 +188,7 @@ describe("POST /visitors - 異常系（バリデーションエラー）", () =>
     vi.clearAllMocks();
     mockService = {
       registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -252,6 +257,7 @@ describe("POST /visitors - エッジケース（入力値）", () => {
     vi.clearAllMocks();
     mockService = {
       registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -342,6 +348,7 @@ describe("POST /visitors - エッジケース（状態・タイミング）", ()
     vi.clearAllMocks();
     mockService = {
       registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
     };
     app = createTestApp(mockService);
   });
@@ -399,5 +406,153 @@ describe("POST /visitors - エッジケース（状態・タイミング）", ()
     const json = (await res.json()) as Record<string, unknown>;
     expect(json.type).toContain("internal-error");
     expect(json.status).toBe(500);
+  });
+});
+
+// ============================================
+// POST /visitors/reset テスト
+// ============================================
+
+describe("POST /visitors/reset - 正常系", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("有効なvisitorIdでリセットが成功し200を返す", async () => {
+    mockService.resetPreference.mockResolvedValue(undefined);
+
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+
+    expect(res.status).toBe(200);
+  });
+
+  it("レスポンスが { success: true, visitorId } 形式である", async () => {
+    mockService.resetPreference.mockResolvedValue(undefined);
+
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+    const json = (await res.json()) as Record<string, unknown>;
+
+    expect(json).toEqual({ success: true, visitorId: VALID_UUID });
+  });
+
+  it("同一visitorIdで複数回呼び出しても全て200を返す（冪等性）", async () => {
+    mockService.resetPreference.mockResolvedValue(undefined);
+
+    const res1 = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+    const res2 = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+  });
+});
+
+describe("POST /visitors/reset - バリデーションエラー", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("UUID形式でないvisitorIdで400を返す", async () => {
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: "invalid-uuid" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("visitorIdが空文字で400を返す", async () => {
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: "" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("visitorIdが未指定で400を返す", async () => {
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /visitors/reset - 存在しないvisitor", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      registerVisitor: vi.fn(),
+      resetPreference: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("存在しないvisitorIdで404を返す", async () => {
+    mockService.resetPreference.mockRejectedValue(new NotFoundError("Visitor", VALID_UUID));
+
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("404エラー時にRFC 7807形式で返す", async () => {
+    mockService.resetPreference.mockRejectedValue(new NotFoundError("Visitor", VALID_UUID));
+
+    const res = await app.request("/visitors/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visitorId: VALID_UUID }),
+    });
+
+    expect(res.headers.get("Content-Type")).toBe("application/problem+json");
+
+    const json = (await res.json()) as Record<string, unknown>;
+    expect(json).toHaveProperty("type");
+    expect(json).toHaveProperty("title");
+    expect(json).toHaveProperty("status", 404);
   });
 });

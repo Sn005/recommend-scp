@@ -34,6 +34,7 @@ function createMockLocalStorage(): PreferenceStorage {
     getFavorites: vi.fn(),
     addFavorite: vi.fn(),
     removeFavorite: vi.fn(),
+    resetPreference: vi.fn(),
   };
 }
 

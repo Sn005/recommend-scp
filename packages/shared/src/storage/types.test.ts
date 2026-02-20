@@ -35,6 +35,7 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
         getFavorites: async (_visitorId) => [],
         addFavorite: async (_favorite) => {},
         removeFavorite: async (_visitorId, _articleId) => {},
+        resetPreference: async (_visitorId) => {},
       };
 
       expect(mockStorage).toBeDefined();
