@@ -125,7 +125,7 @@ describe("Drawer", () => {
   });
 
   describe("AC-2: メニュー項目", () => {
-    it("3つのメニュー項目が表示される", async () => {
+    it("4つのメニュー項目が表示される", async () => {
       const user = userEvent.setup();
       renderWithProvider(<Drawer />);
 
@@ -134,6 +134,7 @@ describe("Drawer", () => {
       expect(screen.getByText("推薦を見る")).toBeInTheDocument();
       expect(screen.getByText("お気に入り一覧")).toBeInTheDocument();
       expect(screen.getByText("閲覧履歴")).toBeInTheDocument();
+      expect(screen.getByText("ライセンス")).toBeInTheDocument();
     });
 
     it("メニュー項目にSVGアイコンが表示される", async () => {
@@ -142,10 +143,10 @@ describe("Drawer", () => {
 
       await user.click(screen.getByTestId("open-drawer"));
 
-      // SVGアイコンが含まれているか確認（3つのメニュー項目 + 1つのリセットボタン）
+      // SVGアイコンが含まれているか確認（4つのメニュー項目 + 1つのリセットボタン）
       const drawer = screen.getByTestId("drawer");
       const svgIcons = drawer.querySelectorAll("svg");
-      expect(svgIcons.length).toBe(4);
+      expect(svgIcons.length).toBe(5);
     });
 
     it("現在のページ（/recommend）がハイライトされる", async () => {
@@ -276,6 +277,99 @@ describe("Drawer", () => {
       await vi.waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith("/onboarding?reset=true");
       });
+    });
+  });
+
+  describe("AC-1（014-02-02）: ライセンス項目の表示", () => {
+    it("「ライセンス」項目が区切り線の後に配置される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const drawer = screen.getByTestId("drawer");
+      const separator = drawer.querySelector(".border-t.border-gray-200");
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+
+      expect(separator).toBeInTheDocument();
+
+      if (separator === null) throw new Error("separator not found");
+      expect(
+        separator.compareDocumentPosition(licenseLink) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it("「ライセンス」項目がリセットボタンの前に配置される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+      const resetButton = screen.getByTestId("reset-preference-button");
+
+      expect(
+        licenseLink.compareDocumentPosition(resetButton) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+    });
+
+    it("「ライセンス」項目にfile-textアイコン（SVG）が表示される", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+      const svg = licenseLink.querySelector("svg");
+      expect(svg).toBeInTheDocument();
+    });
+  });
+
+  describe("AC-2（014-02-02）: ライセンス項目のナビゲーション", () => {
+    it("「ライセンス」項目のhrefが/licensingである", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+      expect(licenseLink).toHaveAttribute("href", "/licensing");
+    });
+
+    it("「ライセンス」項目タップでドロワーが閉じる", async () => {
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+      expect(screen.getByTestId("drawer")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("link", { name: /ライセンス/ }));
+
+      expect(screen.queryByTestId("drawer")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("AC-3（014-02-02）: ライセンス項目のアクティブ状態", () => {
+    it("現在のページ（/licensing）がハイライトされる", async () => {
+      mockPathname = "/licensing";
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+      expect(licenseLink).toHaveAttribute("aria-current", "page");
+    });
+
+    it("/licensing以外のページではライセンス項目がアクティブでない", async () => {
+      mockPathname = "/recommend";
+      const user = userEvent.setup();
+      renderWithProvider(<Drawer />);
+
+      await user.click(screen.getByTestId("open-drawer"));
+
+      const licenseLink = screen.getByRole("link", { name: /ライセンス/ });
+      expect(licenseLink).not.toHaveAttribute("aria-current", "page");
     });
   });
 
