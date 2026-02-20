@@ -60,7 +60,7 @@ export const ResetConfirmDialog = ({ visitorId, onConfirm, onCancel }: ResetConf
         data-testid="reset-dialog"
         role="dialog"
         aria-labelledby="reset-dialog-title"
-        className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-lg"
+        className="mx-4 w-full max-w-md rounded-xl bg-white px-6 py-5 shadow-lg"
       >
         {/* エラー表示 */}
         {error && (
@@ -87,7 +87,7 @@ export const ResetConfirmDialog = ({ visitorId, onConfirm, onCancel }: ResetConf
         <p className="mt-2 text-sm text-gray-500">※ お気に入りと閲覧履歴は保持されます。</p>
 
         {/* ボタン */}
-        <div className="mt-6 flex gap-3">
+        <div className="mt-5 flex gap-3">
           <button
             data-testid="reset-cancel"
             type="button"
