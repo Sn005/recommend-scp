@@ -35,15 +35,14 @@ describe("useVisitorId", () => {
     // localStorageのストアをリセット
     localStorageStore = {};
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(window.localStorage.getItem).mockImplementation(
       (key) => localStorageStore[key] ?? null
     );
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     vi.mocked(window.localStorage.setItem).mockImplementation((key, value) => {
       localStorageStore[key] = value;
     });
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+
     vi.mocked(window.localStorage.removeItem).mockImplementation((key) => {
       localStorageStore[key] = undefined as unknown as string;
     });
@@ -98,7 +97,7 @@ describe("useVisitorId", () => {
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(window.localStorage.setItem).toHaveBeenCalledWith(
         VISITOR_ID_KEY,
         "test-uuid-1234-5678-9abc-def012345678"
@@ -373,7 +372,7 @@ describe("useVisitorId", () => {
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(window.localStorage.setItem).toHaveBeenCalledWith(ONBOARDING_COMPLETED_KEY, "true");
     });
   });
@@ -514,7 +513,7 @@ describe("useVisitorId", () => {
 
     it("localStorageアクセスでエラーが発生した場合、エラーハンドリングされる", async () => {
       // Arrange
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       vi.mocked(window.localStorage.getItem).mockImplementation(() => {
         throw new Error("localStorage access denied");
       });

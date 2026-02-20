@@ -79,6 +79,7 @@ export class DbSaver {
       fetched_at: new Date().toISOString(),
       embedding_status: "pending",
       tagging_status: "pending",
+      author: article.author ?? null,
     };
 
     const { error } = await this.client.from("scp_articles").upsert(data, {

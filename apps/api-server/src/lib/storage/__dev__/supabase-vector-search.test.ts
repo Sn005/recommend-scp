@@ -4,8 +4,6 @@
  * @see specs/005-backend-api/005-02-server-storage/005-02-03.md
  */
 
-/* eslint-disable @typescript-eslint/unbound-method */
-
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseVectorSearch } from "../supabase-vector-search";

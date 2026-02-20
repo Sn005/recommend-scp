@@ -157,6 +157,7 @@ export class EnglishCrawler implements BranchCrawler {
       tags: contentItem.tags,
       createdAt: new Date(contentItem.created_at),
       updatedAt: new Date(contentItem.created_at), // APIに更新日がないため作成日を使用
+      author: contentItem.creator.trim() || undefined,
     };
   }
 

@@ -55,7 +55,7 @@ describe("FullCrawler", () => {
       const result = await promise;
 
       expect(result.length).toBe(150);
-      expect(mockCrawler.fetchArticleList).toHaveBeenCalled(); // eslint-disable-line @typescript-eslint/unbound-method
+      expect(mockCrawler.fetchArticleList).toHaveBeenCalled();
     });
 
     it("各記事にid, title, url, seriesが含まれる", async () => {
@@ -190,7 +190,7 @@ describe("FullCrawler", () => {
     it("一時的なエラー時にリトライする", async () => {
       let callCount = 0;
       const mockCrawler = createMockCrawler(10);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       vi.mocked(mockCrawler.fetchArticleContent).mockImplementation((id) => {
         if (id === "SCP-001") {
           callCount++;
@@ -214,7 +214,7 @@ describe("FullCrawler", () => {
   describe("エラーハンドリング", () => {
     it("失敗した記事がfailedIdsに含まれる", async () => {
       const mockCrawler = createMockCrawler(10);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       vi.mocked(mockCrawler.fetchArticleContent).mockImplementation((id) => {
         if (id === "SCP-005") {
           return Promise.reject(new Error("永続的エラー"));

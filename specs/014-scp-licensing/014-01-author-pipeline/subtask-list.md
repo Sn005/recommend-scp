@@ -4,6 +4,6 @@
 
 | ID                          | 名前                                   | 概要                                                 | ステータス |
 | --------------------------- | -------------------------------------- | ---------------------------------------------------- | ---------- |
-| [014-01-01](./014-01-01.md) | DBマイグレーション（authorカラム追加） | scp_articlesにauthorカラムを追加                     | pending    |
-| [014-01-02](./014-01-02.md) | クローラー型定義・マッピング修正       | ArticleContent/ArticleForDbにauthor追加・DbSaver修正 | pending    |
-| [014-01-03](./014-01-03.md) | 既存データバックフィルスクリプト       | SCP Data APIから既存記事のauthor情報を補完           | pending    |
+| [014-01-01](./014-01-01.md) | DBマイグレーション（authorカラム追加） | scp_articlesにauthorカラムを追加                     | completed  |
+| [014-01-02](./014-01-02.md) | クローラー型定義・マッピング修正       | ArticleContent/ArticleForDbにauthor追加・DbSaver修正 | completed  |
+| [014-01-03](./014-01-03.md) | 既存データバックフィルスクリプト       | SCP Data APIから既存記事のauthor情報を補完           | completed  |
