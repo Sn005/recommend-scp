@@ -60,7 +60,7 @@ export const ResetConfirmDialog = ({ visitorId, onConfirm, onCancel }: ResetConf
         data-testid="reset-dialog"
         role="dialog"
         aria-labelledby="reset-dialog-title"
-        className="mx-4 w-full max-w-md rounded-xl bg-white px-6 py-5 shadow-lg"
+        className="mx-4 w-full rounded-xl bg-white px-6 py-5 shadow-lg"
       >
         {/* エラー表示 */}
         {error && (
