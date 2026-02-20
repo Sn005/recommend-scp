@@ -33,6 +33,8 @@ export interface ArticleContent {
   updatedAt: Date;
   /** ソースハッシュ（差分検出用） */
   sourceHash?: string;
+  /** 著者名 */
+  author?: string;
 }
 
 /** クロール進捗状況 */
@@ -126,6 +128,8 @@ export interface ArticleForDb {
   embedding_status: "pending" | "completed" | "failed";
   /** タグ付けステータス */
   tagging_status: "pending" | "completed" | "failed";
+  /** 著者名 */
+  author?: string | null;
 }
 
 // ============================================================
