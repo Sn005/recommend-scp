@@ -1,10 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import { ServiceWorkerRegistrar } from "@/shared/components/ServiceWorkerRegistrar";
 import { VisitorProvider } from "@/shared/contexts/VisitorProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SCP Recommend",
-  description: "あなた専用のSCP推薦システム",
+  title: "SCPicks - あなた好みのSCPを発見",
+  description: "あなたの好みに合ったSCP記事を推薦するWebアプリ",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SCPicks",
+  },
 };
 
 export const viewport: Viewport = {
@@ -21,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
+        <ServiceWorkerRegistrar />
         <VisitorProvider>{children}</VisitorProvider>
       </body>
     </html>
