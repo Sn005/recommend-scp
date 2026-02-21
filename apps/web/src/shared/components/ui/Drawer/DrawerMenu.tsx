@@ -43,7 +43,7 @@ export const DrawerMenu = () => {
     <div className="flex h-full flex-col">
       {/* ヘッダー */}
       <div className="border-b border-gray-100 px-6 py-6">
-        <h2 className="text-lg font-bold text-gray-900">SCP Recommend</h2>
+        <h2 className="text-lg font-bold text-gray-900">SCPicks</h2>
         <p className="mt-1 text-sm text-gray-500">あなた専用のSCP推薦</p>
       </div>
 

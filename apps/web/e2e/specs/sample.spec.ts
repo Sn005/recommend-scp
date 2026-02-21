@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("トップページにアクセスできる @critical", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle(/SCP Recommend/);
+  await expect(page).toHaveTitle(/SCPicks/);
 });
 
 test("存在しないページは404を返す", async ({ page }) => {

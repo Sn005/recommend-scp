@@ -183,7 +183,7 @@ function OnboardingPageContent() {
       {/* ヘッダー */}
       <header className="border-b border-gray-100 bg-white">
         <div className="px-6 pb-6 pt-12">
-          <h1 className="text-2xl font-bold text-gray-800">SCP Recommend</h1>
+          <h1 className="text-2xl font-bold text-gray-800">SCPicks</h1>
           <p className="mt-2 text-gray-500">あなたの好みに合わせたSCP記事を推薦します</p>
         </div>
         {/* タブ */}
