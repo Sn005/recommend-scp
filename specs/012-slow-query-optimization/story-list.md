@@ -4,5 +4,5 @@
 
 | ID                                                                           | 名前                 | 概要                                       | ステータス |
 | ---------------------------------------------------------------------------- | -------------------- | ------------------------------------------ | ---------- |
-| [012-01](./012-01-optimization-foundation/012-01-optimization-foundation.md) | スロークエリ対応基盤 | 対応方針・判断基準・記録テンプレートの整備 | pending    |
+| [012-01](./012-01-optimization-foundation/012-01-optimization-foundation.md) | スロークエリ対応基盤 | 対応方針・判断基準・記録テンプレートの整備 | completed  |
 | [012-02](./012-02-initial-slow-query-fix/012-02-initial-slow-query-fix.md)   | 初回スロークエリ対応 | pg_stat_statementsデータに基づく分析・改善 | pending    |
