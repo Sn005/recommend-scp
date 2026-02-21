@@ -66,7 +66,7 @@ const INJECTED_STYLE = [
   // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正
   // Wikidot CSSがbody/htmlにoverflow:hiddenを設定し、iOS Safariのiframe内スクロールを阻害するため上書き
   "html,body{overflow-x:hidden!important;overflow-y:visible!important}",
-  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%}",
+  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%;padding-bottom:65px!important}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
   "#page-content{font-size:15px!important;overflow-wrap:break-word;word-break:break-word;padding:0 16px!important}",
   // 記事可読性: 段落間スペーシング
