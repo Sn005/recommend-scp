@@ -27,14 +27,16 @@ export default function ArticlePage() {
   const [authorName, setAuthorName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    fetch(`/api/articles/${articleId}/content`)
-      .then((res) => res.json() as Promise<{ author?: string }>)
-      .then((data) => {
+    const fetchAuthor = async () => {
+      try {
+        const res = await fetch(`/api/articles/${articleId}/content`);
+        const data = (await res.json()) as { author?: string };
         setAuthorName(data.author ?? "");
-      })
-      .catch(() => {
+      } catch {
         setAuthorName(undefined);
-      });
+      }
+    };
+    void fetchAuthor();
   }, [articleId]);
 
   // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
