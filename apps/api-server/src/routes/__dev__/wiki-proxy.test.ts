@@ -9,7 +9,9 @@ import {
   wikiProxyRoutes,
   extractContent,
   buildHtml,
+  buildAttributionHtml,
   rewriteUrls,
+  processHtml,
   isArticleScript,
 } from "../wiki-proxy";
 
@@ -469,7 +471,8 @@ describe("GET /wiki-proxy/*", () => {
       const text = await res.text();
 
       expect(text).toContain('href="/api/wiki-proxy/scp-456"');
-      expect(text).not.toContain("scp-jp.wikidot.com");
+      // 記事内リンクは書き換え済み（帰属表示の原文リンクは除外）
+      expect(text).not.toContain('href="http://scp-jp.wikidot.com/');
     });
 
     it("http://scp-jp.wikidot.com/ のリソースリンク（common--/local--）は /wiki/ のまま", async () => {
@@ -1035,6 +1038,126 @@ describe("GET /wiki-proxy/*", () => {
 
       expect(result).toContain('href="/api/wiki-proxy/scp-999"');
       expect(result).toContain("https://d3g0gp89917ko0.cloudfront.net/");
+    });
+  });
+
+  // ----------------------------------------------------------
+  // ライセンス帰属表示の注入
+  // ----------------------------------------------------------
+  describe("ライセンス帰属表示の注入", () => {
+    it("buildAttributionHtmlがCC BY-SA 3.0ライセンステキストを含む", () => {
+      const html = buildAttributionHtml("scp-173");
+
+      expect(html).toContain("CC BY-SA 3.0");
+    });
+
+    it("buildAttributionHtmlが原文リンクを含む", () => {
+      const html = buildAttributionHtml("scp-173");
+
+      expect(html).toContain("https://scp-jp.wikidot.com/scp-173");
+      expect(html).toContain("原文を見る");
+    });
+
+    it("buildAttributionHtmlがSCP Foundationクレジットを含む", () => {
+      const html = buildAttributionHtml("scp-173");
+
+      expect(html).toContain("SCP Foundation");
+    });
+
+    it("buildAttributionHtmlがライセンス全文URLへのリンクを含む", () => {
+      const html = buildAttributionHtml("scp-173");
+
+      expect(html).toContain("https://creativecommons.org/licenses/by-sa/3.0/");
+    });
+
+    it("buildAttributionHtmlのリンクがtarget=_blankを持つ", () => {
+      const html = buildAttributionHtml("scp-173");
+
+      expect(html).toContain('target="_blank"');
+      expect(html).toContain('rel="noopener noreferrer"');
+    });
+
+    it("processHtmlにarticleIdを渡すと帰属表示が記事末尾に注入される", () => {
+      const html = createWikidotHtml({
+        pageTitle: "SCP-173",
+        pageContent: "<p>彫刻</p>",
+        platformScripts: false,
+      });
+
+      const result = processHtml(html, "scp-173");
+
+      expect(result).toContain('data-testid="attribution-footer"');
+      expect(result).toContain("CC BY-SA 3.0");
+      expect(result).toContain("https://scp-jp.wikidot.com/scp-173");
+    });
+
+    it("帰属表示が記事本文の後に配置される", () => {
+      const html = createWikidotHtml({
+        pageTitle: "SCP-173",
+        pageContent: "<p>彫刻</p>",
+        platformScripts: false,
+      });
+
+      const result = processHtml(html, "scp-173");
+
+      const contentPos = result.indexOf("<p>彫刻</p>");
+      const attributionPos = result.indexOf('data-testid="attribution-footer"');
+      expect(contentPos).toBeLessThan(attributionPos);
+    });
+
+    it("帰属表示がWIKIDOTスタブより前に配置される", () => {
+      const html = createWikidotHtml({ platformScripts: false });
+
+      const result = processHtml(html, "scp-173");
+
+      const attributionPos = result.indexOf('data-testid="attribution-footer"');
+      const stubPos = result.indexOf("window.WIKIDOT=");
+      expect(attributionPos).toBeLessThan(stubPos);
+    });
+
+    it("processHtmlにarticleIdを渡さない場合は帰属表示divが注入されない", () => {
+      const html = createWikidotHtml({ platformScripts: false });
+
+      const result = processHtml(html);
+
+      expect(result).not.toContain('data-testid="attribution-footer"');
+    });
+
+    it("帰属表示内のURLがrewriteUrlsで書き換えられない", () => {
+      const html = createWikidotHtml({ platformScripts: false });
+
+      const result = processHtml(html, "scp-173");
+
+      expect(result).toContain("https://scp-jp.wikidot.com/scp-173");
+      expect(result).toContain("https://creativecommons.org/licenses/by-sa/3.0/");
+    });
+
+    it("統合テスト: wiki-proxyレスポンスに帰属表示が含まれる", async () => {
+      const html = createWikidotHtml({
+        pageTitle: "SCP-173",
+        pageContent: "<p>彫刻</p>",
+      });
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      expect(text).toContain('data-testid="attribution-footer"');
+      expect(text).toContain("CC BY-SA 3.0");
+      expect(text).toContain("https://scp-jp.wikidot.com/scp-173");
+      expect(text).toContain("原文を見る");
+    });
+
+    it("帰属表示のCSSが注入される", async () => {
+      const html = createWikidotHtml();
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      expect(text).toContain(".attribution-footer{");
     });
   });
 });

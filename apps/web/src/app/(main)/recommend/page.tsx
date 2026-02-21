@@ -24,7 +24,6 @@ import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
-import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
 /**
  * 推薦記事閲覧ページ
@@ -227,12 +226,6 @@ export default function RecommendPage() {
   // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
     <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
-      {/* ライセンス帰属表示: 記事上部に常時表示 */}
-      <AttributionFooter
-        articleId={currentArticle.id}
-        className="shrink-0 border-b border-gray-200 bg-gray-50 px-4 py-1.5 text-center text-xs text-gray-500"
-      />
-
       {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
       {slots.map((slot, i) => {
         if (!slot) return null;
