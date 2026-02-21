@@ -100,6 +100,128 @@
 - **アラート解消**: [はい / いいえ]
 ```
 
+## 分析記録
+
+### [2026-02-21] pg_stat_statements 分析・優先度判定
+
+#### データ取得日
+
+- **取得元**: Supabase ダッシュボード Query Performance + pg_stat_statements
+- **取得日時**: 2026-02-21
+
+#### クエリ・コード突合せ結果
+
+pg_stat_statements の上位20クエリを既存コードベースのRepository/RPC関数と突合せした結果を以下に示す。
+
+##### ユーザー操作に直結するクエリ
+
+| #   | クエリ概要                               | 対応コード                                                                            | calls | mean (ms) | total (ms) | 全体比率 |
+| --- | ---------------------------------------- | ------------------------------------------------------------------------------------- | ----- | --------- | ---------- | -------- |
+| 1   | search_articles_by_embedding (RPC)       | `SupabaseVectorSearch.searchByEmbedding()` → `ArticlesRepository.searchByEmbedding()` | 197   | **2,192** | 431,879    | 21.18%   |
+| 3   | search_articles_by_embedding (RPC)       | 同上（パラメータ違い）                                                                | 238   | **1,701** | 404,746    | 19.85%   |
+| 4   | search_articles_by_embedding (RPC)       | 同上（パラメータ違い）                                                                | 62    | **1,485** | 92,094     | 4.52%    |
+| 7   | search_articles_by_embedding (RPC)       | 同上（パラメータ違い）                                                                | 31    | **2,128** | 65,969     | 3.23%    |
+| 9   | search_articles_by_embedding (RPC)       | 同上（パラメータ違い）                                                                | 36    | **1,786** | 64,278     | 3.15%    |
+| 18  | search_articles_by_unexplored_tags (RPC) | `SupabaseVectorSearch` (diversity)                                                    | 50    | **479**   | 23,937     | 1.17%    |
+
+> **Note**: search_articles_by_embedding が pg_stat_statements 上で5つの別エントリとして出現するのは、PostgREST がプリペアドステートメントのパラメータ組み合わせ別に統計を記録するため。合計 564 calls、合計時間 1,058,965ms（**全体の51.93%**）。
+
+##### パイプライン（バッチ処理）クエリ
+
+| #   | クエリ概要                                                             | 対応コード                                                 | calls  | mean (ms) | total (ms) | 全体比率 |
+| --- | ---------------------------------------------------------------------- | ---------------------------------------------------------- | ------ | --------- | ---------- | -------- |
+| 2   | UPDATE scp_articles SET tagging_status                                 | `BatchTaggingProcessor.updateStatus()`                     | 6,004  | 70        | 422,602    | 20.72%   |
+| 6   | UPDATE scp_articles SET embedding, embedding_status, last_processed_at | `BatchEmbeddingProcessor.updateStatus()`                   | 9,267  | 8         | 75,477     | 3.70%    |
+| 8   | UPDATE scp_articles SET last_tagged_at, tagging_status                 | `BatchTaggingProcessor.updateStatus()`                     | 5,996  | 11        | 64,564     | 3.17%    |
+| 11  | INSERT INTO scp_articles (UPSERT)                                      | `DbSaver.saveArticle()` / `DiffDbOperations.saveArticle()` | 27,846 | 1.5       | 40,481     | 1.99%    |
+| 14  | SELECT scp_articles WHERE tagging_status = ?                           | `BatchTaggingProcessor.getPendingArticles()`               | 24     | **1,410** | 33,834     | 1.66%    |
+| 17  | SELECT scp_articles WHERE embedding_status = ?                         | `BatchEmbeddingProcessor.getPendingArticles()`             | 32     | **758**   | 24,247     | 1.19%    |
+| 20  | UPDATE scp_articles SET is_deleted                                     | `DiffDbOperations.markAsDeleted()`                         | 1,000  | 16        | 15,640     | 0.77%    |
+
+##### ダッシュボード・システムクエリ（対応不要）
+
+| #   | クエリ概要                              | 分類                       | calls | mean (ms) | 備考                         |
+| --- | --------------------------------------- | -------------------------- | ----- | --------- | ---------------------------- |
+| 5   | pg_available_extensions()               | ダッシュボード             | 791   | 101       | Supabase管理画面の内部クエリ |
+| 10  | UPDATE LOWER(article_id)                | 一回限りのマイグレーション | 1     | 49,097    | 実行済み、再発なし           |
+| 12  | SELECT from scp_articles (table viewer) | ダッシュボード             | 92    | 411       | テーブルビューア             |
+| 13  | SELECT name FROM pg_timezone_names      | システム                   | 112   | 303       | PostgreSQL内部               |
+| 15  | pg_proc (functions view)                | ダッシュボード             | 106   | 272       | 関数一覧表示                 |
+| 16  | HNSW index creation                     | 一回限りのマイグレーション | 1     | 26,972    | 実行済み、再発なし           |
+| 19  | table_privileges                        | ダッシュボード             | 277   | 83        | 権限表示                     |
+
+#### 優先度判定
+
+ユーザー影響度 = 呼び出し頻度 × 平均実行時間 で算出し、パフォーマンス目標（API: 200ms以下、ベクトル検索: 100ms以下）との乖離度も加味。
+
+| 優先度       | 対象クエリ                           | ユーザー影響度                            | 理由                                                                          |
+| ------------ | ------------------------------------ | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| **高**       | `search_articles_by_embedding`       | **564 calls × 1,858ms avg = 1,058,965ms** | 推薦取得API直結。目標100msに対し**18.6倍**超過。全クエリ時間の51.93%を占有    |
+| **高**       | `search_articles_by_unexplored_tags` | **50 calls × 479ms = 23,937ms**           | 推薦の多様性確保に使用。目標200msに対し**2.4倍**超過                          |
+| **中**       | `SELECT WHERE tagging_status = ?`    | **24 calls × 1,410ms = 33,834ms**         | パイプラインのバッチ取得。SELECT \* で embedding (vector(1536)) を含む大量I/O |
+| **中**       | `SELECT WHERE embedding_status = ?`  | **32 calls × 758ms = 24,247ms**           | 同上。パイプラインのバッチ取得                                                |
+| **低**       | `UPDATE tagging_status` 系           | **12,000 calls × 10-70ms**                | 個別は目標内。total_timeは大きいが1件あたりは許容範囲                         |
+| **対応不要** | ダッシュボード・システム系           | -                                         | アプリケーション外。制御不能                                                  |
+| **対応不要** | 一回限りのマイグレーション           | -                                         | 再発しない                                                                    |
+
+#### ボトルネック分析・改善方針
+
+##### 優先度 高: search_articles_by_embedding
+
+**ボトルネック**:
+
+1. **`get_object_class(a.tags)` の行ごと関数呼び出し**: 各マッチ行で `tag_dictionary` テーブルへのSELECTが発生。match_count=10 でも内部的にスキャンされる行数は多い
+2. **コサイン距離の3重計算**: WHERE句で `(1 - (a.embedding <=> query_vector))` を `min_similarity` と `max_similarity` の2回、ORDER BY で `a.embedding <=> query_vector` を1回、計3回距離計算
+3. **LEFT JOIN article_translations**: 各行でURL取得のためのJOIN。article_translations にインデックスがあるが、結合コスト加算
+4. **HNSWインデックスの ef_search パラメータ**: デフォルト値が小さいと精度を上げるためにスキャン範囲が拡大する可能性
+
+**改善方針**:
+
+| 改善 | 方法                                                                                             | 期待効果 | 難易度 |
+| ---- | ------------------------------------------------------------------------------------------------ | -------- | ------ |
+| A    | **RPC関数最適化**: `get_object_class()` をJOINベースに書き換え（行ごと関数呼び出し → 1回のJOIN） | 大       | 低     |
+| B    | **クエリ書き換え**: 距離計算を1回にまとめる（CTEまたはサブクエリで `dist` を計算し再利用）       | 中       | 低     |
+| C    | **旧IVFFlatインデックスの削除**: HNSWと共存しているIVFFlatを削除し、プランナの選択を単純化       | 小〜中   | 低     |
+| D    | **HNSWパラメータ調整**: `ef_search` を適切な値に設定（SET hnsw.ef_search = 100 等）              | 中       | 低     |
+
+##### 優先度 高: search_articles_by_unexplored_tags
+
+**ボトルネック**:
+
+1. **`tags` カラム (TEXT[]) にGINインデックスなし**: `NOT (a.tags && explored_tags)` がSeq Scanを強制。全行のタグ配列をスキャン
+2. **`get_object_class(a.tags)` の行ごと関数呼び出し**: search_articles_by_embedding と同様
+3. **CASE式によるORDER BY**: 動的ソートはインデックスを活用できない
+
+**改善方針**:
+
+| 改善 | 方法                                                                                       | 期待効果 | 難易度 |
+| ---- | ------------------------------------------------------------------------------------------ | -------- | ------ |
+| E    | **インデックス追加**: `CREATE INDEX idx_scp_articles_tags ON scp_articles USING GIN(tags)` | 大       | 低     |
+| F    | **RPC関数最適化**: `get_object_class()` をJOINベースに書き換え（Aと共通）                  | 中       | 低     |
+
+##### 優先度 中: SELECT WHERE tagging_status / embedding_status
+
+**ボトルネック**:
+
+1. **SELECT \* で embedding (vector(1536)) を返却**: 1536次元ベクトルをJSONシリアライズする巨大I/O。パイプラインでは embedding は不要
+2. **Cache hit rate 94.7%** (tagging_status): 他のクエリ（99%+）と比較して低い。大きな行サイズが原因
+
+**改善方針**:
+
+| 改善 | 方法                                                                                                   | 期待効果 | 難易度 |
+| ---- | ------------------------------------------------------------------------------------------------------ | -------- | ------ |
+| G    | **アプリケーション側の修正**: パイプラインの `.select("*")` を必要カラムのみに変更（embedding を除外） | 大       | 低     |
+
+#### 改善実施の推奨順序
+
+1. **A + B + C + D** (search_articles_by_embedding 最適化) — ユーザー影響度最大、全体の51.93%
+2. **E + F** (search_articles_by_unexplored_tags 最適化) — GINインデックス追加で大幅改善見込み
+3. **G** (パイプラインSELECT最適化) — コード変更のみ、マイグレーション不要
+
+> 上記はSubtask 012-02-02（スロークエリ改善実装）で実施する。
+
+---
+
 ## 対応記録
 
 _(対応実施時に上記テンプレートを使用して追記する)_

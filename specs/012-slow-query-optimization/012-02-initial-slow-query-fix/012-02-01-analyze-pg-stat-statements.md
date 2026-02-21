@@ -28,15 +28,15 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHEN pg_stat_statements データが共有された際
+- [x] WHEN pg_stat_statements データが共有された際
       GIVEN データにクエリテキスト・実行時間・呼び出し回数が含まれている場合
       THEN 各クエリが既存コードベースのどのRepository/RPC関数に対応するか特定されている
 
-- [ ] WHEN スロークエリが特定された際
+- [x] WHEN スロークエリが特定された際
       GIVEN 複数のスロークエリが存在する場合
       THEN ユーザー影響度（呼び出し頻度 × 実行時間）に基づく優先度が判定されている
 
-- [ ] WHEN 分析が完了した際
+- [x] WHEN 分析が完了した際
       GIVEN 改善対象のクエリが決定された場合
       THEN 各クエリのボトルネック（インデックス不足、非効率なJOIN等）が特定されている
       AND 改善方針（インデックス追加 / クエリ書き換え / RPC関数最適化）が提案されている
@@ -61,11 +61,15 @@ completed_at: null
 | 中     | 呼び出し頻度が高いが実行時間は許容範囲内                                 |
 | 低     | バッチ処理・管理系で即時のユーザー影響が小さい                           |
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日:
-- 確認者:
-- 備考:
+- 確認日: 2026-02-21
+- 確認者: Claude Code
+- 備考: pg_stat_statementsデータ・ダッシュボードslow queryデータの分析完了。結果は docs/slow-query-optimization.md に記録済み。
 
 ## 参照ドキュメント
 
