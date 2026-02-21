@@ -787,11 +787,12 @@ describe("GET /articles/:articleId/content - 正常系", () => {
     expect(res.status).toBe(200);
   });
 
-  it("タイトルと本文冒頭50文字を返す", async () => {
+  it("タイトルと本文冒頭50文字とauthorを返す", async () => {
     // Arrange
     const expected = {
       title: "SCP-173 - 彫刻 - オリジナル",
       excerpt: "アイテム番号: SCP-173。オブジェクトクラス: Euclid。特別収容プ",
+      author: "田中太郎",
     };
     mockService.getContent.mockResolvedValue(expected);
 
@@ -848,11 +849,12 @@ describe("GET /articles/:articleId/content - 異常系（エラー耐性）", ()
     app = createTestApp(mockService);
   });
 
-  it("fetch失敗時も200で空レスポンスを返す", async () => {
+  it("fetch失敗時も200で空レスポンスを返す（authorを含む）", async () => {
     // Arrange
     mockService.getContent.mockResolvedValue({
       title: "",
       excerpt: "",
+      author: "",
     });
 
     // Act
@@ -861,10 +863,10 @@ describe("GET /articles/:articleId/content - 異常系（エラー耐性）", ()
 
     // Assert
     expect(res.status).toBe(200);
-    expect(json).toEqual({ title: "", excerpt: "" });
+    expect(json).toEqual({ title: "", excerpt: "", author: "" });
   });
 
-  it("Serviceがエラーをスローした場合も200で空レスポンスを返す", async () => {
+  it("Serviceがエラーをスローした場合も200で空レスポンスを返す（authorを含む）", async () => {
     // Arrange
     mockService.getContent.mockRejectedValue(new Error("Network error"));
 
@@ -874,7 +876,7 @@ describe("GET /articles/:articleId/content - 異常系（エラー耐性）", ()
 
     // Assert
     expect(res.status).toBe(200);
-    expect(json).toEqual({ title: "", excerpt: "" });
+    expect(json).toEqual({ title: "", excerpt: "", author: "" });
   });
 });
 
@@ -927,6 +929,7 @@ describe("GET /articles/:articleId/content - エッジケース", () => {
     mockService.getContent.mockResolvedValue({
       title: "SCP-173-JP",
       excerpt: "本文",
+      author: "",
     });
 
     // Act
@@ -935,5 +938,21 @@ describe("GET /articles/:articleId/content - エッジケース", () => {
     // Assert
     expect(res.status).toBe(200);
     expect(mockService.getContent).toHaveBeenCalledWith("SCP-173-JP");
+  });
+
+  it("authorがNULLの記事でauthorが空文字列で返る", async () => {
+    // Arrange
+    mockService.getContent.mockResolvedValue({
+      title: "SCP-999",
+      excerpt: "本文",
+      author: "",
+    });
+
+    // Act
+    const res = await app.request("/articles/scp-999/content");
+    const json = (await res.json()) as { author: string };
+
+    // Assert
+    expect(json.author).toBe("");
   });
 });

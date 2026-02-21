@@ -126,7 +126,11 @@ export class ArticlesService {
    * @returns { title: string, excerpt: string }
    */
   getContent = async (articleId: string): Promise<ContentResult> => {
-    const url = `http://scp-jp.wikidot.com/${articleId.toLowerCase()}`;
+    const lowerArticleId = articleId.toLowerCase();
+    const url = `http://scp-jp.wikidot.com/${lowerArticleId}`;
+
+    // DB問い合わせとWikiフェッチを並行実行
+    const authorPromise = this.repository.getAuthorByArticleId(lowerArticleId).catch(() => null);
 
     try {
       const response = await fetch(url);
@@ -140,11 +144,13 @@ export class ArticlesService {
       const title = titleText.trim();
       const content = contentText.trim();
       const excerpt = content.substring(0, 50);
+      const author = (await authorPromise) ?? "";
 
-      return { title, excerpt };
+      return { title, excerpt, author };
     } catch {
+      const author = (await authorPromise) ?? "";
       // エラー耐性: サイレント失敗で空レスポンス
-      return { title: "", excerpt: "" };
+      return { title: "", excerpt: "", author };
     }
   };
 }
@@ -157,6 +163,8 @@ export interface ContentResult {
   title: string;
   /** 本文冒頭（最大50文字） */
   excerpt: string;
+  /** 著者名（不明時は空文字列） */
+  author: string;
 }
 
 /**

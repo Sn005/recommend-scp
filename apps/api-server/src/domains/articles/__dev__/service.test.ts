@@ -4,7 +4,7 @@
  * @see specs/005-backend-api/005-04-articles-api/005-04-01.md
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ArticlesService } from "../service";
 import type { ArticlesRepository } from "../repository";
 import { createEmbedding } from "../../../lib/openai";
@@ -22,6 +22,7 @@ describe("ArticlesService", () => {
   let mockRepository: {
     searchByEmbedding: ReturnType<typeof vi.fn>;
     getArticleById: ReturnType<typeof vi.fn>;
+    getAuthorByArticleId: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -29,6 +30,7 @@ describe("ArticlesService", () => {
     mockRepository = {
       searchByEmbedding: vi.fn(),
       getArticleById: vi.fn(),
+      getAuthorByArticleId: vi.fn(),
     };
     service = new ArticlesService(mockRepository as unknown as ArticlesRepository);
   });
@@ -166,6 +168,89 @@ describe("ArticlesService", () => {
       mockRepository.searchByEmbedding.mockRejectedValue(dbError);
 
       await expect(service.searchArticles("test")).rejects.toThrow("RPC function not found");
+    });
+  });
+
+  describe("getContent", () => {
+    beforeEach(() => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          text: vi
+            .fn()
+            .mockResolvedValue(
+              '<html><div id="page-title">SCP-173</div><div id="page-content">本文テキストが50文字以内です</div></html>'
+            ),
+        })
+      );
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("authorがDBに存在する場合、レスポンスにauthorフィールドが含まれる", async () => {
+      mockRepository.getAuthorByArticleId.mockResolvedValue("田中太郎");
+
+      const result = await service.getContent("scp-173");
+
+      expect(result.author).toBe("田中太郎");
+    });
+
+    it("title・excerpt・authorの3フィールドを含むレスポンスを返す", async () => {
+      mockRepository.getAuthorByArticleId.mockResolvedValue("佐藤花子");
+
+      const result = await service.getContent("scp-173");
+
+      expect(result).toEqual({
+        title: "SCP-173",
+        excerpt: "本文テキストが50文字以内です",
+        author: "佐藤花子",
+      });
+    });
+
+    it("authorがNULLの場合は空文字列を返す", async () => {
+      mockRepository.getAuthorByArticleId.mockResolvedValue(null);
+
+      const result = await service.getContent("scp-999");
+
+      expect(result.author).toBe("");
+    });
+
+    it("authorがNULLでもtitleとexcerptは正常に返す", async () => {
+      mockRepository.getAuthorByArticleId.mockResolvedValue(null);
+
+      const result = await service.getContent("scp-173");
+
+      expect(result.title).toBe("SCP-173");
+      expect(result.excerpt).toBe("本文テキストが50文字以内です");
+      expect(result.author).toBe("");
+    });
+
+    it("DBクエリが失敗してもエラーにならずauthorを空文字列で返す", async () => {
+      mockRepository.getAuthorByArticleId.mockRejectedValue(new Error("DB connection failed"));
+
+      const result = await service.getContent("scp-173");
+
+      expect(result.author).toBe("");
+      expect(result.title).toBe("SCP-173");
+    });
+
+    it("fetchとDBクエリの両方が失敗した場合 { title:'', excerpt:'', author:'' } を返す", async () => {
+      mockRepository.getAuthorByArticleId.mockRejectedValue(new Error("DB error"));
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+
+      const result = await service.getContent("scp-173");
+
+      expect(result).toEqual({ title: "", excerpt: "", author: "" });
+    });
+
+    it("article_idを小文字に正規化してDBを検索する", async () => {
+      mockRepository.getAuthorByArticleId.mockResolvedValue("著者名");
+
+      await service.getContent("SCP-173");
+
+      expect(mockRepository.getAuthorByArticleId).toHaveBeenCalledWith("scp-173");
     });
   });
 });

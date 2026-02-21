@@ -107,7 +107,7 @@ export const createArticlesRoutes = (
           return c.json(result, 200);
         } catch {
           // エラー耐性: 失敗時も200で空レスポンス
-          return c.json({ title: "", excerpt: "" }, 200);
+          return c.json({ title: "", excerpt: "", author: "" }, 200);
         }
       })
   );
