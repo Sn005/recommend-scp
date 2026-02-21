@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import { useRef, useCallback } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
+import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
 /**
  * 個別記事閲覧ページ
@@ -55,6 +56,7 @@ export default function ArticlePage() {
           onLoad={handleIframeLoad}
         />
       </div>
+      <AttributionFooter articleId={articleId} />
       <FloatingFavoriteButton articleId={articleId} />
     </div>
   );

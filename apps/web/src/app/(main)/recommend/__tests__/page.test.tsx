@@ -338,7 +338,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       dismissInitialCard();
 
       const webviews = screen.getAllByTestId("article-webview");
-      expect(webviews[0]).toHaveClass("opacity-100", "z-10");
+      expect(webviews[0]).toHaveClass("opacity-100", "z-10", "flex-1");
     });
   });
 
@@ -428,18 +428,18 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         capturedOnDismissed?.();
       });
 
-      // 全リソース読み込み完了前は非表示（opacity-0 z-10）
+      // 全リソース読み込み完了前は非表示（opacity-0 z-10 flex-1）
       const webviews = screen.getAllByTestId("article-webview");
       const currentSlot = webviews[0];
-      expect(currentSlot).toHaveClass("opacity-0", "z-10");
+      expect(currentSlot).toHaveClass("opacity-0", "z-10", "flex-1");
 
       // 全リソース読み込み完了を通知
       act(() => {
         capturedOnContentFullyReady?.();
       });
 
-      // 読み込み完了後は表示（opacity-100 z-10）
-      expect(currentSlot).toHaveClass("opacity-100", "z-10");
+      // 読み込み完了後は表示（opacity-100 z-10 flex-1）
+      expect(currentSlot).toHaveClass("opacity-100", "z-10", "flex-1");
     });
 
     it("遷移完了後にcurrentIndexが更新される（goToNext呼び出し確認）", async () => {
