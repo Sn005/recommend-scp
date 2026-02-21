@@ -26,8 +26,6 @@ import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
 import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
-const ATTRIBUTION_SCROLL_THRESHOLD = 85;
-
 /**
  * 推薦記事閲覧ページ
  *
@@ -99,23 +97,16 @@ export default function RecommendPage() {
   // AC-4: 滞在時間の計測
   const articleStartTimeRef = useRef(0);
 
-  // 帰属表示フッター: スクロール深度が閾値を超えたら表示
-  const [showAttribution, setShowAttribution] = useState(false);
-
   // 記事が変わったらスクロール深度・滞在時間をリセット
   useEffect(() => {
     maxScrollDepthRef.current = 0;
     articleStartTimeRef.current = Date.now();
-    setShowAttribution(false);
   }, [currentIndex]);
 
   // スクロール深度の変更ハンドラー
   const handleScrollChange = useCallback((percentage: number) => {
     if (percentage > maxScrollDepthRef.current) {
       maxScrollDepthRef.current = percentage;
-    }
-    if (percentage >= ATTRIBUTION_SCROLL_THRESHOLD) {
-      setShowAttribution(true);
     }
   }, []);
 
@@ -236,6 +227,12 @@ export default function RecommendPage() {
   // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
     <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
+      {/* ライセンス帰属表示: 記事上部に常時表示 */}
+      <AttributionFooter
+        articleId={currentArticle.id}
+        className="shrink-0 border-b border-gray-200 bg-gray-50 px-4 py-1.5 text-center text-xs text-gray-500"
+      />
+
       {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
       {slots.map((slot, i) => {
         if (!slot) return null;
@@ -270,9 +267,6 @@ export default function RecommendPage() {
           />
         );
       })}
-
-      {/* ライセンス帰属表示: スクロール深度が閾値以上で表示 */}
-      {showAttribution && <AttributionFooter articleId={currentArticle.id} />}
 
       {/* AC-1/AC-3: TransitionCard */}
       {nextArticleForCard && (

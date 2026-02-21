@@ -17,10 +17,10 @@ export function FloatingUI({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-nav pointer-events-none">
-      {/* PillNav - スクロールで表示/非表示（pb-12: ライセンスフッター分のスペース確保） */}
+      {/* PillNav - スクロールで表示/非表示 */}
       <div
         className={cn(
-          "flex justify-center pb-12 transition-opacity duration-300",
+          "flex justify-center pb-4 transition-opacity duration-300",
           isPillNavVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         data-testid="pill-nav"
