@@ -8,6 +8,7 @@
 
 import { Hono } from "hono";
 import { parseHTML } from "linkedom";
+import { cacheGet, cacheSet } from "../lib/cache";
 
 /**
  * 許可するWikidotドメイン（セキュリティのため制限）
@@ -474,6 +475,26 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
   // パスを小文字に正規化する。
   const path = rawPath.toLowerCase();
 
+  // Redisキャッシュチェック（外部fetch前に実行し、ヒット時はHTTPリクエストをスキップ）
+  const cacheKey = `wiki:html:${path}`;
+  const cached = await cacheGet<string>(cacheKey);
+  if (cached) {
+    let html = cached;
+    if (c.req.query("nav") === "floating") {
+      html = html.replace(
+        "</head>",
+        "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
+      );
+    }
+    return new Response(html, {
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        "cache-control": "public, max-age=300, s-maxage=600",
+      },
+    });
+  }
+
   // 通常ページを取得（記事固有CSS/JSを含む完全なHTML）
   const targetUrl = `http://${ALLOWED_WIKIDOT_DOMAIN}/${path}`;
 
@@ -485,17 +506,21 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     // HTMLレスポンス: DOM抽出 + HTML再構築 + URL書き換え
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      let processed = processHtml(html, path);
+      const processed = processHtml(html, path);
+
+      // processHtml結果をRedisキャッシュに保存（TTL 1時間、非同期でレスポンスをブロックしない）
+      void cacheSet(cacheKey, processed, 3600);
 
       // nav=floating: FloatingUI（推薦画面）がある場合、帰属表示バーのpadding-bottomを拡大
+      let finalHtml = processed;
       if (c.req.query("nav") === "floating") {
-        processed = processed.replace(
+        finalHtml = finalHtml.replace(
           "</head>",
           "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
         );
       }
 
-      return new Response(processed, {
+      return new Response(finalHtml, {
         status: response.status,
         headers: {
           "content-type": contentType,
@@ -504,7 +529,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
       });
     }
 
-    // 非HTMLリソース（CSS/JS/画像等）: パススルー
+    // 非HTMLリソース（CSS/JS/画像等）: パススルー（キャッシュ対象外）
     return new Response(response.body, {
       status: response.status,
       headers: {
