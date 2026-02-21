@@ -27,6 +27,7 @@
     "@hono/zod-validator": "^0.7.6",
     "@recommend-scp/shared": "workspace:*",
     "@supabase/supabase-js": "^2.49.4",
+    "@upstash/redis": "^1.36.2",
     "hono": "^4.7.10",
     "linkedom": "^0.18.12",
     "openai": "^4.77.0",

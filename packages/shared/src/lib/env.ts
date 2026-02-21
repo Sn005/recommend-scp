@@ -80,6 +80,14 @@ export const env = {
   get ALLOWED_ORIGINS(): string | undefined {
     return process.env.ALLOWED_ORIGINS;
   },
+  /** オプション: Upstash Redis REST URL（未設定時はキャッシュ無効） */
+  get UPSTASH_REDIS_REST_URL(): string | undefined {
+    return process.env.UPSTASH_REDIS_REST_URL;
+  },
+  /** オプション: Upstash Redis REST トークン（未設定時はキャッシュ無効） */
+  get UPSTASH_REDIS_REST_TOKEN(): string | undefined {
+    return process.env.UPSTASH_REDIS_REST_TOKEN;
+  },
 };
 
 /**
