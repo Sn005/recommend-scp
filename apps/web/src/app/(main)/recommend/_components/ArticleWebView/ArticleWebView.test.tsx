@@ -69,7 +69,7 @@ describe("ArticleWebView", () => {
       render(<ArticleWebView url="http://scp-jp.wikidot.com/scp-173" />);
 
       const iframe = screen.getByTitle("SCP記事");
-      expect(iframe).toHaveAttribute("src", "/api/wiki-proxy/scp-173");
+      expect(iframe).toHaveAttribute("src", "/api/wiki-proxy/scp-173?nav=floating");
     });
 
     it("HTTPS URLはプロキシ変換されない", () => {

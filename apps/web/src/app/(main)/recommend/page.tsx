@@ -223,8 +223,9 @@ export default function RecommendPage() {
   }
 
   // AC-2: iframeプールに基づくレンダリング
+  // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
-    <div className="relative h-screen overflow-clip" data-testid="article-viewer">
+    <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
       {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
       {slots.map((slot, i) => {
         if (!slot) return null;
@@ -250,11 +251,11 @@ export default function RecommendPage() {
               }
             }}
             className={
-              isVisible
-                ? "absolute inset-0 opacity-100 z-10"
-                : isCurrent
-                  ? "absolute inset-0 opacity-0 z-10"
-                  : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+              isCurrent
+                ? isVisible
+                  ? "flex-1 min-h-0 h-full opacity-100 z-10"
+                  : "flex-1 min-h-0 h-full opacity-0 z-10"
+                : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
             }
           />
         );

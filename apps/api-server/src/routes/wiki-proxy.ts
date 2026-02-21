@@ -78,6 +78,9 @@ const INJECTED_STYLE = [
   // コンポーネントコードビューア非表示: テーマ等のコンポーネントincludeに付随する
   // CSSソースコード表示用collapsible-blockを非表示にする（記事本文ではない）
   ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}",
+  // ライセンス帰属表示: 記事末尾に配置、コンテンツと一緒にスクロール
+  ".attribution-footer{border-top:1px solid #e5e7eb;background:#f9fafb;padding:8px 16px 20px;text-align:center;font-size:12px;color:#6b7280;margin-top:32px}",
+  ".attribution-footer a{color:#3b82f6;text-decoration:underline}",
   "</style>",
 ].join("");
 
@@ -335,6 +338,31 @@ function extractContent(html: string): ExtractedContent {
 }
 
 /**
+ * ライセンス帰属表示HTMLを生成
+ *
+ * CC BY-SA 3.0帰属表示を記事末尾に配置する。
+ * iframe内に注入することで記事コンテンツと一緒にスクロールする。
+ * 著者名はwiki-proxyでは取得できないため省略形を使用。
+ */
+function buildAttributionHtml(articleId: string): string {
+  const originalUrl = `https://scp-jp.wikidot.com/${articleId}`;
+  const licenseUrl = "https://creativecommons.org/licenses/by-sa/3.0/";
+  return [
+    '<div class="attribution-footer" data-testid="attribution-footer">',
+    "<p>",
+    'Content licensed under <a href="',
+    licenseUrl,
+    '" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>',
+    " &middot; SCP Foundation",
+    "</p>",
+    '<a href="',
+    originalUrl,
+    '" target="_blank" rel="noopener noreferrer">原文を見る</a>',
+    "</div>",
+  ].join("");
+}
+
+/**
  * 抽出されたコンテンツから最適化HTMLを再構築
  *
  * 構築順序:
@@ -343,9 +371,10 @@ function extractContent(html: string): ExtractedContent {
  * 3. 記事固有CSS（<style>タグ）
  * 4. 注入CSS（可読性スタイル、!importantで記事CSSをオーバーライド）
  * 5. 記事本文（#main-content）
- * 6. WIKIDOTスタブ（ReferenceError防止）
- * 7. 記事固有JS
- * 8. 注入JS（リンクインターセプト + コンポーネント開閉）
+ * 6. ライセンス帰属表示（記事末尾、コンテンツと一緒にスクロール）
+ * 7. WIKIDOTスタブ（ReferenceError防止）
+ * 8. 記事固有JS
+ * 9. 注入JS（リンクインターセプト + コンポーネント開閉）
  */
 function buildHtml(content: ExtractedContent): string {
   return [
@@ -357,6 +386,7 @@ function buildHtml(content: ExtractedContent): string {
     INJECTED_STYLE,
     "</head><body>",
     content.mainContentHtml,
+    "<!-- ATTRIBUTION_PLACEHOLDER -->",
     WIKIDOT_STUB,
     ...content.articleScripts,
     INJECTED_SCRIPT,
@@ -395,11 +425,15 @@ function rewriteUrls(html: string): string {
  * HTML処理パイプライン: DOM抽出 → HTML再構築 → URL書き換え
  *
  * 通常のWikidotページHTMLを受け取り、最適化されたプロキシHTMLを生成する。
+ * articleIdが指定された場合、記事末尾にライセンス帰属表示を注入する。
  */
-function processHtml(html: string): string {
+function processHtml(html: string, articleId?: string): string {
   const content = extractContent(html);
   const rebuilt = buildHtml(content);
-  return rewriteUrls(rebuilt);
+  const rewritten = rewriteUrls(rebuilt);
+  // 帰属表示はrewriteUrls後に注入（外部URLが書き換えられるのを防止）
+  const attribution = articleId ? buildAttributionHtml(articleId) : "";
+  return rewritten.replace("<!-- ATTRIBUTION_PLACEHOLDER -->", attribution);
 }
 
 /**
@@ -451,7 +485,15 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     // HTMLレスポンス: DOM抽出 + HTML再構築 + URL書き換え
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      const processed = processHtml(html);
+      let processed = processHtml(html, path);
+
+      // nav=floating: FloatingUI（推薦画面）がある場合、帰属表示バーのpadding-bottomを拡大
+      if (c.req.query("nav") === "floating") {
+        processed = processed.replace(
+          "</head>",
+          "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
+        );
+      }
 
       return new Response(processed, {
         status: response.status,
@@ -476,5 +518,12 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
 });
 
 // テスト用エクスポート
-export { extractContent, buildHtml, rewriteUrls, processHtml, isArticleScript };
+export {
+  extractContent,
+  buildHtml,
+  buildAttributionHtml,
+  rewriteUrls,
+  processHtml,
+  isArticleScript,
+};
 export type { ExtractedContent };
