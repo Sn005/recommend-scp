@@ -4,4 +4,4 @@
 
 | ID                                                   | 名前                        | 概要                                                        | ステータス |
 | ---------------------------------------------------- | --------------------------- | ----------------------------------------------------------- | ---------- |
-| [016-01](./016-01-redis-cache/016-01-redis-cache.md) | Redisキャッシュレイヤー導入 | wiki-proxyとarticles/contentにUpstash Redisキャッシュを導入 | pending    |
+| [016-01](./016-01-redis-cache/016-01-redis-cache.md) | Redisキャッシュレイヤー導入 | wiki-proxyとarticles/contentにUpstash Redisキャッシュを導入 | completed  |

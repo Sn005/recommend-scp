@@ -3,7 +3,7 @@ id: "016-01"
 epic_id: "016"
 epic_title: "記事表示速度改善"
 title: "Redisキャッシュレイヤー導入"
-status: "pending"
+status: "completed"
 created_at: "2026-02-21"
 updated_at: "2026-02-21"
 ---

@@ -8,6 +8,7 @@ import type { ArticlesRepository } from "./repository";
 import { createEmbedding } from "../../lib/openai";
 import { NotFoundError } from "../../lib/errors";
 import { parseHTML } from "linkedom";
+import { cacheGet, cacheSet } from "../../lib/cache";
 
 /**
  * 記事検索結果の1件
@@ -127,6 +128,12 @@ export class ArticlesService {
    */
   getContent = async (articleId: string): Promise<ContentResult> => {
     const lowerArticleId = articleId.toLowerCase();
+    const cacheKey = `article:content:${lowerArticleId}`;
+
+    // Redisキャッシュチェック（外部fetch/DB問い合わせ前に実行）
+    const cached = await cacheGet<ContentResult>(cacheKey);
+    if (cached) return cached;
+
     const url = `http://scp-jp.wikidot.com/${lowerArticleId}`;
 
     // DB問い合わせとWikiフェッチを並行実行
@@ -146,10 +153,17 @@ export class ArticlesService {
       const excerpt = content.substring(0, 50);
       const author = (await authorPromise) ?? "";
 
-      return { title, excerpt, author };
+      const result: ContentResult = { title, excerpt, author };
+
+      // 成功時のみキャッシュ保存（空レスポンスはキャッシュしない → 次回リトライ可能）
+      if (title || excerpt) {
+        void cacheSet(cacheKey, result, 3600);
+      }
+
+      return result;
     } catch {
       const author = (await authorPromise) ?? "";
-      // エラー耐性: サイレント失敗で空レスポンス
+      // エラー耐性: サイレント失敗で空レスポンス（キャッシュ保存しない）
       return { title: "", excerpt: "", author };
     }
   };
