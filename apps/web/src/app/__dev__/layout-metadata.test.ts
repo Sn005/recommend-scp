@@ -11,12 +11,13 @@ describe("layout.tsx メタデータ", () => {
   });
 
   describe("AC-2: layout.tsx メタデータ更新", () => {
-    it('title が "SCPicks - あなた好みのSCPを発見" に設定されている', () => {
-      expect(layoutContent).toContain("SCPicks - あなた好みのSCPを発見");
+    it("title.default が SITE_NAME を含むテンプレートリテラルで設定されている", () => {
+      expect(layoutContent).toContain("あなた好みのSCPを発見");
+      expect(layoutContent).toMatch(/default\s*:\s*`/);
     });
 
-    it('description が "あなたの好みに合ったSCP記事を推薦するWebアプリ" に設定されている', () => {
-      expect(layoutContent).toContain("あなたの好みに合ったSCP記事を推薦するWebアプリ");
+    it("description が siteConfig.description から設定されている", () => {
+      expect(layoutContent).toMatch(/description\s*:\s*siteConfig\.description/);
     });
 
     it('manifest が "/manifest.json" を指している', () => {
@@ -31,8 +32,8 @@ describe("layout.tsx メタデータ", () => {
       expect(layoutContent).toMatch(/statusBarStyle\s*:\s*["']default["']/);
     });
 
-    it('appleWebApp.title が "SCPicks" に設定されている', () => {
-      expect(layoutContent).toMatch(/title\s*:\s*["']SCPicks["']/);
+    it("appleWebApp.title が siteConfig.name に設定されている", () => {
+      expect(layoutContent).toMatch(/title\s*:\s*siteConfig\.name/);
     });
   });
 
@@ -51,6 +52,93 @@ describe("layout.tsx メタデータ", () => {
 
     it("statusBarStyle が含まれている（apple-mobile-web-app-status-bar-style 相当）", () => {
       expect(layoutContent).toMatch(/statusBarStyle/);
+    });
+  });
+
+  describe("SEO: Open Graph メタデータ", () => {
+    it('og:type が "website" に設定されている', () => {
+      expect(layoutContent).toMatch(/type\s*:\s*["']website["']/);
+    });
+
+    it("og:siteName が設定されている", () => {
+      expect(layoutContent).toMatch(/siteName\s*:\s*siteConfig\.name/);
+    });
+
+    it("og:locale が設定されている", () => {
+      expect(layoutContent).toMatch(/locale\s*:\s*siteConfig\.locale/);
+    });
+
+    it("og:images が設定されている", () => {
+      expect(layoutContent).toContain("icon-512x512.png");
+    });
+
+    it("og:title が設定されている", () => {
+      expect(layoutContent).toMatch(/openGraph[\s\S]*title/);
+    });
+
+    it("og:description が設定されている", () => {
+      expect(layoutContent).toMatch(/openGraph[\s\S]*description/);
+    });
+  });
+
+  describe("SEO: Twitter Card メタデータ", () => {
+    it('twitter:card が "summary" に設定されている', () => {
+      expect(layoutContent).toMatch(/card\s*:\s*["']summary["']/);
+    });
+
+    it("twitter:title が設定されている", () => {
+      expect(layoutContent).toMatch(/twitter[\s\S]*title/);
+    });
+
+    it("twitter:description が設定されている", () => {
+      expect(layoutContent).toMatch(/twitter[\s\S]*description/);
+    });
+
+    it("twitter:images が設定されている", () => {
+      expect(layoutContent).toMatch(/twitter[\s\S]*images/);
+    });
+  });
+
+  describe("SEO: metadataBase と title template", () => {
+    it("metadataBase が設定されている", () => {
+      expect(layoutContent).toContain("metadataBase");
+    });
+
+    it("title template が設定されている", () => {
+      expect(layoutContent).toContain("template");
+      expect(layoutContent).toContain("%s");
+    });
+  });
+
+  describe("SEO: JSON-LD 構造化データ", () => {
+    it("application/ld+json スクリプトタグが含まれている", () => {
+      expect(layoutContent).toContain("application/ld+json");
+    });
+
+    it("WebSite スキーマが含まれている", () => {
+      expect(layoutContent).toContain("WebSite");
+    });
+
+    it("WebApplication スキーマが含まれている", () => {
+      expect(layoutContent).toContain("WebApplication");
+    });
+
+    it("schema.org コンテキストが含まれている", () => {
+      expect(layoutContent).toContain("https://schema.org");
+    });
+
+    it("XSS対策として < がエスケープされている", () => {
+      expect(layoutContent).toContain("\\u003c");
+    });
+  });
+
+  describe("SEO: robots と canonical", () => {
+    it("robots 設定が含まれている", () => {
+      expect(layoutContent).toMatch(/robots\s*:/);
+    });
+
+    it("alternates.canonical が設定されている", () => {
+      expect(layoutContent).toMatch(/canonical\s*:/);
     });
   });
 });
