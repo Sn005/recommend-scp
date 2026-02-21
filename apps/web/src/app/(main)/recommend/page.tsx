@@ -24,6 +24,7 @@ import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
+import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
 /**
  * 推薦記事閲覧ページ
@@ -274,6 +275,12 @@ export default function RecommendPage() {
 
       {/* AC-5: FloatingUI（ProgressBarなし） */}
       <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
+
+      {/* ライセンス帰属表示フッター（画面最下部に固定表示） */}
+      <AttributionFooter
+        articleId={currentArticle.id}
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 bg-gray-50/95 px-4 py-1.5 text-center text-xs text-gray-500 backdrop-blur-sm"
+      />
     </div>
   );
 }

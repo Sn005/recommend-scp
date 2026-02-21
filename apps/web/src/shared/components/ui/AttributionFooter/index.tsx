@@ -9,6 +9,8 @@ interface AttributionFooterProps {
   articleId: string;
   /** 著者名。undefined または空文字列の場合は著者名部分を省略 */
   authorName?: string;
+  /** 追加のCSSクラス */
+  className?: string;
 }
 
 const CC_BY_SA_URL = "https://creativecommons.org/licenses/by-sa/3.0/";
@@ -19,14 +21,17 @@ const CC_BY_SA_URL = "https://creativecommons.org/licenses/by-sa/3.0/";
  * 記事ページのiframe下部に表示し、ライセンス・著者・原文リンクを提供する。
  * 著者名が不明（空文字列/undefined）の場合は著者名部分を省略する。
  */
-export function AttributionFooter({ articleId, authorName }: AttributionFooterProps) {
+export function AttributionFooter({ articleId, authorName, className }: AttributionFooterProps) {
   const hasAuthor = Boolean(authorName?.trim());
   const originalUrl = `https://scp-jp.wikidot.com/${articleId}`;
 
   return (
     <footer
       data-testid="attribution-footer"
-      className="shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-2 text-center text-xs text-gray-500"
+      className={
+        className ??
+        "shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-2 text-center text-xs text-gray-500"
+      }
     >
       <p>
         {hasAuthor ? (

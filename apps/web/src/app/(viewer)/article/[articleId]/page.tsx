@@ -9,7 +9,7 @@ import { useParams } from "next/navigation";
 import { useRef, useCallback, useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
-import { AttributionFooter } from "./_components/AttributionFooter";
+import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
 /**
  * 個別記事閲覧ページ
