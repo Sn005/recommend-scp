@@ -5,7 +5,7 @@ story_id: "001-01"
 epic_title: "環境構築"
 story_title: "共通設定整備"
 title: "設定要件の確認と決定"
-status: "pending"
+status: "completed"
 created_at: "2024-01-01"
 updated_at: "2024-01-01"
 completed_at: null

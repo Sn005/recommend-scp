@@ -1,7 +1,7 @@
 ---
 id: "014"
 title: "SCPライセンス・帰属表示"
-status: "pending"
+status: "completed"
 created_at: "2026-02-20"
 updated_at: "2026-02-20"
 ---

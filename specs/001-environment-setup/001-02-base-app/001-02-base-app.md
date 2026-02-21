@@ -3,7 +3,7 @@ id: "001-02"
 epic_id: "001"
 epic_title: "環境構築"
 title: "基本アプリケーション作成"
-status: "pending"
+status: "completed"
 created_at: "2024-01-01"
 updated_at: "2024-01-01"
 ---

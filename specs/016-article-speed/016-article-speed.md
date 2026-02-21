@@ -1,7 +1,7 @@
 ---
 id: "016"
 title: "記事表示速度改善"
-status: "pending"
+status: "completed"
 created_at: "2026-02-21"
 updated_at: "2026-02-21"
 ---
