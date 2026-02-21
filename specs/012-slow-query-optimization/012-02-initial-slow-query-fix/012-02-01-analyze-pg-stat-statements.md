@@ -5,10 +5,10 @@ story_id: "012-02"
 epic_title: "スロークエリ最適化"
 story_title: "初回スロークエリ対応"
 title: "pg_stat_statementsデータ分析・優先度判定"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
-updated_at: "2026-02-15"
-completed_at: null
+updated_at: "2026-02-21"
+completed_at: "2026-02-21"
 ---
 
 # Subtask: pg_stat_statementsデータ分析・優先度判定
