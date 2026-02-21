@@ -6,10 +6,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
 import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
+
+const ATTRIBUTION_SCROLL_THRESHOLD = 85;
 
 /**
  * 個別記事閲覧ページ
@@ -24,6 +26,8 @@ export default function ArticlePage() {
   const { articleId } = useParams<{ articleId: string }>();
   const iframeSrc = `/api/wiki-proxy/${articleId}`;
   const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [showAttribution, setShowAttribution] = useState(false);
 
   // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
   // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
@@ -39,6 +43,28 @@ export default function ArticlePage() {
         });
       });
     }
+
+    // iframeコンテンツのスクロール検知（同一オリジン: wiki-proxy）
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    try {
+      const iframeWindow = iframe.contentWindow;
+      if (!iframeWindow) return;
+      iframeWindow.addEventListener("scroll", () => {
+        const doc = iframeWindow.document.documentElement;
+        const scrollTop = iframeWindow.scrollY || doc.scrollTop;
+        const scrollHeight = doc.scrollHeight;
+        const clientHeight = iframeWindow.innerHeight || doc.clientHeight;
+        if (scrollHeight <= clientHeight) return;
+        const percentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+        if (percentage >= ATTRIBUTION_SCROLL_THRESHOLD) {
+          setShowAttribution(true);
+        }
+      });
+    } catch {
+      // cross-origin fallback: フッターを常時表示
+      setShowAttribution(true);
+    }
   }, []);
 
   return (
@@ -49,6 +75,7 @@ export default function ArticlePage() {
         className={cn("relative w-full flex-1 min-h-0")}
       >
         <iframe
+          ref={iframeRef}
           src={iframeSrc}
           className="w-full h-full border-0"
           title="SCP記事"
@@ -56,7 +83,7 @@ export default function ArticlePage() {
           onLoad={handleIframeLoad}
         />
       </div>
-      <AttributionFooter articleId={articleId} />
+      {showAttribution && <AttributionFooter articleId={articleId} />}
       <FloatingFavoriteButton articleId={articleId} />
     </div>
   );
