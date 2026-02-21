@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/onboarding"],
+        disallow: ["/api/", "/onboarding", "/favorites", "/history", "/article/"],
       },
       // AI学習クローラーをブロック（検索エンジンクローラーは許可）
       {

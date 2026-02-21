@@ -26,6 +26,10 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   return {
     title,
     description,
+    robots: {
+      index: false,
+      follow: false,
+    },
     openGraph: {
       title: `${title} | SCPicks`,
       description,

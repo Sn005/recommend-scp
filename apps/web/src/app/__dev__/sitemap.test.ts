@@ -26,18 +26,12 @@ describe("sitemap.ts", () => {
     expect(recommend?.priority).toBe(0.9);
   });
 
-  it("/favorites ページが含まれている", () => {
+  it("noindexページ（/favorites, /history）がサイトマップに含まれていない", () => {
     const result = sitemap();
     const favorites = result.find((entry) => entry.url.includes("/favorites"));
-    expect(favorites).toBeDefined();
-    expect(favorites?.priority).toBe(0.7);
-  });
-
-  it("/history ページが含まれている", () => {
-    const result = sitemap();
     const history = result.find((entry) => entry.url.includes("/history"));
-    expect(history).toBeDefined();
-    expect(history?.priority).toBe(0.5);
+    expect(favorites).toBeUndefined();
+    expect(history).toBeUndefined();
   });
 
   it("全エントリにlastModifiedが設定されている", () => {

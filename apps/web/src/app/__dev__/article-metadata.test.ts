@@ -39,6 +39,15 @@ describe("記事ページ generateMetadata", () => {
     expect(twitter.card).toBe("summary");
   });
 
+  it("noindexが設定されている（iframe記事はインデックス対象外）", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ articleId: "scp-173" }),
+    });
+    const robots = metadata.robots as { index: boolean; follow: boolean };
+    expect(robots.index).toBe(false);
+    expect(robots.follow).toBe(false);
+  });
+
   it("canonical URLにarticleIdが含まれる", async () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ articleId: "scp-173" }),

@@ -4,6 +4,7 @@ import { siteConfig } from "@/shared/lib/site-config";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = siteConfig.url;
 
+  // noindexページ（/favorites, /history, /article/[id], /onboarding）は除外
   return [
     {
       url: baseUrl,
@@ -16,18 +17,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/favorites`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/history`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.5,
     },
   ];
 }

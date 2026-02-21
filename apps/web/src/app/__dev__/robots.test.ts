@@ -40,6 +40,27 @@ describe("robots.ts", () => {
     expect(defaultRule?.disallow).toContain("/onboarding");
   });
 
+  it("/favorites をクロール対象外にしている", () => {
+    const result = robots();
+    const rules = getRulesArray(result.rules);
+    const defaultRule = findRule(rules, "*");
+    expect(defaultRule?.disallow).toContain("/favorites");
+  });
+
+  it("/history をクロール対象外にしている", () => {
+    const result = robots();
+    const rules = getRulesArray(result.rules);
+    const defaultRule = findRule(rules, "*");
+    expect(defaultRule?.disallow).toContain("/history");
+  });
+
+  it("/article/ をクロール対象外にしている", () => {
+    const result = robots();
+    const rules = getRulesArray(result.rules);
+    const defaultRule = findRule(rules, "*");
+    expect(defaultRule?.disallow).toContain("/article/");
+  });
+
   it("AI学習クローラー（GPTBot）をブロックしている", () => {
     const result = robots();
     const rules = getRulesArray(result.rules);
