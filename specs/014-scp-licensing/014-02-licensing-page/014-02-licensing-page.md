@@ -3,7 +3,7 @@ id: "014-02"
 epic_id: "014"
 epic_title: "SCPライセンス・帰属表示"
 title: "ライセンスページ・ナビゲーション"
-status: "pending"
+status: "completed"
 created_at: "2026-02-20"
 updated_at: "2026-02-20"
 ---
@@ -25,8 +25,8 @@ updated_at: "2026-02-20"
 
 ## Acceptance Criteria
 
-- [ ] `/licensing` ページでGPLv3とCC BY-SA 3.0のライセンス情報が表示されること
-- [ ] ドロワーメニューに「ライセンス」項目が表示され、タップで `/licensing` に遷移すること
+- [x] `/licensing` ページでGPLv3とCC BY-SA 3.0のライセンス情報が表示されること
+- [x] ドロワーメニューに「ライセンス」項目が表示され、タップで `/licensing` に遷移すること
 
 ## 関連Subtask
 

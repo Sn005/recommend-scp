@@ -27,6 +27,8 @@ export const DrawerMenu = () => {
   const { visitorId } = useVisitorId();
   const [showResetDialog, setShowResetDialog] = useState(false);
 
+  const isLicensingActive = pathname === "/licensing";
+
   const handleClick = () => {
     close();
   };
@@ -74,7 +76,25 @@ export const DrawerMenu = () => {
           })}
         </ul>
 
-        {/* 区切り線 + リセットボタン */}
+        {/* 区切り線 + ライセンス + リセットボタン */}
+        <div className="mx-3 my-2 border-t border-gray-200" />
+        <Link
+          href="/licensing"
+          onClick={handleClick}
+          aria-current={isLicensingActive ? "page" : undefined}
+          className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors ${
+            isLicensingActive
+              ? "bg-primary/10 text-primary"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <Icon
+            name="file-text"
+            size={22}
+            className={isLicensingActive ? "text-primary" : "text-gray-500"}
+          />
+          <span>ライセンス</span>
+        </Link>
         <div className="mx-3 my-2 border-t border-gray-200" />
         <button
           data-testid="reset-preference-button"
