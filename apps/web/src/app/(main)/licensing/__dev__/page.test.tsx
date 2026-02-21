@@ -5,7 +5,6 @@
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import LicensingPage from "../page";
 
 // モック
@@ -148,21 +147,7 @@ describe("014-02-01: ライセンスページUI実装", () => {
     });
   });
 
-  describe("AC-3: MenuButtonとドロワー連携", () => {
-    it("MenuButtonが表示される", () => {
-      render(<LicensingPage />);
-      const menuButton = screen.getByRole("button", { name: /メニュー/i });
-      expect(menuButton).toBeInTheDocument();
-    });
-
-    it("MenuButtonタップでDrawerのtoggleが呼ばれる", async () => {
-      const user = userEvent.setup();
-      render(<LicensingPage />);
-      const menuButton = screen.getByRole("button", { name: /メニュー/i });
-      await user.click(menuButton);
-      expect(mockToggle).toHaveBeenCalledTimes(1);
-    });
-  });
+  // AC-3: MenuButton はMainLayoutの責務のため、layout.test.tsx でテスト済み
 
   describe("デザイン準拠チェック", () => {
     it("全体レイアウトにbg-gray-50が適用される", () => {

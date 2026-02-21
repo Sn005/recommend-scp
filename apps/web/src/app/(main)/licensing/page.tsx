@@ -5,8 +5,6 @@
  */
 "use client";
 
-import { MenuButton } from "@/shared/components/ui/MenuButton";
-
 const externalLinks = [
   {
     label: "CC BY-SA 3.0 ライセンス全文",
@@ -29,8 +27,6 @@ const externalLinks = [
 export default function LicensingPage() {
   return (
     <div data-testid="licensing-page" className="min-h-screen bg-gray-50">
-      <MenuButton />
-
       <main className="px-4 pb-8">
         {/* ヘッダー */}
         <div className="py-4 pl-12">
