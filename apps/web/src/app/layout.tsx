@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "SCPicks - あなた好みのSCPを発見",
   description: "あなたの好みに合ったSCP記事を推薦するWebアプリ",
   manifest: "/manifest.json",
+  themeColor: "#FFFFFF",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
