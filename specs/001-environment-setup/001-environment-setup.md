@@ -1,7 +1,7 @@
 ---
 id: "001"
 title: "環境構築"
-status: "pending"
+status: "completed"
 created_at: "2024-01-01"
 updated_at: "2024-01-01"
 ---
