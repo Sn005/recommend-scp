@@ -113,6 +113,25 @@ export class ArticlesRepository {
   };
 
   /**
+   * 記事IDから著者名を取得
+   *
+   * @param articleId - 記事ID（例: scp-173）
+   * @returns 著者名。存在しない場合やauthorがNULLの場合はnull
+   */
+  getAuthorByArticleId = async (articleId: string): Promise<string | null> => {
+    const response = (await this.supabase
+      .from("scp_articles")
+      .select("author")
+      .eq("article_id", articleId)
+      .single()) as unknown as SupabaseResponse<{ author: string | null }>;
+
+    // PGRST116: 行が見つからない場合
+    if (response.error?.code === "PGRST116") return null;
+    if (response.error !== null) throw new DatabaseError(response.error);
+    return response.data?.author ?? null;
+  };
+
+  /**
    * 翻訳有無を更新
    *
    * @param articleId - 記事ID
