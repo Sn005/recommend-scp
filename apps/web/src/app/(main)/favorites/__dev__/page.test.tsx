@@ -147,24 +147,7 @@ describe("FavoritesPage", () => {
     });
   });
 
-  describe("AC-3: MenuButton", () => {
-    it("MenuButtonが表示される", () => {
-      render(<FavoritesPage />);
-
-      const menuButton = screen.getByRole("button", { name: /メニュー/i });
-      expect(menuButton).toBeInTheDocument();
-    });
-
-    it("タップでDrawerが開く", async () => {
-      const user = userEvent.setup();
-      render(<FavoritesPage />);
-
-      const menuButton = screen.getByRole("button", { name: /メニュー/i });
-      await user.click(menuButton);
-
-      expect(mockToggle).toHaveBeenCalledTimes(1);
-    });
-  });
+  // AC-3: MenuButton はMainLayoutの責務のため、layout.test.tsx でテスト済み
 
   describe("AC-4: 空状態", () => {
     beforeEach(() => {

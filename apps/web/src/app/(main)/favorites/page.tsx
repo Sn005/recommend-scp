@@ -10,7 +10,6 @@ import { FavoriteList } from "./_components/FavoriteList";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
 import { SkeletonLoader } from "./_components/SkeletonLoader";
-import { MenuButton } from "@/shared/components/ui/MenuButton";
 
 /**
  * お気に入りページ
@@ -46,7 +45,6 @@ export default function FavoritesPage() {
   if (isLoading) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <MenuButton />
         <main className="pb-8 px-4">
           {/* ヘッダー */}
           <div className="flex items-center justify-between py-4 pl-12">
@@ -63,7 +61,6 @@ export default function FavoritesPage() {
   if (error) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <MenuButton />
         <main className="pb-8 px-4">
           {/* ヘッダー */}
           <div className="flex items-center justify-between py-4 pl-12">
@@ -80,7 +77,6 @@ export default function FavoritesPage() {
   if (favorites.length === 0) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <MenuButton />
         <main className="pb-8 px-4">
           {/* ヘッダー */}
           <div className="flex items-center justify-between py-4 pl-12">
@@ -96,9 +92,6 @@ export default function FavoritesPage() {
   // AC-2, AC-8: 通常表示
   return (
     <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-      {/* AC-3: MenuButton */}
-      <MenuButton />
-
       <main className="pb-8 px-4">
         {/* AC-2: ヘッダー（スクロールで動く） */}
         <div className="flex items-center justify-between py-4 pl-12">
