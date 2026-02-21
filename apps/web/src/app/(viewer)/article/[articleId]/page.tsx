@@ -6,9 +6,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
+import { AttributionFooter } from "./_components/AttributionFooter";
 
 /**
  * 個別記事閲覧ページ
@@ -23,6 +24,18 @@ export default function ArticlePage() {
   const { articleId } = useParams<{ articleId: string }>();
   const iframeSrc = `/api/wiki-proxy/${articleId}`;
   const containerRef = useRef<HTMLDivElement>(null);
+  const [authorName, setAuthorName] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    fetch(`/api/articles/${articleId}/content`)
+      .then((res) => res.json() as Promise<{ author?: string }>)
+      .then((data) => {
+        setAuthorName(data.author ?? "");
+      })
+      .catch(() => {
+        setAuthorName(undefined);
+      });
+  }, [articleId]);
 
   // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
   // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
@@ -41,11 +54,11 @@ export default function ArticlePage() {
   }, []);
 
   return (
-    <div className="relative h-screen overflow-hidden" data-testid="article-page">
+    <div className="relative flex flex-col h-screen overflow-hidden" data-testid="article-page">
       <div
         ref={containerRef}
         data-testid="article-webview"
-        className={cn("relative w-full h-screen")}
+        className={cn("relative w-full flex-1 min-h-0")}
       >
         <iframe
           src={iframeSrc}
@@ -55,6 +68,7 @@ export default function ArticlePage() {
           onLoad={handleIframeLoad}
         />
       </div>
+      <AttributionFooter articleId={articleId} authorName={authorName} />
       <FloatingFavoriteButton articleId={articleId} />
     </div>
   );
