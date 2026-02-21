@@ -1,62 +1,52 @@
 /**
- * @file 記事閲覧ページ
- * @description お気に入り一覧からの個別記事表示
- * wiki-proxy経由のiframeで記事を表示する
+ * @file 記事閲覧ページ（サーバーコンポーネント）
+ * @description generateMetadataで記事ごとのOGP/Twitterカードを生成
  * ライセンス帰属表示はwiki-proxyが記事末尾に注入（iframe内でスクロール）
  */
-"use client";
+import type { Metadata } from "next";
+import { ArticlePageContent } from "./_components/ArticlePageContent";
 
-import { useParams } from "next/navigation";
-import { useRef, useCallback } from "react";
-import { cn } from "@/shared/lib/utils";
-import { FloatingFavoriteButton } from "./_components/FloatingFavoriteButton";
+interface ArticlePageProps {
+  params: Promise<{ articleId: string }>;
+}
 
 /**
- * 個別記事閲覧ページ
- *
- * - お気に入り一覧からの遷移先
- * - articleId（例: scp-173）からwiki-proxyのURLを直接構築
- * - wiki-proxyがCSS注入 + URL書き換え + ライセンス帰属表示を適用
- * - FloatingFavoriteButtonで右下にお気に入りトグルを配置
- * - レイアウトでMenuButton/Drawerを配置（他ページへの導線）
+ * articleId（例: "scp-173"）を表示用タイトルに変換
+ * "scp-173" → "SCP-173"
  */
-export default function ArticlePage() {
-  const { articleId } = useParams<{ articleId: string }>();
-  const iframeSrc = `/api/wiki-proxy/${articleId}`;
-  const containerRef = useRef<HTMLDivElement>(null);
+function formatArticleTitle(articleId: string): string {
+  return articleId.toUpperCase();
+}
 
-  // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
-  // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
-  // DevToolsでh-screenのチェックを外す→戻す操作で治ることから、
-  // 2回のペイントサイクルを経てheightをトグルする必要がある（double rAF）。
-  const handleIframeLoad = useCallback(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.style.height = "auto";
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          container.style.height = "";
-        });
-      });
-    }
-  }, []);
+export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
+  const { articleId } = await params;
+  const title = formatArticleTitle(articleId);
+  const description = `${title} - SCP Foundation日本語版の記事をSCPicksで閲覧`;
 
-  return (
-    <div className="relative flex flex-col h-screen overflow-hidden" data-testid="article-page">
-      <div
-        ref={containerRef}
-        data-testid="article-webview"
-        className={cn("relative w-full flex-1 min-h-0")}
-      >
-        <iframe
-          src={iframeSrc}
-          className="w-full h-full border-0"
-          title="SCP記事"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          onLoad={handleIframeLoad}
-        />
-      </div>
-      <FloatingFavoriteButton articleId={articleId} />
-    </div>
-  );
+  return {
+    title,
+    description,
+    robots: {
+      index: false,
+      follow: false,
+    },
+    openGraph: {
+      title: `${title} | SCPicks`,
+      description,
+      type: "article",
+    },
+    twitter: {
+      card: "summary",
+      title: `${title} | SCPicks`,
+      description,
+    },
+    alternates: {
+      canonical: `/article/${articleId}`,
+    },
+  };
+}
+
+export default async function ArticlePage({ params }: ArticlePageProps) {
+  const { articleId } = await params;
+  return <ArticlePageContent articleId={articleId} />;
 }
