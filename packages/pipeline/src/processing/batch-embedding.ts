@@ -181,7 +181,9 @@ export class BatchEmbeddingProcessor {
   async getPendingArticles(limit = 2000): Promise<DbArticle[]> {
     const { data, error } = await this.supabase
       .from("scp_articles")
-      .select("*")
+      .select(
+        "id, article_id, title, content, content_hash, rating, lang, embedding_status, last_processed_at"
+      )
       .eq("embedding_status", "pending")
       .limit(limit);
 
