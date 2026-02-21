@@ -79,7 +79,7 @@ const INJECTED_STYLE = [
   // CSSソースコード表示用collapsible-blockを非表示にする（記事本文ではない）
   ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}",
   // ライセンス帰属表示: 記事末尾に配置、コンテンツと一緒にスクロール
-  ".attribution-footer{border-top:1px solid #e5e7eb;background:#f9fafb;padding:8px 16px 80px;text-align:center;font-size:12px;color:#6b7280;margin-top:32px}",
+  ".attribution-footer{border-top:1px solid #e5e7eb;background:#f9fafb;padding:8px 16px 20px;text-align:center;font-size:12px;color:#6b7280;margin-top:32px}",
   ".attribution-footer a{color:#3b82f6;text-decoration:underline}",
   "</style>",
 ].join("");
@@ -485,7 +485,15 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     // HTMLレスポンス: DOM抽出 + HTML再構築 + URL書き換え
     if (contentType.includes("text/html")) {
       const html = await response.text();
-      const processed = processHtml(html, path);
+      let processed = processHtml(html, path);
+
+      // nav=floating: FloatingUI（推薦画面）がある場合、帰属表示バーのpadding-bottomを拡大
+      if (c.req.query("nav") === "floating") {
+        processed = processed.replace(
+          "</head>",
+          "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
+        );
+      }
 
       return new Response(processed, {
         status: response.status,

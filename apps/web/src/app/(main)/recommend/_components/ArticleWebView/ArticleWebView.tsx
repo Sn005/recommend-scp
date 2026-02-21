@@ -18,7 +18,7 @@ const SCP_JP_HTTP_ORIGIN = "http://scp-jp.wikidot.com";
 
 function toProxyUrl(url: string): string {
   if (url.startsWith(SCP_JP_HTTP_ORIGIN)) {
-    return "/api/wiki-proxy" + url.slice(SCP_JP_HTTP_ORIGIN.length);
+    return "/api/wiki-proxy" + url.slice(SCP_JP_HTTP_ORIGIN.length) + "?nav=floating";
   }
   return url;
 }
