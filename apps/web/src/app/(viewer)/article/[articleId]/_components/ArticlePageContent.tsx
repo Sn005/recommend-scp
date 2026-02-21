@@ -8,7 +8,7 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import { FloatingFavoriteButton } from "./FloatingFavoriteButton";
-import { AttributionFooter } from "./AttributionFooter";
+import { AttributionFooter } from "@/shared/components/ui/AttributionFooter";
 
 interface ArticlePageContentProps {
   readonly articleId: string;
