@@ -225,7 +225,9 @@ export class BatchTaggingProcessor {
   async getPendingArticles(limit = 10000): Promise<DbTaggingArticle[]> {
     const { data, error } = await this.supabase
       .from("scp_articles")
-      .select("*")
+      .select(
+        "id, article_id, title, content, content_hash, rating, lang, tagging_status, last_tagged_at"
+      )
       .eq("tagging_status", "pending")
       .limit(limit);
 

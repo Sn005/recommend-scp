@@ -5,10 +5,10 @@ story_id: "012-02"
 epic_title: "スロークエリ最適化"
 story_title: "初回スロークエリ対応"
 title: "スロークエリ改善実装"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
 updated_at: "2026-02-15"
-completed_at: null
+completed_at: "2026-02-21"
 ---
 
 # Subtask: スロークエリ改善実装
@@ -28,17 +28,17 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [ ] WHEN スロークエリの改善方針が決定された際
+- [x] WHEN スロークエリの改善方針が決定された際
       GIVEN インデックス追加が必要な場合
       THEN マイグレーションファイルが `supabase/migrations/` に命名規則に従って作成されている
       AND `CREATE INDEX` 文が適切なカラム・インデックスタイプで記述されている
 
-- [ ] WHEN RPC関数の最適化が必要な場合
+- [x] WHEN RPC関数の最適化が必要な場合
       GIVEN 関数本体の書き換えが改善方針に含まれている場合
       THEN `DROP FUNCTION IF EXISTS` + `CREATE OR REPLACE FUNCTION` パターンで安全に更新されている
       AND 入出力の型（引数・戻り値）が変更されていない
 
-- [ ] WHILE マイグレーションを作成している間
+- [x] WHILE マイグレーションを作成している間
       THE SYSTEM SHALL 既存のテストが全て通過する状態を保つ
 
 ## 設計
@@ -64,11 +64,15 @@ supabase/migrations/YYYYMMDD000001_optimize_[対象]_[改善内容].sql
 - `DROP FUNCTION IF EXISTS` + `CREATE OR REPLACE FUNCTION` パターンを使用
 - マイグレーションファイルにはコメントで「Why」を記述
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
-- 確認日:
-- 確認者:
-- 備考:
+- 確認日: 2026-02-21
+- 確認者: Claude
+- 備考: 改善A〜G全て実装完了。code-reviewerレビュー指摘（翻訳フィルタリグレッション・search_path欠落）も修正済み。
 
 ## 参照ドキュメント
 
