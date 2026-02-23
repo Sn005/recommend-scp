@@ -4,6 +4,7 @@
  * @see specs/005-backend-api/005-06-feedback-api/005-06-01.md
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { FeedbackRepository } from "../repository";
 import type { VisitorsRepository } from "../../visitors/repository";
@@ -55,7 +56,7 @@ describe("FeedbackService", () => {
     service = new FeedbackService(
       mockFeedbackRepo as unknown as FeedbackRepository,
       mockVisitorsRepo as unknown as VisitorsRepository,
-      mockSupabase as unknown as import("@supabase/supabase-js").SupabaseClient
+      mockSupabase as unknown as SupabaseClient
     );
   });
 
