@@ -74,11 +74,6 @@ class MockPreferenceStorage implements PreferenceStorage {
     this.recommendationLogs.set(log.visitorId, existing);
   }
 
-  async getDislikedArticleIds(visitorId: string): Promise<string[]> {
-    const feedbacks = this.feedbacks.get(visitorId) ?? [];
-    return feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId);
-  }
-
   async getArticleTags(articleId: string): Promise<string[] | null> {
     return this.articleTags.get(articleId) ?? null;
   }
@@ -119,7 +114,7 @@ class MockPreferenceStorage implements PreferenceStorage {
 const createFeedback = (
   visitorId: string,
   articleId: string,
-  type: "like" | "dislike",
+  type: "like" | "next",
   createdAt = "2026-01-20T12:00:00Z"
 ): Feedback => ({
   id: `${visitorId}_${articleId}`,
@@ -268,11 +263,11 @@ describe("PreferenceProfiler", () => {
     });
   });
 
-  describe("AC3: WHEN ユーザーが記事をDislikeした際", () => {
+  describe("AC3: WHEN ユーザーが記事をNextした際", () => {
     it("THEN その記事のタグに対する重みは変化しない", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]);
-      storage.setFeedbacks(visitorId, [createFeedback(visitorId, "scp-001", "dislike")]);
+      storage.setFeedbacks(visitorId, [createFeedback(visitorId, "scp-001", "next")]);
 
       // Act
       const profile = await profiler.recalculateProfile(visitorId);
@@ -283,10 +278,10 @@ describe("PreferenceProfiler", () => {
 
     it("AND 他のLike記事のタグ重みには影響しない", async () => {
       // Arrange
-      storage.setArticleTags("scp-001", ["horror"]); // Dislike
+      storage.setArticleTags("scp-001", ["horror"]); // Next
       storage.setArticleTags("scp-002", ["surreal"]); // Like
       storage.setFeedbacks(visitorId, [
-        createFeedback(visitorId, "scp-001", "dislike"),
+        createFeedback(visitorId, "scp-001", "next"),
         createFeedback(visitorId, "scp-002", "like"),
       ]);
 
@@ -296,18 +291,6 @@ describe("PreferenceProfiler", () => {
       // Assert
       expect(profile.tagWeights["horror"]).toBeUndefined();
       expect(profile.tagWeights["surreal"]).toBe(1.0);
-    });
-
-    it("AND 記事単体が除外リストに追加される", async () => {
-      // Arrange
-      storage.setArticleTags("scp-001", ["horror"]);
-      storage.setFeedbacks(visitorId, [createFeedback(visitorId, "scp-001", "dislike")]);
-
-      // Act
-      const dislikedIds = await storage.getDislikedArticleIds(visitorId);
-
-      // Assert
-      expect(dislikedIds).toContain("scp-001");
     });
   });
 

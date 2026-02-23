@@ -41,17 +41,17 @@ export const createFeedbackRoutes = (
   const visitorsRepo = new VisitorsRepository(supabase);
   const service = serviceFactory
     ? serviceFactory()
-    : new FeedbackService(feedbackRepo, visitorsRepo);
+    : new FeedbackService(feedbackRepo, visitorsRepo, supabase);
 
   /**
    * POST /feedback
    *
-   * フィードバック（Like/Dislike/Skip）を記録
+   * フィードバック（Like/Next）を記録
    *
    * @param visitorId - 訪問者ID（UUID）
    * @param articleId - 記事ID
-   * @param type - フィードバック種別（like/dislike/skip）
-   * @param metadata - スキップメタデータ（オプション）
+   * @param type - フィードバック種別（like/next）
+   * @param metadata - 「次へ」操作メタデータ（オプション）
    *
    * Response:
    * - 200 OK: フィードバック記録成功
@@ -62,8 +62,8 @@ export const createFeedbackRoutes = (
     "/",
     zValidator("json", recordFeedbackSchema, throwOnValidationError),
     async (c) => {
-      const { visitorId, articleId, type } = c.req.valid("json");
-      await service.recordFeedback(visitorId, articleId, type);
+      const { visitorId, articleId, type, metadata } = c.req.valid("json");
+      await service.recordFeedback(visitorId, articleId, type, metadata);
 
       return c.json(
         {

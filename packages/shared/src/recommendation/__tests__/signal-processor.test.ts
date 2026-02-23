@@ -1,6 +1,6 @@
 /**
  * @file SignalProcessor テスト
- * @description Like/Dislikeフィードバック処理のテスト
+ * @description Like/Nextフィードバック処理のテスト
  * @see specs/004-recommend/004-04-signal-processing/004-04-01.md
  */
 
@@ -78,11 +78,6 @@ class MockPreferenceStorage implements PreferenceStorage {
     const existing = this.recommendationLogs.get(log.visitorId) ?? [];
     existing.push(log);
     this.recommendationLogs.set(log.visitorId, existing);
-  }
-
-  async getDislikedArticleIds(visitorId: string): Promise<string[]> {
-    const feedbacks = this.feedbacks.get(visitorId) ?? [];
-    return feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId);
   }
 
   async getArticleTags(articleId: string): Promise<string[] | null> {
@@ -187,30 +182,18 @@ describe("SignalProcessor", () => {
     });
   });
 
-  describe("AC2: WHEN ユーザーが記事をDislikeした際", () => {
+  describe("AC2: WHEN ユーザーが記事をNextした際", () => {
     it("THEN Feedbackレコードがストレージに保存される", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]);
 
       // Act
-      await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      await processor.recordFeedback(visitorId, "scp-001", "next");
 
       // Assert
       const feedbacks = storage.getFeedbacksDirectly(visitorId);
       expect(feedbacks).toHaveLength(1);
-      expect(feedbacks[0].type).toBe("dislike");
-    });
-
-    it("AND その記事がgetDislikedArticleIdsの結果に含まれる", async () => {
-      // Arrange
-      storage.setArticleTags("scp-001", ["horror"]);
-
-      // Act
-      await processor.recordFeedback(visitorId, "scp-001", "dislike");
-
-      // Assert
-      const dislikedIds = await storage.getDislikedArticleIds(visitorId);
-      expect(dislikedIds).toContain("scp-001");
+      expect(feedbacks[0].type).toBe("next");
     });
 
     it("AND タグ重みは変化しない", async () => {
@@ -218,20 +201,20 @@ describe("SignalProcessor", () => {
       storage.setArticleTags("scp-001", ["horror"]);
 
       // Act
-      const profile = await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      const profile = await processor.recordFeedback(visitorId, "scp-001", "next");
 
-      // Assert: Dislikeした記事のタグは重みに影響しない
+      // Assert: Nextした記事のタグは重みに影響しない
       expect(profile.tagWeights["horror"]).toBeUndefined();
     });
 
     it("AND 他のLike記事のタグ重みには影響しない", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]); // これをLike
-      storage.setArticleTags("scp-002", ["surreal"]); // これをDislike
+      storage.setArticleTags("scp-002", ["surreal"]); // これをNext
 
       // Act
       await processor.recordFeedback(visitorId, "scp-001", "like");
-      const profile = await processor.recordFeedback(visitorId, "scp-002", "dislike");
+      const profile = await processor.recordFeedback(visitorId, "scp-002", "next");
 
       // Assert
       expect(profile.tagWeights["horror"]).toBe(1.0);
@@ -240,26 +223,26 @@ describe("SignalProcessor", () => {
   });
 
   describe("AC3: WHEN 同じ記事に対して再度フィードバックした際", () => {
-    it("THEN 既存のフィードバックが上書きされる（Like → Dislike）", async () => {
+    it("THEN 既存のフィードバックが上書きされる（Like → Next）", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]);
 
-      // Act: 最初にLike、次にDislike
+      // Act: 最初にLike、次にNext
       await processor.recordFeedback(visitorId, "scp-001", "like");
-      await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      await processor.recordFeedback(visitorId, "scp-001", "next");
 
       // Assert
       const feedbacks = storage.getFeedbacksDirectly(visitorId);
       expect(feedbacks).toHaveLength(1);
-      expect(feedbacks[0].type).toBe("dislike");
+      expect(feedbacks[0].type).toBe("next");
     });
 
-    it("THEN 既存のフィードバックが上書きされる（Dislike → Like）", async () => {
+    it("THEN 既存のフィードバックが上書きされる（Next → Like）", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]);
 
-      // Act: 最初にDislike、次にLike
-      await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      // Act: 最初にNext、次にLike
+      await processor.recordFeedback(visitorId, "scp-001", "next");
       const profile = await processor.recordFeedback(visitorId, "scp-001", "like");
 
       // Assert
@@ -276,12 +259,12 @@ describe("SignalProcessor", () => {
       storage.setArticleTags("scp-001", ["horror"]);
       storage.setArticleTags("scp-002", ["surreal"]);
 
-      // Act: scp-001をLike、scp-002をLike、scp-001をDislikeに変更
+      // Act: scp-001をLike、scp-002をLike、scp-001をNextに変更
       await processor.recordFeedback(visitorId, "scp-001", "like");
       await processor.recordFeedback(visitorId, "scp-002", "like");
-      const profile = await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      const profile = await processor.recordFeedback(visitorId, "scp-001", "next");
 
-      // Assert: scp-001はDislikeになったのでhorrorの重みは0、surrealのみ
+      // Assert: scp-001はNextになったのでhorrorの重みは0、surrealのみ
       expect(profile.tagWeights["surreal"]).toBe(1.0);
       expect(profile.tagWeights["horror"]).toBeUndefined();
     });
@@ -464,10 +447,10 @@ describe("SignalProcessor", () => {
       expect(profile.tagWeights["surreal"]).toBe(1.0);
     });
 
-    it("Dislike済み記事の読了は追加の重みが付かない", async () => {
+    it("Next済み記事の読了は追加の重みが付かない", async () => {
       // Arrange
       storage.setArticleTags("scp-001", ["horror"]);
-      await processor.recordFeedback(visitorId, "scp-001", "dislike");
+      await processor.recordFeedback(visitorId, "scp-001", "next");
       await processor.recordView(visitorId, "scp-001", 120);
 
       // Act

@@ -54,7 +54,7 @@ const STARTER_PACK_TAGS: Record<Exclude<StarterPackType, "custom">, Record<strin
 /**
  * 嗜好プロファイル計算クラス
  *
- * ユーザーの行動履歴（Like/Dislike/閲覧）から嗜好プロファイルを計算する。
+ * ユーザーの行動履歴（Like/Next/閲覧）から嗜好プロファイルを計算する。
  */
 export class PreferenceProfiler {
   constructor(private storage: PreferenceStorage) {}
@@ -62,10 +62,9 @@ export class PreferenceProfiler {
   /**
    * 嗜好プロファイルを再計算
    *
-   * フィードバック（Like/Dislike）と閲覧履歴から嗜好プロファイルを計算する。
-   * - Like: +1.0
-   * - 読了（Likeなし）: +0.3
-   * - Dislike: 0（タグ重みに影響しない）
+   * フィードバック（Like/Next）と閲覧履歴から嗜好プロファイルを計算する。
+   * - Like: +1.0（レガシー互換）
+   * - 読了（フィードバックなし）: +0.3
    *
    * @param visitorId 訪問者ID
    * @returns 計算された嗜好プロファイル
@@ -154,7 +153,7 @@ export class PreferenceProfiler {
    * @returns タグ名 → 重み値のマップ
    */
   private async calculateTagWeights(
-    feedbacks: { articleId: string; type: "like" | "dislike" | "skip" }[],
+    feedbacks: { articleId: string; type: "like" | "next" }[],
     viewHistories: { articleId: string; duration?: number }[]
   ): Promise<Record<string, number>> {
     const weights: Record<string, number> = {};
@@ -164,10 +163,8 @@ export class PreferenceProfiler {
       feedbacks.filter((f) => f.type === "like").map((f) => f.articleId)
     );
 
-    // Dislike記事のIDセット
-    const dislikedArticleIds = new Set(
-      feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId)
-    );
+    // フィードバック済み記事のIDセット
+    const feedbackArticleIds = new Set(feedbacks.map((f) => f.articleId));
 
     // Like記事のタグに+1.0
     for (const articleId of likedArticleIds) {
@@ -179,13 +176,12 @@ export class PreferenceProfiler {
       }
     }
 
-    // 読了記事（LikeもDislikeもない）のタグに+0.3
+    // 読了記事（フィードバックなし）のタグに+0.3
     const completedViews = viewHistories.filter(
       (vh) =>
         vh.duration !== undefined &&
         vh.duration >= WEIGHTS.MIN_VIEW_DURATION &&
-        !likedArticleIds.has(vh.articleId) &&
-        !dislikedArticleIds.has(vh.articleId)
+        !feedbackArticleIds.has(vh.articleId)
     );
 
     // 記事ごとに1回だけカウント（重複除去）

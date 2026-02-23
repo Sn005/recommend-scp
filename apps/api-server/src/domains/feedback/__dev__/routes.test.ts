@@ -103,11 +103,12 @@ describe("POST /feedback - 正常系", () => {
     expect(mockService.recordFeedback).toHaveBeenCalledWith(
       VALID_VISITOR_ID,
       VALID_ARTICLE_ID,
-      "like"
+      "like",
+      undefined
     );
   });
 
-  it("Dislikeフィードバックが記録される", async () => {
+  it("Nextフィードバックが記録される", async () => {
     // Arrange
     mockService.recordFeedback.mockResolvedValue(undefined);
 
@@ -118,7 +119,7 @@ describe("POST /feedback - 正常系", () => {
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "dislike",
+        type: "next",
       }),
     });
 
@@ -126,7 +127,8 @@ describe("POST /feedback - 正常系", () => {
     expect(mockService.recordFeedback).toHaveBeenCalledWith(
       VALID_VISITOR_ID,
       VALID_ARTICLE_ID,
-      "dislike"
+      "next",
+      undefined
     );
   });
 
@@ -170,14 +172,14 @@ describe("POST /feedback - 正常系", () => {
       }),
     });
 
-    // Act - 2回目（dislikeに変更）
+    // Act - 2回目（nextに変更）
     const res = await app.request("/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "dislike",
+        type: "next",
       }),
     });
 
@@ -373,7 +375,7 @@ describe("POST /feedback - 異常系（バリデーションエラー）", () =>
   });
 });
 
-describe("POST /feedback - AC-9: skip型対応", () => {
+describe("POST /feedback - AC-9: next型対応", () => {
   let app: Hono;
   let mockService: MockService;
 
@@ -385,7 +387,7 @@ describe("POST /feedback - AC-9: skip型対応", () => {
     app = createTestApp(mockService);
   });
 
-  it("type=skipのリクエストで200を返す", async () => {
+  it("type=nextのリクエストで200を返す", async () => {
     // Arrange
     mockService.recordFeedback.mockResolvedValue(undefined);
 
@@ -396,7 +398,7 @@ describe("POST /feedback - AC-9: skip型対応", () => {
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
       }),
     });
 
@@ -404,9 +406,15 @@ describe("POST /feedback - AC-9: skip型対応", () => {
     expect(res.status).toBe(200);
   });
 
-  it("skip型フィードバックがserviceに渡される", async () => {
+  it("next型フィードバックがmetadataとともにserviceに渡される", async () => {
     // Arrange
     mockService.recordFeedback.mockResolvedValue(undefined);
+
+    const metadata = {
+      scrollDepth: 30,
+      dwellTime: 15,
+      interestLevel: "medium",
+    };
 
     // Act
     await app.request("/feedback", {
@@ -415,20 +423,17 @@ describe("POST /feedback - AC-9: skip型対応", () => {
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
-        metadata: {
-          scrollDepth: 30,
-          dwellTime: 15,
-          interestLevel: "neutral",
-        },
+        type: "next",
+        metadata,
       }),
     });
 
-    // Assert: metadataはスキーマで受け付けるがserviceにはtype情報のみ渡す
+    // Assert: metadataも4番目の引数としてserviceに渡される
     expect(mockService.recordFeedback).toHaveBeenCalledWith(
       VALID_VISITOR_ID,
       VALID_ARTICLE_ID,
-      "skip"
+      "next",
+      metadata
     );
   });
 
@@ -443,31 +448,18 @@ describe("POST /feedback - AC-9: skip型対応", () => {
       body: JSON.stringify({
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
       }),
     });
 
     // Assert
     expect(res.status).toBe(200);
-  });
-
-  it("type=dislikeが引き続き受け付けられる（後方互換性）", async () => {
-    // Arrange
-    mockService.recordFeedback.mockResolvedValue(undefined);
-
-    // Act
-    const res = await app.request("/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        visitorId: VALID_VISITOR_ID,
-        articleId: VALID_ARTICLE_ID,
-        type: "dislike",
-      }),
-    });
-
-    // Assert
-    expect(res.status).toBe(200);
+    expect(mockService.recordFeedback).toHaveBeenCalledWith(
+      VALID_VISITOR_ID,
+      VALID_ARTICLE_ID,
+      "next",
+      undefined
+    );
   });
 });
 

@@ -12,11 +12,11 @@ const VALID_ARTICLE_ID = "scp-173";
 
 describe("recordFeedbackSchema", () => {
   describe("AC-9: API後方互換性", () => {
-    it("type=skipのリクエストが検証に通る", () => {
+    it("type=nextのリクエストが検証に通る", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
       };
 
       const result = recordFeedbackSchema.safeParse(input);
@@ -34,11 +34,11 @@ describe("recordFeedbackSchema", () => {
       expect(result.success).toBe(true);
     });
 
-    it("type=dislikeのリクエストが検証に通る（後方互換性）", () => {
+    it("type=nextのリクエストが検証に通る（like以外の有効な型）", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "dislike",
+        type: "next",
       };
 
       const result = recordFeedbackSchema.safeParse(input);
@@ -49,11 +49,11 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         },
       };
 
@@ -65,7 +65,7 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
       };
 
       const result = recordFeedbackSchema.safeParse(input);
@@ -76,11 +76,11 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: 0,
           dwellTime: 0,
-          interestLevel: "skip",
+          interestLevel: "low",
         },
       };
 
@@ -105,11 +105,11 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: -10,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         },
       };
 
@@ -121,11 +121,11 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: 150,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         },
       };
 
@@ -137,11 +137,11 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: 30,
           dwellTime: -5,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         },
       };
 
@@ -153,7 +153,7 @@ describe("recordFeedbackSchema", () => {
       const input = {
         visitorId: VALID_VISITOR_ID,
         articleId: VALID_ARTICLE_ID,
-        type: "skip",
+        type: "next",
         metadata: {
           scrollDepth: 30,
           dwellTime: 15,

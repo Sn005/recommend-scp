@@ -10,12 +10,14 @@
 export interface SignalWeights {
   /** お気に入り重み（デフォルト: 2.0） */
   favorite: number;
-  /** Like重み（デフォルト: 1.0） */
+  /** Like重み（デフォルト: 1.0）レガシー互換 */
   like: number;
   /** 読了重み（デフォルト: 0.3） */
   view: number;
-  /** Dislike重み（デフォルト: -0.5） */
-  dislike: number;
+  /** 深く読んで次へ（デフォルト: 0.3） */
+  nextHigh: number;
+  /** 即通過で次へ（デフォルト: -0.2） */
+  nextLow: number;
 }
 
 /**
@@ -24,12 +26,14 @@ export interface SignalWeights {
 export interface PreferenceVectorInput {
   /** お気に入り記事ID */
   favoriteArticleIds: string[];
-  /** Like記事ID */
+  /** Like記事ID（レガシー互換） */
   likedArticleIds: string[];
-  /** 読了記事ID（Like/Dislikeなし） */
+  /** 読了記事ID（フィードバックなしの閲覧のみ） */
   viewedArticleIds: string[];
-  /** Dislike記事ID */
-  dislikedArticleIds: string[];
+  /** 深く読んで次へ（interestLevel: high） */
+  nextHighArticleIds: string[];
+  /** 即通過で次へ（interestLevel: low） */
+  nextLowArticleIds: string[];
 }
 
 /**
@@ -47,14 +51,15 @@ export const DEFAULT_SIGNAL_WEIGHTS: SignalWeights = {
   favorite: 2.0,
   like: 1.0,
   view: 0.3,
-  dislike: -0.5,
+  nextHigh: 0.3,
+  nextLow: -0.2,
 };
 
 /**
  * 重み付け平均を計算
  *
  * 各ベクトルに重みを乗じて合計し、重みの絶対値の合計で割って正規化する。
- * 負の重み（Dislike）も正しく処理される。
+ * 負の重み（nextLow）も正しく処理される。
  *
  * @param items 重み付きベクトルの配列
  * @returns 重み付け平均ベクトル（空配列の場合は空配列）
@@ -120,13 +125,13 @@ async function collectWeightedVectors(
 /**
  * 嗜好ベクトルを計算
  *
- * ユーザーの行動履歴（Like/お気に入り/読了/Dislike）から
- * Embeddingの重み付け平均として嗜好ベクトルを計算する。
+ * ユーザーの行動履歴から Embeddingの重み付け平均として嗜好ベクトルを計算する。
  *
  * - お気に入り: 重み2.0（最も強い正シグナル）
- * - Like: 重み1.0（強い正シグナル）
- * - 読了: 重み0.3（弱い正シグナル）
- * - Dislike: 重み-0.5（負のシグナル、避けるべき方向）
+ * - Like: 重み1.0（レガシー互換）
+ * - 読了: 重み0.3（フィードバックなしの閲覧のみ）
+ * - 深読み次へ: 重み0.3（interestLevel: high）
+ * - 即通過次へ: 重み-0.2（interestLevel: low、弱いネガティブ）
  *
  * @param input 行動履歴（各シグナルの記事ID配列）
  * @param getEmbedding 記事IDからEmbeddingを取得する関数
@@ -145,15 +150,23 @@ export async function calculatePreferenceVector(
   };
 
   // 全てのシグナルを収集
-  const [favoriteVectors, likedVectors, viewedVectors, dislikedVectors] = await Promise.all([
-    collectWeightedVectors(input.favoriteArticleIds, effectiveWeights.favorite, getEmbedding),
-    collectWeightedVectors(input.likedArticleIds, effectiveWeights.like, getEmbedding),
-    collectWeightedVectors(input.viewedArticleIds, effectiveWeights.view, getEmbedding),
-    collectWeightedVectors(input.dislikedArticleIds, effectiveWeights.dislike, getEmbedding),
-  ]);
+  const [favoriteVectors, likedVectors, viewedVectors, nextHighVectors, nextLowVectors] =
+    await Promise.all([
+      collectWeightedVectors(input.favoriteArticleIds, effectiveWeights.favorite, getEmbedding),
+      collectWeightedVectors(input.likedArticleIds, effectiveWeights.like, getEmbedding),
+      collectWeightedVectors(input.viewedArticleIds, effectiveWeights.view, getEmbedding),
+      collectWeightedVectors(input.nextHighArticleIds, effectiveWeights.nextHigh, getEmbedding),
+      collectWeightedVectors(input.nextLowArticleIds, effectiveWeights.nextLow, getEmbedding),
+    ]);
 
   // 全てのベクトルを結合
-  const allVectors = [...favoriteVectors, ...likedVectors, ...viewedVectors, ...dislikedVectors];
+  const allVectors = [
+    ...favoriteVectors,
+    ...likedVectors,
+    ...viewedVectors,
+    ...nextHighVectors,
+    ...nextLowVectors,
+  ];
 
   // 履歴が空（有効なEmbeddingが1つもない）の場合はnull
   if (allVectors.length === 0) {

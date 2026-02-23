@@ -15,7 +15,8 @@ interface MockFeedbackRow {
   id: string;
   visitor_id: string;
   article_id: string;
-  type: "like" | "dislike";
+  type: "like" | "next";
+  metadata?: Record<string, unknown> | null;
   created_at: string;
 }
 
@@ -83,6 +84,7 @@ describe("FeedbackRepository", () => {
           visitor_id: "visitor-1",
           article_id: "article-1",
           type: "like",
+          metadata: null,
           created_at: "2025-01-20T10:00:00Z",
         },
         { onConflict: "visitor_id,article_id" }
@@ -94,7 +96,7 @@ describe("FeedbackRepository", () => {
         id: "uuid-123",
         visitor_id: "visitor-1",
         article_id: "article-1",
-        type: "dislike",
+        type: "next",
         created_at: "2025-01-20T12:00:00Z",
       };
       const queryMock = createUpsertQueryMock({ data: mockRow, error: null });
@@ -103,16 +105,16 @@ describe("FeedbackRepository", () => {
       const result: Feedback = await repository.save({
         visitorId: "visitor-1",
         articleId: "article-1",
-        type: "dislike",
+        type: "next",
         createdAt: "2025-01-20T12:00:00Z",
       });
 
-      expect(result.type).toBe("dislike");
+      expect(result.type).toBe("next");
       expect(queryMock.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           visitor_id: "visitor-1",
           article_id: "article-1",
-          type: "dislike",
+          type: "next",
         }),
         { onConflict: "visitor_id,article_id" }
       );
@@ -150,7 +152,7 @@ describe("FeedbackRepository", () => {
           id: "uuid-2",
           visitor_id: "visitor-1",
           article_id: "article-2",
-          type: "dislike",
+          type: "next",
           created_at: "2025-01-20T11:00:00Z",
         },
       ];
@@ -164,7 +166,7 @@ describe("FeedbackRepository", () => {
       expect(result[0].articleId).toBe("article-1");
       expect(result[0].type).toBe("like");
       expect(result[1].articleId).toBe("article-2");
-      expect(result[1].type).toBe("dislike");
+      expect(result[1].type).toBe("next");
       expect(mockFrom).toHaveBeenCalledWith("feedback");
     });
 

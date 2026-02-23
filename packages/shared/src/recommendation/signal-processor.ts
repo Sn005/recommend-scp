@@ -11,7 +11,7 @@ import type { PreferenceProfiler } from "./profiler";
 /**
  * シグナル処理クラス
  *
- * ユーザーのLike/Dislikeフィードバックを処理し、
+ * ユーザーのLike/Nextフィードバックを処理し、
  * ストレージへの保存と嗜好プロファイルの更新を行う。
  * 閲覧履歴の記録と読了シグナル処理も担当する。
  */
@@ -30,14 +30,14 @@ export class SignalProcessor {
    *
    * @param visitorId 訪問者ID
    * @param articleId 記事ID
-   * @param type フィードバック種別（like/dislike）
+   * @param type フィードバック種別（like/next）
    * @returns 更新後の嗜好プロファイル
    * @throws visitorIdまたはarticleIdが空の場合
    */
   async recordFeedback(
     visitorId: string,
     articleId: string,
-    type: "like" | "dislike"
+    type: "like" | "next"
   ): Promise<PreferenceProfile> {
     // バリデーション
     if (!visitorId) {

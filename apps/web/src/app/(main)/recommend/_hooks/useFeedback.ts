@@ -1,6 +1,6 @@
 /**
  * @file useFeedback フック
- * @description Like/Skip/Favoriteフィードバックを記録するフック
+ * @description Next/Favoriteフィードバックを記録するフック
  * @see specs/006-frontend/006-05-transition-ux/006-05-06.md
  */
 "use client";
@@ -8,13 +8,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "@/shared/lib/api-client";
 import { useVisitorId } from "@/shared/hooks/useVisitorId";
-import type { FeedbackType, SkipMetadata, UseFeedbackResult } from "../_types";
+import type { FeedbackType, NextMetadata, UseFeedbackResult } from "../_types";
 
 /** 保留中のフィードバック */
 interface PendingFeedback {
   articleId: string;
   type: FeedbackType;
-  metadata?: SkipMetadata;
+  metadata?: NextMetadata;
   retryCount: number;
   timestamp: number;
 }
@@ -23,27 +23,26 @@ const STORAGE_KEY = "scp-feedback-pending";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
-/** 優先度: favorite > like > skip */
+/** 優先度: favorite > next */
 const PRIORITY: Record<FeedbackType, number> = {
-  favorite: 3,
-  like: 2,
-  skip: 1,
+  favorite: 2,
+  next: 1,
 };
 
 /**
  * interest_levelを算出する
  *
- * AC-3: scrollDepth < 10 AND dwellTime < 5 → "skip"
- * AC-5: scrollDepth > 50 AND dwellTime > 30 → "like"
- * AC-4: それ以外 → "neutral"
+ * scrollDepth < 10 AND dwellTime < 5 → "low"（即通過）
+ * scrollDepth > 50 AND dwellTime > 30 → "high"（深く読んだ）
+ * それ以外 → "medium"（通常）
  */
 export function calculateInterestLevel(
   scrollDepth: number,
   dwellTime: number
-): "skip" | "neutral" | "like" {
-  if (scrollDepth < 10 && dwellTime < 5) return "skip";
-  if (scrollDepth > 50 && dwellTime > 30) return "like";
-  return "neutral";
+): "low" | "medium" | "high" {
+  if (scrollDepth < 10 && dwellTime < 5) return "low";
+  if (scrollDepth > 50 && dwellTime > 30) return "high";
+  return "medium";
 }
 
 /**
@@ -81,9 +80,9 @@ export function useFeedback(): UseFeedbackResult {
   }, [pendingQueue]);
 
   // フィードバック送信（内部）
-  // NOTE: feedback APIは like/skip のみサポート。favoriteは別APIで管理するため、ここでは成功とみなす
+  // NOTE: feedback APIは next のみサポート。favoriteは別APIで管理するため、ここでは成功とみなす
   const sendFeedback = useCallback(
-    async (articleId: string, type: FeedbackType, metadata?: SkipMetadata): Promise<boolean> => {
+    async (articleId: string, type: FeedbackType, metadata?: NextMetadata): Promise<boolean> => {
       if (!visitorId) return false;
 
       // favoriteはfeedback APIではなく別途favorites APIで管理
@@ -153,7 +152,7 @@ export function useFeedback(): UseFeedbackResult {
 
   // フィードバック記録（共通）
   const recordFeedback = useCallback(
-    async (articleId: string, type: FeedbackType, metadata?: SkipMetadata) => {
+    async (articleId: string, type: FeedbackType, metadata?: NextMetadata) => {
       // バリデーション
       if (!articleId || !visitorId) return;
 
@@ -182,13 +181,8 @@ export function useFeedback(): UseFeedbackResult {
   );
 
   // 各フィードバック種別のラッパー
-  const recordLike = useCallback(
-    (articleId: string) => recordFeedback(articleId, "like"),
-    [recordFeedback]
-  );
-
-  const recordSkip = useCallback(
-    (articleId: string, metadata: SkipMetadata) => recordFeedback(articleId, "skip", metadata),
+  const recordNext = useCallback(
+    (articleId: string, metadata: NextMetadata) => recordFeedback(articleId, "next", metadata),
     [recordFeedback]
   );
 
@@ -208,8 +202,7 @@ export function useFeedback(): UseFeedbackResult {
   );
 
   return {
-    recordLike,
-    recordSkip,
+    recordNext,
     recordFavorite,
     hasRecorded,
     getFeedbackType,

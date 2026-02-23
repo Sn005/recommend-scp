@@ -4,6 +4,7 @@
  * @see specs/005-backend-api/005-06-feedback-api/005-06-01.md
  */
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { FeedbackRepository } from "../repository";
 import type { VisitorsRepository } from "../../visitors/repository";
@@ -18,6 +19,9 @@ describe("FeedbackService", () => {
   };
   let mockVisitorsRepo: {
     findByVisitorId: ReturnType<typeof vi.fn>;
+  };
+  let mockSupabase: {
+    from: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
@@ -43,9 +47,16 @@ describe("FeedbackService", () => {
       }),
     };
 
+    mockSupabase = {
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({ error: null }),
+      }),
+    };
+
     service = new FeedbackService(
       mockFeedbackRepo as unknown as FeedbackRepository,
-      mockVisitorsRepo as unknown as VisitorsRepository
+      mockVisitorsRepo as unknown as VisitorsRepository,
+      mockSupabase as unknown as SupabaseClient
     );
   });
 
@@ -63,15 +74,15 @@ describe("FeedbackService", () => {
       );
     });
 
-    it("Dislikeを記録できる", async () => {
-      await service.recordFeedback("visitor-1", "article-1", "dislike");
+    it("Nextを記録できる", async () => {
+      await service.recordFeedback("visitor-1", "article-1", "next");
 
       expect(mockVisitorsRepo.findByVisitorId).toHaveBeenCalledWith("visitor-1");
       expect(mockFeedbackRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
           visitorId: "visitor-1",
           articleId: "article-1",
-          type: "dislike",
+          type: "next",
         })
       );
     });
