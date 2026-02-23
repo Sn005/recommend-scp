@@ -63,7 +63,7 @@ const DEFAULT_CONFIG: RecommendationEngineConfig = {
  * 推薦エンジン
  *
  * ユーザーの嗜好ベクトル（preferenceEmbedding）に基づいて
- * コサイン類似度で推薦候補を取得し、既読・Dislike済み記事を除外する。
+ * コサイン類似度で推薦候補を取得し、既読記事を除外する。
  * 80/20の確率で好み推薦とセレンディピティ推薦を切り替える。
  */
 export class RecommendationEngine {
@@ -288,52 +288,37 @@ export class RecommendationEngine {
   }
 
   /**
-   * フィードバックを記録
-   *
-   * @param visitorId 訪問者ID
-   * @param articleId 記事ID
-   * @param type フィードバック種別（like/dislike）
-   */
-  async recordFeedback(
-    visitorId: string,
-    articleId: string,
-    type: "like" | "dislike"
-  ): Promise<void> {
-    await this.storage.addFeedback({
-      id: `${visitorId}_${articleId}`,
-      visitorId,
-      articleId,
-      type,
-      createdAt: new Date().toISOString(),
-    });
-  }
-
-  /**
    * 除外対象のIDを取得
    *
-   * 既読・Dislike済み・お気に入り済みの記事IDを収集する。
+   * 既読・フィードバック済み・お気に入り済みの記事IDを収集する。
    *
    * @param visitorId 訪問者ID
    * @returns 除外対象の記事ID配列
    */
   private async getExcludedIds(visitorId: string): Promise<string[]> {
-    const [viewHistory, disliked, favorites] = await Promise.all([
+    const [viewHistory, feedbacks, favorites] = await Promise.all([
       this.storage.getViewHistory(visitorId),
-      this.storage.getDislikedArticleIds(visitorId),
+      this.storage.getFeedback(visitorId),
       this.storage.getFavorites(visitorId),
     ]);
 
     const viewedIds = viewHistory.map((h) => h.articleId);
+    const feedbackIds = feedbacks.map((f) => f.articleId);
     const favoriteIds = favorites.map((f) => f.articleId);
 
-    return [...new Set([...viewedIds, ...disliked, ...favoriteIds])];
+    return [...new Set([...viewedIds, ...feedbackIds, ...favoriteIds])];
   }
 
   /**
    * 嗜好ベクトルを再計算
    *
-   * 最新の行動履歴（Like/Dislike/お気に入り/閲覧）に基づいて
+   * 最新の行動履歴（お気に入り/Like/閲覧/Next）に基づいて
    * 嗜好ベクトルを再計算し、プロファイルを更新する。
+   *
+   * Next操作のinterestLevelに応じて重みを分配:
+   * - high: 深く読んだ → 重み0.3（弱いポジティブ）
+   * - medium: 通常の閲覧 → 重み0（影響なし、ベクトル計算に含まない）
+   * - low: 即通過 → 重み-0.2（弱いネガティブ）
    *
    * @param visitorId 訪問者ID
    */
@@ -344,11 +329,21 @@ export class RecommendationEngine {
       this.storage.getFavorites(visitorId),
     ]);
 
+    // Next操作をinterestLevelで分類
+    const nextFeedbacks = feedbacks.filter((f) => f.type === "next");
+    const nextHighArticleIds = nextFeedbacks
+      .filter((f) => f.metadata?.interestLevel === "high")
+      .map((f) => f.articleId);
+    const nextLowArticleIds = nextFeedbacks
+      .filter((f) => f.metadata?.interestLevel === "low")
+      .map((f) => f.articleId);
+
     const input: PreferenceVectorInput = {
       favoriteArticleIds: favorites.map((f) => f.articleId),
       likedArticleIds: feedbacks.filter((f) => f.type === "like").map((f) => f.articleId),
       viewedArticleIds: this.getViewedOnlyArticleIds(feedbacks, viewHistories),
-      dislikedArticleIds: feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId),
+      nextHighArticleIds,
+      nextLowArticleIds,
     };
 
     const preferenceEmbedding = await calculatePreferenceVector(input, (id) =>
@@ -368,13 +363,13 @@ export class RecommendationEngine {
   }
 
   /**
-   * Like/Dislikeなしの読了記事IDを取得
+   * フィードバックなしの読了記事IDを取得
    *
-   * フィードバック（Like/Dislike）がなく、閲覧のみの記事を抽出する。
+   * フィードバック（Like/Next）がなく、閲覧のみの記事を抽出する。
    *
    * @param feedbacks フィードバック配列
    * @param viewHistories 閲覧履歴配列
-   * @returns Like/Dislikeなしの閲覧記事ID配列
+   * @returns フィードバックなしの閲覧記事ID配列
    */
   private getViewedOnlyArticleIds(feedbacks: Feedback[], viewHistories: ViewHistory[]): string[] {
     const feedbackArticleIds = new Set(feedbacks.map((f) => f.articleId));

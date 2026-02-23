@@ -140,8 +140,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 0, dwellTime: 0, interestLevel: "skip" },
+          type: "next",
+          metadata: { scrollDepth: 0, dwellTime: 0, interestLevel: "low" },
         });
         expect(result.success).toBe(true);
       });
@@ -150,8 +150,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 50, dwellTime: 3600, interestLevel: "neutral" },
+          type: "next",
+          metadata: { scrollDepth: 50, dwellTime: 3600, interestLevel: "medium" },
         });
         expect(result.success).toBe(true);
       });
@@ -162,8 +162,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 100, dwellTime: 86400, interestLevel: "like" },
+          type: "next",
+          metadata: { scrollDepth: 100, dwellTime: 86400, interestLevel: "high" },
         });
         expect(result.success).toBe(true);
       });
@@ -172,8 +172,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 100, dwellTime: 86401, interestLevel: "like" },
+          type: "next",
+          metadata: { scrollDepth: 100, dwellTime: 86401, interestLevel: "high" },
         });
         expect(result.success).toBe(false);
       });
@@ -182,8 +182,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 50, dwellTime: 86399, interestLevel: "neutral" },
+          type: "next",
+          metadata: { scrollDepth: 50, dwellTime: 86399, interestLevel: "medium" },
         });
         expect(result.success).toBe(true);
       });
@@ -192,8 +192,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 0, dwellTime: -1, interestLevel: "skip" },
+          type: "next",
+          metadata: { scrollDepth: 0, dwellTime: -1, interestLevel: "low" },
         });
         expect(result.success).toBe(false);
       });
@@ -204,8 +204,8 @@ describe("009-02-01: Zodスキーマ制約強化 - feedback", () => {
         const result = recordFeedbackSchema.safeParse({
           visitorId: VALID_UUID,
           articleId: "scp-173",
-          type: "skip",
-          metadata: { scrollDepth: 50, dwellTime: 1000000, interestLevel: "neutral" },
+          type: "next",
+          metadata: { scrollDepth: 50, dwellTime: 1000000, interestLevel: "medium" },
         });
         expect(result.success).toBe(false);
       });

@@ -5,7 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Feedback } from "@recommend-scp/shared/storage/server";
+import type { Feedback, FeedbackMetadata } from "@recommend-scp/shared/storage/server";
 import { DatabaseError } from "../../lib/errors";
 
 /** DB行の型（snake_case） */
@@ -13,7 +13,8 @@ interface FeedbackRow {
   id: string;
   visitor_id: string;
   article_id: string;
-  type: "like" | "dislike" | "skip";
+  type: "like" | "next";
+  metadata: FeedbackMetadata | null;
   created_at: string;
 }
 
@@ -42,13 +43,14 @@ export class FeedbackRepository {
           visitor_id: feedback.visitorId,
           article_id: feedback.articleId,
           type: feedback.type,
+          metadata: feedback.metadata ?? null,
           created_at: feedback.createdAt,
         },
         {
           onConflict: "visitor_id,article_id",
         }
       )
-      .select("id, visitor_id, article_id, type, created_at")
+      .select("id, visitor_id, article_id, type, metadata, created_at")
       .single();
 
     if (error) throw new DatabaseError(error);
@@ -65,7 +67,7 @@ export class FeedbackRepository {
   getByVisitorId = async (visitorId: string): Promise<Feedback[]> => {
     const { data, error } = await this.supabase
       .from("feedback")
-      .select("id, visitor_id, article_id, type, created_at")
+      .select("id, visitor_id, article_id, type, metadata, created_at")
       .eq("visitor_id", visitorId);
 
     if (error) throw new DatabaseError(error);
@@ -82,6 +84,7 @@ export class FeedbackRepository {
     visitorId: row.visitor_id,
     articleId: row.article_id,
     type: row.type,
+    metadata: row.metadata ?? undefined,
     createdAt: row.created_at,
   });
 }

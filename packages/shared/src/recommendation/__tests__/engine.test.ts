@@ -29,7 +29,6 @@ function createMockStorage(overrides: Partial<PreferenceStorage> = {}): Preferen
     addFeedback: vi.fn().mockResolvedValue(undefined),
     getRecommendationLog: vi.fn().mockResolvedValue([]),
     addRecommendationLog: vi.fn().mockResolvedValue(undefined),
-    getDislikedArticleIds: vi.fn().mockResolvedValue([]),
     getArticleTags: vi.fn().mockResolvedValue(null),
     getFavorites: vi.fn().mockResolvedValue([]),
     addFavorite: vi.fn().mockResolvedValue(undefined),
@@ -184,12 +183,19 @@ describe("RecommendationEngine", () => {
       );
     });
 
-    it("Dislike済み記事が除外される", async () => {
+    it("フィードバック済み記事が除外される", async () => {
       const storage = createMockStorage({
         getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
         getViewHistory: vi.fn().mockResolvedValue([]),
-        getDislikedArticleIds: vi.fn().mockResolvedValue(["disliked-article"]),
-        getFeedback: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([
+          {
+            id: "fb1",
+            visitorId,
+            articleId: "feedback-article",
+            type: "next",
+            createdAt: "2024-01-01T00:00:00.000Z",
+          },
+        ]),
         getFavorites: vi.fn().mockResolvedValue([]),
       });
 
@@ -205,7 +211,7 @@ describe("RecommendationEngine", () => {
 
       expect(vectorSearch.searchByEmbedding).toHaveBeenCalledWith(
         expect.objectContaining({
-          excludeIds: expect.arrayContaining(["disliked-article"]),
+          excludeIds: expect.arrayContaining(["feedback-article"]),
         })
       );
     });
@@ -324,55 +330,6 @@ describe("RecommendationEngine", () => {
       expect(storage.addViewHistory).toHaveBeenCalledWith(
         expect.objectContaining({
           id: expect.stringMatching(/^visitor-123_article-123_\d+$/),
-        })
-      );
-    });
-  });
-
-  describe("recordFeedback", () => {
-    it("Likeフィードバックが保存される", async () => {
-      const storage = createMockStorage();
-      const vectorSearch = createMockVectorSearch();
-
-      const engine = new RecommendationEngine(storage, vectorSearch);
-      await engine.recordFeedback(visitorId, "article-123", "like");
-
-      expect(storage.addFeedback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          visitorId,
-          articleId: "article-123",
-          type: "like",
-          createdAt: expect.any(String),
-        })
-      );
-    });
-
-    it("Dislikeフィードバックが保存される", async () => {
-      const storage = createMockStorage();
-      const vectorSearch = createMockVectorSearch();
-
-      const engine = new RecommendationEngine(storage, vectorSearch);
-      await engine.recordFeedback(visitorId, "article-456", "dislike");
-
-      expect(storage.addFeedback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          visitorId,
-          articleId: "article-456",
-          type: "dislike",
-        })
-      );
-    });
-
-    it("フィードバックIDが正しいフォーマットで生成される", async () => {
-      const storage = createMockStorage();
-      const vectorSearch = createMockVectorSearch();
-
-      const engine = new RecommendationEngine(storage, vectorSearch);
-      await engine.recordFeedback(visitorId, "article-123", "like");
-
-      expect(storage.addFeedback).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "visitor-123_article-123",
         })
       );
     });

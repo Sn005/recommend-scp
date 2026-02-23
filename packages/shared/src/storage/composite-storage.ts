@@ -108,15 +108,6 @@ export class CompositeStorage implements PreferenceStorage {
   }
 
   /**
-   * Dislike済み記事IDを取得
-   * @param visitorId 訪問者ID
-   * @returns Dislike済み記事IDの配列
-   */
-  getDislikedArticleIds(visitorId: string): Promise<string[]> {
-    return this.localStorage.getDislikedArticleIds(visitorId);
-  }
-
-  /**
    * 記事のタグ情報を取得
    *
    * Supabaseのタグストレージから取得する。

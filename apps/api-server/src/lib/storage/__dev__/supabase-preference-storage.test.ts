@@ -66,7 +66,7 @@ const mockFeedbackRows = [
     id: "uuid-2",
     visitor_id: "visitor-123",
     article_id: "SCP-096",
-    type: "dislike",
+    type: "next",
     created_at: "2025-01-19T10:00:00Z",
   },
 ];
@@ -152,7 +152,6 @@ describe("SupabasePreferenceStorage", () => {
       expect(typeof storage.addFeedback).toBe("function");
       expect(typeof storage.getRecommendationLog).toBe("function");
       expect(typeof storage.addRecommendationLog).toBe("function");
-      expect(typeof storage.getDislikedArticleIds).toBe("function");
       expect(typeof storage.getArticleTags).toBe("function");
       expect(typeof storage.getFavorites).toBe("function");
       expect(typeof storage.addFavorite).toBe("function");
@@ -366,7 +365,7 @@ describe("SupabasePreferenceStorage", () => {
 
       expect(feedback).toHaveLength(2);
       expect(feedback[0].type).toBe("like");
-      expect(feedback[1].type).toBe("dislike");
+      expect(feedback[1].type).toBe("next");
     });
   });
 
@@ -452,14 +451,14 @@ describe("SupabasePreferenceStorage", () => {
 
       const feedback2: Feedback = {
         ...feedback1,
-        type: "dislike",
+        type: "next",
       };
 
       await storage.addFeedback(feedback1);
       await storage.addFeedback(feedback2);
 
       expect(upsertMock).toHaveBeenCalledTimes(2);
-      expect(upsertMock).toHaveBeenLastCalledWith(expect.objectContaining({ type: "dislike" }), {
+      expect(upsertMock).toHaveBeenLastCalledWith(expect.objectContaining({ type: "next" }), {
         onConflict: "visitor_id,article_id",
       });
     });
@@ -527,37 +526,6 @@ describe("SupabasePreferenceStorage", () => {
         recommended_at: "2025-01-20T12:00:00Z",
         clicked: false,
       });
-    });
-  });
-
-  describe("getDislikedArticleIds", () => {
-    it("type='dislike'のarticle_idリストを取得できる", async () => {
-      const dislikeRows = [{ article_id: "SCP-173" }, { article_id: "SCP-096" }];
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: dislikeRows, error: null }),
-          }),
-        }),
-      });
-
-      const articleIds = await storage.getDislikedArticleIds("visitor-123");
-
-      expect(articleIds).toEqual(["SCP-173", "SCP-096"]);
-    });
-
-    it("dislikeが0件の場合は空配列を返す", async () => {
-      mockFrom.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
-          }),
-        }),
-      });
-
-      const articleIds = await storage.getDislikedArticleIds("visitor-123");
-
-      expect(articleIds).toEqual([]);
     });
   });
 

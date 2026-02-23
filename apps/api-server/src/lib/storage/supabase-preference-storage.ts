@@ -123,6 +123,7 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
         visitor_id: feedback.visitorId,
         article_id: feedback.articleId,
         type: feedback.type,
+        metadata: feedback.metadata ?? null,
         created_at: feedback.createdAt,
       },
       { onConflict: "visitor_id,article_id" }
@@ -165,21 +166,6 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
       clicked: log.clicked,
     });
     if (error) throw new DatabaseError(error);
-  };
-
-  /**
-   * Dislike済み記事IDを取得
-   */
-  getDislikedArticleIds = async (visitorId: string): Promise<string[]> => {
-    const result = await this.supabase
-      .from("feedback")
-      .select("article_id")
-      .eq("visitor_id", visitorId)
-      .eq("type", "dislike");
-
-    if (result.error) throw new DatabaseError(result.error);
-    const rows = (result.data as DbRow[] | null) ?? [];
-    return rows.map((d) => d.article_id as string);
   };
 
   /**
@@ -398,7 +384,8 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
     id: row.id as string,
     visitorId: row.visitor_id as string,
     articleId: row.article_id as string,
-    type: row.type as "like" | "dislike",
+    type: row.type as "like" | "next",
+    metadata: (row.metadata as Feedback["metadata"]) ?? undefined,
     createdAt: row.created_at as string,
   });
 

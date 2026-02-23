@@ -32,8 +32,7 @@ const mockUseInfiniteArticlesResult = {
 };
 
 const mockUseFeedbackResult = {
-  recordLike: vi.fn(),
-  recordSkip: vi.fn(),
+  recordNext: vi.fn(),
   recordFavorite: vi.fn(),
   hasRecorded: vi.fn().mockReturnValue(false),
   getFeedbackType: vi.fn().mockReturnValue(null),
@@ -77,9 +76,9 @@ vi.mock("../_hooks/useInfiniteArticles", () => ({
 vi.mock("../_hooks/useFeedback", () => ({
   useFeedback: () => mockUseFeedbackResult,
   calculateInterestLevel: (scrollDepth: number, dwellTime: number) => {
-    if (scrollDepth < 10 && dwellTime < 5) return "skip";
-    if (scrollDepth > 50 && dwellTime > 30) return "like";
-    return "neutral";
+    if (scrollDepth < 10 && dwellTime < 5) return "low";
+    if (scrollDepth > 50 && dwellTime > 30) return "high";
+    return "medium";
   },
 }));
 
@@ -556,7 +555,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
   // ===== AC-4: フィードバック統合 =====
 
   describe("AC-4: フィードバック統合", () => {
-    it("「次へ」タップでrecordSkipがscrollDepthとdwellTimeメタデータ付きで呼ばれる", async () => {
+    it("「次へ」タップでrecordNextがscrollDepthとdwellTimeメタデータ付きで呼ばれる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
@@ -564,12 +563,12 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
-      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledWith(
+      expect(mockUseFeedbackResult.recordNext).toHaveBeenCalledWith(
         "scp-173",
         expect.objectContaining({
           scrollDepth: expect.any(Number) as number,
           dwellTime: expect.any(Number) as number,
-          interestLevel: expect.stringMatching(/^(skip|neutral|like)$/) as string,
+          interestLevel: expect.stringMatching(/^(low|medium|high)$/) as string,
         })
       );
     });
@@ -582,7 +581,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(mockUseFeedbackResult).not.toHaveProperty("recordDislike");
     });
 
-    it("skipメタデータにscrollDepthとdwellTimeが含まれる", async () => {
+    it("nextメタデータにscrollDepthとdwellTimeが含まれる", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
@@ -590,7 +589,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       const nextButton = await screen.findByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
-      const callArgs = mockUseFeedbackResult.recordSkip.mock.calls[0];
+      const callArgs = mockUseFeedbackResult.recordNext.mock.calls[0];
       expect(callArgs[1]).toHaveProperty("scrollDepth");
       expect(callArgs[1]).toHaveProperty("dwellTime");
       expect(callArgs[1]).toHaveProperty("interestLevel");
@@ -637,8 +636,8 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       fireEvent.click(nextButton);
       fireEvent.click(nextButton);
 
-      // recordSkipは最初の1回のみ
-      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledTimes(1);
+      // recordNextは最初の1回のみ
+      expect(mockUseFeedbackResult.recordNext).toHaveBeenCalledTimes(1);
     });
 
     it("TransitionCard表示中は追加の遷移を受け付けない", async () => {
@@ -684,7 +683,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       // 2回目のクリック → 再び遷移可能
       fireEvent.click(nextButton);
 
-      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledTimes(2);
+      expect(mockUseFeedbackResult.recordNext).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -700,13 +699,13 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(screen.queryByTestId("scroll-end-trigger-scp-173")).not.toBeInTheDocument();
     });
 
-    it("スクロール到達でrecordLikeが呼ばれない", () => {
+    it("スクロール到達でrecordNextが呼ばれない", () => {
       setupDefaultArticles();
       render(<RecommendPage />);
       dismissInitialCard();
 
-      // onScrollEndが渡されていないため、recordLikeは呼ばれない
-      expect(mockUseFeedbackResult.recordLike).not.toHaveBeenCalled();
+      // onScrollEndが渡されていないため、recordNextは呼ばれない
+      expect(mockUseFeedbackResult.recordNext).not.toHaveBeenCalled();
     });
 
     it("スクロール到達でgoToNextが呼ばれない", () => {
@@ -917,8 +916,8 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       const nextButton = screen.getByLabelText("次の記事へ");
       await userEvent.click(nextButton);
 
-      // 1回目のrecordSkipでscrollDepth=50が記録される
-      expect(mockUseFeedbackResult.recordSkip).toHaveBeenCalledWith(
+      // 1回目のrecordNextでscrollDepth=50が記録される
+      expect(mockUseFeedbackResult.recordNext).toHaveBeenCalledWith(
         "scp-173",
         expect.objectContaining({
           scrollDepth: 50,

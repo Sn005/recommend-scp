@@ -34,7 +34,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const mockEmbedding = createMockEmbedding(1536, [1.0, 0.5, 0.25]);
       const getEmbedding = async (id: string) => (id === "scp-001" ? mockEmbedding : null);
@@ -56,7 +57,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
 
       // Act
@@ -74,7 +76,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: [],
         likedArticleIds: ["scp-001"],
         viewedArticleIds: ["scp-002"],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       // scp-001: [1, 0], scp-002: [0, 1]
       const embeddings: Record<string, number[]> = {
@@ -101,7 +104,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"], // [1, 0, 0] 重み2.0
         likedArticleIds: ["scp-002"], // [0, 1, 0] 重み1.0
         viewedArticleIds: ["scp-003"], // [0, 0, 1] 重み0.3
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const embeddings: Record<string, number[]> = {
         "scp-001": [1.0, 0.0, 0.0],
@@ -130,7 +134,8 @@ describe("calculatePreferenceVector", () => {
       expect(DEFAULT_SIGNAL_WEIGHTS.favorite).toBe(2.0);
       expect(DEFAULT_SIGNAL_WEIGHTS.like).toBe(1.0);
       expect(DEFAULT_SIGNAL_WEIGHTS.view).toBe(0.3);
-      expect(DEFAULT_SIGNAL_WEIGHTS.dislike).toBe(-0.5);
+      expect(DEFAULT_SIGNAL_WEIGHTS.nextHigh).toBe(0.3);
+      expect(DEFAULT_SIGNAL_WEIGHTS.nextLow).toBe(-0.2);
     });
 
     it("お気に入り（2.0）はLike（1.0）より強い影響を持つ", async () => {
@@ -139,7 +144,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"], // 重み2.0
         likedArticleIds: ["scp-002"], // 重み1.0
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       // 両方異なる方向
       const embeddings: Record<string, number[]> = {
@@ -164,7 +170,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"],
         likedArticleIds: ["scp-002"],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const embeddings: Record<string, number[]> = {
         "scp-001": [1.0, 0.0],
@@ -189,14 +196,15 @@ describe("calculatePreferenceVector", () => {
     });
   });
 
-  describe("AC3: WHEN ユーザーにDislike履歴がある場合", () => {
-    it("Dislike記事が負の重み（-0.5）で減算される", async () => {
-      // Arrange: Like 1件 + Dislike 1件（同じ方向）
+  describe("AC3: WHEN ユーザーにnextLow履歴がある場合", () => {
+    it("nextLow記事が負の重み（-0.2）で減算される", async () => {
+      // Arrange: Like 1件 + nextLow 1件（同じ方向）
       const input: PreferenceVectorInput = {
         favoriteArticleIds: [],
         likedArticleIds: ["scp-001"], // [1, 0] 重み1.0
         viewedArticleIds: [],
-        dislikedArticleIds: ["scp-002"], // [1, 0] 重み-0.5
+        nextHighArticleIds: [],
+        nextLowArticleIds: ["scp-002"], // [1, 0] 重み-0.2
       };
       const embeddings: Record<string, number[]> = {
         "scp-001": [1.0, 0.0],
@@ -208,19 +216,20 @@ describe("calculatePreferenceVector", () => {
       const result = await calculatePreferenceVector(input, getEmbedding);
 
       // Assert
-      // ([1,0]*1.0 + [1,0]*(-0.5)) / (|1.0| + |-0.5|) = [0.5, 0] / 1.5 = [0.333, 0]
+      // ([1,0]*1.0 + [1,0]*(-0.2)) / (|1.0| + |-0.2|) = [0.8, 0] / 1.2 = [0.667, 0]
       expect(result).not.toBeNull();
-      expect(result![0]).toBeCloseTo(0.5 / 1.5, 3);
+      expect(result![0]).toBeCloseTo(0.8 / 1.2, 3);
       expect(result![1]).toBe(0);
     });
 
-    it("Likeと反対方向のDislikeで「避けるべき方向」が反映される", async () => {
+    it("Likeと反対方向のnextLowで「避けるべき方向」が反映される", async () => {
       // Arrange
       const input: PreferenceVectorInput = {
         favoriteArticleIds: [],
         likedArticleIds: ["scp-001"], // [1, 0]
         viewedArticleIds: [],
-        dislikedArticleIds: ["scp-002"], // [0, 1] 直交方向
+        nextHighArticleIds: [],
+        nextLowArticleIds: ["scp-002"], // [0, 1] 直交方向
       };
       const embeddings: Record<string, number[]> = {
         "scp-001": [1.0, 0.0],
@@ -232,26 +241,27 @@ describe("calculatePreferenceVector", () => {
       const result = await calculatePreferenceVector(input, getEmbedding);
 
       // Assert
-      // ([1,0]*1.0 + [0,1]*(-0.5)) / (1.0 + 0.5) = [1, -0.5] / 1.5
+      // ([1,0]*1.0 + [0,1]*(-0.2)) / (1.0 + 0.2) = [1, -0.2] / 1.2
       expect(result).not.toBeNull();
-      expect(result![0]).toBeCloseTo(1.0 / 1.5, 3);
-      expect(result![1]).toBeCloseTo(-0.5 / 1.5, 3);
+      expect(result![0]).toBeCloseTo(1.0 / 1.2, 3);
+      expect(result![1]).toBeCloseTo(-0.2 / 1.2, 3);
     });
 
-    it("Dislikeのみの場合でもベクトルが生成される（負の方向）", async () => {
+    it("nextLowのみの場合でもベクトルが生成される（負の方向）", async () => {
       // Arrange
       const input: PreferenceVectorInput = {
         favoriteArticleIds: [],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: ["scp-001"],
+        nextHighArticleIds: [],
+        nextLowArticleIds: ["scp-001"],
       };
 
       // Act
       const result = await calculatePreferenceVector(input, async () => [1.0, 0.0]);
 
       // Assert: 負の重みのみでも計算される
-      // [1,0]*(-0.5) / 0.5 = [-1, 0]
+      // [1,0]*(-0.2) / 0.2 = [-1, 0]
       expect(result).not.toBeNull();
       expect(result).toHaveLength(2);
       expect(result![0]).toBe(-1.0);
@@ -266,7 +276,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: [],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
 
       // Act
@@ -282,7 +293,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001", "scp-999"], // scp-999は存在しない
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const embeddings: Record<string, number[]> = {
         "scp-001": [1.0, 0.0],
@@ -304,7 +316,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001", "scp-002"],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const getEmbedding = async () => null; // 常にnull
 
@@ -323,7 +336,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001"], // 重み2.0
         likedArticleIds: ["scp-001"], // 重み1.0
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const getEmbedding = async () => [1.0, 0.0];
 
@@ -342,7 +356,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: ["scp-001", "scp-error"],
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const getEmbedding = async (id: string) => {
         if (id === "scp-error") throw new Error("Network error");
@@ -364,7 +379,8 @@ describe("calculatePreferenceVector", () => {
         favoriteArticleIds: articleIds,
         likedArticleIds: [],
         viewedArticleIds: [],
-        dislikedArticleIds: [],
+        nextHighArticleIds: [],
+        nextLowArticleIds: [],
       };
       const getEmbedding = async () => createMockEmbedding(1536, [1.0]);
 

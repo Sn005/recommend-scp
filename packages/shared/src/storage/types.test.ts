@@ -30,7 +30,6 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
         addFeedback: async (_feedback) => {},
         getRecommendationLog: async (_visitorId, _limit?) => [],
         addRecommendationLog: async (_log) => {},
-        getDislikedArticleIds: async (_visitorId) => [],
         getArticleTags: async (_articleId) => null,
         getFavorites: async (_visitorId) => [],
         addFavorite: async (_favorite) => {},
@@ -64,10 +63,6 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
       expectTypeOf<PreferenceStorage>().toHaveProperty("addRecommendationLog");
     });
 
-    it("Dislike記事取得メソッドを持つ", () => {
-      expectTypeOf<PreferenceStorage>().toHaveProperty("getDislikedArticleIds");
-    });
-
     it("getProfile は visitorId を受け取り PreferenceProfile | null を返す", () => {
       type GetProfileFn = PreferenceStorage["getProfile"];
       expectTypeOf<GetProfileFn>().parameters.toMatchTypeOf<[string]>();
@@ -90,12 +85,6 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
       type GetFeedbackByArticleFn = PreferenceStorage["getFeedbackByArticle"];
       expectTypeOf<GetFeedbackByArticleFn>().parameters.toMatchTypeOf<[string, string]>();
       expectTypeOf<GetFeedbackByArticleFn>().returns.resolves.toMatchTypeOf<Feedback | null>();
-    });
-
-    it("getDislikedArticleIds は visitorId を受け取り string[] を返す", () => {
-      type GetDislikedFn = PreferenceStorage["getDislikedArticleIds"];
-      expectTypeOf<GetDislikedFn>().parameters.toMatchTypeOf<[string]>();
-      expectTypeOf<GetDislikedFn>().returns.resolves.toMatchTypeOf<string[]>();
     });
   });
 
@@ -212,7 +201,7 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
   });
 
   describe("Feedback 型", () => {
-    it("type は 'like' または 'dislike' のみ", () => {
+    it("type は 'like' または 'next' のみ", () => {
       const like: Feedback = {
         id: "visitor-123_SCP-173",
         visitorId: "visitor-123",
@@ -221,16 +210,16 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
         createdAt: "2026-01-20T00:00:00Z",
       };
 
-      const dislike: Feedback = {
+      const next: Feedback = {
         id: "visitor-123_SCP-999",
         visitorId: "visitor-123",
         articleId: "SCP-999",
-        type: "dislike",
+        type: "next",
         createdAt: "2026-01-20T00:00:00Z",
       };
 
-      expectTypeOf(like.type).toEqualTypeOf<"like" | "dislike" | "skip">();
-      expectTypeOf(dislike.type).toEqualTypeOf<"like" | "dislike" | "skip">();
+      expectTypeOf(like.type).toEqualTypeOf<"like" | "next">();
+      expectTypeOf(next.type).toEqualTypeOf<"like" | "next">();
     });
   });
 

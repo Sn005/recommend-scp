@@ -6,7 +6,7 @@
  * 006-05-07: 遷移UX統合
  * - useIframePool: 3スロットCascade Prefetchプール
  * - TransitionCard: 遷移ヘッダーカード（フェードイン/アウト）
- * - useFeedback: recordSkip + メタデータ（scrollDepth, dwellTime）
+ * - useFeedback: recordNext + メタデータ（scrollDepth, dwellTime, interestLevel）
  * - FloatingUI: ProgressBarなし
  */
 "use client";
@@ -44,7 +44,7 @@ export default function RecommendPage() {
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
     useInfiniteArticles();
 
-  const { recordLike, recordSkip } = useFeedback();
+  const { recordNext } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite({
     articleId: currentArticle?.id,
@@ -159,19 +159,19 @@ export default function RecommendPage() {
     }
   }, [currentArticle]);
 
-  // AC-4 + AC-6: 次へボタンハンドラー（recordSkip + TransitionCard遷移）
+  // AC-4 + AC-6: 次へボタンハンドラー（recordNext + TransitionCard遷移）
   const handleNext = useCallback(() => {
     if (transitioningRef.current) return; // AC-6: 遷移中は操作をブロック
 
     const nextArticle = articles[currentIndex + 1] as (typeof articles)[number] | undefined;
     if (!nextArticle) return;
 
-    // AC-4: 暗黙的フィードバック（Skip + メタデータ）
+    // AC-4: 暗黙的フィードバック（Next + メタデータ）
     if (currentArticle) {
       const dwellTime = (Date.now() - articleStartTimeRef.current) / 1000;
       const currentScrollDepth = maxScrollDepthRef.current;
       const interestLevel = calculateInterestLevel(currentScrollDepth, dwellTime);
-      void recordSkip(currentArticle.id, {
+      void recordNext(currentArticle.id, {
         scrollDepth: currentScrollDepth,
         dwellTime,
         interestLevel,
@@ -180,15 +180,13 @@ export default function RecommendPage() {
 
     // AC-1: TransitionCard経由の遷移
     startTransitionWithCard();
-  }, [currentArticle, articles, currentIndex, recordSkip, startTransitionWithCard]);
+  }, [currentArticle, articles, currentIndex, recordNext, startTransitionWithCard]);
 
   // AC-8: お気に入りボタンハンドラー（遷移に影響しない）
+  // NOTE: recordLikeは廃止。お気に入りはfavorites APIのみで管理（重み2.0）
   const handleFavorite = useCallback(() => {
-    if (currentArticle) {
-      void recordLike(currentArticle.id);
-    }
     void toggleFavorite();
-  }, [currentArticle, recordLike, toggleFavorite]);
+  }, [toggleFavorite]);
 
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(

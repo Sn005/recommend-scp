@@ -9,6 +9,7 @@ export type {
   PreferenceProfile,
   ViewHistory,
   Feedback,
+  FeedbackMetadata,
   RecommendationLog,
   Favorite,
 } from "./types";

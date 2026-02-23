@@ -390,7 +390,7 @@ describe("004-01-02: IndexedDB実装", () => {
         id: "visitor1_scp-173",
         visitorId: "visitor1",
         articleId: "scp-173",
-        type: "dislike",
+        type: "next",
         createdAt: "2024-01-01T00:01:00Z",
       };
 
@@ -401,7 +401,7 @@ describe("004-01-02: IndexedDB実装", () => {
       // Assert
       const retrieved = await storage.getFeedback("visitor1");
       expect(retrieved).toHaveLength(1);
-      expect(retrieved[0].type).toBe("dislike");
+      expect(retrieved[0].type).toBe("next");
     });
 
     it("特定記事へのフィードバックを取得できる", async () => {
@@ -428,40 +428,6 @@ describe("004-01-02: IndexedDB実装", () => {
 
       // Assert
       expect(result).toBeNull();
-    });
-
-    it("Dislike済み記事IDリストを取得できる", async () => {
-      // Arrange
-      await storage.addFeedback({
-        id: "visitor1_scp-173",
-        visitorId: "visitor1",
-        articleId: "scp-173",
-        type: "dislike",
-        createdAt: "2026-01-20T00:00:00Z",
-      });
-      await storage.addFeedback({
-        id: "visitor1_scp-682",
-        visitorId: "visitor1",
-        articleId: "scp-682",
-        type: "like",
-        createdAt: "2026-01-20T00:00:00Z",
-      });
-      await storage.addFeedback({
-        id: "visitor1_scp-999",
-        visitorId: "visitor1",
-        articleId: "scp-999",
-        type: "dislike",
-        createdAt: "2026-01-20T00:00:00Z",
-      });
-
-      // Act
-      const dislikedIds = await storage.getDislikedArticleIds("visitor1");
-
-      // Assert
-      expect(dislikedIds).toHaveLength(2);
-      expect(dislikedIds).toContain("scp-173");
-      expect(dislikedIds).toContain("scp-999");
-      expect(dislikedIds).not.toContain("scp-682");
     });
 
     it("異なる記事へのフィードバックは全て保存される", async () => {

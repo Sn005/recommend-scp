@@ -310,14 +310,6 @@ export class IndexedDBStorage implements PreferenceStorage {
   }
 
   /**
-   * Dislike済み記事IDを取得
-   */
-  async getDislikedArticleIds(visitorId: string): Promise<string[]> {
-    const feedbacks = await this.getFeedback(visitorId);
-    return feedbacks.filter((f) => f.type === "dislike").map((f) => f.articleId);
-  }
-
-  /**
    * 記事のタグ情報を取得
    *
    * IndexedDBには記事タグを保存していないためnullを返す。

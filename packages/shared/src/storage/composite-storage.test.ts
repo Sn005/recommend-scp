@@ -29,7 +29,6 @@ function createMockLocalStorage(): PreferenceStorage {
     addFeedback: vi.fn(),
     getRecommendationLog: vi.fn(),
     addRecommendationLog: vi.fn(),
-    getDislikedArticleIds: vi.fn(),
     getArticleTags: vi.fn(),
     getFavorites: vi.fn(),
     addFavorite: vi.fn(),
@@ -252,18 +251,6 @@ describe("004-01-04: CompositeStorage", () => {
 
       // Assert
       expect(mockLocalStorage.addRecommendationLog).toHaveBeenCalledWith(log);
-    });
-
-    it("getDislikedArticleIds が localStorage に委譲される", async () => {
-      // Arrange
-      vi.mocked(mockLocalStorage.getDislikedArticleIds).mockResolvedValue(["scp-173", "scp-682"]);
-
-      // Act
-      const result = await compositeStorage.getDislikedArticleIds("visitor-123");
-
-      // Assert
-      expect(mockLocalStorage.getDislikedArticleIds).toHaveBeenCalledWith("visitor-123");
-      expect(result).toEqual(["scp-173", "scp-682"]);
     });
   });
 

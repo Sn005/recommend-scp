@@ -8,19 +8,24 @@
 import { z } from "zod";
 
 /**
- * スキップメタデータのバリデーションスキーマ
+ * 「次へ」操作メタデータのバリデーションスキーマ
+ *
+ * interestLevel: 行動パターン分類
+ * - low: 即通過（scrollDepth < 10 かつ dwellTime < 5秒）
+ * - medium: 通常の閲覧
+ * - high: 深く読んだ（scrollDepth > 50 かつ dwellTime > 30秒）
  */
 const feedbackMetadataSchema = z.object({
   scrollDepth: z.number().min(0).max(100),
   dwellTime: z.number().min(0).max(86400),
-  interestLevel: z.enum(["skip", "neutral", "like"]),
+  interestLevel: z.enum(["low", "medium", "high"]),
 });
 
 /**
  * POST /feedback リクエストボディのバリデーションスキーマ
  *
- * AC-9: "skip"型を追加、メタデータをオプショナルで受付
- * 後方互換性: "dislike"も引き続き受け付ける
+ * - like: レガシー互換（フロントエンドからは発火しない）
+ * - next: 「次へ」操作（旧skip）。metadataで行動パターンを記録
  */
 export const recordFeedbackSchema = z.object({
   visitorId: z.string().uuid(),
@@ -29,7 +34,7 @@ export const recordFeedbackSchema = z.object({
     .min(1)
     .max(100)
     .regex(/^[a-zA-Z0-9\-_]+$/),
-  type: z.enum(["like", "dislike", "skip"]),
+  type: z.enum(["like", "next"]),
   metadata: feedbackMetadataSchema.optional(),
 });
 

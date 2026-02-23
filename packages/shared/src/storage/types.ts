@@ -74,13 +74,6 @@ export interface PreferenceStorage {
   addRecommendationLog(log: RecommendationLog): Promise<void>;
 
   /**
-   * Dislike済み記事IDを取得
-   * @param visitorId 訪問者ID
-   * @returns Dislike済み記事IDの配列
-   */
-  getDislikedArticleIds(visitorId: string): Promise<string[]>;
-
-  /**
    * 記事のタグ情報を取得
    * @param articleId 記事ID
    * @returns タグの配列。記事が存在しない場合はnull
@@ -195,9 +188,26 @@ export interface ViewHistory {
 }
 
 /**
+ * フィードバックメタデータ
+ *
+ * 「次へ」操作時の暗黙的シグナル。
+ * interestLevelはscrollDepthとdwellTimeから導出される行動パターン分類。
+ */
+export interface FeedbackMetadata {
+  /** スクロール深度（0-100%） */
+  scrollDepth: number;
+  /** 滞在時間（秒） */
+  dwellTime: number;
+  /** 興味度（行動パターン分類） */
+  interestLevel: "low" | "medium" | "high";
+}
+
+/**
  * フィードバック
  *
- * ユーザーの記事に対するフィードバック（Like/Dislike）。
+ * ユーザーの記事に対するフィードバック。
+ * - like: 明示的な「いいね」（現在はフロントエンドから発火しない。レガシー互換）
+ * - next: 「次へ」操作。metadataで行動パターンを記録
  */
 export interface Feedback {
   /** 複合ID: `${visitorId}_${articleId}` */
@@ -210,7 +220,10 @@ export interface Feedback {
   articleId: string;
 
   /** フィードバック種別 */
-  type: "like" | "dislike" | "skip";
+  type: "like" | "next";
+
+  /** メタデータ（next操作時の暗黙的シグナル） */
+  metadata?: FeedbackMetadata;
 
   /** 作成日時（ISO 8601形式） */
   createdAt: string;

@@ -85,41 +85,46 @@ describe("useFeedback", () => {
     vi.useRealTimers();
   });
 
-  describe("AC-1: Dislike記録の廃止", () => {
+  describe("AC-1: Dislike/Like記録の廃止", () => {
     it("recordDislikeメソッドが存在しない", () => {
       const { result } = renderHook(() => useFeedback());
       expect(result.current).not.toHaveProperty("recordDislike");
     });
 
-    it("recordSkipメソッドが存在する", () => {
+    it("recordLikeメソッドが存在しない", () => {
       const { result } = renderHook(() => useFeedback());
-      expect(result.current).toHaveProperty("recordSkip");
-      expect(typeof result.current.recordSkip).toBe("function");
+      expect(result.current).not.toHaveProperty("recordLike");
+    });
+
+    it("recordNextメソッドが存在する", () => {
+      const { result } = renderHook(() => useFeedback());
+      expect(result.current).toHaveProperty("recordNext");
+      expect(typeof result.current.recordNext).toBe("function");
     });
   });
 
   describe("AC-2: 暗黙的フィードバックの記録", () => {
-    it("recordSkip()でtype=skipのフィードバックが送信される", async () => {
+    it("recordNext()でtype=nextのフィードバックが送信される", async () => {
       const { result } = renderHook(() => useFeedback());
       const metadata = {
         scrollDepth: 30,
         dwellTime: 15,
-        interestLevel: "neutral" as const,
+        interestLevel: "medium" as const,
       };
 
       await act(async () => {
-        await result.current.recordSkip("scp-173", metadata);
+        await result.current.recordNext("scp-173", metadata);
       });
 
       expect(mockApi.feedback.$post).toHaveBeenCalledWith({
         json: {
           visitorId: "test-visitor-id",
           articleId: "scp-173",
-          type: "skip",
+          type: "next",
           metadata: {
             scrollDepth: 30,
             dwellTime: 15,
-            interestLevel: "neutral",
+            interestLevel: "medium",
           },
         },
       });
@@ -130,11 +135,11 @@ describe("useFeedback", () => {
       const metadata = {
         scrollDepth: 70,
         dwellTime: 45,
-        interestLevel: "like" as const,
+        interestLevel: "high" as const,
       };
 
       await act(async () => {
-        await result.current.recordSkip("scp-096", metadata);
+        await result.current.recordNext("scp-096", metadata);
       });
 
       expect(mockApi.feedback.$post).toHaveBeenCalledWith(
@@ -144,7 +149,7 @@ describe("useFeedback", () => {
             metadata: {
               scrollDepth: 70,
               dwellTime: 45,
-              interestLevel: "like",
+              interestLevel: "high",
             },
           }),
         })
@@ -152,80 +157,58 @@ describe("useFeedback", () => {
     });
   });
 
-  describe("AC-3: 低興味判定（skip）", () => {
-    it("scrollDepth=5%, dwellTime=3sでinterestLevel=skipが算出される", () => {
-      expect(calculateInterestLevel(5, 3)).toBe("skip");
+  describe("AC-3: 低興味判定（low）", () => {
+    it("scrollDepth=5%, dwellTime=3sでinterestLevel=lowが算出される", () => {
+      expect(calculateInterestLevel(5, 3)).toBe("low");
     });
 
-    it("scrollDepth=9%, dwellTime=4sでinterestLevel=skipが算出される（境界値内）", () => {
-      expect(calculateInterestLevel(9, 4)).toBe("skip");
+    it("scrollDepth=9%, dwellTime=4sでinterestLevel=lowが算出される（境界値内）", () => {
+      expect(calculateInterestLevel(9, 4)).toBe("low");
     });
 
-    it("scrollDepth=0%, dwellTime=0sでinterestLevel=skipが算出される", () => {
-      expect(calculateInterestLevel(0, 0)).toBe("skip");
-    });
-  });
-
-  describe("AC-4: 中興味判定（neutral）", () => {
-    it("scrollDepth=30%, dwellTime=15sでinterestLevel=neutralが算出される", () => {
-      expect(calculateInterestLevel(30, 15)).toBe("neutral");
-    });
-
-    it("境界値: scrollDepth=10%, dwellTime=5sでinterestLevel=neutralが算出される", () => {
-      expect(calculateInterestLevel(10, 5)).toBe("neutral");
-    });
-
-    it("境界値: scrollDepth=50%, dwellTime=30sでinterestLevel=neutralが算出される", () => {
-      expect(calculateInterestLevel(50, 30)).toBe("neutral");
-    });
-
-    it("scrollDepth=20%, dwellTime=3sでinterestLevel=neutralが算出される（スクロール条件のみ満たす）", () => {
-      expect(calculateInterestLevel(20, 3)).toBe("neutral");
-    });
-
-    it("scrollDepth=5%, dwellTime=10sでinterestLevel=neutralが算出される（時間条件のみ満たす）", () => {
-      expect(calculateInterestLevel(5, 10)).toBe("neutral");
+    it("scrollDepth=0%, dwellTime=0sでinterestLevel=lowが算出される", () => {
+      expect(calculateInterestLevel(0, 0)).toBe("low");
     });
   });
 
-  describe("AC-5: 高興味判定（like）", () => {
-    it("scrollDepth=70%, dwellTime=45sでinterestLevel=likeが算出される", () => {
-      expect(calculateInterestLevel(70, 45)).toBe("like");
+  describe("AC-4: 中興味判定（medium）", () => {
+    it("scrollDepth=30%, dwellTime=15sでinterestLevel=mediumが算出される", () => {
+      expect(calculateInterestLevel(30, 15)).toBe("medium");
     });
 
-    it("境界値: scrollDepth=51%, dwellTime=31sでinterestLevel=likeが算出される", () => {
-      expect(calculateInterestLevel(51, 31)).toBe("like");
+    it("境界値: scrollDepth=10%, dwellTime=5sでinterestLevel=mediumが算出される", () => {
+      expect(calculateInterestLevel(10, 5)).toBe("medium");
     });
 
-    it("scrollDepth=100%, dwellTime=60sでinterestLevel=likeが算出される", () => {
-      expect(calculateInterestLevel(100, 60)).toBe("like");
+    it("境界値: scrollDepth=50%, dwellTime=30sでinterestLevel=mediumが算出される", () => {
+      expect(calculateInterestLevel(50, 30)).toBe("medium");
+    });
+
+    it("scrollDepth=20%, dwellTime=3sでinterestLevel=mediumが算出される（スクロール条件のみ満たす）", () => {
+      expect(calculateInterestLevel(20, 3)).toBe("medium");
+    });
+
+    it("scrollDepth=5%, dwellTime=10sでinterestLevel=mediumが算出される（時間条件のみ満たす）", () => {
+      expect(calculateInterestLevel(5, 10)).toBe("medium");
     });
   });
 
-  describe("AC-8: 既存Like/Favoriteとの優先度", () => {
-    it("既にLike記録済みの記事でrecordSkip()がスキップされる", async () => {
-      const { result } = renderHook(() => useFeedback());
-      const articleId = "scp-173";
-
-      await act(async () => {
-        await result.current.recordLike(articleId);
-      });
-
-      mockApi.feedback.$post.mockClear();
-
-      await act(async () => {
-        await result.current.recordSkip(articleId, {
-          scrollDepth: 30,
-          dwellTime: 15,
-          interestLevel: "neutral",
-        });
-      });
-
-      expect(mockApi.feedback.$post).not.toHaveBeenCalled();
-      expect(result.current.getFeedbackType(articleId)).toBe("like");
+  describe("AC-5: 高興味判定（high）", () => {
+    it("scrollDepth=70%, dwellTime=45sでinterestLevel=highが算出される", () => {
+      expect(calculateInterestLevel(70, 45)).toBe("high");
     });
 
-    it("既にFavorite記録済みの記事でrecordSkip()がスキップされる", async () => {
+    it("境界値: scrollDepth=51%, dwellTime=31sでinterestLevel=highが算出される", () => {
+      expect(calculateInterestLevel(51, 31)).toBe("high");
+    });
+
+    it("scrollDepth=100%, dwellTime=60sでinterestLevel=highが算出される", () => {
+      expect(calculateInterestLevel(100, 60)).toBe("high");
+    });
+  });
+
+  describe("AC-8: 既存Favoriteとの優先度", () => {
+    it("既にFavorite記録済みの記事でrecordNext()がスキップされる", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
 
@@ -236,10 +219,10 @@ describe("useFeedback", () => {
       mockApi.feedback.$post.mockClear();
 
       await act(async () => {
-        await result.current.recordSkip(articleId, {
+        await result.current.recordNext(articleId, {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         });
       });
 
@@ -247,56 +230,63 @@ describe("useFeedback", () => {
       expect(result.current.getFeedbackType(articleId)).toBe("favorite");
     });
 
-    it("Skip記録後にLikeで上書きされる", async () => {
+    it("Next記録後にFavoriteで上書きされる", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
 
       await act(async () => {
-        await result.current.recordSkip(articleId, {
+        await result.current.recordNext(articleId, {
           scrollDepth: 5,
           dwellTime: 3,
-          interestLevel: "skip",
+          interestLevel: "low",
         });
       });
 
-      expect(result.current.getFeedbackType(articleId)).toBe("skip");
+      expect(result.current.getFeedbackType(articleId)).toBe("next");
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordFavorite(articleId);
       });
 
-      expect(result.current.getFeedbackType(articleId)).toBe("like");
+      expect(result.current.getFeedbackType(articleId)).toBe("favorite");
     });
   });
 
-  describe("読了判定（暗黙的Like）", () => {
-    it("recordLike()でtype=likeのフィードバックが送信される", async () => {
+  describe("recordNextの基本動作", () => {
+    it("recordNext()でtype=nextのフィードバックが送信される", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 50, dwellTime: 20, interestLevel: "medium" as const };
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(mockApi.feedback.$post).toHaveBeenCalledWith({
-        json: { visitorId: "test-visitor-id", articleId: "scp-173", type: "like" },
+        json: {
+          visitorId: "test-visitor-id",
+          articleId: "scp-173",
+          type: "next",
+          metadata: { scrollDepth: 50, dwellTime: 20, interestLevel: "medium" },
+        },
       });
       expect(result.current.hasRecorded(articleId)).toBe(true);
-      expect(result.current.getFeedbackType(articleId)).toBe("like");
+      expect(result.current.getFeedbackType(articleId)).toBe("next");
     });
 
-    it("同じ記事で2回目の読了時はAPI呼び出しをスキップする", async () => {
+    it("同じ記事で2回目のrecordNext時はAPI呼び出しをスキップする", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 50, dwellTime: 20, interestLevel: "medium" as const };
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       mockApi.feedback.$post.mockClear();
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(mockApi.feedback.$post).not.toHaveBeenCalled();
@@ -307,11 +297,12 @@ describe("useFeedback", () => {
     it("API失敗時にフィードバックをローカルキューに追加する", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post.mockRejectedValueOnce(new Error("Network error"));
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(result.current.pendingCount).toBe(1);
@@ -321,6 +312,7 @@ describe("useFeedback", () => {
     it("ネットワーク復帰時にキューのフィードバックを再送信する", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post
         .mockRejectedValueOnce(new Error("Network error"))
@@ -330,7 +322,7 @@ describe("useFeedback", () => {
         });
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(result.current.pendingCount).toBe(1);
@@ -350,11 +342,12 @@ describe("useFeedback", () => {
     it("localStorageにキューが永続化される", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post.mockRejectedValueOnce(new Error("Network error"));
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       const stored = localStorage.getItem("scp-feedback-pending");
@@ -362,7 +355,7 @@ describe("useFeedback", () => {
       const parsed = JSON.parse(stored ?? "[]") as { articleId: string; type: string }[];
       expect(parsed).toHaveLength(1);
       expect(parsed[0]?.articleId).toBe(articleId);
-      expect(parsed[0]?.type).toBe("like");
+      expect(parsed[0]?.type).toBe("next");
     });
   });
 
@@ -370,12 +363,13 @@ describe("useFeedback", () => {
     it("API失敗時でもユーザー操作はブロックされない", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post.mockRejectedValueOnce(new Error("Server error"));
 
       const startTime = Date.now();
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
       const endTime = Date.now();
 
@@ -387,6 +381,7 @@ describe("useFeedback", () => {
       vi.useRealTimers();
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post
         .mockRejectedValueOnce(new Error("Error 1"))
@@ -398,7 +393,7 @@ describe("useFeedback", () => {
         });
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(result.current.pendingCount).toBe(1);
@@ -421,11 +416,12 @@ describe("useFeedback", () => {
       mockApi.feedback.$post.mockReset();
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       mockApi.feedback.$post.mockRejectedValue(new Error("Permanent error"));
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(result.current.pendingCount).toBe(1);
@@ -445,23 +441,18 @@ describe("useFeedback", () => {
   });
 
   describe("フィードバック種別の優先度", () => {
-    it("favorite > like > skip の優先度で上書きされる", async () => {
+    it("favorite > next の優先度で上書きされる", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
 
       await act(async () => {
-        await result.current.recordSkip(articleId, {
+        await result.current.recordNext(articleId, {
           scrollDepth: 5,
           dwellTime: 3,
-          interestLevel: "skip",
+          interestLevel: "low",
         });
       });
-      expect(result.current.getFeedbackType(articleId)).toBe("skip");
-
-      await act(async () => {
-        await result.current.recordLike(articleId);
-      });
-      expect(result.current.getFeedbackType(articleId)).toBe("like");
+      expect(result.current.getFeedbackType(articleId)).toBe("next");
 
       await act(async () => {
         await result.current.recordFavorite(articleId);
@@ -480,7 +471,11 @@ describe("useFeedback", () => {
       mockApi.feedback.$post.mockClear();
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, {
+          scrollDepth: 30,
+          dwellTime: 15,
+          interestLevel: "medium",
+        });
       });
 
       expect(result.current.getFeedbackType(articleId)).toBe("favorite");
@@ -490,15 +485,16 @@ describe("useFeedback", () => {
     it("同じ優先度のフィードバックは重複記録されない", async () => {
       const { result } = renderHook(() => useFeedback());
       const articleId = "scp-173";
+      const metadata = { scrollDepth: 30, dwellTime: 15, interestLevel: "medium" as const };
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       mockApi.feedback.$post.mockClear();
 
       await act(async () => {
-        await result.current.recordLike(articleId);
+        await result.current.recordNext(articleId, metadata);
       });
 
       expect(mockApi.feedback.$post).not.toHaveBeenCalled();
@@ -529,30 +525,34 @@ describe("useFeedback", () => {
       mockApi.feedback.$post.mockRejectedValue(new Error("Network error"));
 
       await act(async () => {
-        await result.current.recordLike("scp-173");
+        await result.current.recordNext("scp-173", {
+          scrollDepth: 30,
+          dwellTime: 15,
+          interestLevel: "medium",
+        });
       });
       expect(result.current.pendingCount).toBe(1);
 
       await act(async () => {
-        await result.current.recordSkip("scp-682", {
+        await result.current.recordNext("scp-682", {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         });
       });
       expect(result.current.pendingCount).toBe(2);
     });
   });
 
-  describe("recordSkip エッジケース", () => {
+  describe("recordNext エッジケース", () => {
     it("scrollDepth=0%, dwellTime=0sでも正常に記録される", async () => {
       const { result } = renderHook(() => useFeedback());
 
       await act(async () => {
-        await result.current.recordSkip("scp-173", {
+        await result.current.recordNext("scp-173", {
           scrollDepth: 0,
           dwellTime: 0,
-          interestLevel: "skip",
+          interestLevel: "low",
         });
       });
 
@@ -563,10 +563,10 @@ describe("useFeedback", () => {
       const { result } = renderHook(() => useFeedback());
 
       await act(async () => {
-        await result.current.recordSkip("scp-173", {
+        await result.current.recordNext("scp-173", {
           scrollDepth: 100,
           dwellTime: 1000,
-          interestLevel: "like",
+          interestLevel: "high",
         });
       });
 
@@ -586,10 +586,10 @@ describe("useFeedback", () => {
       const { result } = renderHook(() => useFeedback());
 
       await act(async () => {
-        await result.current.recordSkip("scp-173", {
+        await result.current.recordNext("scp-173", {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         });
       });
 
@@ -600,10 +600,10 @@ describe("useFeedback", () => {
       const { result } = renderHook(() => useFeedback());
 
       await act(async () => {
-        await result.current.recordSkip("", {
+        await result.current.recordNext("", {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         });
       });
 
@@ -615,10 +615,10 @@ describe("useFeedback", () => {
       mockApi.feedback.$post.mockRejectedValueOnce(new Error("Network error"));
 
       await act(async () => {
-        await result.current.recordSkip("scp-173", {
+        await result.current.recordNext("scp-173", {
           scrollDepth: 30,
           dwellTime: 15,
-          interestLevel: "neutral",
+          interestLevel: "medium",
         });
       });
 
