@@ -11,11 +11,11 @@ ALTER TABLE feedback ADD COLUMN IF NOT EXISTS metadata JSONB;
 
 COMMENT ON COLUMN feedback.metadata IS 'フィードバックメタデータ（scrollDepth, dwellTime, interestLevel）';
 
--- 2. skip → next にリネーム
-UPDATE feedback SET type = 'next' WHERE type = 'skip';
-
--- 3. 既存のCHECK制約を削除
+-- 2. 既存のCHECK制約を削除（UPDATEの前に削除しないと制約違反になる）
 ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_type_check;
+
+-- 3. skip → next にリネーム
+UPDATE feedback SET type = 'next' WHERE type = 'skip';
 
 -- 4. 新しいCHECK制約（dislike除去 + next追加）
 ALTER TABLE feedback ADD CONSTRAINT feedback_type_check CHECK (type IN ('like', 'next'));
