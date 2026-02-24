@@ -75,8 +75,52 @@
 
 - **提唱者**: Paul & Elder (2006)
 - **6カテゴリ**: (1) 明確化の質問、(2) 前提を探る質問、(3) 理由と証拠を問う質問、(4) 視点・観点を問う質問、(5) 含意と帰結を問う質問、(6) 質問自体についての質問
-- **設計への示唆**: /clarify の Phase 1→4 はこの6カテゴリの段階的適用に相当
+- **設計への示唆**: /clarify の各ラウンドはこの6カテゴリの段階的適用に相当
+- **/clarify との詳細対応**:
+
+| カテゴリ                   | /clarify での実装                                       | 充足度 |
+| -------------------------- | ------------------------------------------------------- | ------ |
+| (1) 明確化の質問           | Round 1「定義の明確化」、アナロジーによる具体化         | 充足   |
+| (2) 前提を探る質問         | 弁証法的三層構造の第2層（アンチテーゼ）、前提レジスター | 充足   |
+| (3) 理由と証拠を問う質問   | 弁証法的三層構造の第2層、連続的エレンコス               | 充足   |
+| (4) 視点・観点を問う質問   | CTO（反対立場の検討）、Devil's Advocate                 | 充足   |
+| (5) 含意と帰結を問う質問   | 弁証法的三層構造の第3層（ジンテーゼ）、帰結連鎖         | 充足   |
+| (6) 質問自体についての質問 | 中間リフレクション、確信度キャリブレーション            | 充足   |
+
 - **文献**: Paul, R. & Elder, L. (2006). _Critical Thinking: Tools for Taking Charge of Your Learning and Your Life_. Pearson
+
+### ソクラテス的弁証法（Dialectical Method）
+
+- **起源**: ソクラテス〜プラトン、ヘーゲルによる体系化
+- **核心**: テーゼ（命題）→ アンチテーゼ（反命題）→ ジンテーゼ（統合）の三段階で、対立する概念の比較を通じてより深い理解に到達する
+- **認知科学的根拠**: Gick & Holyoak (1983) のスキーマ形成理論と接続。2つの対立事例の比較が抽象的スキーマの形成を促進するメカニズムと、弁証法のテーゼ/アンチテーゼ比較は同型の認知プロセス
+- **設計への示唆**: /clarify の弁証法的質問三層構造（第1層: テーゼ、第2層: アンチテーゼ、第3層: ジンテーゼ）の理論的基盤
+- **文献**: Hegel, G.W.F. (1807/1977). _Phenomenology of Spirit_. Trans. A.V. Miller. Oxford University Press
+
+### エレンコス（反駁法）
+
+- **起源**: ソクラテス（プラトンの対話篇に記録）
+- **核心**: 対話相手の発言間の**矛盾を検出**し、相手自身にその矛盾を認識させることで、より精緻な思考へ導く。エレンコスの目的は「論破」ではなく「吟味（examination）」
+- **認知科学的根拠**: 矛盾検出は認知的不協和（Festinger, 1957）を生じさせ、不協和の解消動機が批判的思考を活性化する。また、自分の発言間の一貫性チェックはメタ認知的モニタリング（Flavell, 1979）に相当
+- **設計への示唆**: /clarify の連続的エレンコスは、セッション内の発言間矛盾を自動検出し、ユーザー自身に解消を促す。チェックポイント的なCTO/DAと異なり、プロセス全体に渡って機能する
+- **文献**: Vlastos, G. (1983). The Socratic Elenchus. _Oxford Studies in Ancient Philosophy_, 1, 27-58
+- **文献**: Festinger, L. (1957). _A Theory of Cognitive Dissonance_. Stanford University Press
+
+### 産婆術（Maieutics）
+
+- **起源**: ソクラテス（プラトン『テアイテトス』）
+- **核心**: ソクラテスは自らを「知識の産婆」と称し、対話相手が**既に持っている知識を引き出す**手法を用いた。教師は知識を注入するのではなく、学習者の内なる知識の「出産」を助ける
+- **設計への示唆**: /clarify の「自由回答ファースト + アナロジーは確認」の設計思想そのもの。AIは知識を注入せず、ユーザーの暗黙知の出産を助ける産婆として機能する
+- **文献**: Plato. _Theaetetus_. (Various translations available)
+
+### /clarify に導入しないソクラテス的要素とその根拠
+
+| 要素                       | 不採用の根拠                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| **アポリア**（行き詰まり） | エンジニアリング文脈では決定麻痺を招く。目的が知的探求ではなく意思決定支援              |
+| **ソクラテス的アイロニー** | AI文脈で不自然。Anti-Sycophancy Protocol（率直な指摘）と矛盾。信頼関係を損なう          |
+| **無制限のWhyチェーン**    | 弁証法的三層構造の第2層で吸収。独立したWhyチェーンは認知疲労リスクが高い                |
+| **有機的対話への全面移行** | 5ラウンド構造という「構造化された自由」の枠内で弁証法を実現。構造を破壊する方向は不採用 |
 
 ---
 
@@ -269,6 +313,11 @@ AIが提示した選択肢を人間が無意識に採用してしまう問題。
 | セッション文脈での比喩切り替え | 関係シフト, 反省的実践                 | ユーザー固有の思考フレームへの適応 |
 | 自由回答→選択肢の段階的開示    | 認知的強制関数, アンカリング効果       | 思考汚染防止、回答の所有感維持     |
 | 事前コミットメント             | 自動化バイアス, 認知的オフローディング | 人間の主体的思考の確保             |
+| 弁証法的質問三層構造           | ヘーゲル弁証法, スキーマ形成理論       | 対立概念比較による深い理解の促進   |
+| 前提探索（アンチテーゼ）       | Paul & Elder カテゴリ(2), エレンコス   | 暗黙の前提の可視化                 |
+| 連続的エレンコス               | ソクラテス的反駁, 認知的不協和         | セッション内一貫性の担保           |
+| 帰結連鎖（ジンテーゼ）         | Paul & Elder カテゴリ(5), 弁証法的統合 | 決定間の波及効果の追跡             |
+| 中間リフレクション             | Schon の reflection-on-action          | メタ認知的介入による後半品質向上   |
 
 ---
 
@@ -279,26 +328,31 @@ AIが提示した選択肢を人間が無意識に採用してしまう問題。
 3. Chi, M.T.H., de Leeuw, N., Chiu, M.H., & LaVancher, C. (1994). Eliciting self-explanations improves understanding. _Cognitive Science_, 18(3), 439-477. https://doi.org/10.1207/s15516709cog1803_3
 4. Cleverly, P. (2025). A framework for understanding LLM over-reliance. _SSRN_. https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5359658
 5. Cowan, N. (2001). The magical number 4 in short-term memory. _Behavioral and Brain Sciences_, 24(1), 87-114. https://doi.org/10.1017/S0140525X01003922
-6. Gentner, D. (1983). Structure-mapping: A theoretical framework for analogy. _Cognitive Science_, 7(2), 155-170. https://doi.org/10.1207/s15516709cog0702_3
-7. Gentner, D. & Markman, A.B. (1997). Structure mapping in analogy and similarity. _American Psychologist_, 52(1), 45-56. https://doi.org/10.1037/0003-066X.52.1.45
-8. Gentner, D. & Rattermann, M.J. (1991). Language and the career of similarity. In S.A. Gelman & J.P. Byrnes (Eds.), _Perspectives on language and thought_.
-9. Gick, M.L. & Holyoak, K.J. (1983). Schema induction and analogical transfer. _Cognitive Psychology_, 15(1), 1-38. https://doi.org/10.1016/0010-0285(83)90002-6
-10. Hick, W.E. (1952). On the rate of gain of information. _Quarterly Journal of Experimental Psychology_, 4(1), 11-26. https://doi.org/10.1080/17470215208416600
-11. Iyengar, S.S. & Lepper, M.R. (2000). When choice is demotivating. _Journal of Personality and Social Psychology_, 79(6), 995-1006. https://doi.org/10.1037/0022-3514.79.6.995
-12. Kalyuga, S. (2007). Expertise reversal effect and its implications. _Educational Psychology Review_, 19(4), 509-539. https://doi.org/10.1007/s10648-007-9054-3
-13. Kosmyna, N. et al. Your Brain on ChatGPT. MIT Media Lab. https://www.media.mit.edu/publications/your-brain-on-chatgpt/
-14. Logg, J.M., Minson, J.A. & Moore, D.A. (2019). Algorithm appreciation. _Organizational Behavior and Human Decision Processes_, 151, 90-103. https://doi.org/10.1016/j.obhdp.2018.12.005
-15. Miller, G.A. (1956). The magical number seven, plus or minus two. _Psychological Review_, 63(2), 81-97. https://doi.org/10.1037/h0043158
-16. Mosier, K.L. & Skitka, L.J. (1996). Human decision makers and automated decision aids. In Parasuraman & Mouloua (Eds.), _Automation and Human Performance_.
-17. Nonaka, I. & Takeuchi, H. (1995). _The Knowledge-Creating Company_. Oxford University Press. https://doi.org/10.1093/oso/9780195092691.001.0001
-18. Paul, R. & Elder, L. (2006). _Critical Thinking: Tools for Taking Charge of Your Learning and Your Life_. Pearson.
-19. Polanyi, M. (1966). _The Tacit Dimension_. University of Chicago Press. https://doi.org/10.7208/chicago/9780226232768.001.0001
-20. Reigeluth, C.M. (1999). _Instructional-Design Theories and Models: Volume II_. Lawrence Erlbaum Associates.
-21. Risko, E.F. & Gilbert, S.J. (2016). Cognitive Offloading. _Trends in Cognitive Sciences_, 20(9), 676-688. https://doi.org/10.1016/j.tics.2016.07.002
-22. Schon, D.A. (1983). _The Reflective Practitioner_. Basic Books.
-23. Schwartz, B. (2004). _The Paradox of Choice_. HarperCollins.
-24. Sweller, J. (1988). Cognitive load during problem solving. _Cognitive Science_, 12(2), 257-285. https://doi.org/10.1207/s15516709cog1202_4
-25. Thaler, R.H. & Sunstein, C.R. (2008). _Nudge_. Yale University Press.
-26. Tversky, A. & Kahneman, D. (1974). Judgment under Uncertainty. _Science_, 185(4157), 1124-1131. https://doi.org/10.1126/science.185.4157.1124
-27. Vygotsky, L.S. (1978). _Mind in Society_. Harvard University Press. https://doi.org/10.2307/j.ctvjf9vz4
-28. Wood, D., Bruner, J.S. & Ross, G. (1976). The role of tutoring in problem solving. _Journal of Child Psychology and Psychiatry_, 17(2), 89-100. https://doi.org/10.1111/j.1469-7610.1976.tb00381.x
+6. Festinger, L. (1957). _A Theory of Cognitive Dissonance_. Stanford University Press
+7. Flavell, J.H. (1979). Metacognition and cognitive monitoring. _American Psychologist_, 34(10), 906-911. https://doi.org/10.1037/0003-066X.34.10.906
+8. Gentner, D. (1983). Structure-mapping: A theoretical framework for analogy. _Cognitive Science_, 7(2), 155-170. https://doi.org/10.1207/s15516709cog0702_3
+9. Gentner, D. & Markman, A.B. (1997). Structure mapping in analogy and similarity. _American Psychologist_, 52(1), 45-56. https://doi.org/10.1037/0003-066X.52.1.45
+10. Gentner, D. & Rattermann, M.J. (1991). Language and the career of similarity. In S.A. Gelman & J.P. Byrnes (Eds.), _Perspectives on language and thought_.
+11. Gick, M.L. & Holyoak, K.J. (1983). Schema induction and analogical transfer. _Cognitive Psychology_, 15(1), 1-38. https://doi.org/10.1016/0010-0285(83)90002-6
+12. Hegel, G.W.F. (1807/1977). _Phenomenology of Spirit_. Trans. A.V. Miller. Oxford University Press
+13. Hick, W.E. (1952). On the rate of gain of information. _Quarterly Journal of Experimental Psychology_, 4(1), 11-26. https://doi.org/10.1080/17470215208416600
+14. Iyengar, S.S. & Lepper, M.R. (2000). When choice is demotivating. _Journal of Personality and Social Psychology_, 79(6), 995-1006. https://doi.org/10.1037/0022-3514.79.6.995
+15. Kalyuga, S. (2007). Expertise reversal effect and its implications. _Educational Psychology Review_, 19(4), 509-539. https://doi.org/10.1007/s10648-007-9054-3
+16. Kosmyna, N. et al. Your Brain on ChatGPT. MIT Media Lab. https://www.media.mit.edu/publications/your-brain-on-chatgpt/
+17. Logg, J.M., Minson, J.A. & Moore, D.A. (2019). Algorithm appreciation. _Organizational Behavior and Human Decision Processes_, 151, 90-103. https://doi.org/10.1016/j.obhdp.2018.12.005
+18. Miller, G.A. (1956). The magical number seven, plus or minus two. _Psychological Review_, 63(2), 81-97. https://doi.org/10.1037/h0043158
+19. Mosier, K.L. & Skitka, L.J. (1996). Human decision makers and automated decision aids. In Parasuraman & Mouloua (Eds.), _Automation and Human Performance_.
+20. Nonaka, I. & Takeuchi, H. (1995). _The Knowledge-Creating Company_. Oxford University Press. https://doi.org/10.1093/oso/9780195092691.001.0001
+21. Paul, R. & Elder, L. (2006). _Critical Thinking: Tools for Taking Charge of Your Learning and Your Life_. Pearson.
+22. Plato. _Theaetetus_. (Various translations available)
+23. Polanyi, M. (1966). _The Tacit Dimension_. University of Chicago Press. https://doi.org/10.7208/chicago/9780226232768.001.0001
+24. Reigeluth, C.M. (1999). _Instructional-Design Theories and Models: Volume II_. Lawrence Erlbaum Associates.
+25. Risko, E.F. & Gilbert, S.J. (2016). Cognitive Offloading. _Trends in Cognitive Sciences_, 20(9), 676-688. https://doi.org/10.1016/j.tics.2016.07.002
+26. Schon, D.A. (1983). _The Reflective Practitioner_. Basic Books.
+27. Schwartz, B. (2004). _The Paradox of Choice_. HarperCollins.
+28. Sweller, J. (1988). Cognitive load during problem solving. _Cognitive Science_, 12(2), 257-285. https://doi.org/10.1207/s15516709cog1202_4
+29. Thaler, R.H. & Sunstein, C.R. (2008). _Nudge_. Yale University Press.
+30. Tversky, A. & Kahneman, D. (1974). Judgment under Uncertainty. _Science_, 185(4157), 1124-1131. https://doi.org/10.1126/science.185.4157.1124
+31. Vlastos, G. (1983). The Socratic Elenchus. _Oxford Studies in Ancient Philosophy_, 1, 27-58
+32. Vygotsky, L.S. (1978). _Mind in Society_. Harvard University Press. https://doi.org/10.2307/j.ctvjf9vz4
+33. Wood, D., Bruner, J.S. & Ross, G. (1976). The role of tutoring in problem solving. _Journal of Child Psychology and Psychiatry_, 17(2), 89-100. https://doi.org/10.1111/j.1469-7610.1976.tb00381.x
