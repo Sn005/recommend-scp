@@ -76,6 +76,19 @@ const INJECTED_STYLE = [
   "#page-content img{max-width:100%!important;height:auto!important;display:block;margin:16px 0}",
   // レイアウト崩れ防止: Wikidot記事のfloatブロックを無効化
   "#page-content .block-left,#page-content .block-right{float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
+  // ACSバー（Anomaly Classification System）: 固定幅レイアウトをモバイル対応
+  // ACSバーはデフォルトで固定幅(590px等)が設定されており、モバイルではみ出す
+  ".anom-bar-container,.anom-bar-wrapper{max-width:100%!important;box-sizing:border-box!important}",
+  ".anom-bar-container *{max-width:100%!important;box-sizing:border-box!important}",
+  // テーブル: 横スクロール可能にして、はみ出しを防止
+  "#page-content table{display:block!important;overflow-x:auto!important;max-width:100%!important;-webkit-overflow-scrolling:touch}",
+  "#page-content .wiki-content-table{overflow-x:auto!important;max-width:100%!important}",
+  // pre/codeブロック: 横スクロール可能にして、はみ出しを防止
+  "#page-content pre{overflow-x:auto!important;max-width:100%!important;white-space:pre-wrap!important;word-break:break-all!important}",
+  // scp-image-block: 画像ブロックのはみ出し防止
+  ".scp-image-block{max-width:100%!important;box-sizing:border-box!important;float:none!important;margin:16px auto!important}",
+  // 全般的なoverflow防止: #page-content直下の要素
+  "#page-content>div,#page-content>table,#page-content>blockquote{max-width:100%!important;box-sizing:border-box!important;overflow-x:auto!important}",
   // コンポーネントコードビューア非表示: テーマ等のコンポーネントincludeに付随する
   // CSSソースコード表示用collapsible-blockを非表示にする（記事本文ではない）
   ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}",
