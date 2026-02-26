@@ -765,10 +765,11 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain('style="display:none"');
+      // フィルタリング後、display:noneプロパティが保持される（セミコロン正規化あり）
+      expect(text).toContain('style="display:none;"');
     });
 
-    it("display:noneと他のプロパティが混在するstyle属性も保持される", async () => {
+    it("display:noneと他のプロパティが混在するstyle属性はdisplayのみ保持される", async () => {
       const html = createWikidotHtml({
         pageContent: '<div style="margin: 0; display: none; color: red;">隠し</div>',
       });
@@ -778,10 +779,13 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain('style="margin: 0; display: none; color: red;"');
+      // margin/colorは除去され、displayのみ保持
+      expect(text).toContain('style="display: none;"');
+      expect(text).not.toContain("margin: 0;");
+      expect(text).not.toContain("color: red");
     });
 
-    it("display:block等のnone以外のdisplay値は除去される", async () => {
+    it("display:block等のnone以外のdisplay値もレイアウトプロパティとして保持される", async () => {
       const html = createWikidotHtml({
         pageContent: '<div style="display: block;">表示要素</div>',
       });
@@ -791,7 +795,26 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).not.toContain('style="display: block;"');
+      // displayはレイアウトプロパティのため保持される
+      expect(text).toContain('style="display: block;"');
+    });
+
+    it("width/max-width/overflow等のレイアウトプロパティは保持される", async () => {
+      const html = createWikidotHtml({
+        pageContent:
+          '<div style="width: 590px; max-width: 100%; overflow-x: auto; color: red;">ACSバー</div>',
+      });
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      // レイアウト系は保持、装飾系(color)は除去
+      expect(text).toContain("width: 590px");
+      expect(text).toContain("max-width: 100%");
+      expect(text).toContain("overflow-x: auto");
+      expect(text).not.toContain("color: red");
     });
 
     it("他の属性は保持される", async () => {
