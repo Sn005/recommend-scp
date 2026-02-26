@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 // Supabaseクライアントをモック
 vi.mock("@recommend-scp/shared/lib/supabase", () => ({
-  getSupabaseClient: vi.fn(),
+  getSupabaseAdmin: vi.fn(),
 }));
 
-import { getSupabaseClient } from "@recommend-scp/shared/lib/supabase";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import { createApp, createRoutes } from "../app";
 import type { AppType } from "../app";
 
@@ -25,10 +25,10 @@ describe("Honoアプリケーション", () => {
         }),
       }),
     };
-    (getSupabaseClient as Mock).mockReturnValue(mockClient);
+    (getSupabaseAdmin as Mock).mockReturnValue(mockClient);
 
     // テスト用にアプリケーションを作成
-    app = createApp(getSupabaseClient());
+    app = createApp(getSupabaseAdmin());
   });
 
   it("Hono インスタンスが export される", () => {
@@ -37,7 +37,7 @@ describe("Honoアプリケーション", () => {
   });
 
   it("AppType 型が export される", () => {
-    const routes = createRoutes(getSupabaseClient());
+    const routes = createRoutes(getSupabaseAdmin());
     const _typeCheck: AppType = routes;
     expect(_typeCheck).toBeDefined();
   });

@@ -8,7 +8,7 @@
  */
 
 import { Hono } from "hono";
-import { getSupabaseClient } from "@recommend-scp/shared/lib/supabase";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import { logger } from "../lib/logger";
 
 // パッケージバージョンを取得
@@ -38,7 +38,7 @@ export const healthRoutes = new Hono().get("/", async (c) => {
 
   // DB接続チェック
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseAdmin();
     const { error } = await supabase.from("scp_articles").select("id").limit(1);
 
     if (error) {

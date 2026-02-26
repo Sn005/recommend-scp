@@ -3,10 +3,10 @@ import { Hono } from "hono";
 
 // Supabaseクライアントをモック
 vi.mock("@recommend-scp/shared/lib/supabase", () => ({
-  getSupabaseClient: vi.fn(),
+  getSupabaseAdmin: vi.fn(),
 }));
 
-import { getSupabaseClient } from "@recommend-scp/shared/lib/supabase";
+import { getSupabaseAdmin } from "@recommend-scp/shared/lib/supabase";
 import { healthRoutes } from "../health";
 
 // パッケージバージョン
@@ -40,7 +40,7 @@ const setupMockClient = (success: boolean) => {
       }),
     }),
   };
-  (getSupabaseClient as Mock).mockReturnValue(mockClient);
+  (getSupabaseAdmin as Mock).mockReturnValue(mockClient);
   return mockClient;
 };
 
@@ -150,7 +150,7 @@ describe("GET /health - 異常系（DB接続失敗）", () => {
         }),
       }),
     };
-    (getSupabaseClient as Mock).mockReturnValue(mockClient);
+    (getSupabaseAdmin as Mock).mockReturnValue(mockClient);
 
     const app = createApp();
     const req = new Request("http://localhost/health");
