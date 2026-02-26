@@ -11,6 +11,39 @@ import { parseHTML } from "linkedom";
 import { cacheGet, cacheSet } from "../lib/cache";
 
 /**
+ * デバッグ用CSS/JS: overflow要素をハイライト表示
+ * ?debug=overflow クエリパラメータで有効化
+ */
+const DEBUG_OVERFLOW_STYLE = [
+  "<style>",
+  "*{outline:1px solid rgba(255,0,0,0.15)!important}",
+  "#debug-overflow-info{position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;padding:8px;font-family:monospace;max-height:40vh;overflow-y:auto}",
+  "</style>",
+  "<script>",
+  "document.addEventListener('DOMContentLoaded',function(){",
+  "var vw=document.documentElement.clientWidth;var issues=[];",
+  "document.querySelectorAll('*').forEach(function(el){",
+  "var r=el.getBoundingClientRect();",
+  "if(r.right>vw+1||r.width>vw){",
+  "var id=el.id?'#'+el.id:'';",
+  "var cls=el.className?'.'+String(el.className).split(' ').join('.'):'';",
+  "var tag=el.tagName.toLowerCase();",
+  "var w=Math.round(r.width);",
+  "var st=el.getAttribute('style')||'(none)';",
+  "var cs=getComputedStyle(el);",
+  "var cw='width:'+cs.width+' max-width:'+cs.maxWidth+' overflow:'+cs.overflow;",
+  "issues.push(tag+id+cls+' w='+w+'px style=\"'+st+'\" computed={'+cw+'}');",
+  "el.style.outline='3px solid red';",
+  "}});",
+  "var info=document.createElement('div');info.id='debug-overflow-info';",
+  "info.innerHTML='<b>Viewport:'+vw+'px | Overflow:'+issues.length+'</b><br>'",
+  "+(issues.length?issues.map(function(s,i){return(i+1)+'. '+s}).join('<br>'):'None');",
+  "document.body.prepend(info);",
+  "});",
+  "</script>",
+].join("");
+
+/**
  * 許可するWikidotドメイン（セキュリティのため制限）
  */
 const ALLOWED_WIKIDOT_DOMAIN = "scp-jp.wikidot.com";
@@ -509,6 +542,9 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
         "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
       );
     }
+    if (c.req.query("debug") === "overflow") {
+      html = html.replace("</head>", DEBUG_OVERFLOW_STYLE + "</head>");
+    }
     return new Response(html, {
       status: 200,
       headers: {
@@ -541,6 +577,10 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
           "</head>",
           "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
         );
+      }
+      // debug=overflow: はみ出し要素をハイライト表示するデバッグモード
+      if (c.req.query("debug") === "overflow") {
+        finalHtml = finalHtml.replace("</head>", DEBUG_OVERFLOW_STYLE + "</head>");
       }
 
       return new Response(finalHtml, {
