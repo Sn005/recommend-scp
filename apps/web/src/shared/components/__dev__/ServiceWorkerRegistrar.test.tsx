@@ -1,12 +1,14 @@
-import { render } from "@testing-library/react";
+import { render, cleanup } from "@testing-library/react";
 import { ServiceWorkerRegistrar } from "../ServiceWorkerRegistrar";
 
 describe("ServiceWorkerRegistrar", () => {
+  const mockUpdate = vi.fn().mockResolvedValue(undefined);
   const mockRegister = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRegister.mockResolvedValue({ scope: "/" });
+    vi.useFakeTimers();
+    mockRegister.mockResolvedValue({ scope: "/", update: mockUpdate });
     Object.defineProperty(navigator, "serviceWorker", {
       value: { register: mockRegister },
       writable: true,
@@ -15,8 +17,8 @@ describe("ServiceWorkerRegistrar", () => {
   });
 
   afterEach(() => {
-    // プロパティを完全に削除して元の状態に戻す
-
+    vi.useRealTimers();
+    cleanup();
     delete (navigator as unknown as Record<string, unknown>).serviceWorker;
   });
 
@@ -34,8 +36,6 @@ describe("ServiceWorkerRegistrar", () => {
 
   describe("AC-2: 未サポート環境でのエラーなし", () => {
     beforeEach(() => {
-      // プロパティを削除して未サポート環境をシミュレート
-
       delete (navigator as unknown as Record<string, unknown>).serviceWorker;
     });
 
@@ -68,6 +68,35 @@ describe("ServiceWorkerRegistrar", () => {
     it("コンポーネントが何もレンダリングしない", () => {
       const { container } = render(<ServiceWorkerRegistrar />);
       expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe("SW更新の定期チェック", () => {
+    it("登録成功後に60分間隔でregistration.update()が呼ばれる", async () => {
+      render(<ServiceWorkerRegistrar />);
+
+      // registerのPromiseを解決させる
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(mockUpdate).not.toHaveBeenCalled();
+
+      // 60分経過
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+
+      // さらに60分経過
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+      expect(mockUpdate).toHaveBeenCalledTimes(2);
+    });
+
+    it("登録失敗時はupdate()が呼ばれない", async () => {
+      mockRegister.mockRejectedValueOnce(new Error("SW registration failed"));
+      render(<ServiceWorkerRegistrar />);
+
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 });
