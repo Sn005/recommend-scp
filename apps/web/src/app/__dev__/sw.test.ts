@@ -35,21 +35,61 @@ describe("sw.js", () => {
     it("activate ハンドラ内で clients.claim() が呼ばれている", () => {
       expect(swContent).toContain("clients.claim()");
     });
+  });
 
-    it("fetch イベントハンドラが登録されている", () => {
-      expect(swContent).toMatch(/addEventListener\s*\(\s*['"]fetch['"]/);
+  describe("Workboxキャッシュ機能の存在確認", () => {
+    it("Workboxがimportされている", () => {
+      expect(swContent).toContain("importScripts");
+      expect(swContent).toContain("workbox-sw.js");
     });
 
-    it("HTTPスキームのリクエストが fetch(event.request) される", () => {
-      expect(swContent).toMatch(/fetch\s*\(\s*event\.request\s*\)/);
+    it("キャッシュ名 scp-articles-v1 が定義されている", () => {
+      expect(swContent).toContain("scp-articles-v1");
     });
 
-    it("HTTPスキームのチェックが行われている", () => {
-      expect(swContent).toMatch(/startsWith\s*\(\s*['"]http/);
+    it("キャッシュ名 scp-sub-resources-v1 が定義されている", () => {
+      expect(swContent).toContain("scp-sub-resources-v1");
     });
 
-    it("キャッシュ操作（caches.open 等）が行われていない", () => {
-      expect(swContent).not.toMatch(/caches\.(open|put|match)/);
+    it("StaleWhileRevalidate戦略が設定されている", () => {
+      expect(swContent).toContain("StaleWhileRevalidate");
+    });
+
+    it("CacheFirst戦略が設定されている", () => {
+      expect(swContent).toContain("CacheFirst");
+    });
+
+    it("/api/wiki-proxy/ パスの判定が存在する", () => {
+      expect(swContent).toContain("/api/wiki-proxy/");
+    });
+
+    it("サブリソースのパスプレフィックスが定義されている", () => {
+      expect(swContent).toContain("/wdfiles-");
+      expect(swContent).toContain("/wikidot-");
+      expect(swContent).toContain("/common--");
+      expect(swContent).toContain("/local--");
+    });
+
+    it("3ヶ月の有効期限が設定されている", () => {
+      expect(swContent).toMatch(/90\s*\*\s*24\s*\*\s*60\s*\*\s*60/);
+    });
+
+    it("purgeOnQuotaErrorが有効である", () => {
+      expect(swContent).toContain("purgeOnQuotaError: true");
+    });
+
+    it("古いキャッシュの削除ロジックが存在する", () => {
+      expect(swContent).toMatch(/caches\.keys/);
+      expect(swContent).toMatch(/caches\.delete/);
+    });
+
+    it("200レスポンスのみキャッシュするCacheableResponsePluginが設定されている", () => {
+      expect(swContent).toContain("CacheableResponsePlugin");
+      expect(swContent).toContain("statuses");
+    });
+
+    it("ExpirationPluginが設定されている", () => {
+      expect(swContent).toContain("ExpirationPlugin");
     });
   });
 });
