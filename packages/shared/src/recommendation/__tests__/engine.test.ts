@@ -924,6 +924,7 @@ describe("RecommendationEngine", () => {
       const engine = new RecommendationEngine(storage, vectorSearch, {
         recalculateOnRequest: false,
         serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
       });
 
       const recommendations = await engine.getRecommendations(visitorId, 10);
@@ -966,6 +967,7 @@ describe("RecommendationEngine", () => {
       const engine = new RecommendationEngine(storage, vectorSearch, {
         recalculateOnRequest: false,
         serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
       });
 
       await engine.getRecommendations(visitorId, 10);
@@ -1016,6 +1018,7 @@ describe("RecommendationEngine", () => {
       const engine = new RecommendationEngine(storage, vectorSearch, {
         recalculateOnRequest: false,
         serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
       });
 
       const recommendations = await engine.getRecommendations(visitorId, 10);
@@ -1267,6 +1270,122 @@ describe("RecommendationEngine", () => {
       for (const rec of recommendations) {
         expect(poolIds.has(rec.id)).toBe(true);
       }
+    });
+  });
+
+  describe("段階的プール拡張（preference）", () => {
+    it("初回で十分な結果がある場合、拡張しない", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+      // 初回のみ（フォールバックもなし）
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(1);
+    });
+
+    it("初回不足時にプール倍率を増やして再検索する", async () => {
+      const level0Results: VectorSearchResult[] = Array.from({ length: 3 }, (_, i) => ({
+        id: `pref-${i}`,
+        title: `好み記事${i}`,
+        similarity: 0.95 - i * 0.01,
+        url: `http://ja.scp-wiki.net/pref-${i}`,
+      }));
+      const level1Results: VectorSearchResult[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `pref-expand-${i}`,
+        title: `拡張記事${i}`,
+        similarity: 0.8 - i * 0.01,
+        url: `http://ja.scp-wiki.net/pref-expand-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(level0Results) // Level 0: limit * 3 = 30
+          .mockResolvedValueOnce(level1Results), // Level 1: limit * 5 = 50
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+      // Level 0 + Level 1 = 2回
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(2);
+
+      // Level 1の呼び出しでプール倍率が増加していることを確認
+      const level1Call = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock
+        .calls[1][0];
+      expect(level1Call.limit).toBe(50); // 10 * (3 + 2) = 50
+    });
+
+    it("0件返却時に早期終了する", async () => {
+      const level0Results: VectorSearchResult[] = [
+        { id: "pref-0", title: "記事0", similarity: 0.9, url: "http://ja.scp-wiki.net/pref-0" },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(level0Results) // Level 0: 1件
+          .mockResolvedValueOnce([]) // Level 1: 0件 → 早期終了
+          .mockResolvedValue([]), // フォールバック
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // Level 0 + Level 1(0件で終了) + フォールバック(serendipity adjacent + fallback) = 4以下
+      // Level 2, Level 3 は実行されない
+      const callCount = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+      expect(callCount).toBeLessThanOrEqual(4);
     });
   });
 });
