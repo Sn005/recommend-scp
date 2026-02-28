@@ -224,4 +224,83 @@ pg_stat_statements の上位20クエリを既存コードベースのRepository/
 
 ## 対応記録
 
-_(対応実施時に上記テンプレートを使用して追記する)_
+### [2026-02-21] 対応 #1: A案 スロークエリ改善（改善A〜F）
+
+#### 検出
+
+- **検出元**: pg_stat_statements
+- **対象クエリ**: `search_articles_by_embedding`, `search_articles_by_unexplored_tags`
+- **検出時の実行時間**: embedding 平均 1,858ms / unexplored_tags 平均 479ms
+- **実行頻度**: embedding 564回 / unexplored_tags 50回
+
+#### 分析
+
+- **実行計画のボトルネック**: get_object_class() の行ごと関数呼び出し(N+1)、距離の3重計算、IVFFlat/HNSW共存によるプランナ混乱、tags配列にGINインデックスなし
+- **影響範囲**: 推薦取得API（全クエリ時間の51.93%を占有）
+
+#### Why
+
+ユーザー操作に直結する推薦APIのレスポンスが目標200msを大幅に超過。N+1問題・距離の重複計算・インデックス競合という複数のボトルネックをまとめて解消する。
+
+#### How
+
+- **改善方法**: RPC関数最適化 + インデックス整理
+- **マイグレーションファイル**: `supabase/migrations/20260221000001_optimize_slow_queries.sql`
+- **変更内容の概要**:
+  - A+F: get_object_class() → LEFT JOIN LATERAL に書き換え
+  - B: 距離計算をCTEで1回にまとめる
+  - C: 旧IVFFlatインデックスを削除（HNSWに統一）
+  - D: ef_search パラメータを明示化（40、デフォルト値）
+  - E: tags カラムに GIN インデックス追加
+
+#### 効果
+
+| 指標                         | 改善前  | 改善後 | 改善率 | 目標値  |
+| ---------------------------- | ------- | ------ | ------ | ------- |
+| embedding 平均実行時間       | 1,858ms | 391ms  | -79%   | ≤ 100ms |
+| unexplored_tags 平均実行時間 | 479ms   | 604ms  | -      | ≤ 100ms |
+| embedding 全体占有率         | 51.93%  | -      | -      | -       |
+
+- **アラート解消**: いいえ（目標値未達のためB案で追加対応）
+
+> Note: unexplored_tags は計測タイミング・サンプル数（14 calls）の差異により改善前より悪化して見えるが、A案の改善(GINインデックス追加・LATERAL JOIN化)は適用済み。
+
+---
+
+### [2026-02-28] 対応 #2: B案 スロークエリ追加最適化（Phase B）
+
+#### 検出
+
+- **検出元**: pg_stat_statements（A案適用後の再計測）
+- **対象クエリ**: `search_articles_by_embedding`, `search_articles_by_unexplored_tags`
+- **検出時の実行時間**: embedding 平均 391ms (72 calls) / unexplored_tags 平均 604ms (14 calls)
+- **A案からの改善**: embedding は 1,858ms → 391ms（-79%）だが目標100ms未達
+
+#### 分析
+
+- **embedding のボトルネック**: ef_search がデフォルト値(40)のまま、over-fetch 5x が過大でJOIN処理に余計な負荷
+- **unexplored_tags のボトルネック**: `NOT (tags && explored_tags)` の否定条件により GIN インデックスが使えず Seq Scan が強制される
+- **共通のボトルネック**: article_translations の JOIN で PK 使用後に has_translation フィルタが後段処理
+
+#### Why
+
+A案で79%改善したが目標100msに対して3.9〜6.0倍の乖離が残存。推薦APIの体感速度改善にはさらなるチューニングが必要。特にunexplored_tags は GIN インデックスが否定条件で無効化されている構造的問題を解消する必要がある。
+
+#### How
+
+- **改善方法**: HNSWパラメータ調整 + クエリ書き換え + インデックス追加
+- **マイグレーションファイル**: `supabase/migrations/20260228000001_optimize_slow_queries_phase_b.sql`
+- **変更内容の概要**:
+  - B-1: ef_search を 40 → 20 に削減（推薦用途での精度トレードオフ許容）
+  - B-2: over-fetch 倍率を 5x → 3x に削減（JOIN処理を40%軽量化）
+  - B-3: article_translations に部分インデックス追加（日本語翻訳済み記事専用）
+  - B-4: unexplored_tags の NOT && → 正引き(&&)+NOT EXISTS パターンに書き換え（GINインデックス活用可能に）
+
+#### 効果
+
+| 指標                         | B案適用前 | B案適用後 | 目標値  |
+| ---------------------------- | --------- | --------- | ------- |
+| embedding 平均実行時間       | 391ms     | (要計測)  | ≤ 100ms |
+| unexplored_tags 平均実行時間 | 604ms     | (要計測)  | ≤ 100ms |
+
+- **アラート解消**: (B案適用後に再計測して判定)
