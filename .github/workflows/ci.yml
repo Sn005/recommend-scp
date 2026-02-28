@@ -163,7 +163,12 @@ jobs:
 
       - name: Merge E2E Reports
         if: always() && steps.e2e_target.outputs.skip != 'true'
-        run: pnpm --filter web exec playwright merge-reports --reporter=html ./blob-report
+        run: |
+          if find apps/web/blob-report -name '*.zip' 2>/dev/null | grep -q .; then
+            pnpm --filter web exec playwright merge-reports --reporter=html ./blob-report
+          else
+            echo "::warning::No blob report files found, skipping merge"
+          fi
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
