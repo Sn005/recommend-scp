@@ -182,23 +182,24 @@ export function useInfiniteArticles(
           }
           return;
         }
-        consecutiveEmptyRef.current = 0;
 
-        setArticles((prev) => {
-          const existingIds = new Set(prev.map((a) => a.id));
-          const uniqueNewArticles = newArticles.filter((a) => !existingIds.has(a.id));
-          // 全件重複の場合: 連続2回で初めて「これ以上なし」と判断
-          if (uniqueNewArticles.length === 0) {
-            consecutiveEmptyRef.current += 1;
-            if (consecutiveEmptyRef.current >= 2) {
-              setHasMore(false);
-            }
-            return prev;
+        // articlesRefで事前に重複判定してからsetArticles/setHasMoreを呼ぶ。
+        // setArticlesコールバック内でsetHasMoreを呼ぶと、コールバック外の
+        // setHasMore(hasMoreData)でReactバッチ処理時に上書きされるため、
+        // コールバック外で一本化する。
+        const existingIds = new Set(articlesRef.current.map((a) => a.id));
+        const uniqueNewArticles = newArticles.filter((a) => !existingIds.has(a.id));
+
+        if (uniqueNewArticles.length === 0) {
+          consecutiveEmptyRef.current += 1;
+          if (consecutiveEmptyRef.current >= 2) {
+            setHasMore(false);
           }
+        } else {
           consecutiveEmptyRef.current = 0;
-          return [...prev, ...uniqueNewArticles];
-        });
-        setHasMore(hasMoreData);
+          setArticles((prev) => [...prev, ...uniqueNewArticles]);
+          setHasMore(hasMoreData);
+        }
       }
     } catch {
       // AC-7: バックグラウンド取得失敗時はユーザーの閲覧体験を中断しない

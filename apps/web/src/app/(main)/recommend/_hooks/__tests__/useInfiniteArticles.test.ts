@@ -642,6 +642,35 @@ describe("useInfiniteArticles", () => {
       expect(result.current.hasMore).toBe(false);
     });
 
+    it("サーバーが記事を返したが全件重複の場合、hasMoreがtrueに上書きされない", async () => {
+      const initialArticles = createMockArticles(10);
+      // loadMore1回目: サーバーは記事を返すが、全て初回取得と同一ID → 全件重複
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles))
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles.slice(0, 5)))
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles.slice(0, 5)));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の全件重複 → hasMoreはまだtrue
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+      expect(result.current.articles).toHaveLength(10);
+
+      // 2回目の全件重複 → hasMoreがfalseになる（trueに上書きされない）
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(false);
+      expect(result.current.articles).toHaveLength(10);
+    });
+
     it("空レスポンス後に成功レスポンスでカウンタがリセットされる", async () => {
       mockApi.recommend.$post
         .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
