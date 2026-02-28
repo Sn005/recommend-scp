@@ -585,6 +585,79 @@ describe("POST /recommend - エッジケース", () => {
   });
 });
 
+describe("POST /recommend - hasMoreロジック", () => {
+  let app: Hono;
+  let mockService: MockService;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockService = {
+      getRecommendations: vi.fn(),
+    };
+    app = createTestApp(mockService);
+  });
+
+  it("結果がlimit未満でもhasMore=trueになる", async () => {
+    // Arrange: limit=10に対して5件のみ返す
+    mockService.getRecommendations.mockResolvedValue(mockRecommendations.slice(0, 2));
+
+    // Act
+    const res = await app.request("/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        limit: 10,
+      }),
+    });
+    const json = (await res.json()) as { hasMore: boolean; count: number };
+
+    // Assert: limit未満でもhasMore=true（次回リクエストで異なるパスが選択される可能性がある）
+    expect(json.count).toBe(2);
+    expect(json.hasMore).toBe(true);
+  });
+
+  it("結果が0件の場合hasMore=falseになる", async () => {
+    // Arrange
+    mockService.getRecommendations.mockResolvedValue([]);
+
+    // Act
+    const res = await app.request("/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        limit: 10,
+      }),
+    });
+    const json = (await res.json()) as { hasMore: boolean; count: number };
+
+    // Assert: 0件の場合のみhasMore=false
+    expect(json.count).toBe(0);
+    expect(json.hasMore).toBe(false);
+  });
+
+  it("結果がlimit以上でもhasMore=trueになる", async () => {
+    // Arrange
+    mockService.getRecommendations.mockResolvedValue(mockRecommendations);
+
+    // Act
+    const res = await app.request("/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        visitorId: VALID_VISITOR_ID,
+        limit: 3,
+      }),
+    });
+    const json = (await res.json()) as { hasMore: boolean; count: number };
+
+    // Assert
+    expect(json.count).toBe(3);
+    expect(json.hasMore).toBe(true);
+  });
+});
+
 describe("POST /recommend - パフォーマンス", () => {
   let app: Hono;
   let mockService: MockService;

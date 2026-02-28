@@ -598,6 +598,111 @@ describe("useInfiniteArticles", () => {
       expect(result.current.error).toBeNull();
     });
 
+    it("1回目の空レスポンスではhasMoreがfalseにならない", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      await act(async () => {
+        await result.current.loadMore();
+      });
+
+      // 1回目の空レスポンスではまだhasMore=true（推薦エンジンの確率的パス選択を考慮）
+      expect(result.current.hasMore).toBe(true);
+    });
+
+    it("連続2回の空レスポンスでhasMoreがfalseになる", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 2回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(false);
+    });
+
+    it("サーバーが記事を返したが全件重複の場合、hasMoreがtrueに上書きされない", async () => {
+      const initialArticles = createMockArticles(10);
+      // loadMore1回目: サーバーは記事を返すが、全て初回取得と同一ID → 全件重複
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles))
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles.slice(0, 5)))
+        .mockResolvedValueOnce(createSuccessResponse(initialArticles.slice(0, 5)));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の全件重複 → hasMoreはまだtrue
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+      expect(result.current.articles).toHaveLength(10);
+
+      // 2回目の全件重複 → hasMoreがfalseになる（trueに上書きされない）
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(false);
+      expect(result.current.articles).toHaveLength(10);
+    });
+
+    it("空レスポンス後に成功レスポンスでカウンタがリセットされる", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("new-1")]))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 成功レスポンス → カウンタリセット
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 再び1回目の空レスポンス → まだhasMore=true
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+    });
+
     it("currentIndexがloadMore後も変化しない（スクロール位置維持）", async () => {
       mockApi.recommend.$post
         .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))

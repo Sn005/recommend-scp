@@ -9,7 +9,9 @@ import {
   getAdjacentArticles,
   getUnexploredArticles,
   DEFAULT_SERENDIPITY_CONFIG,
+  DEFAULT_ADJACENT_RELAXATION,
   type SerendipityConfig,
+  type AdjacentRelaxationConfig,
 } from "../serendipity";
 import type { VectorSearchClient, VectorSearchResult } from "../../search/vector-search-client";
 
@@ -512,6 +514,164 @@ describe("セレンディピティ推薦", () => {
       // limit=1、ceil(1*0.5)=1なので隣接1件
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("adjacent-0");
+    });
+  });
+
+  describe("隣接領域の段階的緩和", () => {
+    it("Level 0で十分な結果がある場合、緩和しない", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `adj-${i}`,
+        title: `隣接${i}`,
+        similarity: 0.5 + i * 0.02,
+        url: `http://ja.scp-wiki.net/adj-${i}`,
+      }));
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+      });
+
+      const result = await getAdjacentArticles(
+        testEmbedding,
+        [],
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        5
+      );
+
+      expect(result).toHaveLength(5);
+      // 1回のみ呼び出し（緩和不要）
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(1);
+    });
+
+    it("Level 0で不足時、類似度範囲を拡張して再検索する", async () => {
+      const level0Results: VectorSearchResult[] = [
+        { id: "adj-1", title: "隣接1", similarity: 0.5, url: "http://ja.scp-wiki.net/adj-1" },
+      ];
+      const level1Results: VectorSearchResult[] = [
+        { id: "adj-2", title: "隣接2", similarity: 0.35, url: "http://ja.scp-wiki.net/adj-2" },
+        { id: "adj-3", title: "隣接3", similarity: 0.75, url: "http://ja.scp-wiki.net/adj-3" },
+        { id: "adj-4", title: "隣接4", similarity: 0.32, url: "http://ja.scp-wiki.net/adj-4" },
+        { id: "adj-5", title: "隣接5", similarity: 0.78, url: "http://ja.scp-wiki.net/adj-5" },
+      ];
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(level0Results) // Level 0: [0.4, 0.7]
+          .mockResolvedValueOnce(level1Results), // Level 1: [0.3, 0.8]
+      });
+
+      const result = await getAdjacentArticles(
+        testEmbedding,
+        [],
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        5
+      );
+
+      expect(result).toHaveLength(5);
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(2);
+
+      // Level 1の呼び出しで類似度範囲が拡張されていることを確認
+      const level1Call = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock
+        .calls[1][0];
+      expect(level1Call.minSimilarity).toBeCloseTo(0.3);
+      expect(level1Call.maxSimilarity).toBeCloseTo(0.8);
+    });
+
+    it("最大緩和時に類似度が下限/上限を超えない", async () => {
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+      });
+
+      const relaxation: AdjacentRelaxationConfig = {
+        maxRelaxationLevels: 5,
+        minSimilarityStep: 0.2,
+        maxSimilarityStep: 0.2,
+        minSimilarityFloor: 0.1,
+        maxSimilarityCeiling: 0.95,
+      };
+
+      await getAdjacentArticles(
+        testEmbedding,
+        [],
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        5,
+        relaxation
+      );
+
+      const calls = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock.calls;
+
+      // 各レベルの類似度範囲を検証
+      for (const call of calls) {
+        expect(call[0].minSimilarity).toBeGreaterThanOrEqual(0.1);
+        expect(call[0].maxSimilarity).toBeLessThanOrEqual(0.95);
+      }
+    });
+
+    it("レベル間で重複記事が除去される", async () => {
+      const sharedArticle: VectorSearchResult = {
+        id: "shared-1",
+        title: "共通記事",
+        similarity: 0.5,
+        url: "http://ja.scp-wiki.net/shared-1",
+      };
+      const newArticle: VectorSearchResult = {
+        id: "new-1",
+        title: "新規記事",
+        similarity: 0.35,
+        url: "http://ja.scp-wiki.net/new-1",
+      };
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce([sharedArticle]) // Level 0
+          .mockResolvedValueOnce([newArticle]) // Level 1 (sharedArticleはexcludeされる)
+          .mockResolvedValue([]), // Level 2以降: 空
+      });
+
+      const result = await getAdjacentArticles(
+        testEmbedding,
+        [],
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        5
+      );
+
+      expect(result).toHaveLength(2);
+      const ids = result.map((r) => r.id);
+      expect(ids).toContain("shared-1");
+      expect(ids).toContain("new-1");
+    });
+
+    it("緩和なし(maxRelaxationLevels=0)で従来と同じ動作", async () => {
+      const mockResults: VectorSearchResult[] = [
+        { id: "adj-1", title: "隣接1", similarity: 0.5, url: "http://ja.scp-wiki.net/adj-1" },
+      ];
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+      });
+
+      const noRelaxation: AdjacentRelaxationConfig = {
+        ...DEFAULT_ADJACENT_RELAXATION,
+        maxRelaxationLevels: 0,
+      };
+
+      const result = await getAdjacentArticles(
+        testEmbedding,
+        [],
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        5,
+        noRelaxation
+      );
+
+      // 1回のみ呼び出し（緩和なし）
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(1);
+      expect(result).toHaveLength(1);
     });
   });
 });

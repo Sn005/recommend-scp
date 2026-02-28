@@ -62,8 +62,9 @@ export const createRecommendRoutes = (
         {
           recommendations,
           count: recommendations.length,
-          // limitより少ない場合は追加記事なし
-          hasMore: recommendations.length >= limit,
+          // 0件返却の場合のみ「これ以上なし」と判断
+          // limit未満でも次回リクエストで異なるパス（preference/serendipity）が選択される可能性がある
+          hasMore: recommendations.length > 0,
         },
         200
       );

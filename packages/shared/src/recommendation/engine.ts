@@ -11,7 +11,9 @@ import { calculatePreferenceVector, type PreferenceVectorInput } from "./prefere
 import {
   getSerendipityArticles,
   DEFAULT_SERENDIPITY_CONFIG,
+  DEFAULT_ADJACENT_RELAXATION,
   type SerendipityConfig,
+  type AdjacentRelaxationConfig,
 } from "./serendipity";
 
 /**
@@ -35,6 +37,38 @@ export interface RecommendedArticle {
 }
 
 /**
+ * 段階的類似度緩和設定
+ *
+ * 検索結果が不足した場合、段階的にパラメータを緩和して再検索する。
+ */
+export interface SimilarityRelaxationConfig {
+  /** 最大緩和レベル（デフォルト: 3） */
+  maxRelaxationLevels: number;
+  /** プール倍率の1レベルあたりの増分（デフォルト: 2） */
+  poolMultiplierStep: number;
+  /** 隣接領域: 最小類似度の緩和幅（デフォルト: 0.1） */
+  adjacentMinSimilarityStep: number;
+  /** 隣接領域: 最大類似度の緩和幅（デフォルト: 0.1） */
+  adjacentMaxSimilarityStep: number;
+  /** 隣接領域: 最小類似度の下限（デフォルト: 0.1） */
+  adjacentMinSimilarityFloor: number;
+  /** 隣接領域: 最大類似度の上限（デフォルト: 0.95） */
+  adjacentMaxSimilarityCeiling: number;
+}
+
+/**
+ * デフォルトの段階的緩和設定
+ */
+const DEFAULT_RELAXATION_CONFIG: SimilarityRelaxationConfig = {
+  maxRelaxationLevels: 3,
+  poolMultiplierStep: 2,
+  adjacentMinSimilarityStep: 0.1,
+  adjacentMaxSimilarityStep: 0.1,
+  adjacentMinSimilarityFloor: 0.1,
+  adjacentMaxSimilarityCeiling: 0.95,
+};
+
+/**
  * 推薦エンジン設定
  */
 export interface RecommendationEngineConfig {
@@ -44,6 +78,8 @@ export interface RecommendationEngineConfig {
   serendipity?: Partial<SerendipityConfig>;
   /** 候補プール倍率（デフォルト: 3）。limitのN倍の候補を取得し、ランダムサンプリングで多様性を確保する */
   candidatePoolMultiplier?: number;
+  /** 段階的緩和設定（省略時はデフォルト設定を使用） */
+  relaxation?: Partial<SimilarityRelaxationConfig>;
 }
 
 /**
@@ -69,6 +105,7 @@ const DEFAULT_CONFIG: RecommendationEngineConfig = {
 export class RecommendationEngine {
   private readonly config: RecommendationEngineConfig;
   private readonly serendipityConfig: SerendipityConfig;
+  private readonly relaxationConfig: SimilarityRelaxationConfig;
 
   constructor(
     private readonly storage: PreferenceStorage,
@@ -79,6 +116,10 @@ export class RecommendationEngine {
     this.serendipityConfig = {
       ...DEFAULT_SERENDIPITY_CONFIG,
       ...config.serendipity,
+    };
+    this.relaxationConfig = {
+      ...DEFAULT_RELAXATION_CONFIG,
+      ...config.relaxation,
     };
   }
 
@@ -115,18 +156,30 @@ export class RecommendationEngine {
 
     // 連続類似検出（80/20判定より優先）
     const forceSerendipity = await this.shouldForceSerendipity(visitorId);
-    if (forceSerendipity) {
-      return this.getSerendipityRecommendations(profile, excludedIds, limit);
-    }
 
     // 80/20 判定: explorationRateの確率でセレンディピティ推薦
-    const isSerendipity = Math.random() < this.serendipityConfig.explorationRate;
+    const isSerendipity =
+      forceSerendipity || Math.random() < this.serendipityConfig.explorationRate;
 
-    if (isSerendipity) {
-      return this.getSerendipityRecommendations(profile, excludedIds, limit);
-    } else {
-      return this.getPreferenceRecommendations(profile, excludedIds, limit);
+    // プライマリパスで取得
+    const primaryResults = isSerendipity
+      ? await this.getSerendipityRecommendations(profile, excludedIds, limit)
+      : await this.getPreferenceRecommendations(profile, excludedIds, limit);
+
+    // フォールバック: プライマリがlimit未満の場合、代替パスで不足分を補充
+    if (primaryResults.length < limit) {
+      const primaryIds = primaryResults.map((r) => r.id);
+      const fallbackExcludedIds = [...excludedIds, ...primaryIds];
+      const remaining = limit - primaryResults.length;
+
+      const fallbackResults = isSerendipity
+        ? await this.getPreferenceRecommendations(profile, fallbackExcludedIds, remaining)
+        : await this.getSerendipityRecommendations(profile, fallbackExcludedIds, remaining);
+
+      return [...primaryResults, ...fallbackResults];
     }
+
+    return primaryResults;
   }
 
   /**
@@ -188,28 +241,49 @@ export class RecommendationEngine {
     excludedIds: string[],
     limit: number
   ): Promise<RecommendedArticle[]> {
-    const multiplier = this.config.candidatePoolMultiplier ?? DEFAULT_CANDIDATE_POOL_MULTIPLIER;
-    const poolSize = limit * multiplier;
+    const baseMultiplier = this.config.candidatePoolMultiplier ?? DEFAULT_CANDIDATE_POOL_MULTIPLIER;
+    const { maxRelaxationLevels, poolMultiplierStep } = this.relaxationConfig;
 
-    // 候補プールを多めに取得
-    const results = await this.vectorSearch.searchByEmbedding({
-      queryVector: profile.preferenceEmbedding!,
-      excludeIds: excludedIds,
-      limit: poolSize,
-    });
+    const collectedIds = new Set<string>();
+    const allResults: RecommendedArticle[] = [];
 
-    const articles = results.map((r) => ({
-      id: r.id,
-      title: r.title,
-      similarityScore: r.similarity,
-      source: "preference" as const,
-      url: r.url,
-      objectClass: r.objectClass ?? null,
-      rating: r.rating ?? null,
-    }));
+    for (let level = 0; level <= maxRelaxationLevels; level++) {
+      const currentMultiplier = baseMultiplier + level * poolMultiplierStep;
+      const poolSize = limit * currentMultiplier;
 
-    // シャッフルしてlimit件を返却
-    return this.shuffleArray(articles).slice(0, limit);
+      const results = await this.vectorSearch.searchByEmbedding({
+        queryVector: profile.preferenceEmbedding!,
+        excludeIds: [...excludedIds, ...collectedIds],
+        limit: poolSize,
+      });
+
+      for (const r of results) {
+        if (!collectedIds.has(r.id)) {
+          collectedIds.add(r.id);
+          allResults.push({
+            id: r.id,
+            title: r.title,
+            similarityScore: r.similarity,
+            source: "preference" as const,
+            url: r.url,
+            objectClass: r.objectClass ?? null,
+            rating: r.rating ?? null,
+          });
+        }
+      }
+
+      if (allResults.length >= limit) {
+        return this.shuffleArray(allResults).slice(0, limit);
+      }
+
+      // 緩和しても0件の場合はこれ以上拡大しても無駄
+      if (results.length === 0 && level > 0) {
+        break;
+      }
+    }
+
+    // 取得可能分のみ返却
+    return this.shuffleArray(allResults).slice(0, limit);
   }
 
   /**
@@ -244,13 +318,22 @@ export class RecommendationEngine {
   ): Promise<RecommendedArticle[]> {
     const exploredTags = await this.getExploredTags(profile.visitorId);
 
+    const adjacentRelaxation: AdjacentRelaxationConfig = {
+      maxRelaxationLevels: this.relaxationConfig.maxRelaxationLevels,
+      minSimilarityStep: this.relaxationConfig.adjacentMinSimilarityStep,
+      maxSimilarityStep: this.relaxationConfig.adjacentMaxSimilarityStep,
+      minSimilarityFloor: this.relaxationConfig.adjacentMinSimilarityFloor,
+      maxSimilarityCeiling: this.relaxationConfig.adjacentMaxSimilarityCeiling,
+    };
+
     return getSerendipityArticles(
       profile.preferenceEmbedding!,
       excludedIds,
       exploredTags,
       this.vectorSearch,
       this.serendipityConfig,
-      limit
+      limit,
+      adjacentRelaxation
     );
   }
 

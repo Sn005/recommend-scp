@@ -25,6 +25,35 @@ export interface SerendipityConfig {
 }
 
 /**
+ * 隣接領域の段階的緩和設定
+ *
+ * 検索結果が不足した場合、類似度範囲を段階的に拡大して再検索する。
+ */
+export interface AdjacentRelaxationConfig {
+  /** 最大緩和レベル（デフォルト: 3） */
+  maxRelaxationLevels: number;
+  /** 最小類似度の緩和幅（1レベルあたりの減少量、デフォルト: 0.1） */
+  minSimilarityStep: number;
+  /** 最大類似度の緩和幅（1レベルあたりの増加量、デフォルト: 0.1） */
+  maxSimilarityStep: number;
+  /** 最小類似度の下限（デフォルト: 0.1） */
+  minSimilarityFloor: number;
+  /** 最大類似度の上限（デフォルト: 0.95） */
+  maxSimilarityCeiling: number;
+}
+
+/**
+ * デフォルトの隣接領域緩和設定
+ */
+export const DEFAULT_ADJACENT_RELAXATION: AdjacentRelaxationConfig = {
+  maxRelaxationLevels: 3,
+  minSimilarityStep: 0.1,
+  maxSimilarityStep: 0.1,
+  minSimilarityFloor: 0.1,
+  maxSimilarityCeiling: 0.95,
+};
+
+/**
  * デフォルトセレンディピティ設定
  */
 export const DEFAULT_SERENDIPITY_CONFIG: SerendipityConfig = {
@@ -53,13 +82,21 @@ export async function getSerendipityArticles(
   exploredTags: string[],
   vectorSearch: VectorSearchClient,
   config: SerendipityConfig = DEFAULT_SERENDIPITY_CONFIG,
-  limit: number = 10
+  limit: number = 10,
+  adjacentRelaxation?: AdjacentRelaxationConfig
 ): Promise<RecommendedArticle[]> {
   const adjacentCount = Math.ceil(limit * config.adjacentRatio);
   const unexploredCount = limit - adjacentCount;
 
   const [adjacentArticles, unexploredArticles] = await Promise.all([
-    getAdjacentArticles(preferenceEmbedding, excludeIds, vectorSearch, config, adjacentCount),
+    getAdjacentArticles(
+      preferenceEmbedding,
+      excludeIds,
+      vectorSearch,
+      config,
+      adjacentCount,
+      adjacentRelaxation
+    ),
     getUnexploredArticles(exploredTags, excludeIds, vectorSearch, unexploredCount),
   ]);
 
@@ -98,25 +135,56 @@ export async function getAdjacentArticles(
   excludeIds: string[],
   vectorSearch: VectorSearchClient,
   config: SerendipityConfig,
-  limit: number
+  limit: number,
+  relaxation: AdjacentRelaxationConfig = DEFAULT_ADJACENT_RELAXATION
 ): Promise<RecommendedArticle[]> {
-  const results = await vectorSearch.searchByEmbedding({
-    queryVector: preferenceEmbedding,
-    excludeIds,
-    limit: limit * 2, // 余裕を持って取得
-    minSimilarity: config.adjacentMinSimilarity,
-    maxSimilarity: config.adjacentMaxSimilarity,
-  });
+  const collectedIds = new Set<string>();
+  const allResults: RecommendedArticle[] = [];
 
-  return results.slice(0, limit).map((r) => ({
-    id: r.id,
-    title: r.title,
-    similarityScore: r.similarity,
-    source: "serendipity" as const,
-    url: r.url,
-    objectClass: r.objectClass ?? null,
-    rating: r.rating ?? null,
-  }));
+  for (let level = 0; level <= relaxation.maxRelaxationLevels; level++) {
+    const minSim = Math.max(
+      config.adjacentMinSimilarity - level * relaxation.minSimilarityStep,
+      relaxation.minSimilarityFloor
+    );
+    const maxSim = Math.min(
+      config.adjacentMaxSimilarity + level * relaxation.maxSimilarityStep,
+      relaxation.maxSimilarityCeiling
+    );
+
+    const results = await vectorSearch.searchByEmbedding({
+      queryVector: preferenceEmbedding,
+      excludeIds: [...excludeIds, ...collectedIds],
+      limit: limit * 2,
+      minSimilarity: minSim,
+      maxSimilarity: maxSim,
+    });
+
+    for (const r of results) {
+      if (!collectedIds.has(r.id)) {
+        collectedIds.add(r.id);
+        allResults.push({
+          id: r.id,
+          title: r.title,
+          similarityScore: r.similarity,
+          source: "serendipity" as const,
+          url: r.url,
+          objectClass: r.objectClass ?? null,
+          rating: r.rating ?? null,
+        });
+      }
+    }
+
+    if (allResults.length >= limit) {
+      return allResults.slice(0, limit);
+    }
+
+    // 緩和しても0件の場合はこれ以上拡大しても無駄
+    if (results.length === 0 && level > 0) {
+      break;
+    }
+  }
+
+  return allResults.slice(0, limit);
 }
 
 /**

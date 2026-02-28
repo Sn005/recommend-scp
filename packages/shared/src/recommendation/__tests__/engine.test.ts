@@ -104,7 +104,7 @@ describe("RecommendationEngine", () => {
       });
 
       const vectorSearch = createMockVectorSearch({
-        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        searchByEmbedding: vi.fn().mockResolvedValueOnce(mockResults).mockResolvedValue([]),
         getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
       });
 
@@ -115,6 +115,7 @@ describe("RecommendationEngine", () => {
       });
       const recommendations = await engine.getRecommendations(visitorId, 10);
 
+      // 3件のみ返却（フォールバックのセレンディピティも0件）
       expect(recommendations).toHaveLength(3);
       // シャッフルにより順序は不定だが、全記事が含まれマッピングが正しいことを確認
       const ids = recommendations.map((r) => r.id).sort();
@@ -354,7 +355,7 @@ describe("RecommendationEngine", () => {
       });
 
       const vectorSearch = createMockVectorSearch({
-        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        searchByEmbedding: vi.fn().mockResolvedValueOnce(mockResults).mockResolvedValue([]),
         getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
       });
 
@@ -364,7 +365,8 @@ describe("RecommendationEngine", () => {
       });
 
       const recommendations = await engine.getRecommendations(visitorId, 10);
-      expect(recommendations).toHaveLength(1);
+      // フォールバック（セレンディピティ）も0件のため、プリファレンス1件のみ
+      expect(recommendations.filter((r) => r.source === "preference")).toHaveLength(1);
       expect(recommendations[0].source).toBe("preference");
     });
 
@@ -391,7 +393,8 @@ describe("RecommendationEngine", () => {
       });
 
       const vectorSearch = createMockVectorSearch({
-        searchByEmbedding: vi.fn().mockResolvedValue(adjacentResults),
+        // 1回目: セレンディピティ adjacent、2回目: フォールバック preference → 空
+        searchByEmbedding: vi.fn().mockResolvedValueOnce(adjacentResults).mockResolvedValue([]),
         searchByUnexploredTags: vi.fn().mockResolvedValue([]),
         getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
       });
@@ -402,7 +405,8 @@ describe("RecommendationEngine", () => {
       });
 
       const recommendations = await engine.getRecommendations(visitorId, 10);
-      expect(recommendations).toHaveLength(1);
+      // フォールバック（プリファレンス）が0件のため、セレンディピティ1件のみ
+      expect(recommendations.filter((r) => r.source === "serendipity")).toHaveLength(1);
       expect(recommendations[0].source).toBe("serendipity");
     });
 
@@ -497,7 +501,11 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(serendipityResults),
+          // 1回目: セレンディピティ adjacent、2回目: フォールバック preference → 空
+          searchByEmbedding: vi
+            .fn()
+            .mockResolvedValueOnce(serendipityResults)
+            .mockResolvedValue([]),
           searchByUnexploredTags: vi.fn().mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
@@ -510,7 +518,7 @@ describe("RecommendationEngine", () => {
 
         const recommendations = await engine.getRecommendations(visitorId);
 
-        expect(recommendations).toHaveLength(1);
+        expect(recommendations.filter((r) => r.source === "serendipity")).toHaveLength(1);
         expect(recommendations[0].source).toBe("serendipity");
       });
 
@@ -541,7 +549,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -553,7 +561,7 @@ describe("RecommendationEngine", () => {
 
         const recommendations = await engine.getRecommendations(visitorId);
 
-        expect(recommendations).toHaveLength(1);
+        expect(recommendations.filter((r) => r.source === "preference")).toHaveLength(1);
         expect(recommendations[0].source).toBe("preference");
       });
 
@@ -576,7 +584,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -587,7 +595,7 @@ describe("RecommendationEngine", () => {
 
         const recommendations = await engine.getRecommendations(visitorId);
 
-        expect(recommendations).toHaveLength(1);
+        expect(recommendations.filter((r) => r.source === "preference")).toHaveLength(1);
         expect(recommendations[0].source).toBe("preference");
       });
 
@@ -617,7 +625,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -628,7 +636,7 @@ describe("RecommendationEngine", () => {
 
         const recommendations = await engine.getRecommendations(visitorId);
 
-        expect(recommendations).toHaveLength(1);
+        expect(recommendations.filter((r) => r.source === "preference")).toHaveLength(1);
         expect(recommendations[0].source).toBe("preference");
       });
 
@@ -661,7 +669,10 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(serendipityResults),
+          searchByEmbedding: vi
+            .fn()
+            .mockResolvedValueOnce(serendipityResults)
+            .mockResolvedValue([]),
           searchByUnexploredTags: vi.fn().mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
@@ -770,7 +781,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -811,7 +822,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -852,7 +863,7 @@ describe("RecommendationEngine", () => {
         ];
 
         const vectorSearch = createMockVectorSearch({
-          searchByEmbedding: vi.fn().mockResolvedValue(preferenceResults),
+          searchByEmbedding: vi.fn().mockResolvedValueOnce(preferenceResults).mockResolvedValue([]),
           getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
         });
 
@@ -865,6 +876,188 @@ describe("RecommendationEngine", () => {
 
         expect(recommendations[0].source).toBe("preference");
       });
+    });
+  });
+
+  describe("フォールバック補充", () => {
+    it("セレンディピティ不足時にプリファレンスでフォールバックする", async () => {
+      const serendipityResults: VectorSearchResult[] = [
+        {
+          id: "serendipity-1",
+          title: "冒険記事1",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/serendipity-1",
+        },
+        {
+          id: "serendipity-2",
+          title: "冒険記事2",
+          similarity: 0.6,
+          url: "http://ja.scp-wiki.net/serendipity-2",
+        },
+      ];
+
+      const preferenceResults: VectorSearchResult[] = Array.from({ length: 8 }, (_, i) => ({
+        id: `pref-${i}`,
+        title: `好み記事${i}`,
+        similarity: 0.9 - i * 0.01,
+        url: `http://ja.scp-wiki.net/pref-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        getArticleTags: vi.fn().mockResolvedValue(["ホラー"]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        // 1回目: セレンディピティ用（adjacentで2件のみ）、2回目: フォールバック用
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(serendipityResults) // adjacent
+          .mockResolvedValue(preferenceResults), // fallback preference
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      // セレンディピティ2件 + プリファレンス8件 = 10件
+      const serendipityCount = recommendations.filter((r) => r.source === "serendipity").length;
+      const preferenceCount = recommendations.filter((r) => r.source === "preference").length;
+      expect(serendipityCount).toBe(2);
+      expect(preferenceCount).toBe(8);
+      expect(recommendations).toHaveLength(10);
+    });
+
+    it("フォールバック時にプライマリ結果IDが除外される", async () => {
+      const serendipityResults: VectorSearchResult[] = [
+        {
+          id: "serendipity-1",
+          title: "冒険記事",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/serendipity-1",
+        },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        getArticleTags: vi.fn().mockResolvedValue(["ホラー"]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(serendipityResults) // adjacent
+          .mockResolvedValue([]), // fallback preference
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // フォールバック用のsearchByEmbeddingの呼び出し（2回目）で
+      // セレンディピティ結果のIDが除外されていることを確認
+      const calls = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock.calls;
+      const fallbackCall = calls[calls.length - 1];
+      expect(fallbackCall[0].excludeIds).toContain("serendipity-1");
+    });
+
+    it("両パス合計でもlimit未満の場合は取得可能分のみ返す", async () => {
+      const serendipityResults: VectorSearchResult[] = [
+        {
+          id: "serendipity-1",
+          title: "冒険記事",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/serendipity-1",
+        },
+      ];
+
+      const preferenceResults: VectorSearchResult[] = [
+        {
+          id: "pref-1",
+          title: "好み記事",
+          similarity: 0.9,
+          url: "http://ja.scp-wiki.net/pref-1",
+        },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        getArticleTags: vi.fn().mockResolvedValue(["ホラー"]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(serendipityResults) // adjacent
+          .mockResolvedValue(preferenceResults), // fallback
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 1 },
+        relaxation: { maxRelaxationLevels: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      // 両パス合計2件しかなくてもエラーにならず返却される
+      expect(recommendations).toHaveLength(2);
+    });
+
+    it("プライマリがlimit以上の場合はフォールバックしない", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+      // searchByUnexploredTagsは呼ばれない（フォールバック不要）
+      expect(vectorSearch.searchByUnexploredTags).not.toHaveBeenCalled();
     });
   });
 
@@ -936,7 +1129,7 @@ describe("RecommendationEngine", () => {
       expect(recommendations).toHaveLength(10);
     });
 
-    it("候補プールが要求数より少ない場合、全件返却される", async () => {
+    it("候補プールが要求数より少ない場合、フォールバック含め取得可能分が返却される", async () => {
       const mockResults: VectorSearchResult[] = Array.from({ length: 5 }, (_, i) => ({
         id: `article-${i}`,
         title: `記事${i}`,
@@ -952,7 +1145,8 @@ describe("RecommendationEngine", () => {
       });
 
       const vectorSearch = createMockVectorSearch({
-        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        // 1回目: preference(5件)、2回目以降: フォールバック serendipity → 空
+        searchByEmbedding: vi.fn().mockResolvedValueOnce(mockResults).mockResolvedValue([]),
         getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
       });
 
@@ -964,6 +1158,7 @@ describe("RecommendationEngine", () => {
 
       const recommendations = await engine.getRecommendations(visitorId, 10);
 
+      // preference 5件 + フォールバック serendipity 0件 = 5件
       expect(recommendations).toHaveLength(5);
     });
 
@@ -1075,6 +1270,122 @@ describe("RecommendationEngine", () => {
       for (const rec of recommendations) {
         expect(poolIds.has(rec.id)).toBe(true);
       }
+    });
+  });
+
+  describe("段階的プール拡張（preference）", () => {
+    it("初回で十分な結果がある場合、拡張しない", async () => {
+      const mockResults: VectorSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+        id: `article-${i}`,
+        title: `記事${i}`,
+        similarity: 0.99 - i * 0.01,
+        url: `http://ja.scp-wiki.net/scp-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue(mockResults),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+      // 初回のみ（フォールバックもなし）
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(1);
+    });
+
+    it("初回不足時にプール倍率を増やして再検索する", async () => {
+      const level0Results: VectorSearchResult[] = Array.from({ length: 3 }, (_, i) => ({
+        id: `pref-${i}`,
+        title: `好み記事${i}`,
+        similarity: 0.95 - i * 0.01,
+        url: `http://ja.scp-wiki.net/pref-${i}`,
+      }));
+      const level1Results: VectorSearchResult[] = Array.from({ length: 10 }, (_, i) => ({
+        id: `pref-expand-${i}`,
+        title: `拡張記事${i}`,
+        similarity: 0.8 - i * 0.01,
+        url: `http://ja.scp-wiki.net/pref-expand-${i}`,
+      }));
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(level0Results) // Level 0: limit * 3 = 30
+          .mockResolvedValueOnce(level1Results), // Level 1: limit * 5 = 50
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      const recommendations = await engine.getRecommendations(visitorId, 10);
+
+      expect(recommendations).toHaveLength(10);
+      // Level 0 + Level 1 = 2回
+      expect(vectorSearch.searchByEmbedding).toHaveBeenCalledTimes(2);
+
+      // Level 1の呼び出しでプール倍率が増加していることを確認
+      const level1Call = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock
+        .calls[1][0];
+      expect(level1Call.limit).toBe(50); // 10 * (3 + 2) = 50
+    });
+
+    it("0件返却時に早期終了する", async () => {
+      const level0Results: VectorSearchResult[] = [
+        { id: "pref-0", title: "記事0", similarity: 0.9, url: "http://ja.scp-wiki.net/pref-0" },
+      ];
+
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(level0Results) // Level 0: 1件
+          .mockResolvedValueOnce([]) // Level 1: 0件 → 早期終了
+          .mockResolvedValue([]), // フォールバック
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+        getEmbedding: vi.fn().mockResolvedValue(testEmbedding),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+        serendipity: { explorationRate: 0 },
+      });
+
+      await engine.getRecommendations(visitorId, 10);
+
+      // Level 0 + Level 1(0件で終了) + フォールバック(serendipity adjacent + fallback) = 4以下
+      // Level 2, Level 3 は実行されない
+      const callCount = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock.calls
+        .length;
+      expect(callCount).toBeLessThanOrEqual(4);
     });
   });
 });
