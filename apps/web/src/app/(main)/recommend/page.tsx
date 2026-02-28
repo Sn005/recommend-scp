@@ -44,7 +44,7 @@ export default function RecommendPage() {
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
     useInfiniteArticles();
 
-  const { recordNext } = useFeedback();
+  const { recordNext, recordFavorite } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;
   const { isFavorited, toggleFavorite } = useArticleFavorite({
     articleId: currentArticle?.id,
@@ -186,7 +186,10 @@ export default function RecommendPage() {
   // NOTE: recordLikeは廃止。お気に入りはfavorites APIのみで管理（重み2.0）
   const handleFavorite = useCallback(() => {
     void toggleFavorite();
-  }, [toggleFavorite]);
+    if (currentArticle?.id) {
+      void recordFavorite(currentArticle.id);
+    }
+  }, [toggleFavorite, recordFavorite, currentArticle?.id]);
 
   // コンテンツ読み込み完了ハンドラー（履歴保存）
   const handleContentLoaded = useCallback(

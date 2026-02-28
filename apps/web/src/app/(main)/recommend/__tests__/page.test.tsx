@@ -732,6 +732,17 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(mockUseArticleFavoriteResult.toggleFavorite).toHaveBeenCalled();
     });
 
+    it("お気に入りボタンタップでrecordFavoriteが呼ばれる", async () => {
+      setupDefaultArticles();
+      render(<RecommendPage />);
+      dismissInitialCard();
+
+      const favoriteButton = await screen.findByLabelText("お気に入りに追加");
+      await userEvent.click(favoriteButton);
+
+      expect(mockUseFeedbackResult.recordFavorite).toHaveBeenCalledWith("scp-173");
+    });
+
     it("お気に入りボタンタップ後も遷移フローに影響しない", async () => {
       setupDefaultArticles();
       render(<RecommendPage />);
