@@ -60,8 +60,12 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
  */
 const INJECTED_STYLE = [
   "<style>",
-  // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
-  "#main-content{margin:0!important;padding:0!important;max-width:none!important}",
+  // Wikidot構造要素のレイアウトリセット
+  // - margin:0 → 旧テーマのmarginで記事幅が狭くなる問題を解消
+  // - max-width:100% → 新テーマ(Sigma等)のwidth:60remがモバイルではみ出すのを制約
+  //   旧テーマのmax-width固定値も上書きし、iframe全幅を使えるようにする
+  //   （max-width:noneだと新テーマのwidth:60remを制約できない）
+  "#main-content{margin:0!important;padding:0!important;max-width:100%!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正
@@ -209,21 +213,41 @@ const INJECTED_SCRIPT = [
 const WIKIDOT_STUB = "<script>window.WIKIDOT={page:{listeners:{}},modules:{}};</script>";
 
 /**
- * HTML要素のインラインstyle属性を除去する正規表現
+ * インラインstyle属性の選択的フィルタリング
  *
  * Wikidot記事には `style="text-align: right;"` 等のインラインスタイルが含まれることがあり、
- * モバイル表示でレイアウト崩れを起こす。記事の装飾はInjected CSSで制御するため、
- * インラインstyle属性は安全に除去できる。
+ * モバイル表示でレイアウト崩れを起こす。一方で、ACSバー等のコンポーネントは
+ * width/max-width/overflow等のレイアウト系プロパティに依存しているため、
+ * これらは保持する必要がある。
  *
- * ただし `display: none` を含むstyle属性は保持する。
- * Wikidotのコンポーネント（テーマCSS等）は親divの `style="display: none;"` で
- * コード表示ブロックを隠しており、除去すると本来非表示のUIが表示されてしまう。
- *
- * - `style="..."` （ダブルクォート）を対象
- * - 属性前の空白ごと除去してHTML構造を保持
- * - 否定先読みで `display: none` / `display:none` を含む属性をスキップ
+ * 戦略: style属性を個別プロパティに分解し、保持すべきプロパティのみ残す。
+ * 残るプロパティがなければstyle属性ごと除去する。
  */
-const INLINE_STYLE_ATTR_RE = / style="(?![^"]*display\s*:\s*none)[^"]*"/gi;
+
+/** レイアウトに必要なため保持するCSSプロパティのパターン */
+const PRESERVED_STYLE_PROPS_RE =
+  /^(display|width|min-width|max-width|height|min-height|max-height|overflow|overflow-x|overflow-y|box-sizing|position|top|left|right|bottom|z-index|opacity|visibility|grid-template|grid-column|grid-row|flex|flex-basis|flex-grow|flex-shrink|order)$/i;
+
+/**
+ * インラインstyle属性値から保持すべきプロパティのみを抽出する。
+ * 保持するプロパティがなければ空文字を返す。
+ */
+function filterStyleValue(styleValue: string): string {
+  const preserved = styleValue
+    .split(";")
+    .map((decl) => decl.trim())
+    .filter((decl) => {
+      if (!decl) return false;
+      const colonIndex = decl.indexOf(":");
+      if (colonIndex === -1) return false;
+      const prop = decl.slice(0, colonIndex).trim();
+      return PRESERVED_STYLE_PROPS_RE.test(prop);
+    });
+  return preserved.length > 0 ? preserved.join("; ") + ";" : "";
+}
+
+/** style属性全体にマッチする正規表現 */
+const INLINE_STYLE_ATTR_RE = / style="([^"]*)"/gi;
 
 /**
  * href="/path" 形式の絶対パスリンクを href="/api/wiki-proxy/path" に書き換える正規表現
@@ -407,8 +431,11 @@ function buildHtml(content: ExtractedContent): string {
  */
 function rewriteUrls(html: string): string {
   let result = html;
-  // 1. インラインstyle属性の除去
-  result = result.replace(INLINE_STYLE_ATTR_RE, "");
+  // 1. インラインstyle属性の選択的フィルタリング（レイアウト系プロパティは保持）
+  result = result.replace(INLINE_STYLE_ATTR_RE, (_match, value: string) => {
+    const filtered = filterStyleValue(value);
+    return filtered ? ` style="${filtered}"` : "";
+  });
   // 2. フルURL書き換え
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
@@ -519,7 +546,6 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
           "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
         );
       }
-
       return new Response(finalHtml, {
         status: response.status,
         headers: {
