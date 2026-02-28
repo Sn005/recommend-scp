@@ -115,18 +115,30 @@ export class RecommendationEngine {
 
     // 連続類似検出（80/20判定より優先）
     const forceSerendipity = await this.shouldForceSerendipity(visitorId);
-    if (forceSerendipity) {
-      return this.getSerendipityRecommendations(profile, excludedIds, limit);
-    }
 
     // 80/20 判定: explorationRateの確率でセレンディピティ推薦
-    const isSerendipity = Math.random() < this.serendipityConfig.explorationRate;
+    const isSerendipity =
+      forceSerendipity || Math.random() < this.serendipityConfig.explorationRate;
 
-    if (isSerendipity) {
-      return this.getSerendipityRecommendations(profile, excludedIds, limit);
-    } else {
-      return this.getPreferenceRecommendations(profile, excludedIds, limit);
+    // プライマリパスで取得
+    const primaryResults = isSerendipity
+      ? await this.getSerendipityRecommendations(profile, excludedIds, limit)
+      : await this.getPreferenceRecommendations(profile, excludedIds, limit);
+
+    // フォールバック: プライマリがlimit未満の場合、代替パスで不足分を補充
+    if (primaryResults.length < limit) {
+      const primaryIds = primaryResults.map((r) => r.id);
+      const fallbackExcludedIds = [...excludedIds, ...primaryIds];
+      const remaining = limit - primaryResults.length;
+
+      const fallbackResults = isSerendipity
+        ? await this.getPreferenceRecommendations(profile, fallbackExcludedIds, remaining)
+        : await this.getSerendipityRecommendations(profile, fallbackExcludedIds, remaining);
+
+      return [...primaryResults, ...fallbackResults];
     }
+
+    return primaryResults;
   }
 
   /**

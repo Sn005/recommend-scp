@@ -598,6 +598,82 @@ describe("useInfiniteArticles", () => {
       expect(result.current.error).toBeNull();
     });
 
+    it("1回目の空レスポンスではhasMoreがfalseにならない", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      await act(async () => {
+        await result.current.loadMore();
+      });
+
+      // 1回目の空レスポンスではまだhasMore=true（推薦エンジンの確率的パス選択を考慮）
+      expect(result.current.hasMore).toBe(true);
+    });
+
+    it("連続2回の空レスポンスでhasMoreがfalseになる", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 2回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(false);
+    });
+
+    it("空レスポンス後に成功レスポンスでカウンタがリセットされる", async () => {
+      mockApi.recommend.$post
+        .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))
+        .mockResolvedValueOnce(createSuccessResponse([]))
+        .mockResolvedValueOnce(createSuccessResponse([createMockArticle("new-1")]))
+        .mockResolvedValueOnce(createSuccessResponse([]));
+
+      const { result } = renderHook(() => useInfiniteArticles());
+
+      await waitFor(() => {
+        expect(result.current.articles).toHaveLength(10);
+      });
+
+      // 1回目の空レスポンス
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 成功レスポンス → カウンタリセット
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+
+      // 再び1回目の空レスポンス → まだhasMore=true
+      await act(async () => {
+        await result.current.loadMore();
+      });
+      expect(result.current.hasMore).toBe(true);
+    });
+
     it("currentIndexがloadMore後も変化しない（スクロール位置維持）", async () => {
       mockApi.recommend.$post
         .mockResolvedValueOnce(createSuccessResponse(createMockArticles(10)))

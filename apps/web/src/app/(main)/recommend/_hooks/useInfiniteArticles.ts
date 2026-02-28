@@ -55,6 +55,7 @@ export function useInfiniteArticles(
   const isLoadingMoreRef = useRef(false);
   const isMountedRef = useRef(true);
   const articlesRef = useRef<Article[]>([]);
+  const consecutiveEmptyRef = useRef(0);
 
   // マウント状態管理
   useEffect(() => {
@@ -172,20 +173,29 @@ export function useInfiniteArticles(
       const hasMoreData: boolean = data.hasMore ?? false;
 
       if (isMountedRef.current) {
-        // 新規記事が0件の場合は追加記事なしと判断
+        // 新規記事が0件の場合: 連続2回で初めて「これ以上なし」と判断
+        // 推薦エンジンの確率的パス選択により一時的に空結果になることがあるため
         if (newArticles.length === 0) {
-          setHasMore(false);
+          consecutiveEmptyRef.current += 1;
+          if (consecutiveEmptyRef.current >= 2) {
+            setHasMore(false);
+          }
           return;
         }
+        consecutiveEmptyRef.current = 0;
 
         setArticles((prev) => {
           const existingIds = new Set(prev.map((a) => a.id));
           const uniqueNewArticles = newArticles.filter((a) => !existingIds.has(a.id));
-          // 全件重複の場合も追加記事なし
+          // 全件重複の場合: 連続2回で初めて「これ以上なし」と判断
           if (uniqueNewArticles.length === 0) {
-            setHasMore(false);
+            consecutiveEmptyRef.current += 1;
+            if (consecutiveEmptyRef.current >= 2) {
+              setHasMore(false);
+            }
             return prev;
           }
+          consecutiveEmptyRef.current = 0;
           return [...prev, ...uniqueNewArticles];
         });
         setHasMore(hasMoreData);
@@ -231,6 +241,7 @@ export function useInfiniteArticles(
     setCurrentIndex(0);
     setError(null);
     setHasMore(true);
+    consecutiveEmptyRef.current = 0;
   }, []);
 
   // 再取得
