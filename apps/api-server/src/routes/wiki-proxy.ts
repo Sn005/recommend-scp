@@ -204,13 +204,24 @@ const INJECTED_SCRIPT = [
 ].join("");
 
 /**
- * WIKIDOTグローバルオブジェクトのスタブ
+ * WIKIDOTグローバルオブジェクトのスタブ + サードパーティAPI無効化
  *
- * 記事固有JSがWIKIDOTオブジェクトを参照する場合のReferenceError防止。
- * プラットフォームスクリプト（WIKIDOT.combined.js）は除去するが、
- * 記事内のインラインスクリプトがWIKIDOT.page等を参照するケースに対応。
+ * 1. WIKIDOT stub: 記事固有JSがWIKIDOTオブジェクトを参照する場合のReferenceError防止
+ * 2. Service Worker登録ブロック: iframe内からのSW登録を防止（プロキシドメインへの誤登録回避）
+ * 3. nitroAds stub: 広告SDK呼び出しのTypeError防止（createAd等をno-opに）
+ * 4. OneSignal stub: プッシュ通知SDK初期化のエラー防止（pushをno-opに）
  */
-const WIKIDOT_STUB = "<script>window.WIKIDOT={page:{listeners:{}},modules:{}};</script>";
+const WIKIDOT_STUB = [
+  "<script>",
+  "window.WIKIDOT={page:{listeners:{}},modules:{}};",
+  // Service Worker登録をブロック（プロキシドメインへの誤登録防止）
+  "if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.resolve()}}",
+  // NitroAds stub（広告SDKのTypeError防止）
+  "window.nitroAds={loaded:!0,createAd:function(){}};",
+  // OneSignal stub（プッシュ通知SDKのエラー防止）
+  "window.OneSignal=window.OneSignal||[];",
+  "</script>",
+].join("");
 
 /**
  * インラインstyle属性の選択的フィルタリング
@@ -270,20 +281,34 @@ const ABSOLUTE_PATH_HREF_RE = new RegExp(`href="/(?!${PROXY_PATH_PREFIXES.join("
 const CLOUDFRONT_HTTP_RE = /http:\/\/([a-z0-9]+\.cloudfront\.net\/)/g;
 
 /**
- * プラットフォームスクリプトのsrc URLパターン
+ * プラットフォーム・サードパーティスクリプトのsrc URLパターン
  *
- * Wikidotプラットフォームが提供する外部スクリプト（WIKIDOT.combined.js等）を識別。
- * これらはDOM抽出後の再構築HTMLでは不要なため除外する。
+ * 以下の外部スクリプトを識別・除外する:
+ * - Wikidotプラットフォーム（WIKIDOT.combined.js等）: cloudfront.net, wikidot.com, wdfiles.com
+ * - 広告SDK: nitropay.com（NitroAds）
+ * - プッシュ通知SDK: onesignal.com（OneSignal）
+ * - 広告配信: googletag, googletagmanager, doubleclick
+ *
+ * これらはiframe内のプロキシ環境では動作しない、またはドメイン不一致エラーを引き起こすため除去する。
  */
-const PLATFORM_SCRIPT_SRC_RE = /cloudfront\.net|wikidot\.com|wdfiles\.com/i;
+const PLATFORM_SCRIPT_SRC_RE =
+  /cloudfront\.net|wikidot\.com|wdfiles\.com|nitropay\.com|onesignal\.com|googletag|googletagmanager|doubleclick/i;
 
 /**
- * プラットフォームスクリプトのインラインコードパターン
+ * プラットフォーム・サードパーティスクリプトのインラインコードパターン
  *
- * WIKIDOT/OZONE/YAHOOグローバルオブジェクトへの代入を含むインラインスクリプトを識別。
- * これらはプラットフォーム初期化コードであり、再構築HTMLでは不要。
+ * 以下のインラインスクリプトを識別・除外する:
+ * - WIKIDOT/OZONE/YAHOOグローバルオブジェクトへの代入（プラットフォーム初期化コード）
+ * - nitroAds（広告SDK初期化・広告ユニット作成）
+ * - OneSignal（プッシュ通知SDK）
+ * - googletag/google_ad（Google広告）
+ * - require()呼び出し（Node.js式モジュールロード、ブラウザ環境では動作しない）
+ * - navigator.serviceWorker（Service Worker登録、プロキシドメインでの誤登録防止）
+ *
+ * これらはiframe内のプロキシ環境では動作しない、または意図しない副作用を引き起こすため除去する。
  */
-const PLATFORM_SCRIPT_CONTENT_RE = /\bWIKIDOT\.\w+\s*=|\bOZONE\.\w+\s*=|\bYAHOO\.\w+\s*=/;
+const PLATFORM_SCRIPT_CONTENT_RE =
+  /\bWIKIDOT\.\w+\s*=|\bOZONE\.\w+\s*=|\bYAHOO\.\w+\s*=|\bnitroAds\b|\bcreateAd\b|\bOneSignal\b|\bgoogletag\b|\bgoogle_ad\b|\brequire\s*\(|\bnavigator\.serviceWorker\b/;
 
 // ============================================================
 // DOM抽出・再構築
