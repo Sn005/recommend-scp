@@ -94,7 +94,8 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
 const INJECTED_STYLE = [
   "<style>",
   // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
-  "#main-content{margin:0!important;padding:0!important;max-width:none!important}",
+  // max-widthはWikidotテーマ側の制約を維持する（上書きすると記事コンテンツがはみ出す）
+  "#main-content{margin:0!important;padding:0!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正

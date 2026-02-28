@@ -600,9 +600,9 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain(
-        "#main-content{margin:0!important;padding:0!important;max-width:none!important}"
-      );
+      // max-widthはWikidotテーマ側の制約を維持するため上書きしない
+      expect(text).toContain("#main-content{margin:0!important;padding:0!important}");
+      expect(text).not.toContain("max-width:none");
     });
   });
 
