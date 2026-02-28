@@ -27,7 +27,7 @@ recommend-scpは、SCP Foundation記事の推薦システム。
 | APIサーバー       | Hono (独立サーバー)              | 高性能、RPC型共有、フロントエンド分離     |
 | Webフレームワーク | Next.js App Router               | Server Components、静的最適化             |
 | モノレポ          | Turborepo                        | 高速ビルド、キャッシュ                    |
-| ホスティング      | Vercel (Web) / Railway (API)     | 分離デプロイ、スケール独立                |
+| ホスティング      | Vercel (Web + API)               | 統合デプロイ、Next.js API Routes経由      |
 
 ---
 
@@ -332,30 +332,37 @@ logger.error({ err, visitorId }, "推薦計算エラー");
 ## デプロイ構成
 
 ```
-┌─────────────────┐     ┌─────────────────┐
-│   Vercel        │     │   Railway       │
-│   (Next.js)     │────▶│   (Hono API)    │
-│   apps/web      │     │   apps/api-server│
-└─────────────────┘     └────────┬────────┘
-                                 │
-                        ┌────────▼────────┐
-                        │   Supabase      │
-                        │   (PostgreSQL   │
-                        │    + pgvector)  │
-                        └─────────────────┘
+┌──────────────────────────────┐
+│         Vercel               │
+│  ┌────────────────────────┐  │
+│  │  Next.js (apps/web)    │  │
+│  │  ├── App Router (SSR)  │  │
+│  │  └── API Routes        │  │
+│  │      /api/[...route]   │──┼──▶ Hono API (apps/api-server)
+│  └────────────────────────┘  │     をNext.js API Routes経由で提供
+└──────────────┬───────────────┘
+               │
+      ┌────────▼────────┐
+      │   Supabase      │
+      │   (PostgreSQL   │
+      │    + pgvector)  │
+      └─────────────────┘
 ```
+
+**Note:** `apps/api-server` はローカル開発用のスタンドアロンサーバーとしても動作。
+本番環境では `apps/web/src/app/api/[...route]/route.ts` 経由で提供。
 
 ### 環境変数
 
 ```bash
-# API Server (Railway)
-DATABASE_URL=postgresql://...
+# Vercel (本番) - Web + API 統合
 SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=xxx
-OPENAI_API_KEY=xxx  # Embedding用
+SUPABASE_SERVICE_ROLE_KEY=xxx  # サーバーサイドDB操作用
+SUPABASE_ANON_KEY=xxx          # クライアントサイド用（将来）
+OPENAI_API_KEY=xxx             # Embedding用
 
-# Web (Vercel)
-NEXT_PUBLIC_API_URL=https://api.recommend-scp.dev
+# ローカル開発 (apps/api-server スタンドアロン)
+# .env で同じ変数を設定
 ```
 
 ---
