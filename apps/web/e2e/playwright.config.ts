@@ -5,6 +5,7 @@ const isRemote = !!process.env.PLAYWRIGHT_BASE_URL;
 
 export default defineConfig({
   testDir: "./specs",
+  outputDir: "./test-results",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
