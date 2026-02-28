@@ -112,7 +112,7 @@
 デプロイが成功すると：
 
 1. 「Congratulations!」画面が表示される
-2. プロジェクトの URL が発行される（例: `https://recommend-scp.vercel.app`）
+2. プロジェクトの URL が発行される（例: `https://scpicks.app`）
 3. 「Go to Dashboard」でプロジェクト管理画面へ移動
 
 ## 自動デプロイの動作確認
@@ -215,12 +215,12 @@ CI ワークフローの E2E テストで Vercel 環境に対してテストを�
 本番デプロイ完了後の URL を設定します。
 
 1. Vercel ダッシュボードでプロジェクトの本番 URL を確認
-   - 例: `https://recommend-scp.vercel.app`
+   - 例: `https://scpicks.app`
 2. GitHub リポジトリの **Settings** → **Secrets and variables** → **Actions** を開く
 3. **New repository secret** をクリック
 4. 以下を入力して **Add secret**:
    - Name: `PRODUCTION_URL`
-   - Secret: `https://recommend-scp.vercel.app`（実際の本番 URL）
+   - Secret: `https://scpicks.app`（実際の本番 URL）
 
 ### Step 2: VERCEL_TOKEN を取得・設定
 

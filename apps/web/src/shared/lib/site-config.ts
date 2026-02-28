@@ -8,7 +8,7 @@
  */
 
 /* eslint-disable n/no-process-env */
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://scpicks.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://scpicks.app";
 /* eslint-enable n/no-process-env */
 
 export const siteConfig = {

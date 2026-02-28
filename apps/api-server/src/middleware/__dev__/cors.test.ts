@@ -20,7 +20,7 @@ describe("CORSミドルウェア", () => {
 
   beforeEach(async () => {
     // デフォルトの環境変数設定
-    mockAllowedOrigins = "https://recommend-scp.vercel.app,http://localhost:3000";
+    mockAllowedOrigins = "https://scpicks.app,http://localhost:3000";
 
     // モジュールキャッシュをクリアして再インポート
     vi.resetModules();
@@ -43,12 +43,10 @@ describe("CORSミドルウェア", () => {
   describe("AC1: 許可されたオリジンからリクエストがあった際", () => {
     it("Access-Control-Allow-Origin ヘッダーを設定する", async () => {
       const res = await app.request("/test", {
-        headers: { Origin: "https://recommend-scp.vercel.app" },
+        headers: { Origin: "https://scpicks.app" },
       });
 
-      expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://recommend-scp.vercel.app"
-      );
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://scpicks.app");
     });
 
     it("複数の許可オリジンのうち、リクエストのオリジンと一致するものを返す", async () => {
@@ -73,7 +71,7 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
           "Access-Control-Request-Method": "POST",
         },
       });
@@ -85,15 +83,13 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
           "Access-Control-Request-Method": "POST",
           "Access-Control-Request-Headers": "Content-Type,X-Visitor-Id",
         },
       });
 
-      expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://recommend-scp.vercel.app"
-      );
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://scpicks.app");
       expect(res.headers.get("Access-Control-Allow-Methods")).toContain("POST");
       expect(res.headers.get("Access-Control-Max-Age")).toBe("86400");
     });
@@ -102,7 +98,7 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
         },
       });
 
@@ -115,7 +111,7 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
         },
       });
 
@@ -131,7 +127,7 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
           "Access-Control-Request-Headers": "Content-Type,X-Visitor-Id,Authorization",
         },
       });
@@ -144,7 +140,7 @@ describe("CORSミドルウェア", () => {
 
     it("Credentials: true を許可する", async () => {
       const res = await app.request("/test", {
-        headers: { Origin: "https://recommend-scp.vercel.app" },
+        headers: { Origin: "https://scpicks.app" },
       });
 
       expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
@@ -155,11 +151,9 @@ describe("CORSミドルウェア", () => {
     it("指定されたオリジンのみを許可する", async () => {
       // 許可オリジン
       const res1 = await app.request("/test", {
-        headers: { Origin: "https://recommend-scp.vercel.app" },
+        headers: { Origin: "https://scpicks.app" },
       });
-      expect(res1.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://recommend-scp.vercel.app"
-      );
+      expect(res1.headers.get("Access-Control-Allow-Origin")).toBe("https://scpicks.app");
 
       // 非許可オリジン
       const res2 = await app.request("/test", {
@@ -169,7 +163,7 @@ describe("CORSミドルウェア", () => {
     });
 
     it("カンマ区切りの複数オリジンを正しくパースする", async () => {
-      const origins = ["https://recommend-scp.vercel.app", "http://localhost:3000"];
+      const origins = ["https://scpicks.app", "http://localhost:3000"];
 
       for (const origin of origins) {
         const res = await app.request("/test", {
@@ -234,7 +228,7 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "OPTIONS",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
           "Access-Control-Request-Headers": "X-Visitor-Id",
         },
       });
@@ -266,16 +260,14 @@ describe("CORSミドルウェア", () => {
       const res = await app.request("/test", {
         method: "POST",
         headers: {
-          Origin: "https://recommend-scp.vercel.app",
+          Origin: "https://scpicks.app",
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ data: "test" }),
       });
 
       expect(res.status).toBe(200);
-      expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://recommend-scp.vercel.app"
-      );
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://scpicks.app");
       expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
     });
   });
@@ -283,14 +275,12 @@ describe("CORSミドルウェア", () => {
   describe("セキュリティ: ワイルドカード禁止", () => {
     it("credentials: true の場合、ワイルドカードオリジンを使用しない", async () => {
       const res = await app.request("/test", {
-        headers: { Origin: "https://recommend-scp.vercel.app" },
+        headers: { Origin: "https://scpicks.app" },
       });
 
       // credentials: true なので、"*" ではなく具体的なオリジンを返す
       expect(res.headers.get("Access-Control-Allow-Origin")).not.toBe("*");
-      expect(res.headers.get("Access-Control-Allow-Origin")).toBe(
-        "https://recommend-scp.vercel.app"
-      );
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("https://scpicks.app");
     });
   });
 });
