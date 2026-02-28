@@ -58,6 +58,12 @@ export async function setupRecommendMock(page: Page): Promise<void> {
  */
 export async function setupFavoritesMock(page: Page): Promise<void> {
   await page.route("**/favorites**", async (route) => {
+    // ページナビゲーション（HTML取得）はインターセプトしない
+    if (route.request().resourceType() === "document") {
+      await route.continue();
+      return;
+    }
+
     if (route.request().method() === "GET") {
       await route.fulfill({
         status: 200,
