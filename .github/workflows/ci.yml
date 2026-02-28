@@ -148,16 +148,22 @@ jobs:
       # --- E2E実行（リモートURLが取得できた場合のみ） ---
       - name: Run Critical E2E Tests
         if: steps.e2e_target.outputs.skip != 'true'
-        run: pnpm --filter web test:e2e --grep @critical
+        run: pnpm --filter web test:e2e --grep @critical --reporter=list,blob
         env:
           PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/critical
 
       - name: Run Non-Critical E2E Tests
         if: steps.e2e_target.outputs.skip != 'true'
-        run: pnpm --filter web test:e2e --grep-invert @critical
+        run: pnpm --filter web test:e2e --grep-invert @critical --reporter=list,blob
         continue-on-error: true
         env:
           PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/non-critical
+
+      - name: Merge E2E Reports
+        if: always() && steps.e2e_target.outputs.skip != 'true'
+        run: pnpm --filter web exec playwright merge-reports --reporter=html ./blob-report
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
