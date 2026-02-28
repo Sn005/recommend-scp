@@ -17,6 +17,9 @@ ALTER TABLE feedback DROP CONSTRAINT IF EXISTS feedback_type_check;
 -- 3. skip → next にリネーム
 UPDATE feedback SET type = 'next' WHERE type = 'skip';
 
+-- 3.5. dislike行を削除（UIにDislikeボタンなし、不要データ）
+DELETE FROM feedback WHERE type = 'dislike';
+
 -- 4. 新しいCHECK制約（dislike除去 + next追加）
 ALTER TABLE feedback ADD CONSTRAINT feedback_type_check CHECK (type IN ('like', 'next'));
 
