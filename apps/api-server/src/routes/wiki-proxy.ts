@@ -93,9 +93,12 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
  */
 const INJECTED_STYLE = [
   "<style>",
-  // Wikidot構造要素のレイアウトリセット（#main-contentのmarginで記事幅が狭くなる問題の対処）
-  // max-widthはWikidotテーマ側の制約を維持する（上書きすると記事コンテンツがはみ出す）
-  "#main-content{margin:0!important;padding:0!important}",
+  // Wikidot構造要素のレイアウトリセット
+  // - margin:0 → 旧テーマのmarginで記事幅が狭くなる問題を解消
+  // - max-width:100% → 新テーマ(Sigma等)のwidth:60remがモバイルではみ出すのを制約
+  //   旧テーマのmax-width固定値も上書きし、iframe全幅を使えるようにする
+  //   （max-width:noneだと新テーマのwidth:60remを制約できない）
+  "#main-content{margin:0!important;padding:0!important;max-width:100%!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
   // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正

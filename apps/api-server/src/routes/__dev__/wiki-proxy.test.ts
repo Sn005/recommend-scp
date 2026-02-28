@@ -600,8 +600,10 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      // max-widthはWikidotテーマ側の制約を維持するため上書きしない
-      expect(text).toContain("#main-content{margin:0!important;padding:0!important}");
+      // max-width:100%で新テーマのwidth:60remをモバイルで制約（noneは使わない）
+      expect(text).toContain(
+        "#main-content{margin:0!important;padding:0!important;max-width:100%!important}"
+      );
       expect(text).not.toContain("max-width:none");
     });
   });
