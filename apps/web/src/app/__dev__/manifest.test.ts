@@ -43,12 +43,12 @@ describe("manifest.json", () => {
       expect(manifest.display).toBe("standalone");
     });
 
-    it('background_color が "#FFFFFF" である', () => {
+    it('background_color が "#FFFFFF" である（アイコン背景色と統一）', () => {
       expect(manifest.background_color).toBe("#FFFFFF");
     });
 
-    it('theme_color が "#FFFFFF" である', () => {
-      expect(manifest.theme_color).toBe("#FFFFFF");
+    it('theme_color が "#3B82F6" である（ブランドカラーに更新）', () => {
+      expect(manifest.theme_color).toBe("#3B82F6");
     });
 
     it('orientation が "portrait" である', () => {
