@@ -44,8 +44,8 @@ describe("PWAスプラッシュスクリーン", () => {
       expect(manifest.theme_color).toBe("#3B82F6");
     });
 
-    it("background_color がブランドカラー #3B82F6 に設定されている", () => {
-      expect(manifest.background_color).toBe("#3B82F6");
+    it("background_color がアイコン背景色 #FFFFFF に設定されている", () => {
+      expect(manifest.background_color).toBe("#FFFFFF");
     });
 
     it("name が「SCPicks - あなた好みのSCPを発見」である", () => {
