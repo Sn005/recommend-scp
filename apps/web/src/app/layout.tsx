@@ -24,20 +24,12 @@ export const metadata: Metadata = {
     title: `${siteConfig.name} - あなた好みのSCPを発見`,
     description: siteConfig.description,
     locale: siteConfig.locale,
-    images: [
-      {
-        url: "/icons/icon-512x512.png",
-        width: 512,
-        height: 512,
-        alt: `${siteConfig.name} ロゴ`,
-      },
-    ],
+    url: siteConfig.url,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: `${siteConfig.name} - あなた好みのSCPを発見`,
     description: siteConfig.description,
-    images: ["/icons/icon-512x512.png"],
   },
   robots: {
     index: true,

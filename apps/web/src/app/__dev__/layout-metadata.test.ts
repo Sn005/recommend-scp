@@ -68,8 +68,9 @@ describe("layout.tsx メタデータ", () => {
       expect(layoutContent).toMatch(/locale\s*:\s*siteConfig\.locale/);
     });
 
-    it("og:images が設定されている", () => {
-      expect(layoutContent).toContain("icon-512x512.png");
+    it("og:images に旧アイコン（icon-512x512.png）が残っていない", () => {
+      // opengraph-image.tsx による動的生成に切り替えたため
+      expect(layoutContent).not.toContain("icon-512x512.png");
     });
 
     it("og:title が設定されている", () => {
@@ -82,8 +83,8 @@ describe("layout.tsx メタデータ", () => {
   });
 
   describe("SEO: Twitter Card メタデータ", () => {
-    it('twitter:card が "summary" に設定されている', () => {
-      expect(layoutContent).toMatch(/card\s*:\s*["']summary["']/);
+    it('twitter:card が "summary_large_image" に設定されている', () => {
+      expect(layoutContent).toMatch(/card\s*:\s*["']summary_large_image["']/);
     });
 
     it("twitter:title が設定されている", () => {
@@ -94,8 +95,12 @@ describe("layout.tsx メタデータ", () => {
       expect(layoutContent).toMatch(/twitter[\s\S]*description/);
     });
 
-    it("twitter:images が設定されている", () => {
-      expect(layoutContent).toMatch(/twitter[\s\S]*images/);
+    it("twitter:images は twitter-image.tsx 規約で自動設定されるため layout.tsx に不要", () => {
+      // twitter-image.tsx が存在するため、layout.tsx の twitter config に images は不要
+      // images フィールドが twitter ブロック内に残っていないことを確認
+      const twitterMatch = /twitter\s*:\s*\{[^}]*\}/.exec(layoutContent);
+      expect(twitterMatch).not.toBeNull();
+      expect(twitterMatch?.[0]).not.toContain("images");
     });
   });
 
