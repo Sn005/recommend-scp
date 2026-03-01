@@ -88,6 +88,18 @@ export interface RecommendationEngineConfig {
 const DEFAULT_CANDIDATE_POOL_MULTIPLIER = 3;
 
 /**
+ * getExcludedIds で取得する閲覧履歴の上限
+ * ヘビーユーザーで除外リストが肥大化するのを防ぐ
+ */
+const DEFAULT_EXCLUDE_VIEW_HISTORY_LIMIT = 200;
+
+/**
+ * getExploredTags で取得する閲覧履歴の上限
+ * N+1クエリ（getArticleTags × N）の軽減
+ */
+const DEFAULT_EXPLORED_TAGS_VIEW_HISTORY_LIMIT = 50;
+
+/**
  * デフォルト設定
  */
 const DEFAULT_CONFIG: RecommendationEngineConfig = {
@@ -344,7 +356,10 @@ export class RecommendationEngine {
    * @returns ユーザーが触れたタグの配列（重複排除済み）
    */
   private async getExploredTags(visitorId: string): Promise<string[]> {
-    const viewHistory = await this.storage.getViewHistory(visitorId);
+    const viewHistory = await this.storage.getViewHistory(
+      visitorId,
+      DEFAULT_EXPLORED_TAGS_VIEW_HISTORY_LIMIT
+    );
 
     // 並列で全記事のタグを取得
     const tagArrays = await Promise.all(
@@ -380,7 +395,7 @@ export class RecommendationEngine {
    */
   private async getExcludedIds(visitorId: string): Promise<string[]> {
     const [viewHistory, feedbacks, favorites] = await Promise.all([
-      this.storage.getViewHistory(visitorId),
+      this.storage.getViewHistory(visitorId, DEFAULT_EXCLUDE_VIEW_HISTORY_LIMIT),
       this.storage.getFeedback(visitorId),
       this.storage.getFavorites(visitorId),
     ]);
