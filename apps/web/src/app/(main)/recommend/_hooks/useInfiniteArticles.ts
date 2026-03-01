@@ -16,7 +16,7 @@ import type {
 } from "../_types";
 
 const DEFAULT_INITIAL_COUNT = 10;
-const DEFAULT_LOAD_MORE_COUNT = 5;
+const DEFAULT_LOAD_MORE_COUNT = 10;
 const DEFAULT_PREFETCH_THRESHOLD = 3;
 const FETCH_TIMEOUT_MS = 10_000;
 
