@@ -151,7 +151,7 @@ jobs:
         run: pnpm --filter web test:e2e --grep @critical --reporter=list,blob
         env:
           PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
-          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/critical
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report
 
       - name: Run Non-Critical E2E Tests
         if: steps.e2e_target.outputs.skip != 'true'
@@ -159,7 +159,7 @@ jobs:
         continue-on-error: true
         env:
           PLAYWRIGHT_BASE_URL: ${{ steps.e2e_target.outputs.url }}
-          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/non-critical
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report
 
       - name: Merge E2E Reports
         if: always() && steps.e2e_target.outputs.skip != 'true'
