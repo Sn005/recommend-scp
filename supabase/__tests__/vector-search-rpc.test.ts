@@ -317,6 +317,19 @@ describe("005-02-04: ベクトル検索RPC関数", () => {
       expect(Array.isArray(data)).toBe(true);
     });
 
+    it("order_by='random'でも全タグ探索済みの記事を除外する", async () => {
+      const { data, error } = await supabase.rpc("search_articles_by_unexplored_tags", {
+        explored_tags: ["horror", "safe"],
+        order_by: "random",
+        match_count: 100,
+      });
+
+      expect(error).toBeNull();
+      const returnedIds = data.map((row: { id: string }) => row.id);
+      // 全タグが探索済みのtest-001は除外されるべき
+      expect(returnedIds).not.toContain(testArticles[0].article_id);
+    });
+
     it("exclude_idsに指定した記事を除外する", async () => {
       const excludeId = testArticles[1].article_id;
       const { data, error } = await supabase.rpc("search_articles_by_unexplored_tags", {

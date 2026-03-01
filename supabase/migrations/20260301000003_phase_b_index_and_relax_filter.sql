@@ -42,8 +42,11 @@ CREATE INDEX IF NOT EXISTS idx_article_translations_ja_translated
 --   大半の記事が除外される問題を解消。
 --   少なくとも1つ未探索タグを持つ記事は結果に残る。
 --
---   GINインデックス idx_scp_articles_tags は <@ 演算子をサポートするため
---   CTE不要でパフォーマンスへの影響はない。
+--   GINインデックス idx_scp_articles_tags は <@ 演算子をサポートする。
+--   ただし NOT (<@) は否定条件のため、GINインデックスが使用されない場合がある。
+--   （explored_articles CTE の NOT EXISTS + && 正引きパターンがGINを確実に活用できたが、
+--     <@ の意味的な正しさを優先してCTEを除去した。）
+--   パフォーマンスに懸念がある場合は EXPLAIN ANALYZE で確認すること。
 -- ============================================
 DROP FUNCTION IF EXISTS search_articles_by_unexplored_tags(text[], text[], integer, text);
 
