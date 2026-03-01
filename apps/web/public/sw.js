@@ -7,7 +7,7 @@ importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox
 workbox.setConfig({ debug: false });
 
 const { registerRoute } = workbox.routing;
-const { StaleWhileRevalidate, CacheFirst, NetworkOnly } = workbox.strategies;
+const { StaleWhileRevalidate, CacheFirst, NetworkFirst, NetworkOnly } = workbox.strategies;
 const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
 
@@ -16,6 +16,9 @@ const { CacheableResponsePlugin } = workbox.cacheableResponse;
 // ============================================================
 const ARTICLE_CACHE_NAME = "scp-articles-v1";
 const SUB_RESOURCE_CACHE_NAME = "scp-sub-resources-v1";
+const ARTICLE_META_CACHE_NAME = "scp-article-meta-v1";
+const NEXT_STATIC_CACHE_NAME = "next-static-v1";
+const NEXT_PAGES_CACHE_NAME = "next-pages-v1";
 const SUB_RESOURCE_PREFIXES = ["/wdfiles-", "/wikidot-", "/common--", "/local--"];
 
 // ============================================================
@@ -55,6 +58,64 @@ registerRoute(
 );
 
 // ============================================================
+// Next.js 静的アセット: Cache-first（ファイル名にハッシュ含む＝不変）
+// ============================================================
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith("/_next/static/"),
+  new CacheFirst({
+    cacheName: NEXT_STATIC_CACHE_NAME,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 365 * 24 * 60 * 60, // 1年（ハッシュ付きなので長期OK）
+        maxEntries: 200,
+        purgeOnQuotaError: true,
+      }),
+    ],
+  })
+);
+
+// ============================================================
+// 記事メタデータAPI: Stale-While-Revalidate（オフラインでも著者情報表示）
+// ============================================================
+registerRoute(
+  ({ url }) =>
+    url.origin === self.location.origin && /^\/api\/articles\/[^/]+\/content$/.test(url.pathname),
+  new StaleWhileRevalidate({
+    cacheName: ARTICLE_META_CACHE_NAME,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 90 * 24 * 60 * 60, // 3ヶ月（記事キャッシュと同期）
+        purgeOnQuotaError: true,
+      }),
+    ],
+  })
+);
+
+// ============================================================
+// 記事ページナビゲーション: Network-first（オフライン時はキャッシュにフォールバック）
+// ============================================================
+registerRoute(
+  ({ request, url }) =>
+    url.origin === self.location.origin &&
+    url.pathname.startsWith("/article/") &&
+    request.mode === "navigate",
+  new NetworkFirst({
+    cacheName: NEXT_PAGES_CACHE_NAME,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7日（デプロイ後に古いHTMLは不要）
+        maxEntries: 50,
+        purgeOnQuotaError: true,
+      }),
+    ],
+    networkTimeoutSeconds: 3,
+  })
+);
+
+// ============================================================
 // その他のリクエスト: Network passthrough
 // ============================================================
 registerRoute(({ url }) => url.origin === self.location.origin, new NetworkOnly());
@@ -74,9 +135,17 @@ self.addEventListener("activate", (event) => {
     Promise.all([
       self.clients.claim(),
       caches.keys().then((names) => {
-        const expected = new Set([ARTICLE_CACHE_NAME, SUB_RESOURCE_CACHE_NAME]);
+        const expected = new Set([
+          ARTICLE_CACHE_NAME,
+          SUB_RESOURCE_CACHE_NAME,
+          ARTICLE_META_CACHE_NAME,
+          NEXT_STATIC_CACHE_NAME,
+          NEXT_PAGES_CACHE_NAME,
+        ]);
         return Promise.all(
-          names.filter((n) => n.startsWith("scp-") && !expected.has(n)).map((n) => caches.delete(n))
+          names
+            .filter((n) => (n.startsWith("scp-") || n.startsWith("next-")) && !expected.has(n))
+            .map((n) => caches.delete(n))
         );
       }),
     ])
