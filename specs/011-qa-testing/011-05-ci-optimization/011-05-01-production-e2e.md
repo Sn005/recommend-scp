@@ -166,7 +166,7 @@ e2e:
 
 ## 実装メモ
 
-- `PRODUCTION_URL` はGitHub Secretsに登録する（例: `https://scpicks.app`）
+- `PRODUCTION_URL` はGitHub Secretsに登録する（例: `https://scpicks.vercel.app`）
 - mainプッシュ時はVercelが自動デプロイ → ciジョブ実行中（3-5分）にデプロイ完了を期待
 - デプロイ完了を保証するため、必要に応じてe2eジョブにwaitステップを追加可能
 - `webServer` 設定はローカル開発（`pnpm test:e2e` 直接実行）時にのみ使用
