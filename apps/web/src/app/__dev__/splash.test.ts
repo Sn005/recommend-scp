@@ -40,8 +40,8 @@ describe("PWAスプラッシュスクリーン", () => {
   });
 
   describe("AC-1: Androidスプラッシュスクリーン用 manifest.json フィールド", () => {
-    it("theme_color がブランドカラー #3B82F6 に設定されている", () => {
-      expect(manifest.theme_color).toBe("#3B82F6");
+    it("theme_color が白 #FFFFFF に設定されている", () => {
+      expect(manifest.theme_color).toBe("#FFFFFF");
     });
 
     it("background_color がアイコン背景色 #FFFFFF に設定されている", () => {

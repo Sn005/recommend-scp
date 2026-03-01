@@ -47,8 +47,8 @@ describe("manifest.json", () => {
       expect(manifest.background_color).toBe("#FFFFFF");
     });
 
-    it('theme_color が "#3B82F6" である（ブランドカラーに更新）', () => {
-      expect(manifest.theme_color).toBe("#3B82F6");
+    it('theme_color が "#FFFFFF" である（ステータスバー白）', () => {
+      expect(manifest.theme_color).toBe("#FFFFFF");
     });
 
     it('orientation が "portrait" である', () => {
