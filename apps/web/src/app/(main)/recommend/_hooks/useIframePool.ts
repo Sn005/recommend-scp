@@ -1,6 +1,6 @@
 /**
  * @file 3スロットiframeプール管理Hook
- * @description Cascade Prefetch方式でCurrent/Next/Prefetchの3段階iframeを管理
+ * @description 即座に3スロットを作成し、Current/Next/Prefetchの3段階iframeを管理
  * @see specs/006-frontend/006-05-transition-ux/006-05-04.md
  */
 
@@ -11,7 +11,7 @@ import type { Article } from "../_types";
 export interface IframeSlot {
   articleIndex: number;
   url: string;
-  /** iframe onLoad 発火済み（カスケード先読み制御用） */
+  /** iframe onLoad 発火済み */
   isLoaded: boolean;
   /** 画像含む全サブリソース読み込み完了（表示切替用） */
   isFullyLoaded: boolean;
@@ -41,30 +41,19 @@ const createSlot = (articles: Article[], articleIndex: number): IframeSlot | nul
   return { articleIndex, url: articles[articleIndex].url, isLoaded: false, isFullyLoaded: false };
 };
 
-/** 次のスロットが作成可能か判定し、作成する */
-const tryCreateNextSlot = (
-  articles: Article[],
-  afterIndex: number,
-  existing: IframeSlot | null
-): IframeSlot | null => {
-  if (existing !== null) return existing;
-  const nextIndex = afterIndex + 1;
-  if (nextIndex >= articles.length) return null;
-  return createSlot(articles, nextIndex);
-};
-
 export const useIframePool = ({
   articles,
   currentIndex,
 }: UseIframePoolOptions): UseIframePoolReturn => {
+  // 初期化: 記事がある限り全3スロットを即座に作成
   const [slots, setSlots] = useState<Slots>(() => [
     createSlot(articles, currentIndex) ?? EMPTY_SLOT,
-    null,
-    null,
+    createSlot(articles, currentIndex + 1),
+    createSlot(articles, currentIndex + 2),
   ]);
 
   // EMPTY_SLOT→実データの初期化（articles取得完了時のみ）
-  // advance() + handleIframeLoad cascade がスロット管理を担うため、
+  // advance() がスロット管理を担うため、
   // currentIndex変更時の再構築は行わない（プリロード済みiframeを破棄しない）
   useEffect(() => {
     if (articles.length === 0) return;
@@ -73,12 +62,15 @@ export const useIframePool = ({
       // 初期化済み（EMPTY_SLOTでない）の場合は何もしない
       if (prev[0].articleIndex !== -1) return prev;
 
-      return [createSlot(articles, currentIndex) ?? EMPTY_SLOT, null, null];
+      return [
+        createSlot(articles, currentIndex) ?? EMPTY_SLOT,
+        createSlot(articles, currentIndex + 1),
+        createSlot(articles, currentIndex + 2),
+      ];
     });
   }, [articles, currentIndex]);
 
-  // articles配列が拡張された時にnullスロットを埋める（loadMore対応）
-  // Cascade読み込みの順序を尊重: Current.isLoaded → Next作成、Next.isLoaded → Prefetch作成
+  // articles配列が拡張された時にnullスロットを即座に埋める（loadMore対応）
   useEffect(() => {
     if (articles.length === 0) return;
 
@@ -86,14 +78,10 @@ export const useIframePool = ({
       // 初期化前（EMPTY_SLOT状態）は初期化effectに任せる
       if (current.articleIndex === -1) return [current, next, prefetch];
 
-      // Current未読み込みならNextは作成しない（Cascade順序を維持）
-      const newNext = current.isLoaded
-        ? tryCreateNextSlot(articles, current.articleIndex, next)
-        : next;
-      // Next未読み込みならPrefetchは作成しない（Cascade順序を維持）
-      const newPrefetch = newNext?.isLoaded
-        ? tryCreateNextSlot(articles, newNext.articleIndex, prefetch)
-        : prefetch;
+      // nullスロットを即座に埋める（Cascade制約なし）
+      const newNext = next ?? createSlot(articles, current.articleIndex + 1);
+      const newPrefetch =
+        prefetch ?? createSlot(articles, (newNext?.articleIndex ?? current.articleIndex) + 1);
 
       // 変更がなければ再レンダリングを避ける
       if (newNext === next && newPrefetch === prefetch) {
@@ -104,25 +92,20 @@ export const useIframePool = ({
     });
   }, [articles]);
 
-  // Cascade読み込み: loadイベントでisLoadedを更新し、次のスロットを作成
+  // iframe onLoad完了: isLoadedフラグ更新のみ（スロットは初期化時に作成済み）
   const handleIframeLoad = useCallback(
     (articleIndex: number) => {
       setSlots(([current, next, prefetch]) => {
-        // Current読み込み完了 → Cascade: Next作成
         if (current.articleIndex === articleIndex) {
           if (current.isLoaded) return [current, next, prefetch];
-          const loaded: IframeSlot = { ...current, isLoaded: true };
-          return [loaded, tryCreateNextSlot(articles, loaded.articleIndex, next), prefetch];
+          return [{ ...current, isLoaded: true }, next, prefetch];
         }
 
-        // Next読み込み完了 → Cascade: Prefetch作成
         if (next?.articleIndex === articleIndex) {
           if (next.isLoaded) return [current, next, prefetch];
-          const loaded: IframeSlot = { ...next, isLoaded: true };
-          return [current, loaded, tryCreateNextSlot(articles, loaded.articleIndex, prefetch)];
+          return [current, { ...next, isLoaded: true }, prefetch];
         }
 
-        // Prefetch読み込み完了
         if (prefetch?.articleIndex === articleIndex) {
           if (prefetch.isLoaded) return [current, next, prefetch];
           return [current, next, { ...prefetch, isLoaded: true }];
@@ -149,16 +132,15 @@ export const useIframePool = ({
     });
   }, []);
 
-  // スロットローテーション: Current破棄、Next→Current、Prefetch→Next
+  // スロットローテーション: Current破棄、Next→Current、Prefetch→Next、新Prefetch即座作成
   const advance = useCallback(() => {
     setSlots(([current, next, prefetch]) => {
       if (next === null) return [current, next, prefetch];
 
       const newNext = prefetch;
-      // Cascade: 新Nextが読み込み済みなら新Prefetch作成
-      const newPrefetch = newNext?.isLoaded
-        ? tryCreateNextSlot(articles, newNext.articleIndex, null)
-        : null;
+      // 即座に新Prefetchスロット作成（Cascade制約なし）
+      const lastIndex = newNext?.articleIndex ?? next.articleIndex;
+      const newPrefetch = createSlot(articles, lastIndex + 1);
 
       return [next, newNext, newPrefetch];
     });

@@ -55,8 +55,18 @@ const mockUseIframePoolResult = {
       isLoaded: true,
       isFullyLoaded: false,
     },
-    null,
-    null,
+    {
+      articleIndex: 1,
+      url: "https://scp-jp.wikidot.com/scp-682",
+      isLoaded: false,
+      isFullyLoaded: false,
+    },
+    {
+      articleIndex: 2,
+      url: "https://scp-jp.wikidot.com/scp-999",
+      isLoaded: false,
+      isFullyLoaded: false,
+    },
   ] as [
     { articleIndex: number; url: string; isLoaded: boolean; isFullyLoaded: boolean },
     { articleIndex: number; url: string; isLoaded: boolean; isFullyLoaded: boolean } | null,
@@ -293,8 +303,18 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
         isLoaded: true,
         isFullyLoaded: false,
       },
-      null,
-      null,
+      {
+        articleIndex: 1,
+        url: "https://scp-jp.wikidot.com/scp-682",
+        isLoaded: false,
+        isFullyLoaded: false,
+      },
+      {
+        articleIndex: 2,
+        url: "https://scp-jp.wikidot.com/scp-999",
+        isLoaded: false,
+        isFullyLoaded: false,
+      },
     ];
   });
 
@@ -469,8 +489,8 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       render(<RecommendPage />);
 
       const webviews = screen.getAllByTestId("article-webview");
-      // Current + Next + Prefetch = 最大3つ
-      expect(webviews.length).toBeLessThanOrEqual(3);
+      // Current + Next + Prefetch = 常に3つ
+      expect(webviews.length).toBe(3);
     });
 
     it("遷移完了後にスロットローテーション（advance）が実行される", async () => {
@@ -492,7 +512,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       expect(mockUseIframePoolResult.advance).toHaveBeenCalledTimes(1);
     });
 
-    it("最大3つのiframeのみがDOMに存在する", () => {
+    it("常に3つのiframeがDOMに存在する", () => {
       setupDefaultArticles();
       mockUseIframePoolResult.slots = [
         { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
@@ -503,7 +523,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       render(<RecommendPage />);
 
       const webviews = screen.getAllByTestId("article-webview");
-      expect(webviews.length).toBeLessThanOrEqual(3);
+      expect(webviews.length).toBe(3);
     });
   });
 
@@ -844,7 +864,7 @@ describe("RecommendPage 統合テスト (006-05-07)", () => {
       mockUseIframePoolResult.slots = [
         { articleIndex: 0, url: mockArticles[0].url, isLoaded: true, isFullyLoaded: false },
         { articleIndex: 1, url: mockArticles[1].url, isLoaded: false, isFullyLoaded: false },
-        null,
+        null, // 記事が2つのみのためPrefetchはnull
       ];
 
       render(<RecommendPage />);
