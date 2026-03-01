@@ -79,6 +79,17 @@ export interface VectorSearchClient {
   getEmbedding(articleId: string): Promise<number[] | null>;
 
   /**
+   * 複数記事のEmbeddingを一括取得
+   *
+   * N+1クエリ問題を回避するためのバッチ取得メソッド。
+   * 1回のクエリで全記事のEmbeddingを取得する。
+   *
+   * @param articleIds 記事IDの配列
+   * @returns 記事ID → Embeddingベクトルのマップ。Embeddingがない記事は含まれない
+   */
+  getEmbeddings(articleIds: string[]): Promise<Map<string, number[]>>;
+
+  /**
    * 未探索タグを持つ記事を検索
    *
    * ユーザーがまだ触れていないタグを持つ記事を、

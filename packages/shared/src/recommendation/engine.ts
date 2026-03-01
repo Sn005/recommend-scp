@@ -5,7 +5,14 @@
  * @see specs/004-recommend/004-02-recommend-engine/004-02-02.md
  */
 
-import type { PreferenceStorage, PreferenceProfile, ViewHistory, Feedback } from "../storage/types";
+import type {
+  PreferenceStorage,
+  PreferenceProfile,
+  ViewHistory,
+  Feedback,
+  Favorite,
+  RecommendationLog,
+} from "../storage/types";
 import type { VectorSearchClient } from "../search/vector-search-client";
 import { calculatePreferenceVector, type PreferenceVectorInput } from "./preference-vector";
 import {
@@ -152,9 +159,17 @@ export class RecommendationEngine {
     limit: number = 10,
     additionalExcludeIds: string[] = []
   ): Promise<RecommendedArticle[]> {
-    // 嗜好ベクトルを再計算（即時反映）
+    // 全行動データを1回だけ並列取得（recalculate + excludeIds + shouldForceSerendipity で共用）
+    const [feedbacks, viewHistories, favorites, recentLogs] = await Promise.all([
+      this.storage.getFeedback(visitorId),
+      this.storage.getViewHistory(visitorId, DEFAULT_EXCLUDE_VIEW_HISTORY_LIMIT),
+      this.storage.getFavorites(visitorId),
+      this.storage.getRecommendationLog(visitorId, 5),
+    ]);
+
+    // 嗜好ベクトルを再計算（バッチEmbedding取得で高速化）
     if (this.config.recalculateOnRequest) {
-      await this.recalculatePreferenceVector(visitorId);
+      await this.recalculatePreferenceVector(visitorId, feedbacks, viewHistories, favorites);
     }
 
     const profile = await this.storage.getProfile(visitorId);
@@ -162,12 +177,12 @@ export class RecommendationEngine {
       throw new Error("Onboarding not completed: preferenceEmbedding is missing");
     }
 
-    // 除外対象を取得（DB上の履歴 + フロントエンドから渡された既取得記事ID）
-    const baseExcludedIds = await this.getExcludedIds(visitorId);
+    // 除外対象をキャッシュデータから導出（追加DBクエリなし）
+    const baseExcludedIds = this.deriveExcludedIds(viewHistories, feedbacks, favorites);
     const excludedIds = [...new Set([...baseExcludedIds, ...additionalExcludeIds])];
 
-    // 連続類似検出（80/20判定より優先）
-    const forceSerendipity = await this.shouldForceSerendipity(visitorId);
+    // 連続類似検出（キャッシュデータから判定、追加クエリなし）
+    const forceSerendipity = this.checkForceSerendipity(recentLogs);
 
     // 80/20 判定: explorationRateの確率でセレンディピティ推薦
     const isSerendipity =
@@ -175,7 +190,7 @@ export class RecommendationEngine {
 
     // プライマリパスで取得
     const primaryResults = isSerendipity
-      ? await this.getSerendipityRecommendations(profile, excludedIds, limit)
+      ? await this.getSerendipityRecommendations(profile, excludedIds, limit, viewHistories)
       : await this.getPreferenceRecommendations(profile, excludedIds, limit);
 
     // フォールバック: プライマリがlimit未満の場合、代替パスで不足分を補充
@@ -186,7 +201,12 @@ export class RecommendationEngine {
 
       const fallbackResults = isSerendipity
         ? await this.getPreferenceRecommendations(profile, fallbackExcludedIds, remaining)
-        : await this.getSerendipityRecommendations(profile, fallbackExcludedIds, remaining);
+        : await this.getSerendipityRecommendations(
+            profile,
+            fallbackExcludedIds,
+            remaining,
+            viewHistories
+          );
 
       return [...primaryResults, ...fallbackResults];
     }
@@ -199,20 +219,15 @@ export class RecommendationEngine {
    *
    * 直近5件の推薦が全て "preference" の場合、冒険枠を強制する。
    *
-   * @param visitorId 訪問者ID
+   * @param recentLogs 直近の推薦ログ（事前取得済み）
    * @returns 冒険枠を強制すべきかどうか
    */
-  private async shouldForceSerendipity(visitorId: string): Promise<boolean> {
-    const recentLogs = await this.storage.getRecommendationLog(visitorId, 5);
-
+  private checkForceSerendipity(recentLogs: RecommendationLog[]): boolean {
     if (recentLogs.length < 5) {
       return false;
     }
 
-    // 直近5件が全て "preference" かチェック
-    const allPreference = recentLogs.every((log) => log.source === "preference");
-
-    return allPreference;
+    return recentLogs.every((log) => log.source === "preference");
   }
 
   /**
@@ -321,14 +336,16 @@ export class RecommendationEngine {
    * @param profile ユーザープロファイル
    * @param excludedIds 除外する記事ID
    * @param limit 取得件数上限
+   * @param viewHistories 閲覧履歴（事前取得済み、タグ取得に使用）
    * @returns セレンディピティ推薦記事リスト
    */
   private async getSerendipityRecommendations(
     profile: PreferenceProfile,
     excludedIds: string[],
-    limit: number
+    limit: number,
+    viewHistories: ViewHistory[]
   ): Promise<RecommendedArticle[]> {
-    const exploredTags = await this.getExploredTags(profile.visitorId);
+    const exploredTags = await this.getExploredTags(viewHistories);
 
     const adjacentRelaxation: AdjacentRelaxationConfig = {
       maxRelaxationLevels: this.relaxationConfig.maxRelaxationLevels,
@@ -352,21 +369,21 @@ export class RecommendationEngine {
   /**
    * ユーザーが既に触れたタグを取得
    *
-   * @param visitorId 訪問者ID
+   * 事前取得済みの閲覧履歴からタグをバッチ取得する。
+   * N+1クエリ（getArticleTags × N）をバッチ取得（1クエリ）に最適化。
+   *
+   * @param viewHistories 閲覧履歴（事前取得済み）
    * @returns ユーザーが触れたタグの配列（重複排除済み）
    */
-  private async getExploredTags(visitorId: string): Promise<string[]> {
-    const viewHistory = await this.storage.getViewHistory(
-      visitorId,
-      DEFAULT_EXPLORED_TAGS_VIEW_HISTORY_LIMIT
-    );
+  private async getExploredTags(viewHistories: ViewHistory[]): Promise<string[]> {
+    // タグ取得用の閲覧履歴は上限50件（事前取得済みの200件からスライス）
+    const limitedHistory = viewHistories.slice(0, DEFAULT_EXPLORED_TAGS_VIEW_HISTORY_LIMIT);
+    const articleIds = limitedHistory.map((vh) => vh.articleId);
 
-    // 並列で全記事のタグを取得
-    const tagArrays = await Promise.all(
-      viewHistory.map((vh) => this.storage.getArticleTags(vh.articleId))
-    );
+    // バッチ取得（N+1 → 1クエリ）
+    const tagMap = await this.storage.getArticleTagsBatch(articleIds);
 
-    const allTags = tagArrays.flatMap((tags) => tags ?? []);
+    const allTags = [...tagMap.values()].flat();
     return [...new Set(allTags)];
   }
 
@@ -386,21 +403,22 @@ export class RecommendationEngine {
   }
 
   /**
-   * 除外対象のIDを取得
+   * 除外対象のIDを導出
    *
-   * 既読・フィードバック済み・お気に入り済みの記事IDを収集する。
+   * 事前取得済みの行動データから除外対象記事IDを導出する。
+   * 追加のDBクエリは不要。
    *
-   * @param visitorId 訪問者ID
+   * @param viewHistories 閲覧履歴（事前取得済み）
+   * @param feedbacks フィードバック（事前取得済み）
+   * @param favorites お気に入り（事前取得済み）
    * @returns 除外対象の記事ID配列
    */
-  private async getExcludedIds(visitorId: string): Promise<string[]> {
-    const [viewHistory, feedbacks, favorites] = await Promise.all([
-      this.storage.getViewHistory(visitorId, DEFAULT_EXCLUDE_VIEW_HISTORY_LIMIT),
-      this.storage.getFeedback(visitorId),
-      this.storage.getFavorites(visitorId),
-    ]);
-
-    const viewedIds = viewHistory.map((h) => h.articleId);
+  private deriveExcludedIds(
+    viewHistories: ViewHistory[],
+    feedbacks: Feedback[],
+    favorites: Favorite[]
+  ): string[] {
+    const viewedIds = viewHistories.map((h) => h.articleId);
     const feedbackIds = feedbacks.map((f) => f.articleId);
     const favoriteIds = favorites.map((f) => f.articleId);
 
@@ -413,20 +431,25 @@ export class RecommendationEngine {
    * 最新の行動履歴（お気に入り/Like/閲覧/Next）に基づいて
    * 嗜好ベクトルを再計算し、プロファイルを更新する。
    *
+   * バッチEmbedding取得により、N+1クエリ問題を回避。
+   * 全記事IDを集約して1回のクエリで全Embeddingを取得する。
+   *
    * Next操作のinterestLevelに応じて重みを分配:
    * - high: 深く読んだ → 重み0.3（弱いポジティブ）
    * - medium: 通常の閲覧 → 重み0（影響なし、ベクトル計算に含まない）
    * - low: 即通過 → 重み-0.2（弱いネガティブ）
    *
    * @param visitorId 訪問者ID
+   * @param feedbacks フィードバック（事前取得済み）
+   * @param viewHistories 閲覧履歴（事前取得済み）
+   * @param favorites お気に入り（事前取得済み）
    */
-  private async recalculatePreferenceVector(visitorId: string): Promise<void> {
-    const [feedbacks, viewHistories, favorites] = await Promise.all([
-      this.storage.getFeedback(visitorId),
-      this.storage.getViewHistory(visitorId),
-      this.storage.getFavorites(visitorId),
-    ]);
-
+  private async recalculatePreferenceVector(
+    visitorId: string,
+    feedbacks: Feedback[],
+    viewHistories: ViewHistory[],
+    favorites: Favorite[]
+  ): Promise<void> {
     // Next操作をinterestLevelで分類
     const nextFeedbacks = feedbacks.filter((f) => f.type === "next");
     const nextHighArticleIds = nextFeedbacks
@@ -444,8 +467,23 @@ export class RecommendationEngine {
       nextLowArticleIds,
     };
 
-    const preferenceEmbedding = await calculatePreferenceVector(input, (id) =>
-      this.vectorSearch.getEmbedding(id)
+    // 全記事IDを集約してバッチ取得（N+1 → 1クエリ）
+    const allArticleIds = [
+      ...new Set([
+        ...input.favoriteArticleIds,
+        ...input.likedArticleIds,
+        ...input.viewedArticleIds,
+        ...input.nextHighArticleIds,
+        ...input.nextLowArticleIds,
+      ]),
+    ];
+
+    const embeddingMap = await this.vectorSearch.getEmbeddings(allArticleIds);
+
+    // マップルックアップをコールバックとして渡す（DBアクセスなし）
+    const preferenceEmbedding = await calculatePreferenceVector(
+      input,
+      async (id) => embeddingMap.get(id) ?? null
     );
 
     if (preferenceEmbedding) {

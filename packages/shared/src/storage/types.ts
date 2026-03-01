@@ -81,6 +81,16 @@ export interface PreferenceStorage {
   getArticleTags(articleId: string): Promise<string[] | null>;
 
   /**
+   * 複数記事のタグ情報を一括取得
+   *
+   * N+1クエリ問題を回避するためのバッチ取得メソッド。
+   *
+   * @param articleIds 記事IDの配列
+   * @returns 記事ID → タグ配列のマップ。タグがない記事は空配列
+   */
+  getArticleTagsBatch(articleIds: string[]): Promise<Map<string, string[]>>;
+
+  /**
    * お気に入り一覧を取得
    * @param visitorId 訪問者ID
    * @returns お気に入りの配列（追加日時降順）

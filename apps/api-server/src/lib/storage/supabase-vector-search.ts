@@ -137,6 +137,41 @@ export class SupabaseVectorSearch implements VectorSearchClient {
   };
 
   /**
+   * 複数記事のEmbeddingを一括取得
+   *
+   * 1回のクエリで全記事のEmbeddingを取得し、N+1クエリ問題を回避する。
+   *
+   * @param articleIds 記事IDの配列
+   * @returns 記事ID → Embeddingベクトルのマップ
+   */
+  getEmbeddings = async (articleIds: string[]): Promise<Map<string, number[]>> => {
+    const result = new Map<string, number[]>();
+    if (articleIds.length === 0) return result;
+
+    const uniqueIds = [...new Set(articleIds)];
+
+    const response = (await this.supabase
+      .from("scp_articles")
+      .select("article_id, embedding")
+      .in("article_id", uniqueIds)) as unknown as SupabaseResponse<
+      { article_id: string; embedding: number[] | null }[]
+    >;
+
+    if (response.error !== null || response.data === null) {
+      return result;
+    }
+
+    for (const row of response.data) {
+      const embedding = parseVectorField(row.embedding);
+      if (embedding) {
+        result.set(row.article_id, embedding);
+      }
+    }
+
+    return result;
+  };
+
+  /**
    * 未探索タグを持つ記事を検索
    *
    * ユーザーがまだ触れていないタグを持つ記事を、

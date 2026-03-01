@@ -186,6 +186,31 @@ export class SupabasePreferenceStorage implements PreferenceStorage {
   };
 
   /**
+   * 複数記事のタグ情報を一括取得
+   */
+  getArticleTagsBatch = async (articleIds: string[]): Promise<Map<string, string[]>> => {
+    const result = new Map<string, string[]>();
+    if (articleIds.length === 0) return result;
+
+    const uniqueIds = [...new Set(articleIds)];
+
+    const response = await this.supabase
+      .from("scp_articles")
+      .select("article_id, tags")
+      .in("article_id", uniqueIds);
+
+    if (response.error) return result;
+
+    for (const row of response.data as DbRow[]) {
+      const articleId = row.article_id as string;
+      const tags = row.tags as string[] | null;
+      result.set(articleId, tags ?? []);
+    }
+
+    return result;
+  };
+
+  /**
    * お気に入り一覧を取得（added_at降順）
    */
   getFavorites = async (visitorId: string): Promise<Favorite[]> => {

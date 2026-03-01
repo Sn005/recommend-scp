@@ -30,6 +30,7 @@ function createMockLocalStorage(): PreferenceStorage {
     getRecommendationLog: vi.fn(),
     addRecommendationLog: vi.fn(),
     getArticleTags: vi.fn(),
+    getArticleTagsBatch: vi.fn(),
     getFavorites: vi.fn(),
     addFavorite: vi.fn(),
     removeFavorite: vi.fn(),
