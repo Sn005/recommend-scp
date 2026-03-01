@@ -31,6 +31,7 @@ describe("004-01-01: ストレージ抽象化レイヤー", () => {
         getRecommendationLog: async (_visitorId, _limit?) => [],
         addRecommendationLog: async (_log) => {},
         getArticleTags: async (_articleId) => null,
+        getArticleTagsBatch: async (_articleIds) => new Map(),
         getFavorites: async (_visitorId) => [],
         addFavorite: async (_favorite) => {},
         removeFavorite: async (_visitorId, _articleId) => {},

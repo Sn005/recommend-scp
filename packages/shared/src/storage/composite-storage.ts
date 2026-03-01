@@ -120,6 +120,26 @@ export class CompositeStorage implements PreferenceStorage {
   }
 
   /**
+   * 複数記事のタグ情報を一括取得
+   * @param articleIds 記事IDの配列
+   * @returns 記事ID → タグ配列のマップ
+   */
+  async getArticleTagsBatch(articleIds: string[]): Promise<Map<string, string[]>> {
+    const result = new Map<string, string[]>();
+    // 個別のgetArticleTagsに委譲（tagStorageにバッチメソッドがないため）
+    const tagArrays = await Promise.all(
+      articleIds.map(async (id) => {
+        const tags = await this.tagStorage.getArticleTags(id);
+        return [id, tags ?? []] as const;
+      })
+    );
+    for (const [id, tags] of tagArrays) {
+      result.set(id, tags);
+    }
+    return result;
+  }
+
+  /**
    * お気に入り一覧を取得
    * @param visitorId 訪問者ID
    * @returns お気に入りの配列（追加日時降順）

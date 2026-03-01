@@ -319,6 +319,15 @@ export class IndexedDBStorage implements PreferenceStorage {
   }
 
   /**
+   * 複数記事のタグ情報を一括取得
+   *
+   * IndexedDBには記事タグを保存していないため空のマップを返す。
+   */
+  async getArticleTagsBatch(_articleIds: string[]): Promise<Map<string, string[]>> {
+    return new Map();
+  }
+
+  /**
    * お気に入り一覧を取得
    */
   async getFavorites(visitorId: string): Promise<Favorite[]> {

@@ -78,6 +78,15 @@ class MockPreferenceStorage implements PreferenceStorage {
     return this.articleTags.get(articleId) ?? null;
   }
 
+  async getArticleTagsBatch(articleIds: string[]): Promise<Map<string, string[]>> {
+    const result = new Map<string, string[]>();
+    for (const id of articleIds) {
+      const tags = this.articleTags.get(id);
+      if (tags) result.set(id, tags);
+    }
+    return result;
+  }
+
   async getFavorites(_visitorId: string): Promise<import("../../storage/types").Favorite[]> {
     return [];
   }

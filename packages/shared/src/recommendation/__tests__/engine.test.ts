@@ -30,6 +30,7 @@ function createMockStorage(overrides: Partial<PreferenceStorage> = {}): Preferen
     getRecommendationLog: vi.fn().mockResolvedValue([]),
     addRecommendationLog: vi.fn().mockResolvedValue(undefined),
     getArticleTags: vi.fn().mockResolvedValue(null),
+    getArticleTagsBatch: vi.fn().mockResolvedValue(new Map()),
     getFavorites: vi.fn().mockResolvedValue([]),
     addFavorite: vi.fn().mockResolvedValue(undefined),
     removeFavorite: vi.fn().mockResolvedValue(undefined),
@@ -45,6 +46,7 @@ function createMockVectorSearch(overrides: Partial<VectorSearchClient> = {}): Ve
   return {
     searchByEmbedding: vi.fn().mockResolvedValue([]),
     getEmbedding: vi.fn().mockResolvedValue(null),
+    getEmbeddings: vi.fn().mockResolvedValue(new Map()),
     searchByUnexploredTags: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
@@ -278,10 +280,10 @@ describe("RecommendationEngine", () => {
 
       // 嗜好ベクトル再計算のためにfeedback、viewHistory、favoritesが取得される
       expect(storage.getFeedback).toHaveBeenCalledWith(visitorId);
-      expect(storage.getViewHistory).toHaveBeenCalledWith(visitorId);
+      expect(storage.getViewHistory).toHaveBeenCalledWith(visitorId, 200);
       expect(storage.getFavorites).toHaveBeenCalledWith(visitorId);
-      // getEmbeddingが呼ばれる（liked-articleのEmbeddingを取得）
-      expect(vectorSearch.getEmbedding).toHaveBeenCalledWith("liked-article");
+      // getEmbeddingsがバッチ呼び出しされる（liked-articleのEmbeddingを取得）
+      expect(vectorSearch.getEmbeddings).toHaveBeenCalledWith(["liked-article"]);
     });
 
     it("プロファイルが存在しない場合、エラーがスローされる", async () => {
@@ -416,15 +418,17 @@ describe("RecommendationEngine", () => {
         { id: "v2", visitorId, articleId: "article-2", viewedAt: "2024-01-02T00:00:00.000Z" },
       ];
 
+      const tagMap = new Map<string, string[]>([
+        ["article-1", ["ホラー", "Keter"]],
+        ["article-2", ["ミステリー"]],
+      ]);
+
       const storage = createMockStorage({
         getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
         getViewHistory: vi.fn().mockResolvedValue(viewHistory),
         getFeedback: vi.fn().mockResolvedValue([]),
         getFavorites: vi.fn().mockResolvedValue([]),
-        getArticleTags: vi
-          .fn()
-          .mockResolvedValueOnce(["ホラー", "Keter"])
-          .mockResolvedValueOnce(["ミステリー"]),
+        getArticleTagsBatch: vi.fn().mockResolvedValue(tagMap),
       });
 
       const vectorSearch = createMockVectorSearch({
@@ -440,9 +444,8 @@ describe("RecommendationEngine", () => {
 
       await engine.getRecommendations(visitorId, 10);
 
-      // getArticleTagsが閲覧履歴の記事ごとに呼ばれる
-      expect(storage.getArticleTags).toHaveBeenCalledWith("article-1");
-      expect(storage.getArticleTags).toHaveBeenCalledWith("article-2");
+      // getArticleTagsBatchがバッチ呼び出しされる
+      expect(storage.getArticleTagsBatch).toHaveBeenCalledWith(["article-1", "article-2"]);
 
       // 収集したタグがsearchByUnexploredTagsに渡される
       expect(vectorSearch.searchByUnexploredTags).toHaveBeenCalledWith(
@@ -1428,17 +1431,21 @@ describe("RecommendationEngine", () => {
       expect(storage.getViewHistory).toHaveBeenCalledWith(visitorId, 200);
     });
 
-    it("getExploredTagsでgetViewHistoryにlimit=50が渡される", async () => {
-      const viewHistory: ViewHistory[] = [
-        { id: "v1", visitorId, articleId: "article-1", viewedAt: "2024-01-01T00:00:00.000Z" },
-      ];
+    it("getExploredTagsで閲覧履歴が最大50件にスライスされる", async () => {
+      // 55件の閲覧履歴を作成（50件上限を超える）
+      const viewHistory: ViewHistory[] = Array.from({ length: 55 }, (_, i) => ({
+        id: `v${i}`,
+        visitorId,
+        articleId: `article-${i}`,
+        viewedAt: `2024-01-${String(i + 1).padStart(2, "0")}T00:00:00.000Z`,
+      }));
 
       const storage = createMockStorage({
         getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
         getViewHistory: vi.fn().mockResolvedValue(viewHistory),
         getFeedback: vi.fn().mockResolvedValue([]),
         getFavorites: vi.fn().mockResolvedValue([]),
-        getArticleTags: vi.fn().mockResolvedValue(["ホラー"]),
+        getArticleTagsBatch: vi.fn().mockResolvedValue(new Map()),
       });
 
       const vectorSearch = createMockVectorSearch({
@@ -1454,10 +1461,14 @@ describe("RecommendationEngine", () => {
 
       await engine.getRecommendations(visitorId, 10);
 
-      // セレンディピティパスでgetExploredTagsが呼ばれ、limit=50でgetViewHistoryが呼ばれる
-      const calls = (storage.getViewHistory as ReturnType<typeof vi.fn>).mock.calls;
-      // getExcludedIds(limit=200)とgetExploredTags(limit=50)の2回呼ばれる
-      expect(calls).toContainEqual([visitorId, 50]);
+      // getViewHistoryは1回だけ呼ばれる（limit=200で一括取得）
+      expect(storage.getViewHistory).toHaveBeenCalledTimes(1);
+      expect(storage.getViewHistory).toHaveBeenCalledWith(visitorId, 200);
+
+      // getArticleTagsBatchには最大50件のarticleIdが渡される
+      const batchCalls = (storage.getArticleTagsBatch as ReturnType<typeof vi.fn>).mock.calls;
+      expect(batchCalls).toHaveLength(1);
+      expect(batchCalls[0][0]).toHaveLength(50);
     });
   });
 });

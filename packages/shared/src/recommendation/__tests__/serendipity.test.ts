@@ -22,6 +22,7 @@ function createMockVectorSearch(overrides: Partial<VectorSearchClient> = {}): Ve
   return {
     searchByEmbedding: vi.fn().mockResolvedValue([]),
     getEmbedding: vi.fn().mockResolvedValue(null),
+    getEmbeddings: vi.fn().mockResolvedValue(new Map()),
     searchByUnexploredTags: vi.fn().mockResolvedValue([]),
     ...overrides,
   };
