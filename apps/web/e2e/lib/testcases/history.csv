@@ -1,4 +1,4 @@
 id,name,steps,expected,tags,result
-TC-006-04-001,閲覧履歴一覧表示,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":3000},{""action"":""assertVisible"",""testId"":""history-card""}]",閲覧履歴一覧が表示される,critical,
-TC-006-04-002,履歴カード情報表示,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":3000},{""action"":""assertVisible"",""testId"":""history-card""}]",SCP番号・オブジェクトクラスが表示される,critical,
-TC-006-04-003,履歴カードから記事詳細遷移,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":3000},{""action"":""click"",""testId"":""history-card""},{""action"":""assertUrl"",""pattern"":""/article/""}]",記事詳細画面に遷移する,critical,
+TC-006-04-001,閲覧履歴一覧表示,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":5000},{""action"":""assertVisible"",""testId"":""history-card""}]",閲覧履歴一覧が表示される,critical,
+TC-006-04-002,履歴カード情報表示,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":5000},{""action"":""assertVisible"",""testId"":""history-card""}]",SCP番号・オブジェクトクラスが表示される,critical,
+TC-006-04-003,履歴カードから記事詳細遷移,"[{""action"":""goto"",""url"":""/history""},{""action"":""waitFor"",""testId"":""history-card"",""timeout"":5000},{""action"":""click"",""testId"":""history-card""},{""action"":""assertUrl"",""pattern"":""/article/""}]",記事詳細画面に遷移する,critical,

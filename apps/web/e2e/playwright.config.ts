@@ -14,6 +14,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    // E2Eテスト時はService Workerを無効化
+    // 本番デプロイのWorkbox SWがpage.route()モックと干渉するのを防止
+    serviceWorkers: "block",
   },
   projects: [
     {

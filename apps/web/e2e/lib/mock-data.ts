@@ -90,6 +90,63 @@ export const mockHistoryEntries = [
   },
 ];
 
+/** モック: POST /visitors レスポンス（新規ビジター、オンボーディング未完了） */
+export const mockVisitorNew = {
+  visitorId: "e2e-test-visitor-001",
+  isNew: true,
+  createdAt: "2024-01-01T00:00:00.000Z",
+  onboardingCompletedAt: null,
+};
+
+/** モック: GET /onboarding/packs レスポンス */
+export const mockOnboardingPacksResponse = {
+  packs: [
+    {
+      type: "classic",
+      displayName: "クラシック",
+      description: "SCP定番の名作集",
+      primaryTags: ["classic"],
+    },
+    {
+      type: "horror",
+      displayName: "ホラー",
+      description: "恐怖と不安を呼ぶSCP",
+      primaryTags: ["horror"],
+    },
+    {
+      type: "scifi",
+      displayName: "SF",
+      description: "科学とSFのSCP",
+      primaryTags: ["scifi"],
+    },
+    {
+      type: "heartwarming",
+      displayName: "ほっこり",
+      description: "心温まるSCP",
+      primaryTags: ["heartwarming"],
+    },
+    {
+      type: "mystery",
+      displayName: "ミステリー",
+      description: "謎と推理のSCP",
+      primaryTags: ["mystery"],
+    },
+    {
+      type: "jp",
+      displayName: "日本支部",
+      description: "SCP-JP作品集",
+      primaryTags: ["jp"],
+    },
+  ],
+};
+
+/** モック: POST /onboarding/select レスポンス */
+export const mockOnboardingSelectResponse = {
+  success: true,
+  visitorId: "e2e-test-visitor-001",
+  selectedPacks: ["horror"],
+};
+
 /** localStorageキー定義 */
 export const STORAGE_KEYS = {
   visitorId: "recommend_scp_visitor_id",
