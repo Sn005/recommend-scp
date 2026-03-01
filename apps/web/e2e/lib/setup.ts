@@ -6,9 +6,12 @@
 import type { Page } from "@playwright/test";
 import {
   mockVisitorOnboarded,
+  mockVisitorNew,
   mockRecommendResponse,
   mockFavoritesResponse,
   mockHistoryEntries,
+  mockOnboardingPacksResponse,
+  mockOnboardingSelectResponse,
   STORAGE_KEYS,
 } from "./mock-data";
 
@@ -24,6 +27,25 @@ export async function setupOnboardedVisitor(page: Page): Promise<void> {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(mockVisitorOnboarded),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+}
+
+/**
+ * 新規ビジターのAPIモックを設定（オンボーディング未完了）
+ *
+ * POST /visitors → オンボーディング未完了のレスポンスを返す
+ */
+export async function setupNewVisitor(page: Page): Promise<void> {
+  await page.route("**/visitors", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockVisitorNew),
       });
     } else {
       await route.continue();
@@ -95,6 +117,44 @@ export async function setupFeedbackMock(page: Page): Promise<void> {
 }
 
 /**
+ * オンボーディングパック一覧APIのモックを設定
+ *
+ * GET /onboarding/packs → テスト用パックデータを返す
+ */
+export async function setupOnboardingPacksMock(page: Page): Promise<void> {
+  await page.route("**/onboarding/packs", async (route) => {
+    if (route.request().method() === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockOnboardingPacksResponse),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+}
+
+/**
+ * オンボーディング選択確定APIのモックを設定
+ *
+ * POST /onboarding/select → 成功レスポンスを返す
+ */
+export async function setupOnboardingSelectMock(page: Page): Promise<void> {
+  await page.route("**/onboarding/select", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockOnboardingSelectResponse),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+}
+
+/**
  * 閲覧履歴のlocalStorageをシードする
  */
 export async function seedHistory(page: Page): Promise<void> {
@@ -124,12 +184,28 @@ export async function seedOnboardingCompleted(page: Page): Promise<void> {
 }
 
 /**
+ * visitorIdのみをlocalStorageにシードする（オンボーディング完了フラグはセットしない）
+ */
+export async function seedVisitorId(page: Page): Promise<void> {
+  await page.addInitScript(
+    ({ visitorIdKey, visitorId }) => {
+      localStorage.setItem(visitorIdKey, visitorId);
+    },
+    {
+      visitorIdKey: STORAGE_KEYS.visitorId,
+      visitorId: mockVisitorNew.visitorId,
+    }
+  );
+}
+
+/**
  * 推薦画面テスト用のフルセットアップ
  */
 export async function setupRecommendTest(page: Page): Promise<void> {
   await setupOnboardedVisitor(page);
   await setupRecommendMock(page);
   await setupFeedbackMock(page);
+  await setupFavoritesMock(page);
   await seedOnboardingCompleted(page);
 }
 
@@ -149,4 +225,16 @@ export async function setupHistoryTest(page: Page): Promise<void> {
   await setupOnboardedVisitor(page);
   await seedOnboardingCompleted(page);
   await seedHistory(page);
+}
+
+/**
+ * オンボーディング画面テスト用のフルセットアップ
+ *
+ * 新規ビジター（オンボーディング未完了）のAPIモックとlocalStorageを設定
+ */
+export async function setupOnboardingTest(page: Page): Promise<void> {
+  await setupNewVisitor(page);
+  await setupOnboardingPacksMock(page);
+  await setupOnboardingSelectMock(page);
+  await seedVisitorId(page);
 }
