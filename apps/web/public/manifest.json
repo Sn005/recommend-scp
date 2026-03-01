@@ -4,8 +4,8 @@
   "description": "あなたの好みに合ったSCP記事を推薦するWebアプリ",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
+  "background_color": "#3B82F6",
+  "theme_color": "#3B82F6",
   "orientation": "portrait",
   "lang": "ja",
   "icons": [
