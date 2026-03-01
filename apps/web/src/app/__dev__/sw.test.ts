@@ -91,6 +91,46 @@ describe("sw.js", () => {
     it("ExpirationPluginが設定されている", () => {
       expect(swContent).toContain("ExpirationPlugin");
     });
+
+    it("NetworkFirst戦略が設定されている", () => {
+      expect(swContent).toContain("NetworkFirst");
+    });
+
+    it("キャッシュ名 next-static-v1 が定義されている", () => {
+      expect(swContent).toContain("next-static-v1");
+    });
+
+    it("キャッシュ名 next-pages-v1 が定義されている", () => {
+      expect(swContent).toContain("next-pages-v1");
+    });
+
+    it("キャッシュ名 scp-article-meta-v1 が定義されている", () => {
+      expect(swContent).toContain("scp-article-meta-v1");
+    });
+
+    it("/_next/static/ パスの判定が存在する", () => {
+      expect(swContent).toContain("/_next/static/");
+    });
+
+    it("/article/ パスの判定が存在する", () => {
+      expect(swContent).toContain("/article/");
+    });
+
+    it("/api/articles/ のコンテンツAPIパスの判定が存在する", () => {
+      expect(swContent).toMatch(/\\\/api\\\/articles\\\/.*\\\/content/);
+    });
+
+    it("7日の有効期限が設定されている（ページキャッシュ用）", () => {
+      expect(swContent).toMatch(/7\s*\*\s*24\s*\*\s*60\s*\*\s*60/);
+    });
+
+    it("networkTimeoutSecondsが設定されている", () => {
+      expect(swContent).toContain("networkTimeoutSeconds");
+    });
+
+    it("古いキャッシュ削除がnext-プレフィックスにも対応している", () => {
+      expect(swContent).toContain('n.startsWith("next-")');
+    });
   });
 });
 
