@@ -18,28 +18,6 @@ const createMockArticles = (count: number): Article[] =>
     rating: null,
   }));
 
-/** 全スロットをカスケード読み込みで準備するヘルパー */
-const loadAllSlots = async (result: { current: ReturnType<typeof useIframePool> }) => {
-  // Current読み込み完了
-  act(() => {
-    result.current.handleIframeLoad(result.current.slots[0].articleIndex);
-  });
-  // Next作成待ち
-  await waitFor(() => {
-    expect(result.current.slots[1]).not.toBeNull();
-  });
-  // Next読み込み完了
-  act(() => {
-    const nextSlot = result.current.slots[1];
-    if (nextSlot === null) throw new Error("Next slot should exist");
-    result.current.handleIframeLoad(nextSlot.articleIndex);
-  });
-  // Prefetch作成待ち
-  await waitFor(() => {
-    expect(result.current.slots[2]).not.toBeNull();
-  });
-};
-
 // --- テスト ---
 
 describe("useIframePool", () => {
@@ -51,33 +29,31 @@ describe("useIframePool", () => {
   // AC-1: 3スロットiframeプール
   // ============================
   describe("AC-1: 3スロットiframeプール", () => {
-    it("初期状態でCurrentスロットのみが作成される", () => {
+    it("初期状態で3つのスロットが即座に作成される", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
       expect(result.current.slots[0]).toBeDefined();
       expect(result.current.slots[0].articleIndex).toBe(0);
       expect(result.current.slots[0].url).toBe(articles[0].url);
-      expect(result.current.slots[1]).toBeNull();
-      expect(result.current.slots[2]).toBeNull();
-    });
-
-    it("カスケード読み込み完了後、最大3つのスロットが管理される", async () => {
-      const articles = createMockArticles(5);
-      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
-
-      expect(result.current.slots[0]).toBeDefined();
       expect(result.current.slots[1]).not.toBeNull();
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
       expect(result.current.slots[2]).not.toBeNull();
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
     });
 
-    it("Current/Next/Prefetchの3段階でarticleIndexが管理される", async () => {
+    it("初期状態で全スロットのisLoadedがfalseである", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      await loadAllSlots(result);
+      expect(result.current.slots[0].isLoaded).toBe(false);
+      expect(result.current.slots[1]?.isLoaded).toBe(false);
+      expect(result.current.slots[2]?.isLoaded).toBe(false);
+    });
+
+    it("Current/Next/Prefetchの3段階でarticleIndexが管理される", () => {
+      const articles = createMockArticles(5);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
       expect(result.current.slots[0].articleIndex).toBe(0); // Current
       expect(result.current.slots[1]?.articleIndex).toBe(1); // Next
@@ -86,89 +62,64 @@ describe("useIframePool", () => {
   });
 
   // ============================
-  // AC-2: 初回ロードの段階的読み込み
+  // AC-2: 即時スロット作成（Cascade制約なし）
   // ============================
-  describe("AC-2: 初回ロードの段階的読み込み", () => {
-    it("初回表示時、Currentのiframeのみが作成される", () => {
+  describe("AC-2: 即時スロット作成", () => {
+    it("記事が3つ以上あれば初期化時に全スロットが作成される", () => {
       const articles = createMockArticles(3);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
       expect(result.current.slots[0]).toBeDefined();
-      expect(result.current.slots[1]).toBeNull();
-      expect(result.current.slots[2]).toBeNull();
-    });
-
-    it("Current読み込み完了後にNextスロットが作成される", async () => {
-      const articles = createMockArticles(3);
-      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      // Nextはまだ作成されていない
-      expect(result.current.slots[1]).toBeNull();
-
-      // Current読み込み完了
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-        expect(result.current.slots[1]?.articleIndex).toBe(1);
-        expect(result.current.slots[1]?.isLoaded).toBe(false);
-      });
-    });
-
-    it("Next読み込み完了後にPrefetchスロットが作成される", async () => {
-      const articles = createMockArticles(3);
-      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      // Current読み込み完了
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
-
-      // Prefetchはまだ作成されていない
-      expect(result.current.slots[2]).toBeNull();
-
-      // Next読み込み完了
-      act(() => {
-        result.current.handleIframeLoad(1);
-      });
-
-      await waitFor(() => {
-        expect(result.current.slots[2]).not.toBeNull();
-        expect(result.current.slots[2]?.articleIndex).toBe(2);
-        expect(result.current.slots[2]?.isLoaded).toBe(false);
-      });
-    });
-
-    it("Cascade読み込みが順序通りに実行される（Current→Next→Prefetch）", async () => {
-      const articles = createMockArticles(3);
-      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      // 初期: Currentのみ
       expect(result.current.slots[0].articleIndex).toBe(0);
-      expect(result.current.slots[1]).toBeNull();
-      expect(result.current.slots[2]).toBeNull();
+      expect(result.current.slots[1]).not.toBeNull();
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]).not.toBeNull();
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
+    });
 
-      // Current完了 → Next作成
+    it("handleIframeLoad()はisLoadedを更新するだけでスロット作成しない", () => {
+      const articles = createMockArticles(5);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      // 全スロットが既に存在することを確認
+      expect(result.current.slots[1]).not.toBeNull();
+      expect(result.current.slots[2]).not.toBeNull();
+
+      // Current読み込み完了
       act(() => {
         result.current.handleIframeLoad(0);
       });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
-      expect(result.current.slots[2]).toBeNull();
 
-      // Next完了 → Prefetch作成
+      // スロットが変わらない（既に存在している）
+      expect(result.current.slots[0].isLoaded).toBe(true);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
+    });
+
+    it("全スロットが同時に読み込み可能（Cascade制約なし）", () => {
+      const articles = createMockArticles(5);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      // 全スロットが同時に存在
+      expect(result.current.slots[0]).toBeDefined();
+      expect(result.current.slots[1]).not.toBeNull();
+      expect(result.current.slots[2]).not.toBeNull();
+
+      // 任意の順序でisLoadedを更新可能
       act(() => {
-        result.current.handleIframeLoad(1);
+        result.current.handleIframeLoad(2); // Prefetch先に完了
       });
-      await waitFor(() => {
-        expect(result.current.slots[2]).not.toBeNull();
+      expect(result.current.slots[2]?.isLoaded).toBe(true);
+
+      act(() => {
+        result.current.handleIframeLoad(0); // Current完了
       });
+      expect(result.current.slots[0].isLoaded).toBe(true);
+
+      act(() => {
+        result.current.handleIframeLoad(1); // Next完了
+      });
+      expect(result.current.slots[1]?.isLoaded).toBe(true);
     });
   });
 
@@ -176,11 +127,9 @@ describe("useIframePool", () => {
   // AC-3: 遷移時のスロットローテーション
   // ============================
   describe("AC-3: 遷移時のスロットローテーション", () => {
-    it("advance()でNextがCurrentに昇格する", async () => {
+    it("advance()でNextがCurrentに昇格する", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       act(() => {
         result.current.advance();
@@ -189,11 +138,9 @@ describe("useIframePool", () => {
       expect(result.current.slots[0].articleIndex).toBe(1);
     });
 
-    it("advance()でPrefetchがNextに昇格する", async () => {
+    it("advance()でPrefetchがNextに昇格する", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       act(() => {
         result.current.advance();
@@ -202,32 +149,22 @@ describe("useIframePool", () => {
       expect(result.current.slots[1]?.articleIndex).toBe(2);
     });
 
-    it("advance()後に新しいPrefetchスロットが作成される", async () => {
+    it("advance()後に新しいPrefetchスロットが即座に作成される", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       act(() => {
         result.current.advance();
       });
 
-      // 新Next(旧Prefetch)が読み込み完了すると新Prefetch作成
-      act(() => {
-        result.current.handleIframeLoad(2);
-      });
-
-      await waitFor(() => {
-        expect(result.current.slots[2]).not.toBeNull();
-        expect(result.current.slots[2]?.articleIndex).toBe(3);
-      });
+      // 即座に新Prefetchが作成される（Cascade待ち不要）
+      expect(result.current.slots[2]).not.toBeNull();
+      expect(result.current.slots[2]?.articleIndex).toBe(3);
     });
 
-    it("advance()でCurrentスロットが破棄される", async () => {
+    it("advance()でCurrentスロットが破棄される", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       const oldCurrentIndex = result.current.slots[0].articleIndex;
 
@@ -240,6 +177,21 @@ describe("useIframePool", () => {
         .filter((s): s is NonNullable<typeof s> => s !== null)
         .map((s) => s.articleIndex);
       expect(allIndices).not.toContain(oldCurrentIndex);
+    });
+
+    it("連続advance()で常に3スロットが維持される", () => {
+      const articles = createMockArticles(10);
+      const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
+
+      // 3回連続advance
+      for (let i = 0; i < 3; i++) {
+        act(() => {
+          result.current.advance();
+        });
+
+        const nonNullSlots = result.current.slots.filter((s) => s !== null).length;
+        expect(nonNullSlots).toBe(3);
+      }
     });
   });
 
@@ -308,17 +260,12 @@ describe("useIframePool", () => {
       expect(result.current.slots[0].isFullyLoaded).toBe(true);
     });
 
-    it("handleIframeFullyLoaded()はNextスロットにも適用される", async () => {
+    it("handleIframeFullyLoaded()はNextスロットにも適用される", () => {
       const articles = createMockArticles(3);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      // Current読み込み完了 → Next作成
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
+      // Nextスロットは即座に存在
+      expect(result.current.slots[1]).not.toBeNull();
 
       act(() => {
         result.current.handleIframeFullyLoaded(1);
@@ -353,11 +300,9 @@ describe("useIframePool", () => {
       expect(result.current.slots[0].isFullyLoaded).toBe(true);
     });
 
-    it("isFullyLoadedはadvance()後のスロットローテーションで引き継がれる", async () => {
+    it("isFullyLoadedはadvance()後のスロットローテーションで引き継がれる", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       // Nextスロットを完全読み込み完了に設定
       act(() => {
@@ -379,11 +324,9 @@ describe("useIframePool", () => {
   // AC-5: メモリ管理
   // ============================
   describe("AC-5: メモリ管理", () => {
-    it("advance()後に古いスロットが削除される", async () => {
+    it("advance()後に古いスロットが削除される", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       const oldCurrentUrl = result.current.slots[0].url;
 
@@ -398,11 +341,9 @@ describe("useIframePool", () => {
       expect(allUrls).not.toContain(oldCurrentUrl);
     });
 
-    it("連続advance()でスロット数が3を超えない", async () => {
+    it("連続advance()でスロット数が3を超えない", () => {
       const articles = createMockArticles(10);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      await loadAllSlots(result);
 
       // 3回連続advance
       for (let i = 0; i < 3; i++) {
@@ -420,58 +361,29 @@ describe("useIframePool", () => {
   // AC-6: 記事不足時のフォールバック
   // ============================
   describe("AC-6: 記事不足時のフォールバック", () => {
-    it("記事が1つしかない場合、Next/Prefetchスロットが作成されない", async () => {
+    it("記事が1つしかない場合、Next/Prefetchスロットがnullになる", () => {
       const articles = createMockArticles(1);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-
-      // 少し待ってもNext/Prefetchは作成されない
-      await waitFor(() => {
-        expect(result.current.slots[0].isLoaded).toBe(true);
-      });
-
+      expect(result.current.slots[0]).toBeDefined();
+      expect(result.current.slots[0].articleIndex).toBe(0);
       expect(result.current.slots[1]).toBeNull();
       expect(result.current.slots[2]).toBeNull();
     });
 
-    it("記事が2つの場合、Prefetchスロットが作成されない", async () => {
+    it("記事が2つの場合、Prefetchスロットがnullになる", () => {
       const articles = createMockArticles(2);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      // Current読み込み完了 → Next作成
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
-
-      // Next読み込み完了 → Prefetchは作成されない
-      act(() => {
-        result.current.handleIframeLoad(1);
-      });
-
-      await waitFor(() => {
-        expect(result.current.slots[1]?.isLoaded).toBe(true);
-      });
-
+      expect(result.current.slots[0]).toBeDefined();
+      expect(result.current.slots[1]).not.toBeNull();
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
       expect(result.current.slots[2]).toBeNull();
     });
 
-    it("2件の記事でadvance()後もCurrentのみで正常動作する", async () => {
+    it("2件の記事でadvance()後もCurrentのみで正常動作する", () => {
       const articles = createMockArticles(2);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      // Current読み込み完了 → Next作成
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
 
       act(() => {
         result.current.advance();
@@ -482,17 +394,9 @@ describe("useIframePool", () => {
       expect(result.current.slots[2]).toBeNull();
     });
 
-    it("最後の記事でadvance()を呼んでもエラーにならない", async () => {
+    it("最後の記事でadvance()を呼んでもエラーにならない", () => {
       const articles = createMockArticles(2);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
-
-      // Current読み込み完了 → Next作成
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
 
       // 1番目の記事に進む
       act(() => {
@@ -512,20 +416,12 @@ describe("useIframePool", () => {
   // AC-7: 読み込み完了通知
   // ============================
   describe("AC-7: 読み込み完了通知", () => {
-    it("isNextReadyがNextスロットの読み込み完了を反映する", async () => {
+    it("isNextReadyがNextスロットの読み込み完了を反映する", () => {
       const articles = createMockArticles(3);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      // 初期: isNextReady = false
-      expect(result.current.isNextReady).toBe(false);
-
-      // Current読み込み完了 → Next作成（まだ読み込み中）
-      act(() => {
-        result.current.handleIframeLoad(0);
-      });
-      await waitFor(() => {
-        expect(result.current.slots[1]).not.toBeNull();
-      });
+      // 初期: Nextは存在するがisLoaded=false → isNextReady = false
+      expect(result.current.slots[1]).not.toBeNull();
       expect(result.current.isNextReady).toBe(false);
 
       // Next読み込み完了 → isNextReady = true
@@ -543,16 +439,17 @@ describe("useIframePool", () => {
       expect(result.current.isNextReady).toBe(false);
     });
 
-    it("advance()後にisNextReadyがリセットされる", async () => {
+    it("advance()後にisNextReadyがリセットされる", () => {
       const articles = createMockArticles(5);
       const { result } = renderHook(() => useIframePool({ articles, currentIndex: 0 }));
 
-      await loadAllSlots(result);
+      // Next(index=1)を読み込み完了
+      act(() => {
+        result.current.handleIframeLoad(1);
+      });
+      expect(result.current.isNextReady).toBe(true);
 
-      // Prefetchが読み込み完了していなければ、advance後にisNextReadyはfalse
-      // (旧PrefetchがNextに昇格するが、isLoadedはfalseのまま)
-      expect(result.current.slots[2]?.isLoaded).toBe(false);
-
+      // advance() → 旧Prefetch(index=2)がNextに昇格（isLoaded=false）
       act(() => {
         result.current.advance();
       });
@@ -566,6 +463,116 @@ describe("useIframePool", () => {
       });
 
       expect(result.current.isNextReady).toBe(true);
+    });
+  });
+
+  // ============================
+  // AC-8: loadMore による記事追加時のスロット補填
+  // ============================
+  describe("AC-8: loadMore による記事追加時のスロット補填", () => {
+    it("articles配列が拡張された時にnullのNextスロットが即座に埋められる", async () => {
+      const initialArticles = createMockArticles(3);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // 全スロットが最初から存在
+      expect(result.current.slots[0].articleIndex).toBe(0);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
+
+      // 2回advance: [0,1,2] → [1,2,null] → [2,null,null]
+      act(() => {
+        result.current.advance();
+      });
+      act(() => {
+        result.current.advance();
+      });
+
+      expect(result.current.slots[0].articleIndex).toBe(2);
+      expect(result.current.slots[1]).toBeNull();
+      expect(result.current.slots[2]).toBeNull();
+
+      // loadMore完了をシミュレート: 6記事に拡張
+      const extendedArticles = createMockArticles(6);
+      rerender({ articles: extendedArticles, currentIndex: 2 });
+
+      // effectによりnullスロットが即座に埋まる
+      await waitFor(() => {
+        expect(result.current.slots[1]).not.toBeNull();
+        expect(result.current.slots[1]?.articleIndex).toBe(3);
+      });
+    });
+
+    it("articles配列拡張時にCurrent未読み込みでもスロットが即座に埋められる", async () => {
+      const initialArticles = createMockArticles(1);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // Currentは読み込み完了していない
+      expect(result.current.slots[0].isLoaded).toBe(false);
+      expect(result.current.slots[1]).toBeNull();
+
+      // articles拡張
+      const extendedArticles = createMockArticles(3);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // Current未読み込みでもNextが即座に作成される（Cascade制約なし）
+      await waitFor(() => {
+        expect(result.current.slots[1]).not.toBeNull();
+        expect(result.current.slots[1]?.articleIndex).toBe(1);
+      });
+    });
+
+    it("articles配列拡張時にPrefetchも即座に埋められる", async () => {
+      const initialArticles = createMockArticles(2);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // 初期: 2記事 → Prefetchはnull
+      expect(result.current.slots[0].articleIndex).toBe(0);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]).toBeNull();
+
+      // articles拡張
+      const extendedArticles = createMockArticles(5);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // Prefetchも即座に作成される
+      await waitFor(() => {
+        expect(result.current.slots[2]).not.toBeNull();
+        expect(result.current.slots[2]?.articleIndex).toBe(2);
+      });
+    });
+
+    it("articles配列が拡張されても既存の非nullスロットは上書きされない", () => {
+      const initialArticles = createMockArticles(5);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // 全スロットが初期化済み
+      expect(result.current.slots[0].articleIndex).toBe(0);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
+
+      const extendedArticles = createMockArticles(10);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // 既存スロットが維持されている
+      expect(result.current.slots[0].articleIndex).toBe(0);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
     });
   });
 });
