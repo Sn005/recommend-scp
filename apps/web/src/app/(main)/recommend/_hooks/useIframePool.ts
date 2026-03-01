@@ -77,6 +77,33 @@ export const useIframePool = ({
     });
   }, [articles, currentIndex]);
 
+  // articles配列が拡張された時にnullスロットを埋める（loadMore対応）
+  // Cascade読み込みの順序を尊重: Current.isLoaded → Next作成、Next.isLoaded → Prefetch作成
+  useEffect(() => {
+    if (articles.length === 0) return;
+
+    setSlots(([current, next, prefetch]) => {
+      // 初期化前（EMPTY_SLOT状態）は初期化effectに任せる
+      if (current.articleIndex === -1) return [current, next, prefetch];
+
+      // Current未読み込みならNextは作成しない（Cascade順序を維持）
+      const newNext = current.isLoaded
+        ? tryCreateNextSlot(articles, current.articleIndex, next)
+        : next;
+      // Next未読み込みならPrefetchは作成しない（Cascade順序を維持）
+      const newPrefetch = newNext?.isLoaded
+        ? tryCreateNextSlot(articles, newNext.articleIndex, prefetch)
+        : prefetch;
+
+      // 変更がなければ再レンダリングを避ける
+      if (newNext === next && newPrefetch === prefetch) {
+        return [current, next, prefetch];
+      }
+
+      return [current, newNext, newPrefetch];
+    });
+  }, [articles]);
+
   // Cascade読み込み: loadイベントでisLoadedを更新し、次のスロットを作成
   const handleIframeLoad = useCallback(
     (articleIndex: number) => {

@@ -568,4 +568,132 @@ describe("useIframePool", () => {
       expect(result.current.isNextReady).toBe(true);
     });
   });
+
+  // ============================
+  // AC-8: loadMore による記事追加時のスロット補填
+  // ============================
+  describe("AC-8: loadMore による記事追加時のスロット補填", () => {
+    it("articles配列が拡張された時にnullのNextスロットが埋められる", async () => {
+      const initialArticles = createMockArticles(3);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      await loadAllSlots(result);
+      // slots: [0(loaded), 1(loaded), 2(not loaded)]
+
+      // 1回目のadvance: [1(loaded), 2(not loaded), null]
+      act(() => {
+        result.current.advance();
+      });
+
+      // 2を読み込み完了
+      act(() => {
+        result.current.handleIframeLoad(2);
+      });
+      await waitFor(() => {
+        expect(result.current.slots[1]?.isLoaded).toBe(true);
+      });
+      // slots: [1(loaded), 2(loaded), null(index3 >= length3)]
+
+      // 2回目のadvance: [2(loaded), null, null]
+      act(() => {
+        result.current.advance();
+      });
+
+      expect(result.current.slots[0].articleIndex).toBe(2);
+      expect(result.current.slots[1]).toBeNull();
+      expect(result.current.slots[2]).toBeNull();
+
+      // loadMore完了をシミュレート: 6記事に拡張
+      const extendedArticles = createMockArticles(6);
+      rerender({ articles: extendedArticles, currentIndex: 2 });
+
+      // effectによりnull Nextがarticle 3で埋まる
+      await waitFor(() => {
+        expect(result.current.slots[1]).not.toBeNull();
+        expect(result.current.slots[1]?.articleIndex).toBe(3);
+      });
+    });
+
+    it("articles配列拡張時にCascade順序が維持される（Current未読み込みならNext作成しない）", () => {
+      const initialArticles = createMockArticles(1);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // Currentは読み込み完了していない
+      expect(result.current.slots[0].isLoaded).toBe(false);
+      expect(result.current.slots[1]).toBeNull();
+
+      // articles拡張
+      const extendedArticles = createMockArticles(3);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // Current未読み込みなのでNext作成されない
+      expect(result.current.slots[1]).toBeNull();
+    });
+
+    it("articles配列拡張時にNext読み込み済みならPrefetchも埋められる", async () => {
+      const initialArticles = createMockArticles(2);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      // Current読み込み完了 → Next作成
+      act(() => {
+        result.current.handleIframeLoad(0);
+      });
+      await waitFor(() => {
+        expect(result.current.slots[1]).not.toBeNull();
+      });
+
+      // Next読み込み完了
+      act(() => {
+        result.current.handleIframeLoad(1);
+      });
+      await waitFor(() => {
+        expect(result.current.slots[1]?.isLoaded).toBe(true);
+      });
+
+      // Prefetchはnull（index2 >= length2）
+      expect(result.current.slots[2]).toBeNull();
+
+      // articles拡張
+      const extendedArticles = createMockArticles(5);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // Next読み込み済みなのでPrefetchも作成される
+      await waitFor(() => {
+        expect(result.current.slots[2]).not.toBeNull();
+        expect(result.current.slots[2]?.articleIndex).toBe(2);
+      });
+    });
+
+    it("articles配列が拡張されても既存の非nullスロットは上書きされない", async () => {
+      const initialArticles = createMockArticles(5);
+      const { result, rerender } = renderHook(
+        ({ articles, currentIndex }: { articles: Article[]; currentIndex: number }) =>
+          useIframePool({ articles, currentIndex }),
+        { initialProps: { articles: initialArticles, currentIndex: 0 } }
+      );
+
+      await loadAllSlots(result);
+      // slots: [0(loaded), 1(loaded), 2(not loaded)]
+
+      const extendedArticles = createMockArticles(10);
+      rerender({ articles: extendedArticles, currentIndex: 0 });
+
+      // 既存スロットが維持されている
+      expect(result.current.slots[0].articleIndex).toBe(0);
+      expect(result.current.slots[1]?.articleIndex).toBe(1);
+      expect(result.current.slots[2]?.articleIndex).toBe(2);
+    });
+  });
 });
