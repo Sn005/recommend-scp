@@ -251,8 +251,26 @@ describe("005-02-04: ベクトル検索RPC関数", () => {
       expect(Array.isArray(data)).toBe(true);
     });
 
-    it("explored_tagsに含まれないタグの記事を返す", async () => {
-      // horrorタグを持つ記事を除外
+    it("全タグが探索済みの記事のみ除外する（<@演算子）", async () => {
+      // explored_tags に horror と safe を両方指定
+      // test-001 (tags: ["horror", "safe"]) → 全タグ探索済み → 除外
+      // test-002 (tags: ["scientific", "euclid"]) → 未探索タグあり → 含まれる
+      const { data, error } = await supabase.rpc("search_articles_by_unexplored_tags", {
+        explored_tags: ["horror", "safe"],
+        match_count: 100,
+      });
+
+      expect(error).toBeNull();
+      const returnedIds = data.map((row: { id: string }) => row.id);
+      // 全タグが探索済みのtest-001は除外されるべき
+      expect(returnedIds).not.toContain(testArticles[0].article_id);
+      // 未探索タグを持つtest-002は含まれるべき
+      expect(returnedIds).toContain(testArticles[1].article_id);
+    });
+
+    it("一部タグのみ探索済みでも未探索タグがあれば返却する", async () => {
+      // explored_tags に horror のみ指定
+      // test-001 (tags: ["horror", "safe"]) → "safe"が未探索 → 含まれる
       const { data, error } = await supabase.rpc("search_articles_by_unexplored_tags", {
         explored_tags: ["horror"],
         match_count: 100,
@@ -260,9 +278,9 @@ describe("005-02-04: ベクトル検索RPC関数", () => {
 
       expect(error).toBeNull();
       const returnedIds = data.map((row: { id: string }) => row.id);
-      // horrorタグを持つtest-001は除外されるべき
-      expect(returnedIds).not.toContain(testArticles[0].article_id);
-      // scientificタグを持つtest-002は含まれるべき
+      // 未探索タグ"safe"を持つtest-001は含まれるべき
+      expect(returnedIds).toContain(testArticles[0].article_id);
+      // 全く探索済みタグを含まないtest-002も含まれるべき
       expect(returnedIds).toContain(testArticles[1].article_id);
     });
 
@@ -297,6 +315,19 @@ describe("005-02-04: ベクトル検索RPC関数", () => {
       expect(error).toBeNull();
       expect(data).toBeDefined();
       expect(Array.isArray(data)).toBe(true);
+    });
+
+    it("order_by='random'でも全タグ探索済みの記事を除外する", async () => {
+      const { data, error } = await supabase.rpc("search_articles_by_unexplored_tags", {
+        explored_tags: ["horror", "safe"],
+        order_by: "random",
+        match_count: 100,
+      });
+
+      expect(error).toBeNull();
+      const returnedIds = data.map((row: { id: string }) => row.id);
+      // 全タグが探索済みのtest-001は除外されるべき
+      expect(returnedIds).not.toContain(testArticles[0].article_id);
     });
 
     it("exclude_idsに指定した記事を除外する", async () => {
