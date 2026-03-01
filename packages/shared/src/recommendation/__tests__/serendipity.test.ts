@@ -436,7 +436,7 @@ describe("セレンディピティ推薦", () => {
       expect(adjacentIds).toHaveLength(10);
     });
 
-    it("両方の検索で結果が少ない場合、取得可能分のみ返す", async () => {
+    it("両方の検索で結果が少ない場合、adjacentでバックフィルされる", async () => {
       const adjacentResults: VectorSearchResult[] = [
         {
           id: "adjacent-0",
@@ -455,8 +455,25 @@ describe("セレンディピティ推薦", () => {
         },
       ];
 
+      const backfillResults: VectorSearchResult[] = [
+        {
+          id: "backfill-0",
+          title: "補充0",
+          similarity: 0.4,
+          url: "http://ja.scp-wiki.net/backfill-0",
+        },
+      ];
+
+      const noRelaxation: AdjacentRelaxationConfig = {
+        ...DEFAULT_ADJACENT_RELAXATION,
+        maxRelaxationLevels: 0,
+      };
+
       const vectorSearch = createMockVectorSearch({
-        searchByEmbedding: vi.fn().mockResolvedValue(adjacentResults),
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(adjacentResults) // 初回adjacent
+          .mockResolvedValueOnce(backfillResults), // バックフィル
         searchByUnexploredTags: vi.fn().mockResolvedValue(unexploredResults),
       });
 
@@ -466,11 +483,101 @@ describe("セレンディピティ推薦", () => {
         testExploredTags,
         vectorSearch,
         DEFAULT_SERENDIPITY_CONFIG,
-        10
+        10,
+        noRelaxation
       );
 
-      // limit=10だが、取得可能なのは2件
-      expect(result).toHaveLength(2);
+      // adjacent 1件 + unexplored 1件 + backfill 1件 = 3件
+      expect(result).toHaveLength(3);
+      const ids = result.map((a) => a.id);
+      expect(ids).toContain("adjacent-0");
+      expect(ids).toContain("unexplored-0");
+      expect(ids).toContain("backfill-0");
+    });
+
+    it("未探索ジャンルが0件の場合、adjacentで不足分を補充する", async () => {
+      const adjacentResults: VectorSearchResult[] = Array.from({ length: 5 }, (_, i) => ({
+        id: `adjacent-${i}`,
+        title: `隣接${i}`,
+        similarity: 0.65 - i * 0.02,
+        url: `http://ja.scp-wiki.net/adjacent-${i}`,
+      }));
+
+      const backfillResults: VectorSearchResult[] = Array.from({ length: 5 }, (_, i) => ({
+        id: `backfill-${i}`,
+        title: `補充${i}`,
+        similarity: 0.45 - i * 0.02,
+        url: `http://ja.scp-wiki.net/backfill-${i}`,
+      }));
+
+      const noRelaxation: AdjacentRelaxationConfig = {
+        ...DEFAULT_ADJACENT_RELAXATION,
+        maxRelaxationLevels: 0,
+      };
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(adjacentResults) // 初回adjacent: 5件
+          .mockResolvedValueOnce(backfillResults), // バックフィル: 5件
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]), // unexplored: 0件
+      });
+
+      const result = await getSerendipityArticles(
+        testEmbedding,
+        [],
+        testExploredTags,
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        10,
+        noRelaxation
+      );
+
+      // adjacent 5件 + backfill 5件 = 10件
+      expect(result).toHaveLength(10);
+    });
+
+    it("バックフィル時にプライマリ結果のIDが除外される", async () => {
+      const adjacentResults: VectorSearchResult[] = [
+        {
+          id: "adjacent-0",
+          title: "隣接0",
+          similarity: 0.5,
+          url: "http://ja.scp-wiki.net/adjacent-0",
+        },
+      ];
+
+      const noRelaxation: AdjacentRelaxationConfig = {
+        ...DEFAULT_ADJACENT_RELAXATION,
+        maxRelaxationLevels: 0,
+      };
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi
+          .fn()
+          .mockResolvedValueOnce(adjacentResults) // 初回adjacent
+          .mockResolvedValueOnce([]), // バックフィル（結果なし）
+        searchByUnexploredTags: vi.fn().mockResolvedValue([]),
+      });
+
+      const excludeIds = ["exclude-1"];
+
+      await getSerendipityArticles(
+        testEmbedding,
+        excludeIds,
+        testExploredTags,
+        vectorSearch,
+        DEFAULT_SERENDIPITY_CONFIG,
+        10,
+        noRelaxation
+      );
+
+      // バックフィル呼び出し（2回目のsearchByEmbedding）で
+      // 既存の除外IDに加えてプライマリ結果のIDも含まれる
+      const backfillCall = (vectorSearch.searchByEmbedding as ReturnType<typeof vi.fn>).mock
+        .calls[1];
+      expect(backfillCall[0].excludeIds).toContain("exclude-1");
+      expect(backfillCall[0].excludeIds).toContain("adjacent-0");
     });
 
     it("limit=1、adjacentRatio=0.5の場合、隣接1件のみ", async () => {

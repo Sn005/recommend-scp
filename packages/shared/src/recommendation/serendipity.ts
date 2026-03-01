@@ -114,6 +114,30 @@ export async function getSerendipityArticles(
     }
   }
 
+  // リバランス: unexploredが不足した場合、adjacentで補充
+  if (results.length < limit) {
+    const shortage = limit - results.length;
+    const backfillExcludeIds = [...excludeIds, ...Array.from(seen)];
+    const backfillResults = await getAdjacentArticles(
+      preferenceEmbedding,
+      backfillExcludeIds,
+      vectorSearch,
+      config,
+      shortage,
+      adjacentRelaxation
+    );
+
+    for (const article of backfillResults) {
+      if (!seen.has(article.id)) {
+        seen.add(article.id);
+        results.push({
+          ...article,
+          source: "serendipity" as const,
+        });
+      }
+    }
+  }
+
   return results.slice(0, limit);
 }
 

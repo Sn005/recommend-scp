@@ -299,12 +299,12 @@ describe("useInfiniteArticles", () => {
         await result2.current.loadMore();
       });
 
-      // DEFAULT_LOAD_MORE_COUNT = 5
+      // DEFAULT_LOAD_MORE_COUNT = 10
       // loadMore時は既存記事のIDをexcludeIdsとして送信する
       expect(mockApi.recommend.$post).toHaveBeenLastCalledWith({
         json: {
           visitorId: "test-visitor-id",
-          limit: 5,
+          limit: 10,
           excludeIds: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
         },
       });
