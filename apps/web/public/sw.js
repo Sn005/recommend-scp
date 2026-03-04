@@ -6,7 +6,7 @@ importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox
 // ============================================================
 workbox.setConfig({ debug: false });
 
-const { registerRoute } = workbox.routing;
+const { registerRoute, setCatchHandler } = workbox.routing;
 const { StaleWhileRevalidate, CacheFirst, NetworkFirst, NetworkOnly } = workbox.strategies;
 const { ExpirationPlugin } = workbox.expiration;
 const { CacheableResponsePlugin } = workbox.cacheableResponse;
@@ -22,6 +22,22 @@ const NEXT_STATIC_CACHE_NAME = "next-static-v1";
 const NEXT_PAGES_CACHE_NAME = "next-pages-v1";
 const SUB_RESOURCE_PREFIXES = ["/wdfiles-", "/wikidot-", "/common--", "/local--"];
 const OFFLINE_PAGE_PREFIXES = ["/article/", "/favorites", "/history"];
+const APP_SHELL_URL = "/recommend";
+
+// ============================================================
+// RSCキャッシュキー分離プラグイン
+// Next.js App Routerのクライアントサイド遷移（RSCペイロード）と
+// フルページナビゲーション（HTML）を別々にキャッシュする
+// ============================================================
+const rscCacheKeyPlugin = {
+  cacheKeyWillBeUsed: async ({ request }) => {
+    const url = new URL(request.url);
+    if (request.headers.get("RSC") === "1") {
+      url.searchParams.set("_rsc", "1");
+    }
+    return url.toString();
+  },
+};
 
 // ============================================================
 // 記事HTML: Stale-While-Revalidate（即時表示＋バックグラウンド更新）
@@ -113,22 +129,23 @@ registerRoute(
 );
 
 // ============================================================
-// オフライン対応ページナビゲーション: Network-first
+// オフライン対応ページ: Network-first
 // 対象: /article/*, /favorites, /history
-// オフライン時はキャッシュにフォールバック（要: 一度オンラインで訪問済み）
+// フルナビゲーション(HTML)とクライアントサイド遷移(RSC)の両方をキャッシュ
+// rscCacheKeyPluginにより異なるキャッシュキーで保存
 // ============================================================
 registerRoute(
-  ({ request, url }) =>
+  ({ url }) =>
     url.origin === self.location.origin &&
-    request.mode === "navigate" &&
     OFFLINE_PAGE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix)),
   new NetworkFirst({
     cacheName: NEXT_PAGES_CACHE_NAME,
     plugins: [
+      rscCacheKeyPlugin,
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({
         maxAgeSeconds: 7 * 24 * 60 * 60, // 7日（デプロイ後に古いHTMLは不要）
-        maxEntries: 50,
+        maxEntries: 100,
         purgeOnQuotaError: true,
       }),
     ],
@@ -142,9 +159,24 @@ registerRoute(
 registerRoute(({ url }) => url.origin === self.location.origin, new NetworkOnly());
 
 // ============================================================
-// Install: 即座にアクティベート
+// Navigateフォールバック: オフライン時にHTMLキャッシュがないページへの
+// フルナビゲーションをキャッシュ済みアプリシェルで代替
+// Next.jsクライアントルーターがURLを解釈し、キャッシュ済みRSCデータで描画
 // ============================================================
-self.addEventListener("install", () => {
+setCatchHandler(async ({ event }) => {
+  if (event.request.mode === "navigate") {
+    const cache = await caches.open(NEXT_PAGES_CACHE_NAME);
+    const cached = await cache.match(APP_SHELL_URL);
+    if (cached) return cached;
+  }
+  return Response.error();
+});
+
+// ============================================================
+// Install: アプリシェルをプリキャッシュ＋即座にアクティベート
+// ============================================================
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(NEXT_PAGES_CACHE_NAME).then((cache) => cache.add(APP_SHELL_URL)));
   self.skipWaiting();
 });
 

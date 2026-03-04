@@ -152,6 +152,34 @@ describe("sw.js", () => {
       expect(swContent).toContain('n.startsWith("next-")');
     });
   });
+
+  describe("RSCキャッシュキー分離とアプリシェルフォールバック", () => {
+    it("RSCキャッシュキー分離プラグインが定義されている", () => {
+      expect(swContent).toContain("rscCacheKeyPlugin");
+    });
+
+    it("RSCヘッダーによるキャッシュキー分岐が実装されている", () => {
+      expect(swContent).toContain('request.headers.get("RSC")');
+      expect(swContent).toContain("_rsc");
+    });
+
+    it("cacheKeyWillBeUsedフックが定義されている", () => {
+      expect(swContent).toContain("cacheKeyWillBeUsed");
+    });
+
+    it("アプリシェルURLが定義されている", () => {
+      expect(swContent).toContain("APP_SHELL_URL");
+      expect(swContent).toContain("/recommend");
+    });
+
+    it("setCatchHandlerでナビゲーションフォールバックが設定されている", () => {
+      expect(swContent).toContain("setCatchHandler");
+    });
+
+    it("installイベントでアプリシェルをプリキャッシュしている", () => {
+      expect(swContent).toContain("cache.add(APP_SHELL_URL)");
+    });
+  });
 });
 
 describe("layout.tsx への ServiceWorkerRegistrar 配置", () => {
