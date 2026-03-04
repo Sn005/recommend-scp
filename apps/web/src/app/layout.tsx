@@ -80,7 +80,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#3B82F6",
+  themeColor: "#FFFFFF",
 };
 
 /** JSON-LD: WebSite + WebApplication 構造化データ */

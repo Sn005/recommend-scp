@@ -134,8 +134,8 @@ describe("PWAスプラッシュスクリーン", () => {
   });
 
   describe("AC-3: スプラッシュスクリーンのデザイン統一性", () => {
-    it("layout.tsx の themeColor がブランドカラー #3B82F6 に更新されている", () => {
-      expect(layoutContent).toMatch(/themeColor\s*:\s*["']#3B82F6["']/);
+    it("layout.tsx の themeColor が白 #FFFFFF に設定されている", () => {
+      expect(layoutContent).toMatch(/themeColor\s*:\s*["']#FFFFFF["']/);
     });
 
     it("スプラッシュ画像生成スクリプトがブランドカラー #3B82F6 を参照している", () => {
