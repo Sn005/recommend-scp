@@ -17,10 +17,10 @@
 | [011](./011-qa-testing/011-qa-testing.md)                           | QAテスト基盤                 | Playwright E2E・CSV管理・AIテストケース生成                             | completed  |
 | [012](./012-slow-query-optimization/012-slow-query-optimization.md) | スロークエリ最適化           | Supabaseスロークエリの分析・改善・Why記録                               | pending    |
 | [013](./013-preference-reset/013-preference-reset.md)               | 嗜好リセット機能             | 嗜好データリセット・オンボーディング再開                                | completed  |
-| [014](./014-scp-licensing/014-scp-licensing.md)                     | SCPライセンス・帰属表示      | ライセンスページ・記事帰属表示・著者情報パイプライン                    | pending    |
-| [015](./015-pwa/015-pwa.md)                                         | PWA対応                      | ホーム画面追加・スタンドアロン表示のためのPWA基盤                       | pending    |
-| [016](./016-article-speed/016-article-speed.md)                     | 記事表示速度改善             | Upstash Redisキャッシュによる記事表示の高速化                           | pending    |
-| [017](./017-app-launch-assets/017-app-launch-assets.md)             | アプリ起動アセット           | アイコン・favicon・OGP画像・スプラッシュスクリーンの本番化              | pending    |
+| [014](./014-scp-licensing/014-scp-licensing.md)                     | SCPライセンス・帰属表示      | ライセンスページ・記事帰属表示・著者情報パイプライン                    | completed  |
+| [015](./015-pwa/015-pwa.md)                                         | PWA対応                      | ホーム画面追加・スタンドアロン表示のためのPWA基盤                       | completed  |
+| [016](./016-article-speed/016-article-speed.md)                     | 記事表示速度改善             | Upstash Redisキャッシュによる記事表示の高速化                           | completed  |
+| [017](./017-app-launch-assets/017-app-launch-assets.md)             | アプリ起動アセット           | アイコン・favicon・OGP画像・スプラッシュスクリーンの本番化              | completed  |
 
 ## 優先順位
 
