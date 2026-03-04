@@ -17,9 +17,11 @@ const { CacheableResponsePlugin } = workbox.cacheableResponse;
 const ARTICLE_CACHE_NAME = "scp-articles-v1";
 const SUB_RESOURCE_CACHE_NAME = "scp-sub-resources-v1";
 const ARTICLE_META_CACHE_NAME = "scp-article-meta-v1";
+const FAVORITES_API_CACHE_NAME = "scp-favorites-api-v1";
 const NEXT_STATIC_CACHE_NAME = "next-static-v1";
 const NEXT_PAGES_CACHE_NAME = "next-pages-v1";
 const SUB_RESOURCE_PREFIXES = ["/wdfiles-", "/wikidot-", "/common--", "/local--"];
+const OFFLINE_PAGE_PREFIXES = ["/article/", "/favorites", "/history"];
 
 // ============================================================
 // 記事HTML: Stale-While-Revalidate（即時表示＋バックグラウンド更新）
@@ -94,13 +96,32 @@ registerRoute(
 );
 
 // ============================================================
-// 記事ページナビゲーション: Network-first（オフライン時はキャッシュにフォールバック）
+// お気に入りAPI: Stale-While-Revalidate（オフラインでもお気に入り一覧表示）
+// ============================================================
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith("/api/favorites"),
+  new StaleWhileRevalidate({
+    cacheName: FAVORITES_API_CACHE_NAME,
+    plugins: [
+      new CacheableResponsePlugin({ statuses: [200] }),
+      new ExpirationPlugin({
+        maxAgeSeconds: 7 * 24 * 60 * 60, // 7日
+        purgeOnQuotaError: true,
+      }),
+    ],
+  })
+);
+
+// ============================================================
+// オフライン対応ページナビゲーション: Network-first
+// 対象: /article/*, /favorites, /history
+// オフライン時はキャッシュにフォールバック（要: 一度オンラインで訪問済み）
 // ============================================================
 registerRoute(
   ({ request, url }) =>
     url.origin === self.location.origin &&
-    url.pathname.startsWith("/article/") &&
-    request.mode === "navigate",
+    request.mode === "navigate" &&
+    OFFLINE_PAGE_PREFIXES.some((prefix) => url.pathname.startsWith(prefix)),
   new NetworkFirst({
     cacheName: NEXT_PAGES_CACHE_NAME,
     plugins: [
@@ -139,6 +160,7 @@ self.addEventListener("activate", (event) => {
           ARTICLE_CACHE_NAME,
           SUB_RESOURCE_CACHE_NAME,
           ARTICLE_META_CACHE_NAME,
+          FAVORITES_API_CACHE_NAME,
           NEXT_STATIC_CACHE_NAME,
           NEXT_PAGES_CACHE_NAME,
         ]);

@@ -108,12 +108,32 @@ describe("sw.js", () => {
       expect(swContent).toContain("scp-article-meta-v1");
     });
 
+    it("キャッシュ名 scp-favorites-api-v1 が定義されている", () => {
+      expect(swContent).toContain("scp-favorites-api-v1");
+    });
+
     it("/_next/static/ パスの判定が存在する", () => {
       expect(swContent).toContain("/_next/static/");
     });
 
     it("/article/ パスの判定が存在する", () => {
       expect(swContent).toContain("/article/");
+    });
+
+    it("/favorites パスの判定が存在する", () => {
+      expect(swContent).toContain("/favorites");
+    });
+
+    it("/history パスの判定が存在する", () => {
+      expect(swContent).toContain("/history");
+    });
+
+    it("/api/favorites パスの判定が存在する", () => {
+      expect(swContent).toContain("/api/favorites");
+    });
+
+    it("オフライン対応ページプレフィックスが定義されている", () => {
+      expect(swContent).toContain("OFFLINE_PAGE_PREFIXES");
     });
 
     it("/api/articles/ のコンテンツAPIパスの判定が存在する", () => {
