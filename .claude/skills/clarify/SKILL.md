@@ -16,6 +16,7 @@ description: Extracts tacit knowledge through structured Socratic dialogue befor
 5. **前提探索**: 暗黙の前提を問い、Assumption Registerに記録する
 6. **矛盾検出**: 新しい決定を記録する際、過去の決定との矛盾を自動検出する（Continuous Elenchus）
 7. **Decision Provenance**: 全ての決定事項に出所記号を付与し、意思決定の透明性を担保する
+8. **所有権の維持**: 全ての決定事項は「人間が著者」であることを担保する（AIは精緻化の触媒であり、提案者ではない）
 
 ---
 
