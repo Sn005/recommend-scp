@@ -1,0 +1,37 @@
+{
+  "skill_name": "spec",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ユーザー認証機能のspecを作成して。OAuth対応、多要素認証を含めて",
+      "expected_behavior": [
+        "Phase 1でユーザーストーリーとEARS記法ACを生成する",
+        "Phase 2で技術設計（データフロー、インターフェース）を生成する",
+        "Phase 3でEPIC/Story/Subtaskに分割する",
+        "各フェーズでユーザー確認を取る",
+        "spec-reviewerサブエージェントを発火する",
+        "/branchと/prを自動呼び出しする"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "/clarifyの出力を渡した上で「この結果を元にspecを作成して」",
+      "expected_behavior": [
+        "clarifyの出力（トレードオフ表、Decision Provenance、Assumption Register）を入力として活用する",
+        "Phase 1のヒアリングを短縮する",
+        "🤖マーク項目を重点検証する",
+        "未検証前提をACに反映する"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "データパイプラインの仕様を策定して。バッチ処理とリアルタイム処理の両方",
+      "expected_behavior": [
+        "複数アプローチがある場合に選択肢を提示する",
+        "architectサブエージェントを条件付き発火する",
+        "ACがEARS記法（WHEN/GIVEN/THEN）で記述される",
+        "依存関係に基づくタスク順序付けを行う"
+      ]
+    }
+  ]
+}

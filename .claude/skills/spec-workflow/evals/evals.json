@@ -1,0 +1,37 @@
+{
+  "skill_name": "spec-workflow",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "001-01-01の設定要件Subtaskを実装して",
+      "expected_behavior": [
+        "specファイルを読み込みACを表示する",
+        "ユーザーに「このACで進めますか？」と確認する",
+        "test-strategistサブエージェントを発火する",
+        "TDDサイクル（Red→Green→Refactor）で実装する",
+        "完了時にACチェックリストを更新する",
+        "code-reviewerサブエージェントを発火する"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "（実装中に）ついでにCI/CDも設定して",
+      "expected_behavior": [
+        "スコープ外であることを指摘する",
+        "現在のACを提示する",
+        "別Subtaskとして提案する選択肢を提供する",
+        "スコープ外の実装を行わない"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "002-01-03のSubtaskを実装して（ACが曖昧な場合）",
+      "expected_behavior": [
+        "ACの曖昧さを検出して指摘する",
+        "明確化の提案を行う",
+        "ユーザー確認なしに実装を開始しない",
+        "明確化後にTDDサイクルを開始する"
+      ]
+    }
+  ]
+}

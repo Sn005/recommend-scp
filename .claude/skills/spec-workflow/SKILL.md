@@ -1,24 +1,13 @@
 ---
 name: spec-workflow
-description: 仕様駆動開発（SDD）ワークフローを自動発動で強制。Subtask開始時にAC確認、TDD実行、完了時にACチェックを実施。スコープ外実装を禁止。Use when implementing features, creating new functionality, or when "実装して", "作成して", "開発して" keywords appear.
+description: Enforces spec-driven TDD implementation workflow. Reads Subtask specs, confirms AC with user, runs test-strategist before TDD, and code-reviewer before PR. Blocks out-of-scope implementation. Use when users say "実装して", "作成して", "開発して", reference a Subtask ID (e.g. 002-01-01), or mention implementing features, starting a Subtask/Story/EPIC.
 ---
 
 # Spec-Driven Development Workflow Skill
 
-仕様駆動開発（SDD）の**下流工程（実装）** を担当するスキルです。
-EPIC → Story → Subtaskの3階層構造に基づいた開発を行います。
+仕様駆動開発（SDD）の**下流工程（実装）**。Subtask specに基づいてTDD実装を行う。
 
-> **Note**: 仕様策定（上流工程）は `/spec` Skill で行います。
 > 連携フロー: `/spec`（仕様策定）→ `spec-workflow`（実装）
-
-## 発動条件
-
-以下のキーワード・コンテキストで自動発動：
-
-- 実装して、作成して、開発して
-- 新機能実装
-- Subtask開始、Story開始
-- EPIC、Story、Subtaskへの言及
 
 ## 基本原則
 
