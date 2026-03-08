@@ -108,12 +108,32 @@ describe("sw.js", () => {
       expect(swContent).toContain("scp-article-meta-v1");
     });
 
+    it("キャッシュ名 scp-favorites-api-v1 が定義されている", () => {
+      expect(swContent).toContain("scp-favorites-api-v1");
+    });
+
     it("/_next/static/ パスの判定が存在する", () => {
       expect(swContent).toContain("/_next/static/");
     });
 
     it("/article/ パスの判定が存在する", () => {
       expect(swContent).toContain("/article/");
+    });
+
+    it("/favorites パスの判定が存在する", () => {
+      expect(swContent).toContain("/favorites");
+    });
+
+    it("/history パスの判定が存在する", () => {
+      expect(swContent).toContain("/history");
+    });
+
+    it("/api/favorites パスの判定が存在する", () => {
+      expect(swContent).toContain("/api/favorites");
+    });
+
+    it("オフライン対応ページプレフィックスが定義されている", () => {
+      expect(swContent).toContain("OFFLINE_PAGE_PREFIXES");
     });
 
     it("/api/articles/ のコンテンツAPIパスの判定が存在する", () => {
@@ -130,6 +150,34 @@ describe("sw.js", () => {
 
     it("古いキャッシュ削除がnext-プレフィックスにも対応している", () => {
       expect(swContent).toContain('n.startsWith("next-")');
+    });
+  });
+
+  describe("RSCキャッシュキー分離とアプリシェルフォールバック", () => {
+    it("RSCキャッシュキー分離プラグインが定義されている", () => {
+      expect(swContent).toContain("rscCacheKeyPlugin");
+    });
+
+    it("RSCヘッダーによるキャッシュキー分岐が実装されている", () => {
+      expect(swContent).toContain('request.headers.get("RSC")');
+      expect(swContent).toContain("_rsc");
+    });
+
+    it("cacheKeyWillBeUsedフックが定義されている", () => {
+      expect(swContent).toContain("cacheKeyWillBeUsed");
+    });
+
+    it("アプリシェルURLが定義されている", () => {
+      expect(swContent).toContain("APP_SHELL_URL");
+      expect(swContent).toContain("/recommend");
+    });
+
+    it("setCatchHandlerでナビゲーションフォールバックが設定されている", () => {
+      expect(swContent).toContain("setCatchHandler");
+    });
+
+    it("installイベントでアプリシェルをプリキャッシュしている", () => {
+      expect(swContent).toContain("cache.add(APP_SHELL_URL)");
     });
   });
 });
