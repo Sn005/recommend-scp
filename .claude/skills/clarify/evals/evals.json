@@ -1,0 +1,37 @@
+{
+  "skill_name": "clarify",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "推薦機能を作りたいんだけど、要件を整理して",
+      "expected_behavior": [
+        "説明責任フレーミングでセッションを開始する",
+        "自由回答ファーストで質問する（選択肢を先に出さない）",
+        "ラウンド形式で段階的に深掘りする",
+        "中間リフレクションを実施する",
+        "Decision Provenance付きのトレードオフ表を出力する",
+        "Assumption Registerを出力する"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "APIの設計について clarify して。ただし Round 2 で十分と言う",
+      "expected_behavior": [
+        "早期終了を受け入れる",
+        "CTOチェックポイントとDevil's Advocateをスキップする",
+        "確信度キャリブレーションは実施する",
+        "出力生成して /spec 引き継ぎ情報を提供する"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "検索機能の要件を整理して。（Round 2でユーザーがRound 1と矛盾する回答をする）",
+      "expected_behavior": [
+        "Continuous Elenchusが矛盾を検出し指摘する",
+        "安易に同意せず、矛盾点を率直に指摘する（Anti-Sycophancy）",
+        "矛盾解消後の決定に🔗記号を付与する",
+        "前提レジスターに該当前提を記録する"
+      ]
+    }
+  ]
+}

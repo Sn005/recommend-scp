@@ -1,21 +1,11 @@
 ---
 name: spec
-description: 仕様策定Skill。自然言語の要件から構造化された仕様書（EPIC/Story/Subtask）を段階的に生成。完了時に /branch と /pr を自動呼び出し。Use when "specを作成して", "仕様を策定して", "要件を整理して" keywords appear.
+description: Generates structured specifications (EPIC/Story/Subtask) from natural language requirements through 3-phase dialogue. Produces EARS-notation acceptance criteria, triggers /branch and /pr on completion. Use when users say "specを作成して", "仕様を策定して", "要件を整理して", "[機能名]のspecを書いて", "新機能の仕様を定義して", or when structured specifications need to be created from requirements.
 ---
 
 # /spec Skill - 仕様策定ワークフロー
 
-仕様駆動開発（SDD）の**上流工程**を担当するSkill。
-自然言語の要件から、構造化された仕様書（EPIC/Story/Subtask）を段階的に生成します。
-
-## 発動条件
-
-以下のキーワードで自動発動：
-
-- 「specを作成して」「仕様を策定して」
-- 「[機能名]のspecを書いて」
-- 「新機能の仕様を定義して」
-- 「要件を整理して」
+仕様駆動開発（SDD）の**上流工程**。自然言語の要件から、構造化された仕様書（EPIC/Story/Subtask）を段階的に生成する。
 
 ## 基本原則
 
