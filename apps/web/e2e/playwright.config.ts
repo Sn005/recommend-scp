@@ -15,7 +15,7 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
     // E2Eテスト時はService Workerを無効化
-    // 本番デプロイのWorkbox SWがpage.route()モックと干渉するのを防止
+    // 本番デプロイのWorkbox SWがキャッシュによりテスト結果を不安定にするのを防止
     serviceWorkers: "block",
   },
   projects: [
@@ -33,8 +33,7 @@ export default defineConfig({
           url: "http://localhost:3000",
           reuseExistingServer: !process.env.CI,
           env: {
-            // E2Eテストではpage.route()で全APIをモックするため、
-            // 実際のAPIサーバーは不要。未設定時のクラッシュを防止
+            // ローカル開発時はNEXT_PUBLIC_API_URLを渡す（本番API対向）
             NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
           },
         },
