@@ -14,7 +14,7 @@ SCP推薦Webアプリ「SCPicks」をPWA（Progressive Web App）としてリリ
 | 項目         | 決定                                             |
 | ------------ | ------------------------------------------------ |
 | アプリ名(短) | `SCPicks`                                        |
-| アプリ名(長) | `SCPicks - あなた好みのSCPを発見`                |
+| アプリ名(長) | `SCPicks - あなた好みのSCPを推薦`                |
 | テーマカラー | 既存デザイントークン踏襲 (`#3B82F6` / `#FFFFFF`) |
 | アイコン     | ミニマル文字ロゴ（装飾を抑えたシンプルデザイン） |
 
@@ -45,7 +45,7 @@ SCP推薦Webアプリ「SCPicks」をPWA（Progressive Web App）としてリリ
 
 ```jsonc
 {
-  "name": "SCPicks - あなた好みのSCPを発見",
+  "name": "SCPicks - あなた好みのSCPを推薦",
   "short_name": "SCPicks",
   "description": "あなたの好みに合ったSCP記事を推薦するWebアプリ",
   "start_url": "/",
@@ -101,7 +101,7 @@ self.addEventListener("fetch", (event) => {
 
 ```tsx
 export const metadata: Metadata = {
-  title: "SCPicks - あなた好みのSCPを発見",
+  title: "SCPicks - あなた好みのSCPを推薦",
   description: "あなたの好みに合ったSCP記事を推薦するWebアプリ",
   manifest: "/manifest.json",
   appleWebApp: {

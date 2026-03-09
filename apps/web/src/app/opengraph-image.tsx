@@ -5,7 +5,7 @@ export const size = {
   height: 630,
 };
 
-export const alt = "SCPicks - あなた好みのSCPを発見";
+export const alt = "SCPicks - あなた好みのSCPを推薦";
 
 export const contentType = "image/png";
 
@@ -49,7 +49,7 @@ export default function OgImage() {
             opacity: 0.9,
           }}
         >
-          あなた好みのSCPを発見
+          あなた好みのSCPを推薦
         </div>
       </div>
     </div>,

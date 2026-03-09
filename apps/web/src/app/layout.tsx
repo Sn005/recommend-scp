@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} - あなた好みのSCPを発見`,
+    default: `${siteConfig.name} - あなた好みのSCPを推薦`,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -57,14 +57,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: siteConfig.name,
-    title: `${siteConfig.name} - あなた好みのSCPを発見`,
+    title: `${siteConfig.name} - あなた好みのSCPを推薦`,
     description: siteConfig.description,
     locale: siteConfig.locale,
     url: siteConfig.url,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteConfig.name} - あなた好みのSCPを発見`,
+    title: `${siteConfig.name} - あなた好みのSCPを推薦`,
     description: siteConfig.description,
   },
   robots: {

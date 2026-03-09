@@ -1,5 +1,5 @@
 {
-  "name": "SCPicks - あなた好みのSCPを発見",
+  "name": "SCPicks - あなた好みのSCPを推薦",
   "short_name": "SCPicks",
   "description": "あなたの好みに合ったSCP記事を推薦するWebアプリ",
   "start_url": "/",

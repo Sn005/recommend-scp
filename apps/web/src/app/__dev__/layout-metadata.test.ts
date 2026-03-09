@@ -12,7 +12,7 @@ describe("layout.tsx メタデータ", () => {
 
   describe("AC-2: layout.tsx メタデータ更新", () => {
     it("title.default が SITE_NAME を含むテンプレートリテラルで設定されている", () => {
-      expect(layoutContent).toContain("あなた好みのSCPを発見");
+      expect(layoutContent).toContain("あなた好みのSCPを推薦");
       expect(layoutContent).toMatch(/default\s*:\s*`/);
     });
 
