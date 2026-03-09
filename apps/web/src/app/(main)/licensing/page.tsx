@@ -49,6 +49,10 @@ export default function LicensingPage() {
             <p className="text-sm leading-relaxed text-gray-600">
               SCP Foundationのコンテンツは CC BY-SA 3.0 ライセンスの下で提供されています。
             </p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              ShareAlike（継承）条項により、このコンテンツを改変・再配布する場合は同じライセンス（CC
+              BY-SA 3.0）を適用する必要があります。
+            </p>
           </section>
 
           {/* クレジット */}
