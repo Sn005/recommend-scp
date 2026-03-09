@@ -69,7 +69,6 @@ describe("layout.tsx メタデータ", () => {
     });
 
     it("og:images に旧アイコン（icon-512x512.png）が残っていない", () => {
-      // opengraph-image.tsx による動的生成に切り替えたため
       expect(layoutContent).not.toContain("icon-512x512.png");
     });
 
@@ -96,8 +95,6 @@ describe("layout.tsx メタデータ", () => {
     });
 
     it("twitter:images は twitter-image.tsx 規約で自動設定されるため layout.tsx に不要", () => {
-      // twitter-image.tsx が存在するため、layout.tsx の twitter config に images は不要
-      // images フィールドが twitter ブロック内に残っていないことを確認
       const twitterMatch = /twitter\s*:\s*\{[^}]*\}/.exec(layoutContent);
       expect(twitterMatch).not.toBeNull();
       expect(twitterMatch?.[0]).not.toContain("images");
@@ -144,6 +141,22 @@ describe("layout.tsx メタデータ", () => {
 
     it("alternates.canonical が設定されている", () => {
       expect(layoutContent).toMatch(/canonical\s*:/);
+    });
+  });
+
+  describe("018-04-01 AC1: OGPタイトル文言が「推薦」に統一されている", () => {
+    it("openGraph.title に「あなた好みのSCPを推薦」が含まれている", () => {
+      const ogBlock = /openGraph\s*:\s*\{[\s\S]*?\n\s*\}/.exec(layoutContent);
+      expect(ogBlock?.[0]).toContain("あなた好みのSCPを推薦");
+    });
+
+    it("twitter.title に「あなた好みのSCPを推薦」が含まれている", () => {
+      const twitterBlock = /twitter\s*:\s*\{[\s\S]*?\n\s*\}/.exec(layoutContent);
+      expect(twitterBlock?.[0]).toContain("あなた好みのSCPを推薦");
+    });
+
+    it("「あなた好みのSCPを発見」という旧文言がどこにも残っていない", () => {
+      expect(layoutContent).not.toContain("あなた好みのSCPを発見");
     });
   });
 });

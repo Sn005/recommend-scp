@@ -40,6 +40,14 @@ describe("OGP画像生成（opengraph-image.tsx）", () => {
     it("キャッチコピー「あなた好みのSCPを推薦」がソースに含まれている", () => {
       expect(content).toContain("あなた好みのSCPを推薦");
     });
+
+    it("alt テキストに「推薦」が含まれている", () => {
+      expect(content).toMatch(/alt\s*=\s*["'].*推薦/);
+    });
+
+    it("「あなた好みのSCPを発見」という旧文言が残っていない", () => {
+      expect(content).not.toContain("あなた好みのSCPを発見");
+    });
   });
 
   describe("AC-1: ブランドカラーの使用", () => {
@@ -49,6 +57,16 @@ describe("OGP画像生成（opengraph-image.tsx）", () => {
 
     it("ブランドカラー #FFFFFF（ホワイト）が使用されている", () => {
       expect(content).toMatch(/#(FFFFFF|ffffff)/);
+    });
+  });
+
+  describe("018-04-01 AC3: 青グラデーション背景が設定されている", () => {
+    it("linear-gradient でグラデーション背景が定義されている", () => {
+      expect(content).toMatch(/linear-gradient/);
+    });
+
+    it("グラデーション終了色 #2563EB が使われている", () => {
+      expect(content).toMatch(/#2563[Ee][Bb]/);
     });
   });
 

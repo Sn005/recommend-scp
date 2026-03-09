@@ -2,7 +2,7 @@
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **subtask-id**: 018-04-01
 - **story-id**: 018-04
 - **epic-id**: 018
@@ -15,18 +15,18 @@ scpicks.appのOGPメタデータとTwitterカードが正しく動作してい�
 
 ## Acceptance Criteria（EARS記法）
 
-- [ ] WHEN scpicks.appのURLをTwitter/Xに共有する際
+- [x] WHEN scpicks.appのURLをTwitter/Xに共有する際
       GIVEN OGPメタデータが設定されている場合
       THEN タイトル「SCPicks - あなた好みのSCPを推薦」が表示される
       AND OGP画像（1200x630px、青グラデーション）が正しく表示される
       AND 説明文が表示される
 
-- [ ] WHEN OGPデバッガーツールで検証する際
+- [x] WHEN OGPデバッガーツールで検証する際
       GIVEN scpicks.appのURLを入力した場合
       THEN summary_large_imageカードとして正しく表示される
       AND og:title, og:description, og:image が全て設定されている
 
-- [ ] WHEN OGP画像（/opengraph-image）に直接アクセスする際
+- [x] WHEN OGP画像（/opengraph-image）に直接アクセスする際
       GIVEN 本番環境で画像URLにアクセスした場合
       THEN 1200x630pxの画像が返される
       AND 「SCPicks」ブランディングとタグラインが含まれている
