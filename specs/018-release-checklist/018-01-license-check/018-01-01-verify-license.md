@@ -2,7 +2,7 @@
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **subtask-id**: 018-01-01
 - **story-id**: 018-01
 - **epic-id**: 018
@@ -15,16 +15,16 @@
 
 ## Acceptance Criteria（EARS記法）
 
-- [ ] WHEN ライセンスページ（scpicks.app/licensing）にアクセスする際
+- [x] WHEN ライセンスページ（scpicks.app/licensing）にアクセスする際
       GIVEN 本番環境が稼働している場合
       THEN 以下が正しく表示されている - CC BY-SA 3.0ライセンスの明示 - SCP Foundationへの帰属表示 - ShareAlike条項の説明 - ライセンス全文へのリンク
       AND リンク切れがない
 
-- [ ] WHEN 記事詳細画面を表示する際
+- [x] WHEN 記事詳細画面を表示する際
       GIVEN 記事コンテンツが表示されている場合
       THEN AttributionFooterが表示されている - 著者名（既知の場合）- CC BY-SA 3.0表記 - SCP Foundation表記 - 原文へのリンク（scp-jp.wikidot.com）
 
-- [ ] WHEN ドロワーメニューを開く際
+- [x] WHEN ドロワーメニューを開く際
       GIVEN メイン画面のメニューアイコンをタップした場合
       THEN ライセンスページへのナビゲーションリンクが表示されている
 

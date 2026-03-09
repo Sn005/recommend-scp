@@ -147,6 +147,18 @@ describe("014-02-01: ライセンスページUI実装", () => {
     });
   });
 
+  describe("AC-1: ShareAlike条項の説明（018-01-01要件）", () => {
+    it("ShareAlike条項の説明テキストが表示される", () => {
+      render(<LicensingPage />);
+      expect(screen.getByText(/ShareAlike/)).toBeInTheDocument();
+    });
+
+    it("二次著作物への同一ライセンス適用要件が説明されている", () => {
+      render(<LicensingPage />);
+      expect(screen.getByText(/同じライセンス/)).toBeInTheDocument();
+    });
+  });
+
   // AC-3: MenuButton はMainLayoutの責務のため、layout.test.tsx でテスト済み
 
   describe("デザイン準拠チェック", () => {
