@@ -23,8 +23,8 @@ describe("manifest.json", () => {
       }).not.toThrow();
     });
 
-    it('name が "SCPicks - あなた好みのSCPを発見" である', () => {
-      expect(manifest.name).toBe("SCPicks - あなた好みのSCPを発見");
+    it('name が "SCPicks - あなた好みのSCPを推薦" である', () => {
+      expect(manifest.name).toBe("SCPicks - あなた好みのSCPを推薦");
     });
 
     it('short_name が "SCPicks" である', () => {

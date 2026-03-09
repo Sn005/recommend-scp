@@ -37,8 +37,8 @@ describe("OGP画像生成（opengraph-image.tsx）", () => {
   });
 
   describe("AC-1: キャッチコピーの表示", () => {
-    it("キャッチコピー「あなた好みのSCPを発見」がソースに含まれている", () => {
-      expect(content).toContain("あなた好みのSCPを発見");
+    it("キャッチコピー「あなた好みのSCPを推薦」がソースに含まれている", () => {
+      expect(content).toContain("あなた好みのSCPを推薦");
     });
   });
 

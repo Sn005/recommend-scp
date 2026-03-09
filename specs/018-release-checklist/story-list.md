@@ -6,4 +6,4 @@
 | 018-02   | E2Eテスト全通過確認    | pending    | Playwright全spec実行       |
 | 018-03   | 本番パフォーマンス確認 | pending    | API応答・スロークエリ確認  |
 | 018-04   | OGP・SNS共有確認       | pending    | Twitterカード検証          |
-| 018-05   | アプリ文言統一         | pending    | 「発見」→「推薦」変更      |
+| 018-05   | アプリ文言統一         | completed  | 「発見」→「推薦」変更      |

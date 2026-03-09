@@ -2,7 +2,7 @@
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **subtask-id**: 018-05-01
 - **story-id**: 018-05
 - **epic-id**: 018
@@ -15,31 +15,31 @@
 
 ## Acceptance Criteria（EARS記法）
 
-- [ ] WHEN アプリのメタデータを確認する際
+- [x] WHEN アプリのメタデータを確認する際
       GIVEN layout.tsxのOGP設定を参照した場合
       THEN og:titleが「SCPicks - あなた好みのSCPを推薦」になっている
       AND descriptionも「発見」→「推薦」に変更されている
 
-- [ ] WHEN OGP画像を確認する際
+- [x] WHEN OGP画像を確認する際
       GIVEN opengraph-image.tsxを参照した場合
       THEN タグラインが「あなた好みのSCPを推薦」になっている
 
-- [ ] WHEN manifest.jsonを確認する際
+- [x] WHEN manifest.jsonを確認する際
       GIVEN PWAマニフェストを参照した場合
       THEN descriptionが「推薦」に変更されている
 
-- [ ] WHEN 関連するテストを実行する際
+- [x] WHEN 関連するテストを実行する際
       GIVEN 文言変更後にテストを実行した場合
       THEN layout-metadata.test.ts がパスする
       AND manifest.test.ts がパスする
       AND opengraph-image.test.ts がパスする
       AND splash.test.ts がパスする
 
-- [ ] WHEN specドキュメントを確認する際
+- [x] WHEN specドキュメントを確認する際
       GIVEN 仕様書内の文言を参照した場合
       THEN 「発見」が「推薦」に統一されている
 
-- [ ] WHEN リポジトリ全体を検索する際
+- [x] WHEN リポジトリ全体を検索する際
       GIVEN 変更作業が完了した場合
       THEN "あなた好みのSCPを発見" という文字列がリポジトリ内に存在しない
 
