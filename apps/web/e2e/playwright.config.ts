@@ -32,6 +32,11 @@ export default defineConfig({
           command: "pnpm dev",
           url: "http://localhost:3000",
           reuseExistingServer: !process.env.CI,
+          env: {
+            // E2Eテストではpage.route()で全APIをモックするため、
+            // 実際のAPIサーバーは不要。未設定時のクラッシュを防止
+            NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
+          },
         },
       }),
 });
