@@ -4,8 +4,56 @@
 
 ## プロジェクト概要
 
-このリポジトリは **仕様駆動開発（SDD: Spec-Driven Development）** のテンプレートです。
-EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行います。
+**SCPicks** — SCP Foundation記事のパーソナライズド推薦システム。
+仕様駆動開発（SDD）で構築し、EPIC → Story → Subtaskの3階層構造でACベースの品質管理を行う。
+
+**本番URL**: scpicks.app（Vercelホスティング）
+
+### 技術スタック
+
+| レイヤー       | 技術                                   | 備考                               |
+| -------------- | -------------------------------------- | ---------------------------------- |
+| フロントエンド | Next.js 16 + React 19 + Tailwind CSS 4 | App Router, Server Components      |
+| バックエンド   | Hono 4.7（Node.js）                    | ドメイン別Colocation, RPC型安全    |
+| データベース   | Supabase（PostgreSQL + pgvector）      | RLS有効, ベクトル検索              |
+| キャッシュ     | Upstash Redis                          | 記事表示高速化                     |
+| LLM            | OpenAI（Embedding + タグ抽出）         | text-embedding-3-small             |
+| ビルド         | Turborepo + pnpm 10 + tsup             | モノレポ最適化                     |
+| テスト         | Vitest（単体）+ Playwright（E2E）      | テストケース名は日本語必須         |
+| CI/CD          | GitHub Actions                         | lint, type-check, build, test, E2E |
+| ホスティング   | Vercel（Web + Functions）              | プレビューデプロイ対応             |
+
+### モノレポ構成
+
+```
+apps/
+├── web/              # Next.js フロントエンド
+│   └── src/app/      # App Router（(main)/, (viewer)/）
+└── api-server/       # Hono REST API
+    └── src/domains/  # articles, recommend, feedback, onboarding, visitors, favorites
+
+packages/
+├── shared/           # コアビジネスロジック（env, supabase, embedding, tagging, recommendation, storage）
+├── pipeline/         # データパイプライン（クローラー, LLMタグ抽出）
+├── api-types/        # RPC型定義（フロントエンド↔バックエンド）
+└── poc/              # 技術検証（PoC）
+
+supabase/             # DBマイグレーション・設定
+mockups/              # デザインモック（HTML）・トークン（CSS）
+```
+
+### 開発コマンド
+
+```bash
+pnpm dev            # Next.js + API 同時起動
+pnpm build          # Turborepoビルド（依存解決付き）
+pnpm lint           # ESLint
+pnpm format         # Prettier（コミット前に必須）
+pnpm type-check     # TypeScript型チェック
+pnpm test           # Vitest
+pnpm test:coverage  # カバレッジ付きテスト
+pnpm pipeline       # データパイプライン実行
+```
 
 ## ドキュメント構成
 
@@ -19,14 +67,21 @@ EPIC → Story → Subtaskの3階層構造で、ACベースの品質管理を行
 
 .claude/                # Claude専用
 ├── CLAUDE.md           # このファイル
+├── NOTES.md            # 学習記録・改善提案・技術メモ
+├── settings.json       # フック設定
+├── agents/             # エージェント定義
+├── commands/           # カスタムコマンド
+├── hooks/              # Git/操作フック
 └── skills/
     ├── clarify/        # 暗黙知抽出Skill（/spec の前段階）
     ├── spec/           # 仕様策定Skill
     ├── spec-workflow/  # 自動発動ワークフローSkill（実装）
     ├── bug-report/     # UI探索バグ報告Skill
-    └── bug-fix/        # UI探索バグ修正Skill
+    ├── bug-fix/        # UI探索バグ修正Skill
+    ├── pr/             # PR作成Skill
+    └── branch/         # ブランチ作成Skill
 
-specs/                  # 仕様書本体
+specs/                  # 仕様書本体（18 EPIC、16完了/2未完了）
 ├── epic-list.md        # EPIC一覧
 └── {epic-id}/
     ├── {epic-id}.md    # EPIC定義
@@ -408,9 +463,18 @@ git commit -m "fix: 緊急修正" --no-verify
 
 ---
 
-## CLAUDE.md分割方針
+## プロジェクト進捗
 
-CLAUDE.mdが肥大化した場合の分割ルール。
+**完了済み（16/18 EPIC）**: PoC, 品質基盤, データパイプライン, 推薦ロジック, バックエンドAPI, フロントエンドUI, インフラ, 監視, セキュリティ, 日本語対応, QAテスト, 嗜好リセット, SCPライセンス, PWA, 記事速度改善, アプリアセット
+
+**未完了（2 EPIC）**:
+
+- **EPIC-012**: スロークエリ最適化（012-02: 初期スロークエリ修正が pending）
+- **EPIC-018**: リリース前最終確認（018-02: E2E全パス, 018-03: 本番パフォーマンスが pending）
+
+---
+
+## CLAUDE.md分割方針
 
 ### 閾値
 
@@ -429,67 +493,8 @@ CLAUDE.mdが肥大化した場合の分割ルール。
 
 ### コア（分離しない）
 
-- プロジェクト概要
-- ドキュメント構成
-- Claudeへの指示
+- プロジェクト概要・ドキュメント構成・Claudeへの指示
 
----
+### 学習記録
 
-## 学習記録
-
-> **分離基準**: 学習記録セクション50行超 or 5項目超、またはCLAUDE.md全体500行超で `.claude/NOTES.md` に分離
-
-### 本格実装に向けた改善案
-
-#### タグ辞書方式の導入（優先度: 高）
-
-現在のタグ抽出はLLMプロンプトにタグ選択肢をハードコーディングしているが、本格実装では**DBでタグ辞書を管理**する方式を採用する。
-
-**メリット:**
-
-- 表記揺れ防止（辞書にあるタグのみ許可）
-- 拡張性（新タグはDB追加のみでコード変更不要）
-- 日本語化対応（辞書を日本語に変更するだけ）
-- 同義語管理（`horror` → `ホラー` のマッピング）
-
-**実装案:**
-
-```sql
-CREATE TABLE tag_dictionary (
-  id SERIAL PRIMARY KEY,
-  category TEXT NOT NULL,  -- 'object_class', 'genre', 'theme', 'format'
-  value TEXT NOT NULL,     -- '安全', 'ホラー' など（日本語）
-  aliases TEXT[],          -- ['Safe', 'safe'] など（同義語）
-  description TEXT,
-  UNIQUE(category, value)
-);
-```
-
-**プロンプト生成:**
-
-```typescript
-const dictionary = await fetchTagDictionary();
-const prompt = `タグを以下から選択: ${dictionary.genre.join(" | ")}`;
-```
-
-#### 多言語支部対応の拡張性設計（優先度: 中）
-
-EPIC-003（データパイプライン本番化）では、将来の多言語支部対応（KO, CN, FR等）を見据えた拡張性を担保する。
-
-**設計方針:**
-
-| 項目         | 拡張性担保の方法                                                   |
-| ------------ | ------------------------------------------------------------------ |
-| 言語マスタ   | `supported_languages` テーブルで管理。新言語は1行INSERT            |
-| 記事テーブル | `scp_articles.lang` は TEXT型で任意言語コード対応                  |
-| クローラー   | `BranchCrawler` インターフェースで抽象化。支部別実装を差し替え可能 |
-| タグ辞書     | `tag_localizations` テーブルで言語別ローカライズを分離管理         |
-
-**新言語追加時の作業:**
-
-1. `supported_languages` に1行追加
-2. 新しい `XxxCrawler` クラス実装（〜200行）
-3. `tag_localizations` にローカライズ追加
-4. パイプライン設定で `lang: 'xx'` 指定
-
-**見積もり:** 1-2日程度で新言語対応可能
+> `.claude/NOTES.md` に分離済み。改善案・技術メモ・教訓はそちらを参照。
