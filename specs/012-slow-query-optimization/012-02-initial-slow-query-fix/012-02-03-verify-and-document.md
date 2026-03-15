@@ -34,7 +34,7 @@ completed_at: null
 
 - [ ] WHEN 効果検証が完了した際
       GIVEN 対応記録テンプレートが存在する場合
-      THEN `docs/slow-query-optimization.md` の「対応記録」セクションに以下が追記されている: - 検出: pg_stat_statements での検出状況 - 分析: ボトルネックの特定内容 - Why: なぜこの改善方法を選択したか - How: マイグレーションファイル名 - 効果: 改善前後の実行時間
+      THEN `docs/operations/slow-query-optimization.md` の「対応記録」セクションに以下が追記されている: - 検出: pg_stat_statements での検出状況 - 分析: ボトルネックの特定内容 - Why: なぜこの改善方法を選択したか - How: マイグレーションファイル名 - 効果: 改善前後の実行時間
 
 ## 設計
 
@@ -79,4 +79,4 @@ completed_at: null
 ## 参照ドキュメント
 
 - [012-02-02: スロークエリ改善実装](./012-02-02-implement-query-optimization.md)
-- [対応方針ドキュメント](../../../docs/slow-query-optimization.md)
+- [対応方針ドキュメント](../../../docs/operations/slow-query-optimization.md)

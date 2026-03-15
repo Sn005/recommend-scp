@@ -1,7 +1,7 @@
 # Anti-Bias Protocol: /clarify Skill の認知バイアス対策統合プロトコル
 
 > このドキュメントは `/clarify` Skill に組み込まれた認知バイアス対策の全体像を定義する。
-> 設計判断の学術的根拠は [認知科学的根拠](../../../docs/analysis/clarify-cognitive-science-references.md) を参照。
+> 設計判断の学術的根拠は [認知科学的根拠](../../../docs/_archived/analysis/clarify-cognitive-science-references.md) を参照。
 
 ---
 

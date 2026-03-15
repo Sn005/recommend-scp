@@ -36,7 +36,7 @@ updated_at: "2026-02-15"
 
 - [ ] WHEN 改善マイグレーションが適用された後
       GIVEN 改善対象のクエリが存在する場合
-      THEN 対応記録が `docs/slow-query-optimization.md` に追記されている
+      THEN 対応記録が `docs/operations/slow-query-optimization.md` に追記されている
       AND 各改善に「Why（なぜその対応を選択したか）」が記録されている
 
 ## 関連Subtask

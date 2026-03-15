@@ -77,4 +77,4 @@ supabase/migrations/YYYYMMDD000001_optimize_[対象]_[改善内容].sql
 ## 参照ドキュメント
 
 - [012-02-01: pg_stat_statementsデータ分析](./012-02-01-analyze-pg-stat-statements.md)
-- [対応方針ドキュメント](../../../docs/slow-query-optimization.md)
+- [対応方針ドキュメント](../../../docs/operations/slow-query-optimization.md)

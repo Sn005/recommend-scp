@@ -248,4 +248,4 @@ apps/web/src/
 
 - clarifyセッション: 2026-01-29
 - 参照アーキテクチャ: [vidmark architecture.md](https://github.com/Sn005/vidmark/blob/main/docs/architecture.md)
-- プロジェクトアーキテクチャ: [.ai/architecture.md](../.ai/architecture.md)
+- プロジェクトアーキテクチャ: [.ai/architecture.md](../../.ai/architecture.md)

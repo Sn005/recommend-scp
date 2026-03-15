@@ -69,9 +69,9 @@ completed_at: "2026-02-21"
 
 - 確認日: 2026-02-21
 - 確認者: Claude Code
-- 備考: pg_stat_statementsデータ・ダッシュボードslow queryデータの分析完了。結果は docs/slow-query-optimization.md に記録済み。
+- 備考: pg_stat_statementsデータ・ダッシュボードslow queryデータの分析完了。結果は docs/operations/slow-query-optimization.md に記録済み。
 
 ## 参照ドキュメント
 
-- [対応方針ドキュメント](../../../docs/slow-query-optimization.md)（012-01-01で作成）
+- [対応方針ドキュメント](../../../docs/operations/slow-query-optimization.md)（012-01-01で作成）
 - [アーキテクチャ定義](../../../.ai/architecture.md)

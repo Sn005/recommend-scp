@@ -28,7 +28,7 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [x] `docs/slow-query-optimization.md` が作成されていること
+- [x] `docs/operations/slow-query-optimization.md` が作成されていること
 
 - [x] ドキュメントに以下の「対応方針」セクションが含まれていること: - スロークエリの判断基準（Supabaseダッシュボードのアラート / pg_stat_statements が起点）- パフォーマンス目標（API ≤ 200ms, ベクトル検索 ≤ 100ms）- 対応スコープ（ピンポイント: インデックス追加・クエリ書き換え・RPC関数最適化）
 
@@ -40,7 +40,7 @@ completed_at: null
 
 ### 成果物
 
-`docs/slow-query-optimization.md` — 既存の `docs/` ディレクトリに配置（`frontend-design-decisions.md` 等と同列）
+`docs/operations/slow-query-optimization.md` — 既存の `docs/` ディレクトリに配置（`frontend-design-decisions.md` 等と同列）
 
 ### ドキュメント構造
 

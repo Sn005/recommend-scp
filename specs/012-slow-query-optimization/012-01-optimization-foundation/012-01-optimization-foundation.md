@@ -25,7 +25,7 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [x] スロークエリ対応方針ドキュメントが `docs/slow-query-optimization.md` に作成されていること
+- [x] スロークエリ対応方針ドキュメントが `docs/operations/slow-query-optimization.md` に作成されていること
 - [x] ドキュメントに判断基準（何をスロークエリとみなすか）が定義されていること
 - [x] ドキュメントに対応フロー（分析→改善→検証）が定義されていること
 - [x] ドキュメントに対応記録テンプレート（Why記録フォーマット）が含まれていること

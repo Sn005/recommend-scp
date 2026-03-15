@@ -370,4 +370,4 @@ Claude: Issue URL を記録しました: #43
 
 - [デザインガイドライン](../../../mockups/DESIGN_GUIDELINES.md)
 - [デザイントークン](../../../mockups/design-tokens.css)
-- [UI探索ワークフロー](../../../docs/ui-exploration-workflow.md)
+- [UI探索ワークフロー](../../../docs/process/ui-exploration-workflow.md)
