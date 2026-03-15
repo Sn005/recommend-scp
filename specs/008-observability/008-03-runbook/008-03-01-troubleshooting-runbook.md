@@ -28,7 +28,7 @@ completed_at: null
 
 ## Acceptance Criteria
 
-- [x] `docs/runbook.md` ファイルが作成されていること
+- [x] `docs/operations/runbook.md` ファイルが作成されていること
 
 - [x] WHEN 「APIがダウンしたとき」セクションを参照した際
       THEN Vercelダッシュボード確認、ヘルスチェック手動実行、デプロイログ確認の手順が記載されている
@@ -43,7 +43,7 @@ completed_at: null
 
 ### 新規作成ファイル
 
-- `docs/runbook.md`
+- `docs/operations/runbook.md`
 
 ### Runbook構成
 
@@ -85,7 +85,7 @@ completed_at: null
 ```markdown
 # レビュー確認項目
 
-# 1. docs/runbook.md が存在すること
+# 1. docs/operations/runbook.md が存在すること
 
 # 2. 「APIがダウンしたとき」セクションが存在し、手順が記載されていること
 

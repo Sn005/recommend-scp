@@ -28,7 +28,7 @@
 - [ ] WHEN Supabaseダッシュボードを確認する際
       GIVEN pg_stat_statementsのデータを参照した場合
       THEN スロークエリアラートが発生していない
-      AND 平均実行時間がベースライン（docs/slow-query-optimization.md記載値）の200%以内である
+      AND 平均実行時間がベースライン（docs/operations/slow-query-optimization.md記載値）の200%以内である
 
 ## 確認手順
 
@@ -40,4 +40,4 @@
 ## 関連ファイル
 
 - `apps/api-server/src/routes/health.ts`
-- `docs/slow-query-optimization.md`
+- `docs/operations/slow-query-optimization.md`

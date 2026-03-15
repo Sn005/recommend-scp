@@ -200,8 +200,8 @@ window.WIKIDOT = { page: { listeners: {} }, modules: {} };
 
 | ドキュメント               | パス                                                    |
 | -------------------------- | ------------------------------------------------------- |
-| ADR（意思決定記録）        | `docs/adr-wiki-proxy-dom-extraction.md`                 |
-| フロントエンド設計決定書   | `docs/frontend-design-decisions.md`                     |
+| ADR（意思決定記録）        | `docs/decisions/adr-wiki-proxy-dom-extraction.md`       |
+| フロントエンド設計決定書   | `docs/decisions/frontend-design-decisions.md`           |
 | WebView コンポーネント仕様 | `specs/006-frontend/006-02-article-reader/006-02-02.md` |
 | 遷移 UX Story 仕様         | `specs/006-frontend/006-05-transition-ux/006-05.md`     |
 

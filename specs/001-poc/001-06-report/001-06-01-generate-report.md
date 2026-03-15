@@ -16,7 +16,7 @@ PoC全体の検証結果をMarkdownレポートとして生成する。
 
 - [x] WHEN 開発者がレポート生成スクリプトを実行した際
       GIVEN 全検証ステップが完了している場合
-      THEN `docs/poc-report.md` にレポートが生成される
+      THEN `docs/_archived/poc-report.md` にレポートが生成される
       AND 生成日時が記載される
 
 ### レポート内容

@@ -126,14 +126,14 @@ specs/                  # 仕様書本体（18 EPIC、16完了/2未完了）
 
 #### デザイン参照ドキュメント（実装前に必ず確認）
 
-| ドキュメント           | パス                                 | 用途                 |
-| ---------------------- | ------------------------------------ | -------------------- |
-| デザインガイドライン   | `mockups/DESIGN_GUIDELINES.md`       | 全体方針             |
-| デザイントークン       | `mockups/design-tokens.css`          | 色・spacing等        |
-| 推薦画面モック         | `mockups/header-6-minimal-2btn.html` | 推薦画面の最終版     |
-| お気に入りモック       | `mockups/favorites-v2.html`          | お気に入り画面       |
-| オンボーディングモック | `mockups/onboarding-v2.html`         | オンボーディング画面 |
-| デザイン決定書         | `docs/frontend-design-decisions.md`  | 設計判断の記録       |
+| ドキュメント           | パス                                          | 用途                 |
+| ---------------------- | --------------------------------------------- | -------------------- |
+| デザインガイドライン   | `mockups/DESIGN_GUIDELINES.md`                | 全体方針             |
+| デザイントークン       | `mockups/design-tokens.css`                   | 色・spacing等        |
+| 推薦画面モック         | `mockups/header-6-minimal-2btn.html`          | 推薦画面の最終版     |
+| お気に入りモック       | `mockups/favorites-v2.html`                   | お気に入り画面       |
+| オンボーディングモック | `mockups/onboarding-v2.html`                  | オンボーディング画面 |
+| デザイン決定書         | `docs/decisions/frontend-design-decisions.md` | 設計判断の記録       |
 
 #### 実装前チェックリスト（MUST）
 

@@ -377,7 +377,7 @@ pnpm --filter pipeline type-check
 
 ## 関連ドキュメント
 
-- [プロダクト構想書](./product-concept.md)
-- [EPIC一覧](../specs/epic-list.md)
-- [EPIC-003: データパイプライン本番化](../specs/003-data-pipeline/003-data-pipeline.md)
-- [Story-003-00: パッケージ構造整備](../specs/003-data-pipeline/003-00-package-structure/003-00-package-structure.md)
+- [プロダクト構想書](../product/product-concept.md)
+- [EPIC一覧](../../specs/epic-list.md)
+- [EPIC-003: データパイプライン本番化](../../specs/003-data-pipeline/003-data-pipeline.md)
+- [Story-003-00: パッケージ構造整備](../../specs/003-data-pipeline/003-00-package-structure/003-00-package-structure.md)

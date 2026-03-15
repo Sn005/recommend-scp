@@ -70,7 +70,7 @@
 | `specs/017-app-launch-assets/017-app-launch-assets.md`      | EPIC定義の文言     |
 | `specs/015-pwa/015-pwa.md`                                  | EPIC定義の文言     |
 | `specs/015-pwa/015-01-pwa-base/015-01-01.md`                | Subtask specの文言 |
-| `docs/pwa-launch-plan.md`                                   | ドキュメントの文言 |
+| `docs/product/pwa-launch-plan.md`                           | ドキュメントの文言 |
 
 ## 確認手順
 

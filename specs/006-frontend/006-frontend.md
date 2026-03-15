@@ -295,7 +295,7 @@ apps/web/src/
 
 ## 参照ドキュメント
 
-- [フロントエンド設計決定書](../../docs/frontend-design-decisions.md)
+- [フロントエンド設計決定書](../../docs/decisions/frontend-design-decisions.md)
 - [アーキテクチャ定義](../../.ai/architecture.md)
 - [vidmark architecture.md](https://github.com/Sn005/vidmark/blob/main/docs/architecture.md)
 - [EPIC-005: バックエンドAPI](../005-backend-api/005-backend-api.md)

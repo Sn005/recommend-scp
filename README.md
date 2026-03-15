@@ -1,149 +1,88 @@
-# ATDD-SDD: 仕様駆動開発テンプレート
+# SCPicks — SCP 記事推薦アプリ
 
-AI駆動開発における「仕様駆動開発（Spec-Driven Development）」のテンプレートリポジトリです。
+SCP Foundation の記事をあなたの好みに合わせて推薦する Web アプリケーションです。
+ハイブリッド推薦エンジン（ベクトル検索 + タグマッチング）により、読みたい SCP にいつでも出会えます。
 
-## 概要
+## 主な機能
 
-**フェーズ → タスク → アクション** の3階層構造で仕様を管理し、各レベルにAcceptance Criteria（AC）とユーザーストーリーを定義することで、AIの暴走を防ぎ品質を高める開発手法です。
+- 無限スクロール形式の記事推薦（80% 好み / 20% セレンディピティ）
+- SCP Wiki 原作テーマを再現した記事表示
+- オンボーディングによる初期プロファイル構築
+- お気に入り管理・閲覧履歴
+- PWA 対応（ホーム画面に追加可能）
+
+## 技術スタック
+
+| レイヤー       | 技術                             |
+| -------------- | -------------------------------- |
+| フロントエンド | Next.js 16 (App Router)          |
+| バックエンド   | Hono (Vercel Functions)          |
+| DB             | Supabase (PostgreSQL + pgvector) |
+| キャッシュ     | Upstash Redis                    |
+| LLM            | OpenAI (Embedding + タグ抽出)    |
+| モノレポ       | Turborepo + pnpm                 |
+| テスト         | Vitest + Playwright              |
+| CI/CD          | GitHub Actions + Vercel          |
+
+## リポジトリ構成
 
 ```
-📋 フェーズ（Phase）
-  👤 ユーザーストーリー + AC
-  └── 🎯 タスク（Task）
-        👤 ユーザーストーリー + AC
-      └── ⚡ アクション（Action）
-            👤 ユーザーストーリー + AC
+apps/
+  web/           # Next.js フロントエンド
+  api-server/    # Hono API サーバー
+packages/
+  shared/        # 共通基盤（型定義・Embedding・検索）
+  pipeline/      # データパイプライン（クローラー・バッチ処理）
+  api-types/     # API 型定義（共有）
+  poc/           # PoC 検証スクリプト
+supabase/
+  migrations/    # DB マイグレーション
 ```
 
-## 特徴
+## セットアップ
 
-- **ACによるスコープ明確化**: AIが「何をすべきか」「何をすべきでないか」を判断可能
-- **暴走防止**: ACを満たしたら完了という明確な境界線
-- **TDDとの親和性**: ACからテストケースを直接導出可能
-- **AIエージェント非依存**: どのAI（Claude, GPT-4, Gemini等）でも使用可能
-- **Claude最適化**: Skills機能で自動発動・ワークフロー強制
+### 前提条件
 
-## ディレクトリ構成
+- Node.js 20+
+- pnpm 10+
+- Supabase プロジェクト（ローカル or クラウド）
+- OpenAI API キー
 
-```
-.ai/                    # 汎用ドキュメント（どのAIでも利用可能）
-├── SPEC_FORMAT.md      # 仕様フォーマット定義
-├── WORKFLOW.md         # ワークフロー定義
-└── PROMPT_TEMPLATE.md  # 他AI用プロンプトテンプレート
-
-.claude/                # Claude専用拡張
-├── CLAUDE.md           # プロジェクト指示
-└── skills/
-    └── spec-workflow/  # 自動発動ワークフローSkill
-
-specs/                  # 仕様書本体
-├── phases/             # フェーズ定義
-├── tasks/              # タスク定義
-└── actions/            # アクション定義
-```
-
-## 使い方
-
-### 1. テンプレートをコピー
+### 手順
 
 ```bash
-git clone https://github.com/your-org/atdd-sdd.git your-project
-cd your-project
-rm -rf .git
-git init
+# 1. リポジトリをクローン
+git clone https://github.com/Sn005/recommend-scp.git
+cd recommend-scp
+
+# 2. 依存関係をインストール
+pnpm install
+
+# 3. 環境変数を設定
+cp .env.example .env
+# .env を編集して実際の値を設定
+
+# 4. 開発サーバーを起動
+pnpm dev
 ```
 
-### 2. 仕様を定義
+## 開発コマンド
 
-1. `specs/phases/` にフェーズを定義
-2. `specs/tasks/` にタスクを定義
-3. `specs/actions/` にアクションを定義
-
-各ファイルは [SPEC_FORMAT.md](.ai/SPEC_FORMAT.md) のフォーマットに従ってください。
-
-### 3. AIで開発開始
-
-#### Claude Codeの場合
-
-Skills機能により自動発動します。タスクを指示するだけでOK：
-
-```
-「001-01-01の設定要件アクションを実装して」
-```
-
-#### 他のAI（GPT-4, Gemini等）の場合
-
-[PROMPT_TEMPLATE.md](.ai/PROMPT_TEMPLATE.md) のテンプレートを使用してください：
-
-```
-[セッション開始時のプロンプトをコピペ]
-
-## 実装するアクション
-[specs/actions/xxx.md の内容をコピペ]
-```
-
-## Claude vs 他AI の差分
-
-| 観点               | Claude          | 他AI                     |
-| ------------------ | --------------- | ------------------------ |
-| 発動方法           | 自動（Skills）  | 手動（プロンプト）       |
-| ワークフロー強制力 | 高（Skill強制） | 中（AIが無視する可能性） |
-| 毎タスクの手間     | 低              | 高（プロンプト作成）     |
-| コンテキスト管理   | @参照で効率的   | 全文コピペ               |
-
-詳細は [プランファイル](/.claude/plans/) を参照してください。
-
-## ワークフロー
-
-### 基本サイクル
-
-```
-1. タスク開始前
-   - アクションファイルを読み込む
-   - ACを確認
-   - ユーザーに確認
-
-2. TDD実装
-   🔴 Red: ACからテストを導出、失敗確認
-   🟢 Green: 最小限の実装
-   🔵 Refactor: コード改善
-
-3. 完了時
-   - 全ACをチェック
-   - ステータス更新
-   - 次のアクション提示
-```
-
-### 禁止事項
-
-- ACなしでの実装開始
-- テストなしの実装（TDD違反）
-- スコープ外の「ついでに」実装
-
-## サンプル仕様
-
-このテンプレートには以下のサンプル仕様が含まれています：
-
-- **Phase 001**: 環境構築
-  - **Task 001-01**: 共通設定整備
-    - Action 001-01-01: 設定要件の確認と決定
-    - Action 001-01-02: ESLint設定作成
-    - Action 001-01-03: Prettier設定作成
-  - **Task 001-02**: 基本アプリケーション作成
+| コマンド             | 説明                   |
+| -------------------- | ---------------------- |
+| `pnpm dev`           | 全アプリの開発サーバー |
+| `pnpm build`         | 全アプリのビルド       |
+| `pnpm test`          | 全パッケージのテスト   |
+| `pnpm test:coverage` | カバレッジ付きテスト   |
+| `pnpm lint`          | ESLint 実行            |
+| `pnpm format`        | Prettier フォーマット  |
+| `pnpm format:check`  | フォーマットチェック   |
+| `pnpm type-check`    | TypeScript 型チェック  |
 
 ## ドキュメント
 
-| ドキュメント                                 | 説明                           |
-| -------------------------------------------- | ------------------------------ |
-| [SPEC_FORMAT.md](.ai/SPEC_FORMAT.md)         | 仕様ファイルのフォーマット定義 |
-| [WORKFLOW.md](.ai/WORKFLOW.md)               | ワークフロー詳細               |
-| [PROMPT_TEMPLATE.md](.ai/PROMPT_TEMPLATE.md) | 他AI用プロンプトテンプレート   |
-| [CLAUDE.md](.claude/CLAUDE.md)               | Claude専用プロジェクト指示     |
+詳細なドキュメントは [docs/README.md](docs/README.md) を参照してください。
 
 ## ライセンス
 
-MIT
-
-## 貢献
-
-Issue、Pull Requestを歓迎します。
+SCP Foundation のコンテンツは CC BY-SA 3.0 ライセンスに基づきます。
