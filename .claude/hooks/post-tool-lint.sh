@@ -43,6 +43,11 @@ if [[ ! -f "$FILE_PATH" ]]; then
   exit 0
 fi
 
+# CLAUDE_PROJECT_DIRが未定義の場合はスキップ（Claude Code外での実行）
+if [[ -z "$CLAUDE_PROJECT_DIR" ]]; then
+  exit 0
+fi
+
 # ESLint実行（単一ファイル、Turborepoオーバーヘッド回避）
 LINT_OUTPUT=$(cd "$CLAUDE_PROJECT_DIR" && npx eslint --no-error-on-unmatched-pattern "$FILE_PATH" 2>&1)
 LINT_EXIT=$?

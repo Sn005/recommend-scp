@@ -19,8 +19,10 @@ if [[ -z "$COMMAND" ]]; then
 fi
 
 # 破壊的コマンドのパターンチェック
-# rm -rf（フラグ順序不問）
-if echo "$COMMAND" | grep -qE 'rm\s+(-[a-zA-Z]*r[a-zA-Z]*f|--force\s+--recursive|-[a-zA-Z]*f[a-zA-Z]*r)'; then
+# rm -rf（フラグ順序不問、スペース区切りの -r -f も検出）
+if echo "$COMMAND" | grep -qE '\brm\b' && \
+   echo "$COMMAND" | grep -qE '(\s-[a-zA-Z]*r|-r\b|--recursive)' && \
+   echo "$COMMAND" | grep -qE '(\s-[a-zA-Z]*f|-f\b|--force)'; then
   echo "🚫 [BLOCKED] rm -rf を検出しました。ファイル削除は慎重に行ってください。個別ファイルの rm は許可されています。" >&2
   exit 2
 fi
