@@ -25,22 +25,7 @@
 
 ### モノレポ構成
 
-```
-apps/
-├── web/              # Next.js フロントエンド
-│   └── src/app/      # App Router（(main)/, (viewer)/）
-└── api-server/       # Hono REST API
-    └── src/domains/  # articles, recommend, feedback, onboarding, visitors, favorites
-
-packages/
-├── shared/           # コアビジネスロジック（env, supabase, embedding, tagging, recommendation, storage）
-├── pipeline/         # データパイプライン（クローラー, LLMタグ抽出）
-├── api-types/        # RPC型定義（フロントエンド↔バックエンド）
-└── poc/              # 技術検証（PoC）
-
-supabase/             # DBマイグレーション・設定
-mockups/              # デザインモック（HTML）・トークン（CSS）
-```
+> 構成を確認するには `tree -L 2 apps packages` を実行してください。
 
 ### 開発コマンド
 
@@ -57,40 +42,7 @@ pnpm pipeline       # データパイプライン実行
 
 ## ドキュメント構成
 
-```
-.ai/                    # 汎用ドキュメント（どのAIでも利用可能）
-├── architecture.md     # アーキテクチャ定義（MUST参照）
-├── coding-guidelines.md # コーディングガイドライン（MUST参照）
-├── SPEC_FORMAT.md      # 仕様フォーマット定義
-├── WORKFLOW.md         # ワークフロー定義
-└── PROMPT_TEMPLATE.md  # 他AI用プロンプトテンプレート
-
-.claude/                # Claude専用
-├── CLAUDE.md           # このファイル
-├── NOTES.md            # 学習記録・改善提案・技術メモ
-├── settings.json       # フック設定
-├── agents/             # エージェント定義
-├── commands/           # カスタムコマンド
-├── hooks/              # Git/操作フック
-└── skills/
-    ├── clarify/        # 暗黙知抽出Skill（/spec の前段階）
-    ├── spec/           # 仕様策定Skill
-    ├── spec-workflow/  # 自動発動ワークフローSkill（実装）
-    ├── bug-report/     # UI探索バグ報告Skill
-    ├── bug-fix/        # UI探索バグ修正Skill
-    ├── pr/             # PR作成Skill
-    └── branch/         # ブランチ作成Skill
-
-specs/                  # 仕様書本体（18 EPIC、16完了/2未完了）
-├── epic-list.md        # EPIC一覧
-└── {epic-id}/
-    ├── {epic-id}.md    # EPIC定義
-    ├── story-list.md   # Story一覧
-    └── {story-id}/
-        ├── {story-id}.md      # Story定義
-        ├── subtask-list.md    # Subtask一覧
-        └── {subtask-id}.md    # Subtask定義
-```
+> 構成を確認するには `tree -L 3 .ai .claude specs --dirsfirst` を実行してください。
 
 ## Claudeへの指示
 
@@ -333,133 +285,13 @@ sed -n '/^## 学習記録/,$p' .claude/CLAUDE.md | grep -c "^###"  # 5項目超�
 
 ## サブエージェント活用ガイド
 
-各Skill（`/spec`, `spec-workflow`）のSKILL.mdにサブエージェントの発火タイミングと詳細が記載されている。ここではプロジェクト横断の概要のみ記載。
+> 詳細は `.claude/AGENTS.md` を参照。
 
-| サブエージェント    | 役割                                 | 発火元Skill         |
-| ------------------- | ------------------------------------ | ------------------- |
-| **spec-reviewer**   | EARS記法・AC品質チェック             | `/spec`             |
-| **architect**       | 既存パターン整合性・技術選定レビュー | `/spec`（条件付き） |
-| **test-strategist** | ACからテストケース導出               | `spec-workflow`     |
-| **code-reviewer**   | AC適合性・コード品質チェック         | `spec-workflow`     |
-| **quality-gate**    | 全AC充足・テスト通過の最終確認       | 全PR（必須）        |
+## コーディングルール & コミット規約
 
-## コーディングルール
+> 詳細は `.claude/CODING_RULES.md` を参照。
 
-### Import文
-
-- **`.js` 拡張子は使用しない**: 特別な事情がない限り、import文に `.js` 拡張子を付けない
-  - 良い例: `import { foo } from "./lib/bar"`
-  - 悪い例: `import { foo } from "./lib/bar.js"`
-- tsconfig.jsonで `moduleResolution: "Bundler"` を使用しているため、拡張子なしで解決可能
-
-### 変数と制御フロー
-
-- **変数の再代入は避ける**: `let` より `const` を優先し、イミュータブルなコードを書く
-- **for文での再代入は避ける**: `map` / `filter` / `reduce` などの高階関数を使用
-  - 良い例: `const doubled = numbers.map(n => n * 2)`
-  - 悪い例: `let result = []; for (const n of numbers) { result.push(n * 2); }`
-- 副作用のない純粋関数を推奨
-
-### 環境変数
-
-> 詳細: [001-01-05: モノレポ環境変数戦略](../specs/001-environment-setup/001-01-common-config/001-01-05-env-strategy.md)
-
-- **ルートの `.env` で一元管理**: 環境変数はリポジトリルートの `.env` に配置
-- **`env.ts` 経由でアクセス**: `packages/shared/src/lib/env.ts` の `env` オブジェクトを使用
-- **`process.env` 直接参照は禁止**: ESLint ルール `n/no-process-env` でエラー
-  - 良い例: `import { env } from "@recommend-scp/shared"; env.SUPABASE_URL`
-  - 悪い例: `process.env.SUPABASE_URL` → ESLint エラー
-- **例外**: `env.ts` / `env.client.ts` / `vitest.config.ts` 内では `process.env` アクセス可
-
-### TypeScript
-
-- 型定義は `src/types.ts` に集約
-- 明示的な型アノテーションを推奨
-- `any` 型の使用は避ける
-
-### テストコード
-
-- **⚠️ 最重要ルール: テストケース名は必ず日本語で記述する**
-  - 良い例: `it("有効なJSONレスポンスをパースできる", ...)`
-  - 悪い例: `it("should parse valid JSON response", ...)`
-- `describe` ブロックの説明も日本語を推奨
-- テストの意図が日本語で明確に伝わることを優先
-
-### ログ出力
-
-- **⚠️ 最重要ルール: `console.log` 禁止 → `createLogger` を使用**
-  - `packages/pipeline/src/crawler/utils/logger.ts` の `createLogger` を必ず使用
-  - ESLintで `no-console: "error"` が設定されており、違反するとビルドエラー
-  - 良い例:
-    ```typescript
-    import { createLogger } from "./crawler/utils/logger";
-    const logger = createLogger({ prefix: "[MyModule]" });
-    logger.info("記事を取得中...");
-    logger.error("取得に失敗:", error);
-    ```
-  - 悪い例:
-    ```typescript
-    console.log("記事を取得中..."); // ESLintエラー
-    ```
-- **例外: `scripts/` ディレクトリ内のCLIスクリプトでは `console` 使用可**
-- ログメッセージは日本語で記述
-- 技術的な固有名詞（Supabase, Embedding等）はそのまま使用可
-
-### コミット前の必須アクション
-
-- **⚠️ 最重要ルール: コミット前に必ず `pnpm format` を実行する**
-  - Claude Code環境ではlefthookのgitフックが動作しないため、手動でフォーマットを実行する必要がある
-  - 実行コマンド: `pnpm format` または `pnpm prettier --write <対象ファイル>`
-  - フォーマット対象: `**/*.{ts,tsx,js,jsx,json,md,yaml,yml}`
-- フォーマットを忘れるとCIで `format:check` が失敗する
-- 特に `.claude/skills/**/*.md` ファイルを編集した場合は要注意
-
-## コミットメッセージ規約（Conventional Commits）
-
-コミットメッセージは以下の形式に従うこと：
-
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-### type（必須）
-
-| type       | 説明                                                 |
-| ---------- | ---------------------------------------------------- |
-| `feat`     | 新機能                                               |
-| `fix`      | バグ修正                                             |
-| `docs`     | ドキュメントのみの変更                               |
-| `style`    | コードの意味に影響しない変更（空白、フォーマット等） |
-| `refactor` | バグ修正でも機能追加でもないコード変更               |
-| `perf`     | パフォーマンス改善                                   |
-| `test`     | テストの追加・修正                                   |
-| `chore`    | ビルドプロセスやツールの変更                         |
-
-### scope（任意）
-
-変更対象のモジュールやコンポーネント名
-例: `feat(search):`, `fix(crawler):`
-
-### 例
-
-```
-feat(search): ベクトル検索機能を追加
-fix(tagging): タグ抽出時のnullチェックを修正
-docs: README.mdにセットアップ手順を追記
-chore: ESLint設定を追加
-```
-
-### 緊急時のフックスキップ
-
-緊急時は `--no-verify` フラグでフックをスキップ可能（通常は非推奨）：
-
-```bash
-git commit -m "fix: 緊急修正" --no-verify
-```
+**コミット前に必ず `pnpm format` を実行すること。** lefthookはClaude Code環境で動作しないため手動実行が必須。
 
 ---
 
