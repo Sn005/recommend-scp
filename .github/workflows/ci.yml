@@ -197,7 +197,7 @@ jobs:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: e2e
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always()
     permissions:
       contents: read
       pages: write
@@ -217,6 +217,7 @@ jobs:
 
       - name: Download Playwright Report
         uses: actions/download-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           name: playwright-report
           path: _site/e2e-report
@@ -235,6 +236,13 @@ jobs:
 
           DEPLOY_TIME=$(date -u '+%Y-%m-%d %H:%M UTC')
 
+          # PR時はブランチ名を表示
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            SOURCE_INFO="Branch: ${{ github.head_ref }} (PR #${{ github.event.pull_request.number }})"
+          else
+            SOURCE_INFO="Branch: main"
+          fi
+
           cat > _site/index.html <<'HTMLEOF'
           <!DOCTYPE html>
           <html lang="ja">
@@ -246,7 +254,8 @@ jobs:
           </head>
           <body class="bg-neutral-100 text-neutral-800 min-h-screen p-6">
             <h1 class="text-2xl font-bold mb-2">SCP Recommend - Project Pages</h1>
-            <p id="deploy-time" class="text-sm text-neutral-500 mb-6"></p>
+            <p id="deploy-time" class="text-sm text-neutral-500 mb-1"></p>
+            <p id="source-info" class="text-sm text-neutral-500 mb-6"></p>
             <div class="grid gap-4 max-w-xl">
               <a href="./mockups/" class="block p-6 bg-white rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow">
                 <div class="font-medium text-lg">Mockups</div>
@@ -256,6 +265,7 @@ jobs:
             </div>
             <script>
               document.getElementById('deploy-time').textContent = 'Last deployed: __DEPLOY_TIME__';
+              document.getElementById('source-info').textContent = '__SOURCE_INFO__';
               var status = '__E2E_STATUS__';
               var container = document.getElementById('e2e-link');
               if (status === 'available') {
@@ -270,6 +280,7 @@ jobs:
 
           sed -i "s|__DEPLOY_TIME__|${DEPLOY_TIME}|g" _site/index.html
           sed -i "s|__E2E_STATUS__|${E2E_STATUS}|g" _site/index.html
+          sed -i "s|__SOURCE_INFO__|${SOURCE_INFO}|g" _site/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
