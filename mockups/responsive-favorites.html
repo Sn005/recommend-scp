@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>レスポンシブお気に入り - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #3B82F6;
+    }
+
+    /* ===== PC版グローバルヘッダー ===== */
+    .global-header {
+      display: none;
+      background: white;
+      border-bottom: 1px solid #E5E7EB;
+      height: 56px;
+      align-items: center;
+      padding: 0 24px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+    }
+    .global-header .logo { font-weight: 700; font-size: 16px; color: #1F2937; white-space: nowrap; }
+    .global-header .logo span { color: var(--primary); }
+    .global-header nav {
+      display: flex; gap: 4px;
+      position: absolute; left: 50%; transform: translateX(-50%);
+    }
+    .global-header nav a {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; color: #6B7280;
+      transition: all 0.2s ease; text-decoration: none;
+    }
+    .global-header nav a:hover { background: #F3F4F6; color: #374151; }
+    .global-header nav a.active { background: #EFF6FF; color: var(--primary); }
+    .global-header nav a svg { width: 18px; height: 18px; }
+    .global-header .header-icons { display: flex; gap: 4px; margin-left: auto; }
+    .global-header .icon-btn {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; color: #6B7280; transition: all 0.2s ease; position: relative;
+    }
+    .global-header .icon-btn:hover { background: #F3F4F6; color: #374151; }
+    .global-header .icon-btn svg { width: 20px; height: 20px; }
+
+    /* ===== モバイル版 ===== */
+    .menu-btn {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .page-header {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* お気に入りカード */
+    .fav-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+    }
+    .fav-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .fav-card:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    /* バッジ */
+    .badge-safe { background: #10B981; color: white; }
+    .badge-euclid { background: #F59E0B; color: white; }
+    .badge-keter { background: #EF4444; color: white; }
+
+    /* ドロワー (モバイルのみ) */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      opacity: 0; visibility: hidden;
+      transition: all 0.3s ease; z-index: 100;
+    }
+    .drawer-overlay.open { opacity: 1; visibility: visible; }
+    .drawer {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: 280px; background: white;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 101;
+      box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; color: #374151;
+      font-size: 15px; transition: background 0.2s;
+    }
+    .drawer-item:hover { background: #F3F4F6; }
+    .drawer-item svg { width: 22px; height: 22px; color: #6B7280; }
+
+    /* ドロップダウン */
+    .dropdown {
+      display: none; position: absolute; top: 100%; right: 0;
+      margin-top: 4px; background: white; border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12); border: 1px solid #E5E7EB;
+      min-width: 200px; padding: 4px; z-index: 60;
+    }
+    .dropdown.open { display: block; }
+    .dropdown a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 8px;
+      font-size: 14px; color: #374151;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .dropdown a:hover { background: #F3F4F6; }
+    .dropdown a svg { width: 18px; height: 18px; color: #6B7280; }
+    .dropdown .divider { height: 1px; background: #E5E7EB; margin: 4px 0; }
+
+    /* レスポンシブ */
+    @media (min-width: 768px) {
+      .global-header { display: flex; }
+      .mobile-only { display: none !important; }
+      .main-content { padding-top: 56px; }
+      .content-wrapper {
+        max-width: 768px;
+        margin: 0 auto;
+      }
+      /* PC版ヘッダー（お気に入りタイトル部分） */
+      .page-title-section {
+        padding-left: 16px;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- ===== PC版グローバルヘッダー ===== -->
+  <header class="global-header">
+    <div class="logo"><span>SCP</span>icks</div>
+    <nav>
+      <a href="responsive-recommend.html">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        推薦
+      </a>
+      <a href="responsive-favorites.html" class="active">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        お気に入り
+      </a>
+      <a href="#">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        履歴
+      </a>
+    </nav>
+    <div class="header-icons">
+      <button class="icon-btn" id="settingsBtn" aria-label="メニュー">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+        </svg>
+        <div class="dropdown" id="settingsDropdown">
+          <a href="#">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            嗜好リセット
+          </a>
+          <div class="divider"></div>
+          <a href="#">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            ライセンス
+          </a>
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== モバイル版 ===== -->
+  <button id="menuBtn" class="menu-btn mobile-only fixed top-4 left-4 z-50 w-10 h-10 rounded-full flex items-center justify-center">
+    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+  </button>
+  <div id="drawerOverlay" class="drawer-overlay mobile-only" onclick="closeDrawer()"></div>
+  <div id="drawer" class="drawer mobile-only">
+    <div class="pt-16 pb-4 px-5 border-b border-gray-100">
+      <h2 class="text-lg font-bold text-gray-800">SCPicks</h2>
+      <p class="text-sm text-gray-500 mt-1">あなた専用のSCP推薦</p>
+    </div>
+    <nav class="py-2">
+      <a href="responsive-recommend.html" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        推薦を見る
+      </a>
+      <a href="responsive-favorites.html" class="drawer-item" style="background:#EFF6FF;color:#3B82F6;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#3B82F6;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        お気に入り一覧
+      </a>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        閲覧履歴
+      </a>
+      <div class="my-2 border-t border-gray-100"></div>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        推薦をリセット
+      </a>
+      <a href="#" class="drawer-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        ライセンス
+      </a>
+    </nav>
+  </div>
+
+  <!-- ===== お気に入り一覧 ===== -->
+  <main class="main-content pb-8 px-4">
+    <div class="content-wrapper">
+      <!-- ページタイトル -->
+      <div class="page-title-section flex items-center justify-between py-4 pl-12 md:pl-0">
+        <h1 class="text-lg font-semibold text-gray-800">お気に入り</h1>
+        <span class="text-sm text-gray-400">12件</span>
+      </div>
+
+      <div class="space-y-3">
+        <!-- カード1 -->
+        <a href="responsive-recommend.html" class="fav-card block p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+                <span class="text-xs text-gray-400">+574</span>
+              </div>
+              <h3 class="font-semibold text-gray-800">SCP-5000</h3>
+              <p class="text-sm text-gray-500 mt-1 line-clamp-2">Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- カード2 -->
+        <a href="#" class="fav-card block p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+                <span class="text-xs text-gray-400">+2,841</span>
+              </div>
+              <h3 class="font-semibold text-gray-800">SCP-682</h3>
+              <p class="text-sm text-gray-500 mt-1 line-clamp-2">不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- カード3 -->
+        <a href="#" class="fav-card block p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-euclid">Euclid</span>
+                <span class="text-xs text-gray-400">+4,102</span>
+              </div>
+              <h3 class="font-semibold text-gray-800">SCP-173</h3>
+              <p class="text-sm text-gray-500 mt-1 line-clamp-2">彫刻 - オリジナル - 視線を外すと高速で移動し首を折る彫刻</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- カード4 -->
+        <a href="#" class="fav-card block p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+                <span class="text-xs text-gray-400">+1,256</span>
+              </div>
+              <h3 class="font-semibold text-gray-800">SCP-999</h3>
+              <p class="text-sm text-gray-500 mt-1 line-clamp-2">くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- カード5 -->
+        <a href="#" class="fav-card block p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+                <span class="text-xs text-gray-400">+892</span>
+              </div>
+              <h3 class="font-semibold text-gray-800">SCP-3000</h3>
+              <p class="text-sm text-gray-500 mt-1 line-clamp-2">アナンタシェーシャ - ベンガル湾深海に棲む巨大なウナギ型生物</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function openDrawer() {
+      document.getElementById('drawer')?.classList.add('open');
+      document.getElementById('drawerOverlay')?.classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('drawer')?.classList.remove('open');
+      document.getElementById('drawerOverlay')?.classList.remove('open');
+    }
+    document.getElementById('menuBtn')?.addEventListener('click', openDrawer);
+
+    document.getElementById('settingsBtn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('settingsDropdown').classList.toggle('open');
+    });
+    document.addEventListener('click', () => {
+      document.getElementById('settingsDropdown')?.classList.remove('open');
+    });
+  </script>
+
+</body>
+</html>
