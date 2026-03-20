@@ -224,12 +224,7 @@
         margin: 4px 0;
       }
 
-      /* PC版3カラムカード */
-      .fav-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
+      /* PC版カード */
       .fav-card-grid {
         display: none;
       }
@@ -246,23 +241,23 @@
           padding-top: 56px;
         }
         .content-wrapper {
-          max-width: 1200px;
+          max-width: 768px;
           margin: 0 auto;
         }
         /* PC版ヘッダー（お気に入りタイトル部分） */
         .page-title-section {
           padding-left: 16px;
         }
-        /* PC: リスト非表示、グリッド表示 */
+        /* PC: モバイルリスト非表示、PC用リスト表示 */
         .fav-list-mobile {
           display: none;
         }
         .fav-card-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
-        /* PC用カード型 */
+        /* PC用カード型（1カラム） */
         .fav-card-v2 {
           background: white;
           border-radius: 12px;
@@ -270,36 +265,41 @@
           padding: 20px;
           transition: all 0.2s ease;
           display: flex;
-          flex-direction: column;
-          gap: 8px;
+          align-items: flex-start;
+          gap: 16px;
         }
         .fav-card-v2:hover {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
           transform: translateY(-2px);
         }
+        .fav-card-v2 .card-body {
+          flex: 1;
+        }
         .fav-card-v2 .card-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          gap: 8px;
+          margin-bottom: 4px;
         }
         .fav-card-v2 h3 {
           font-size: 16px;
           font-weight: 600;
           color: #1f2937;
+          margin-bottom: 4px;
         }
         .fav-card-v2 p {
           font-size: 13px;
           color: #6b7280;
           line-height: 1.6;
-          flex: 1;
         }
-        .fav-card-v2 .card-footer {
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .fav-card-v2 .card-chevron {
+          color: #d1d5db;
+          flex-shrink: 0;
           margin-top: 4px;
-          padding-top: 12px;
-          border-top: 1px solid #f3f4f6;
+        }
+        .fav-card-v2 .card-chevron svg {
+          width: 20px;
+          height: 20px;
         }
       }
     </style>
@@ -614,150 +614,106 @@
           </a>
         </div>
 
-        <!-- PC: 3カラムグリッド型 -->
+        <!-- PC: 1カラムリスト型（時系列順を暗示） -->
         <div class="fav-card-grid">
           <a href="responsive-recommend.html" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
-              <span class="text-xs text-gray-400">+574</span>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+                <span class="text-xs text-gray-400">+574</span>
+              </div>
+              <h3>SCP-5000</h3>
+              <p>Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
             </div>
-            <h3>SCP-5000</h3>
-            <p>Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="card-chevron">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
             </div>
           </a>
           <a href="#" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
-              <span class="text-xs text-gray-400">+2,841</span>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+                <span class="text-xs text-gray-400">+2,841</span>
+              </div>
+              <h3>SCP-682</h3>
+              <p>不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
             </div>
-            <h3>SCP-682</h3>
-            <p>不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="card-chevron">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
             </div>
           </a>
           <a href="#" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-euclid">Euclid</span>
-              <span class="text-xs text-gray-400">+4,102</span>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-euclid">Euclid</span>
+                <span class="text-xs text-gray-400">+4,102</span>
+              </div>
+              <h3>SCP-173</h3>
+              <p>彫刻 - オリジナル - 視線を外すと高速で移動し首を折る彫刻</p>
             </div>
-            <h3>SCP-173</h3>
-            <p>彫刻 - オリジナル - 視線を外すと高速で移動し首を折る彫刻</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="card-chevron">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
             </div>
           </a>
           <a href="#" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
-              <span class="text-xs text-gray-400">+1,256</span>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-safe">Safe</span>
+                <span class="text-xs text-gray-400">+1,256</span>
+              </div>
+              <h3>SCP-999</h3>
+              <p>くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
             </div>
-            <h3>SCP-999</h3>
-            <p>くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="card-chevron">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
             </div>
           </a>
           <a href="#" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
-              <span class="text-xs text-gray-400">+892</span>
+            <div class="card-body">
+              <div class="card-header">
+                <span class="text-xs font-medium px-2 py-0.5 rounded badge-keter">Keter</span>
+                <span class="text-xs text-gray-400">+892</span>
+              </div>
+              <h3>SCP-3000</h3>
+              <p>アナンタシェーシャ - ベンガル湾深海に棲む巨大なウナギ型生物</p>
             </div>
-            <h3>SCP-3000</h3>
-            <p>アナンタシェーシャ - ベンガル湾深海に棲む巨大なウナギ型生物</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="card-chevron">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  d="M9 5l7 7-7 7"
                 />
               </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
-            </div>
-          </a>
-          <a href="#" class="fav-card-v2">
-            <div class="card-header">
-              <span class="text-xs font-medium px-2 py-0.5 rounded badge-euclid">Euclid</span>
-              <span class="text-xs text-gray-400">+1,823</span>
-            </div>
-            <h3>SCP-4999</h3>
-            <p>誰かが見ている - 孤独に死ぬ人のそばに現れる存在</p>
-            <div class="card-footer">
-              <svg
-                class="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-              <span class="text-xs text-gray-400">お気に入り済み</span>
             </div>
           </a>
         </div>

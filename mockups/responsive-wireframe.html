@@ -1526,7 +1526,7 @@
               </div>
             </div>
 
-            <div style="max-width: 1200px; margin: 0 auto; padding: 16px">
+            <div style="max-width: 768px; margin: 0 auto; padding: 16px">
               <div
                 style="
                   display: flex;
@@ -1538,210 +1538,92 @@
                 <div style="font-size: 17px; font-weight: 600; color: #1f2937">お気に入り</div>
                 <div style="font-size: 13px; color: #9ca3af">12件</div>
               </div>
-              <!-- 3カラムグリッド -->
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px">
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--safe);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Safe</span
-                    ><span style="font-size: 10px; color: #9ca3af">+574</span>
+              <!-- 1カラムリスト（時系列順を暗示） -->
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--safe)">Safe</span
+                      ><span class="rating-sm">+574</span>
+                    </div>
+                    <h4>SCP-5000</h4>
+                    <p>Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
                   </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-5000</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    Why? - 財団が人類との敵対を決定した代替タイムライン
-                  </p>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
                 </div>
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--keter);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Keter</span
-                    ><span style="font-size: 10px; color: #9ca3af">+2,841</span>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--keter)">Keter</span
+                      ><span class="rating-sm">+2,841</span>
+                    </div>
+                    <h4>SCP-682</h4>
+                    <p>不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
                   </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-682</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    不死身の爬虫類 - 全ての生命への激しい敵意を持つ
-                  </p>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
                 </div>
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--euclid);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Euclid</span
-                    ><span style="font-size: 10px; color: #9ca3af">+4,102</span>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--euclid)">Euclid</span
+                      ><span class="rating-sm">+4,102</span>
+                    </div>
+                    <h4>SCP-173</h4>
+                    <p>彫刻 - 視線を外すと高速で移動し首を折る彫刻</p>
                   </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-173</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    彫刻 - 視線を外すと高速で移動し首を折る
-                  </p>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
                 </div>
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--safe);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Safe</span
-                    ><span style="font-size: 10px; color: #9ca3af">+1,256</span>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--safe)">Safe</span
+                      ><span class="rating-sm">+1,256</span>
+                    </div>
+                    <h4>SCP-999</h4>
+                    <p>くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
                   </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-999</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    くすぐりオバケ - 触れた人を幸福にするスライム状生物
-                  </p>
-                </div>
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--keter);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Keter</span
-                    ><span style="font-size: 10px; color: #9ca3af">+892</span>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
                   </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-3000</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    アナンタシェーシャ - ベンガル湾深海に棲む巨大なウナギ型
-                  </p>
-                </div>
-                <div
-                  style="
-                    background: white;
-                    border-radius: 12px;
-                    padding: 16px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-                  "
-                >
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 8px;
-                    "
-                  >
-                    <span
-                      class="badge"
-                      style="
-                        background: var(--euclid);
-                        font-size: 10px;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        color: white;
-                      "
-                      >Euclid</span
-                    ><span style="font-size: 10px; color: #9ca3af">+1,823</span>
-                  </div>
-                  <h4 style="font-size: 14px; font-weight: 600; color: #1f2937">SCP-4999</h4>
-                  <p style="font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.5">
-                    誰かが見ている - 孤独に死ぬ人のそばに現れる存在
-                  </p>
                 </div>
               </div>
             </div>
             <div class="anno top" style="top: 64px; left: 50%; transform: translateX(-50%)">
-              max-width: 1200px ・ 3カラムグリッド
+              max-width: 768px ・ 1カラムリスト（時系列暗示）・ hover: translateY(-2px)
             </div>
           </div>
         </div>
@@ -2246,7 +2128,7 @@
             <tr>
               <td>お気に入りカード</td>
               <td>1列リスト</td>
-              <td>3カラムグリッド（max-w: 1200px）</td>
+              <td>1列リスト + hover浮き上がり（max-w: 768px）</td>
             </tr>
             <tr>
               <td>パックカード</td>
