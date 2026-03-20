@@ -1,232 +1,267 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>レスポンシブデザイン比較 - SCPicks</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --primary: #3B82F6;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #F3F4F6;
-    }
-    .preview-frame {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-      border: 1px solid #E5E7EB;
-    }
-    .frame-header {
-      background: #F9FAFB;
-      border-bottom: 1px solid #E5E7EB;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .frame-header .title {
-      font-weight: 600;
-      font-size: 14px;
-      color: #374151;
-    }
-    .frame-header .size {
-      font-size: 12px;
-      color: #9CA3AF;
-      background: #F3F4F6;
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-    .preview-frame iframe {
-      width: 100%;
-      border: none;
-      display: block;
-    }
-    .section-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1F2937;
-      margin-bottom: 8px;
-    }
-    .section-desc {
-      font-size: 14px;
-      color: #6B7280;
-      margin-bottom: 24px;
-    }
-    .comparison-row {
-      display: grid;
-      grid-template-columns: 375px 1fr;
-      gap: 24px;
-      align-items: start;
-    }
-    @media (max-width: 1200px) {
-      .comparison-row {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>レスポンシブデザイン比較 - SCPicks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: #3b82f6;
       }
-    }
-    .nav-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 50px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #6B7280;
-      background: white;
-      border: 1px solid #E5E7EB;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .nav-pill:hover { border-color: var(--primary); color: var(--primary); }
-    .nav-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-    .design-note {
-      background: #FFFBEB;
-      border: 1px solid #FDE68A;
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-    .design-note h4 {
-      font-size: 13px;
-      font-weight: 600;
-      color: #92400E;
-      margin-bottom: 8px;
-    }
-    .design-note ul {
-      font-size: 13px;
-      color: #78350F;
-      list-style: disc;
-      padding-left: 20px;
-    }
-    .design-note li { margin-bottom: 4px; }
-  </style>
-</head>
-<body class="min-h-screen p-6">
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f3f4f6;
+      }
+      .preview-frame {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+      }
+      .frame-header {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .frame-header .title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #374151;
+      }
+      .frame-header .size {
+        font-size: 12px;
+        color: #9ca3af;
+        background: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+      .preview-frame iframe {
+        width: 100%;
+        border: none;
+        display: block;
+      }
+      .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 8px;
+      }
+      .section-desc {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 24px;
+      }
+      .comparison-row {
+        display: grid;
+        grid-template-columns: 375px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      @media (max-width: 1200px) {
+        .comparison-row {
+          grid-template-columns: 1fr;
+        }
+      }
+      .nav-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #6b7280;
+        background: white;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+      .nav-pill:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+      .nav-pill.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+      .design-note {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+      .design-note h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 8px;
+      }
+      .design-note ul {
+        font-size: 13px;
+        color: #78350f;
+        list-style: disc;
+        padding-left: 20px;
+      }
+      .design-note li {
+        margin-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen p-6">
+    <!-- ヘッダー -->
+    <header class="max-w-7xl mx-auto mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">SCPicks レスポンシブデザイン比較</h1>
+      <p class="text-gray-500 mt-2">モバイル（375px）← → PC（768px+）のレイアウト変化を確認</p>
 
-  <!-- ヘッダー -->
-  <header class="max-w-7xl mx-auto mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">SCPicks レスポンシブデザイン比較</h1>
-    <p class="text-gray-500 mt-2">モバイル（375px）← → PC（768px+）のレイアウト変化を確認</p>
+      <!-- 画面選択 -->
+      <div class="flex flex-wrap gap-2 mt-6">
+        <a href="#recommend" class="nav-pill active">推薦画面</a>
+        <a href="#favorites" class="nav-pill">お気に入り</a>
+        <a href="#onboarding" class="nav-pill">オンボーディング</a>
+      </div>
+    </header>
 
-    <!-- 画面選択 -->
-    <div class="flex flex-wrap gap-2 mt-6">
-      <a href="#recommend" class="nav-pill active">推薦画面</a>
-      <a href="#favorites" class="nav-pill">お気に入り</a>
-      <a href="#onboarding" class="nav-pill">オンボーディング</a>
-    </div>
-  </header>
+    <!-- ===== 推薦画面 ===== -->
+    <section id="recommend" class="max-w-7xl mx-auto mb-16">
+      <h2 class="section-title">推薦画面</h2>
+      <p class="section-desc">
+        PC版は案A（カード横ボタン）を採用。メインコンテンツ左右にグレー背景+シャドウで区切りを明示。進捗バー・記事数表示は削除。
+      </p>
 
-  <!-- ===== 推薦画面 ===== -->
-  <section id="recommend" class="max-w-7xl mx-auto mb-16">
-    <h2 class="section-title">推薦画面</h2>
-    <p class="section-desc">PC版では案A（カード横ボタン）と案B（下部固定）を切り替え可能。右上スイッチで比較してください。</p>
-
-    <div class="comparison-row">
-      <!-- モバイル -->
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">モバイル</span>
-          <span class="size">375 x 812</span>
+      <div class="comparison-row">
+        <!-- モバイル -->
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">モバイル</span>
+            <span class="size">375 x 812</span>
+          </div>
+          <iframe src="responsive-recommend.html" style="width: 375px; height: 812px"></iframe>
         </div>
-        <iframe src="responsive-recommend.html" style="width:375px; height:812px;"></iframe>
+
+        <!-- PC -->
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">PC</span>
+            <span class="size">1280 x 800</span>
+          </div>
+          <iframe src="responsive-recommend.html" style="width: 100%; height: 800px"></iframe>
+        </div>
       </div>
 
-      <!-- PC -->
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">PC</span>
-          <span class="size">1280 x 800</span>
-        </div>
-        <iframe src="responsive-recommend.html" style="width:100%; height:800px;"></iframe>
+      <div class="design-note">
+        <h4>デザイン判断メモ</h4>
+        <ul>
+          <li>
+            <strong>ヘッダー:</strong> ロゴ左 / ナビ中央（推薦・お気に入り・履歴）/
+            アイコン右（3点メニュー → ドロップダウン）
+          </li>
+          <li><strong>コンテンツ幅:</strong> max-width: 768px で中央寄せ。SCP記事の可読性を維持</li>
+          <li>
+            <strong>サイドパネル:</strong> メインコンテンツ左右に #F3F4F6 背景 + inset shadow
+            で区切りを明示
+          </li>
+          <li>
+            <strong>PillNav:</strong>
+            案A採用。カード下部に「お気に入り」「次の記事へ」ボタン。進捗バー・記事数表示は削除
+          </li>
+          <li><strong>ドロワー:</strong> PC版では廃止。モバイルのみ表示</li>
+        </ul>
       </div>
-    </div>
+    </section>
 
-    <div class="design-note">
-      <h4>デザイン判断メモ</h4>
-      <ul>
-        <li><strong>ヘッダー:</strong> ロゴ左 / ナビ中央（推薦・お気に入り・履歴）/ アイコン右（3点メニュー → ドロップダウン）</li>
-        <li><strong>コンテンツ幅:</strong> max-width: 768px で中央寄せ。SCP記事の可読性を維持</li>
-        <li><strong>PillNav案A:</strong> カード下部に「お気に入り」「次の記事へ」ボタンを大きく配置。プログレスバーも近くに</li>
-        <li><strong>PillNav案B:</strong> モバイルと同じ下部固定フローティング。PC画面では目立ちにくい可能性</li>
-        <li><strong>ドロワー:</strong> PC版では廃止。モバイルのみ表示</li>
-      </ul>
-    </div>
-  </section>
+    <!-- ===== お気に入り画面 ===== -->
+    <section id="favorites" class="max-w-7xl mx-auto mb-16">
+      <h2 class="section-title">お気に入り画面</h2>
+      <p class="section-desc">
+        モバイルはリスト型、PC版は3カラムカード型グリッドで情報密度を最適化。max-width: 1200px。
+      </p>
 
-  <!-- ===== お気に入り画面 ===== -->
-  <section id="favorites" class="max-w-7xl mx-auto mb-16">
-    <h2 class="section-title">お気に入り画面</h2>
-    <p class="section-desc">カードリストは同じ構造のまま中央寄せ。PC版ではグローバルヘッダーでナビゲーション。</p>
-
-    <div class="comparison-row">
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">モバイル</span>
-          <span class="size">375 x 812</span>
+      <div class="comparison-row">
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">モバイル</span>
+            <span class="size">375 x 812</span>
+          </div>
+          <iframe src="responsive-favorites.html" style="width: 375px; height: 812px"></iframe>
         </div>
-        <iframe src="responsive-favorites.html" style="width:375px; height:812px;"></iframe>
-      </div>
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">PC</span>
-          <span class="size">1280 x 800</span>
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">PC</span>
+            <span class="size">1280 x 800</span>
+          </div>
+          <iframe src="responsive-favorites.html" style="width: 100%; height: 800px"></iframe>
         </div>
-        <iframe src="responsive-favorites.html" style="width:100%; height:800px;"></iframe>
       </div>
-    </div>
 
-    <div class="design-note">
-      <h4>デザイン判断メモ</h4>
-      <ul>
-        <li><strong>カード幅:</strong> max-width: 768px で読みやすさを維持</li>
-        <li><strong>メニューボタン:</strong> PC版では非表示。ヘッダーナビで代替</li>
-        <li><strong>ページタイトル:</strong> PC版ではメニューボタン分のpadding-leftが不要に</li>
-      </ul>
-    </div>
-  </section>
+      <div class="design-note">
+        <h4>デザイン判断メモ</h4>
+        <ul>
+          <li>
+            <strong>PC版レイアウト:</strong> 3カラムカードグリッド（max-width:
+            1200px）で情報密度を最適化
+          </li>
+          <li>
+            <strong>カードデザイン:</strong>
+            縦型カードにバッジ・タイトル・説明・フッターを配置。ホバーで浮き上がり
+          </li>
+          <li><strong>メニューボタン:</strong> PC版では非表示。ヘッダーナビで代替</li>
+        </ul>
+      </div>
+    </section>
 
-  <!-- ===== オンボーディング画面 ===== -->
-  <section id="onboarding" class="max-w-7xl mx-auto mb-16">
-    <h2 class="section-title">オンボーディング画面</h2>
-    <p class="section-desc">PC版ではスターターパックを2列グリッド表示。ヘッダーはロゴのみ（ナビなし）。</p>
+    <!-- ===== オンボーディング画面 ===== -->
+    <section id="onboarding" class="max-w-7xl mx-auto mb-16">
+      <h2 class="section-title">オンボーディング画面</h2>
+      <p class="section-desc">
+        PC版ではスターターパックを2列グリッド表示。ヘッダーはロゴのみ（ナビなし）。
+      </p>
 
-    <div class="comparison-row">
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">モバイル</span>
-          <span class="size">375 x 812</span>
+      <div class="comparison-row">
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">モバイル</span>
+            <span class="size">375 x 812</span>
+          </div>
+          <iframe src="responsive-onboarding.html" style="width: 375px; height: 812px"></iframe>
         </div>
-        <iframe src="responsive-onboarding.html" style="width:375px; height:812px;"></iframe>
-      </div>
-      <div class="preview-frame">
-        <div class="frame-header">
-          <span class="title">PC</span>
-          <span class="size">1280 x 800</span>
+        <div class="preview-frame">
+          <div class="frame-header">
+            <span class="title">PC</span>
+            <span class="size">1280 x 800</span>
+          </div>
+          <iframe src="responsive-onboarding.html" style="width: 100%; height: 800px"></iframe>
         </div>
-        <iframe src="responsive-onboarding.html" style="width:100%; height:800px;"></iframe>
       </div>
-    </div>
 
-    <div class="design-note">
-      <h4>デザイン判断メモ</h4>
-      <ul>
-        <li><strong>ヘッダー:</strong> オンボーディングはロゴのみ中央表示（まだナビ先がないため）</li>
-        <li><strong>カードグリッド:</strong> PC版では2列。パック選択が一覧しやすい</li>
-        <li><strong>絵文字→SVGアイコン:</strong> PC版モックではSVGアイコン+背景色パネルに変更（デザインガイドライン準拠）</li>
-        <li><strong>開始ボタン:</strong> PC版でも下部固定、max-widthで中央寄せ</li>
-      </ul>
-    </div>
-  </section>
+      <div class="design-note">
+        <h4>デザイン判断メモ</h4>
+        <ul>
+          <li>
+            <strong>ヘッダー:</strong> オンボーディングはロゴのみ中央表示（まだナビ先がないため）
+          </li>
+          <li><strong>カードグリッド:</strong> PC版では2列。パック選択が一覧しやすい</li>
+          <li>
+            <strong>絵文字→SVGアイコン:</strong>
+            PC版モックではSVGアイコン+背景色パネルに変更（デザインガイドライン準拠）
+          </li>
+          <li><strong>開始ボタン:</strong> PC版でも下部固定、max-widthで中央寄せ</li>
+        </ul>
+      </div>
+    </section>
 
-  <!-- フッター -->
-  <footer class="max-w-7xl mx-auto text-center py-8 border-t border-gray-200">
-    <p class="text-sm text-gray-400">SCPicks レスポンシブデザインモック v1.0</p>
-    <p class="text-xs text-gray-300 mt-1">ブレイクポイント: 768px (md) | コンテンツ幅: max 768px</p>
-  </footer>
-
-</body>
+    <!-- フッター -->
+    <footer class="max-w-7xl mx-auto text-center py-8 border-t border-gray-200">
+      <p class="text-sm text-gray-400">SCPicks レスポンシブデザインモック v1.0</p>
+      <p class="text-xs text-gray-300 mt-1">
+        ブレイクポイント: 768px (md) | コンテンツ幅: max 768px
+      </p>
+    </footer>
+  </body>
 </html>
