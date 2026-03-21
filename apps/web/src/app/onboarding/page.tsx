@@ -182,9 +182,13 @@ function OnboardingPageContent() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       {/* ヘッダー */}
       <header className="border-b border-gray-100 bg-white">
-        <div className="px-6 pb-6 pt-12">
-          <h1 className="text-2xl font-bold text-gray-800">SCPicks</h1>
-          <p className="mt-2 text-gray-500">あなたの好みに合わせたSCP記事を推薦します</p>
+        <div data-testid="onboarding-intro" className="px-6 pb-6 pt-12 md:pt-8 md:pb-2">
+          <h1 className="text-2xl font-bold text-gray-800 md:text-center md:text-[1.75rem]">
+            SCPicks
+          </h1>
+          <p className="mt-2 text-gray-500 md:text-center">
+            あなたの好みに合わせたSCP記事を推薦します
+          </p>
         </div>
         {/* タブ */}
         <div className="flex border-b border-gray-100" role="tablist">

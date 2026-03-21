@@ -523,6 +523,37 @@ describe("OnboardingPage", () => {
     });
   });
 
+  describe("AC-2（019-04-01）: 見出し中央寄せ・拡大", () => {
+    it("見出しh1がmd:text-center md:text-[1.75rem]クラスを持つ", async () => {
+      render(<OnboardingPage />);
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+      });
+      const heading = screen.getByRole("heading", { level: 1 });
+      expect(heading.className).toContain("md:text-center");
+      expect(heading.className).toContain("md:text-[1.75rem]");
+    });
+
+    it("イントロセクションがmd:pt-8 md:pb-2クラスを持つ", async () => {
+      render(<OnboardingPage />);
+      await waitFor(() => {
+        expect(screen.getByTestId("onboarding-intro")).toBeInTheDocument();
+      });
+      const intro = screen.getByTestId("onboarding-intro");
+      expect(intro.className).toContain("md:pt-8");
+      expect(intro.className).toContain("md:pb-2");
+    });
+
+    it("説明文がmd:text-centerクラスを持つ", async () => {
+      render(<OnboardingPage />);
+      await waitFor(() => {
+        expect(screen.getByText("あなたの好みに合わせたSCP記事を推薦します")).toBeInTheDocument();
+      });
+      const description = screen.getByText("あなたの好みに合わせたSCP記事を推薦します");
+      expect(description.className).toContain("md:text-center");
+    });
+  });
+
   describe("オンボーディング完了済みリダイレクト", () => {
     it("オンボーディングが既に完了している場合、/recommend にリダイレクトされる", async () => {
       mockUseVisitorIdResult.isOnboarded = true;
