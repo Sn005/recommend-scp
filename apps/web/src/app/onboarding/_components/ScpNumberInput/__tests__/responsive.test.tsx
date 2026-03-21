@@ -29,12 +29,12 @@ import { ScpNumberInput } from "../index";
 describe("ScpNumberInput レスポンシブ対応", () => {
   const mockOnComplete = vi.fn();
 
-  describe("AC-4: 入力エリア2列グリッド", () => {
-    it("入力フィールドコンテナがmd:grid md:grid-cols-2 md:gap-3クラスを持つ", () => {
+  describe("AC-4: 入力エリア3列グリッド", () => {
+    it("入力フィールドコンテナがmd:grid md:grid-cols-3 md:gap-3クラスを持つ", () => {
       render(<ScpNumberInput visitorId="test-visitor" onComplete={mockOnComplete} />);
       const grid = screen.getByTestId("scp-input-grid");
       expect(grid.className).toContain("md:grid");
-      expect(grid.className).toContain("md:grid-cols-2");
+      expect(grid.className).toContain("md:grid-cols-3");
       expect(grid.className).toContain("md:gap-3");
     });
 
@@ -42,16 +42,6 @@ describe("ScpNumberInput レスポンシブ対応", () => {
       render(<ScpNumberInput visitorId="test-visitor" onComplete={mockOnComplete} />);
       const grid = screen.getByTestId("scp-input-grid");
       expect(grid.className).toContain("md:space-y-0");
-    });
-
-    it("最後の入力フィールドがmd:col-span-2クラスを持つ（全幅）", () => {
-      render(<ScpNumberInput visitorId="test-visitor" onComplete={mockOnComplete} />);
-      const inputs = screen.getAllByRole("textbox");
-      // 5番目（最後）の入力はfull-width
-      const lastInputWrapper = inputs[4].closest("[data-testid='scp-input-full-width']");
-      expect(lastInputWrapper).not.toBeNull();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      expect(lastInputWrapper!.className).toContain("md:col-span-2");
     });
 
     it("5つの入力フィールドが全て表示される", () => {

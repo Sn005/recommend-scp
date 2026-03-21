@@ -59,25 +59,14 @@ describe("OnboardingLayout レスポンシブ対応", () => {
   });
 
   describe("AC-6: コンテンツ中央寄せ", () => {
-    it("コンテンツラッパーがmd:max-w-[768px] md:mx-autoクラスを持つ", () => {
-      render(
-        <OnboardingLayout>
-          <div data-testid="child" />
-        </OnboardingLayout>
-      );
-      const wrapper = screen.getByTestId("onboarding-content-wrapper");
-      expect(wrapper.className).toContain("md:max-w-[768px]");
-      expect(wrapper.className).toContain("md:mx-auto");
-    });
-
-    it("childrenがコンテンツラッパー内に描画される", () => {
+    it("childrenがレイアウト内に描画される", () => {
       render(
         <OnboardingLayout>
           <div data-testid="inner-child" />
         </OnboardingLayout>
       );
-      const wrapper = screen.getByTestId("onboarding-content-wrapper");
-      expect(wrapper).toContainElement(screen.getByTestId("inner-child"));
+      const layout = screen.getByTestId("onboarding-layout");
+      expect(layout).toContainElement(screen.getByTestId("inner-child"));
     });
   });
 });

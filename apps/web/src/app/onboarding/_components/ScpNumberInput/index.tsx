@@ -113,11 +113,10 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
 
         <div
           data-testid="scp-input-grid"
-          className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0"
+          className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0"
         >
-          {inputs.map((value, index) => {
-            const isFullWidth = index === MAX_INPUTS - 1;
-            const inputEl = (
+          {inputs.map((value, index) => (
+            <div key={index}>
               <input
                 type="text"
                 value={value}
@@ -128,21 +127,11 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
                 disabled={isConfirming}
                 className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
               />
-            );
-            if (isFullWidth) {
-              return (
-                <div key={index} data-testid="scp-input-full-width" className="md:col-span-2">
-                  {inputEl}
-                </div>
-              );
-            }
-            return <div key={index}>{inputEl}</div>;
-          })}
+            </div>
+          ))}
         </div>
 
-        <p className="mt-4 text-xs text-gray-400">
-          ※ 番号のみ入力。JPの場合は「999-JP」のように入力
-        </p>
+        <p className="mt-4 text-xs text-gray-400">※ 番号のみ入力してください</p>
 
         {/* エラーメッセージ */}
         {confirmError && (
