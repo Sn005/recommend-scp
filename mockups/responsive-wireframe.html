@@ -1,0 +1,2162 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCPicks レスポンシブデザイン - Figma風ワイヤーフレーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      :root {
+        --primary: #3b82f6;
+        --canvas: #1e1e1e;
+        --surface: #2c2c2c;
+        --border: #3d3d3d;
+        --text: #ffffff;
+        --text-dim: #999999;
+        --annotation: #ff5c5c;
+        --measure: #ff9500;
+        --safe: #10b981;
+        --euclid: #f59e0b;
+        --keter: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          sans-serif;
+        background: var(--canvas);
+        color: var(--text);
+        margin: 0;
+        overflow-x: auto;
+      }
+
+      /* ===== Figma風トップバー ===== */
+      .figma-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: #2c2c2c;
+        border-bottom: 1px solid #3d3d3d;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 16px;
+      }
+      .figma-bar .logo {
+        font-weight: 700;
+        font-size: 14px;
+        color: #fff;
+      }
+      .figma-bar .logo span {
+        color: var(--primary);
+      }
+      .figma-bar .sep {
+        width: 1px;
+        height: 24px;
+        background: #3d3d3d;
+      }
+      .figma-bar .page-name {
+        font-size: 13px;
+        color: #999;
+      }
+      .figma-bar .page-tabs {
+        display: flex;
+        gap: 2px;
+        margin-left: auto;
+      }
+      .figma-bar .page-tab {
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #999;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        background: transparent;
+      }
+      .figma-bar .page-tab:hover {
+        color: #fff;
+        background: #3d3d3d;
+      }
+      .figma-bar .page-tab.active {
+        color: #fff;
+        background: var(--primary);
+      }
+
+      /* ===== キャンバス ===== */
+      .canvas {
+        padding: 80px 40px 60px;
+        min-width: 1400px;
+      }
+
+      /* ===== フレームタイトル（Figma風） ===== */
+      .frame-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 12px;
+        letter-spacing: 0.02em;
+      }
+
+      /* ===== デバイスフレーム ===== */
+      .device-frame {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+      .device-frame.mobile {
+        width: 375px;
+      }
+      .device-frame.desktop {
+        width: 1280px;
+      }
+
+      /* ===== アノテーション ===== */
+      .anno {
+        position: absolute;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--annotation);
+        background: rgba(255, 92, 92, 0.12);
+        border: 1px solid rgba(255, 92, 92, 0.3);
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .anno::before {
+        content: "";
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: var(--annotation);
+        border-radius: 50%;
+      }
+      .anno.left::before {
+        left: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      .anno.top::before {
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .anno.right::before {
+        right: -12px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      /* 寸法線 */
+      .measure {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        pointer-events: none;
+      }
+      .measure.h {
+        height: 1px;
+        background: var(--measure);
+      }
+      .measure.h::before,
+      .measure.h::after {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 8px;
+        background: var(--measure);
+      }
+      .measure.h::before {
+        left: 0;
+      }
+      .measure.h::after {
+        right: 0;
+      }
+      .measure .val {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--measure);
+        background: var(--canvas);
+        padding: 1px 6px;
+        border-radius: 2px;
+        position: absolute;
+        top: -8px;
+      }
+      .measure.v {
+        width: 1px;
+        background: var(--measure);
+      }
+      .measure.v::before,
+      .measure.v::after {
+        content: "";
+        position: absolute;
+        height: 1px;
+        width: 8px;
+        background: var(--measure);
+      }
+      .measure.v::before {
+        top: 0;
+      }
+      .measure.v::after {
+        bottom: 0;
+      }
+      .measure.v .val {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--measure);
+        background: var(--canvas);
+        padding: 1px 6px;
+        border-radius: 2px;
+        position: absolute;
+        left: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
+      }
+
+      /* ===== セクション区切り ===== */
+      .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 60px 0 32px;
+        padding: 0 4px;
+      }
+      .section-divider .line {
+        flex: 1;
+        height: 1px;
+        background: #3d3d3d;
+      }
+      .section-divider .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      /* ===== デザイントークンパネル ===== */
+      .token-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        width: 320px;
+      }
+      .token-panel h3 {
+        font-size: 12px;
+        font-weight: 600;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 12px;
+      }
+      .token-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .token-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .token-name {
+        font-size: 12px;
+        color: #ccc;
+      }
+      .token-value {
+        font-size: 11px;
+        color: #666;
+        margin-left: auto;
+        font-family: monospace;
+      }
+
+      /* ===== 実際のUI描画 ===== */
+      .mock-header {
+        height: 56px;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        position: relative;
+      }
+      .mock-header .logo {
+        font-weight: 700;
+        font-size: 16px;
+        color: #1f2937;
+      }
+      .mock-header .logo b {
+        color: var(--primary);
+      }
+      .mock-header nav {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+      }
+      .mock-header nav a {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.15s;
+      }
+      .mock-header nav a:hover {
+        background: #f3f4f6;
+      }
+      .mock-header nav a.active {
+        background: #eff6ff;
+        color: var(--primary);
+      }
+      .mock-header nav a svg {
+        width: 16px;
+        height: 16px;
+      }
+      .mock-header .icons {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+      .mock-header .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        transition: background 0.15s;
+      }
+      .mock-header .icon-btn:hover {
+        background: #f3f4f6;
+      }
+      .mock-header .icon-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      /* モバイルメニューボタン */
+      .mock-menu-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 5;
+      }
+      .mock-menu-btn svg {
+        width: 20px;
+        height: 20px;
+        color: #4b5563;
+      }
+
+      /* SCP記事 */
+      .mock-article {
+        background: #ededed;
+      }
+      .mock-article-header {
+        background: #8b0000;
+        color: white;
+        font-size: 11px;
+        padding: 8px 16px;
+        display: flex;
+        gap: 16px;
+      }
+      .mock-article-body {
+        background: #f5f5f5;
+        padding: 20px 16px;
+      }
+      .mock-article-body h2 {
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 12px;
+      }
+      .mock-article-body .rating {
+        display: inline-flex;
+        background: #8b0000;
+        color: white;
+        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+      }
+      .mock-article-body .field {
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 12px;
+      }
+      .mock-article-body .field b {
+        color: #000;
+      }
+      .mock-article-body p {
+        font-size: 13px;
+        color: #333;
+        line-height: 1.7;
+        margin-bottom: 12px;
+        text-align: justify;
+      }
+
+      /* ピルナビ */
+      .mock-pill-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 24px;
+        padding: 8px 20px;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        border-radius: 50px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+      }
+      .mock-pill-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mock-pill-btn svg {
+        width: 26px;
+        height: 26px;
+      }
+      .mock-pill-btn.heart {
+        color: #6b7280;
+      }
+      .mock-pill-btn.next {
+        color: var(--primary);
+      }
+
+      /* カード近くアクションボタン（案A） */
+      .mock-card-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        padding: 20px 16px;
+        background: #fff;
+      }
+      .mock-card-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 28px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .mock-card-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+      .mock-card-btn.fav {
+        background: #fff;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+      }
+      .mock-card-btn.next-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+      }
+
+      /* プログレスバー */
+      .mock-progress {
+        height: 2px;
+        background: rgba(0, 0, 0, 0.05);
+        margin: 0 16px;
+        border-radius: 1px;
+        overflow: hidden;
+      }
+      .mock-progress-fill {
+        height: 100%;
+        width: 20%;
+        background: var(--primary);
+        border-radius: 2px;
+      }
+      .mock-progress-text {
+        font-size: 11px;
+        color: #9ca3af;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      /* お気に入りカード */
+      .mock-fav-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .mock-fav-card .badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: white;
+      }
+      .mock-fav-card h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 4px 0 4px;
+      }
+      .mock-fav-card p {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.5;
+      }
+      .mock-fav-card .chevron {
+        color: #d1d5db;
+        flex-shrink: 0;
+        margin-top: 4px;
+      }
+      .mock-fav-card .chevron svg {
+        width: 16px;
+        height: 16px;
+      }
+      .mock-fav-card .rating-sm {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-left: 6px;
+      }
+
+      /* オンボーディングカード */
+      .mock-pack-card {
+        background: white;
+        border: 2px solid transparent;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .mock-pack-card.selected {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      }
+      .mock-pack-card .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .mock-pack-card .icon-box svg {
+        width: 24px;
+        height: 24px;
+      }
+      .mock-pack-card h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+      .mock-pack-card p {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+      .mock-pack-check {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 22px;
+        height: 22px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mock-pack-check svg {
+        width: 14px;
+        height: 14px;
+        color: white;
+      }
+
+      /* タブ */
+      .mock-tabs {
+        display: flex;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .mock-tab {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+        color: #9ca3af;
+        border-bottom: 2px solid transparent;
+      }
+      .mock-tab.active {
+        color: var(--primary);
+        border-color: var(--primary);
+      }
+
+      /* フローティングボタン */
+      .mock-float-btn {
+        background: var(--primary);
+        color: white;
+        padding: 16px;
+        border-radius: 50px;
+        font-size: 15px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+      }
+
+      /* ===== ページ表示制御 ===== */
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+
+      /* スペック表 */
+      .spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+      .spec-table th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: #666;
+        padding: 6px 12px;
+        border-bottom: 1px solid #3d3d3d;
+      }
+      .spec-table td {
+        font-size: 12px;
+        color: #ccc;
+        padding: 6px 12px;
+        border-bottom: 1px solid #2a2a2a;
+      }
+      .spec-table td code {
+        font-family: monospace;
+        font-size: 11px;
+        color: var(--primary);
+        background: rgba(59, 130, 246, 0.1);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Figma風トップバー -->
+    <div class="figma-bar">
+      <div class="logo"><span>SCP</span>icks</div>
+      <div class="sep"></div>
+      <div class="page-name">Responsive Design System</div>
+      <div class="page-tabs">
+        <button class="page-tab active" onclick="showPage('overview')">Overview</button>
+        <button class="page-tab" onclick="showPage('recommend')">推薦画面</button>
+        <button class="page-tab" onclick="showPage('favorites')">お気に入り</button>
+        <button class="page-tab" onclick="showPage('onboarding')">オンボーディング</button>
+        <button class="page-tab" onclick="showPage('tokens')">Tokens</button>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: Overview ===== -->
+    <div class="canvas page active" id="page-overview">
+      <!-- タイトル -->
+      <div style="margin-bottom: 48px">
+        <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px">
+          SCPicks Responsive Design
+        </h1>
+        <p style="font-size: 14px; color: #999">
+          Breakpoint: 768px (md) ・ Content max-width: 768px ・ Mobile-first
+        </p>
+      </div>
+
+      <!-- ブレイクポイント図解 -->
+      <div style="margin-bottom: 60px">
+        <div class="frame-label">Breakpoint Diagram</div>
+        <div
+          style="
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            display: inline-block;
+          "
+        >
+          <!-- モバイル範囲 -->
+          <div style="display: flex; align-items: end; gap: 0">
+            <div style="text-align: center">
+              <div
+                style="
+                  width: 120px;
+                  height: 200px;
+                  background: #1a1a2e;
+                  border: 2px solid #555;
+                  border-radius: 12px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  margin-bottom: 8px;
+                "
+              >
+                <div
+                  style="width: 90px; height: 160px; background: #f5f5f5; border-radius: 4px"
+                ></div>
+              </div>
+              <div style="font-size: 11px; color: #999">Mobile</div>
+              <div style="font-size: 10px; color: #666">0 - 767px</div>
+              <div style="font-size: 10px; color: var(--annotation); margin-top: 4px">
+                Drawer + PillNav
+              </div>
+            </div>
+
+            <div
+              style="
+                width: 80px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-bottom: 60px;
+              "
+            >
+              <div style="font-size: 24px; color: var(--measure)">→</div>
+              <div style="font-size: 10px; color: var(--measure); font-weight: 600">768px</div>
+            </div>
+
+            <div style="text-align: center">
+              <div
+                style="
+                  width: 360px;
+                  height: 220px;
+                  background: #1a1a2e;
+                  border: 2px solid #555;
+                  border-radius: 8px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  padding: 8px;
+                  margin-bottom: 8px;
+                "
+              >
+                <div
+                  style="
+                    width: 340px;
+                    height: 12px;
+                    background: #333;
+                    border-radius: 2px;
+                    margin-bottom: 6px;
+                  "
+                ></div>
+                <div
+                  style="
+                    width: 340px;
+                    flex: 1;
+                    background: #f5f5f5;
+                    border-radius: 2px;
+                    display: flex;
+                    justify-content: center;
+                  "
+                >
+                  <div style="width: 200px; background: #e5e7eb; margin: 8px 0"></div>
+                </div>
+              </div>
+              <div style="font-size: 11px; color: #999">Desktop</div>
+              <div style="font-size: 10px; color: #666">768px+</div>
+              <div style="font-size: 10px; color: var(--annotation); margin-top: 4px">
+                Header Nav + Centered Content
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ナビゲーション変化 -->
+      <div style="margin-bottom: 60px">
+        <div class="frame-label">Navigation Transformation</div>
+        <div style="display: flex; gap: 40px; align-items: start">
+          <!-- モバイル -->
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              padding: 20px;
+              width: 300px;
+            "
+          >
+            <div style="font-size: 12px; font-weight: 600; color: #999; margin-bottom: 16px">
+              MOBILE
+            </div>
+            <div style="display: flex; gap: 8px; align-items: start">
+              <div
+                style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: rgba(255, 255, 255, 0.1);
+                  border: 1px solid #555;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <svg width="16" height="16" fill="none" stroke="#999" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div style="font-size: 12px; color: #ccc; margin-bottom: 4px">
+                  ハンバーガーメニュー
+                </div>
+                <div style="font-size: 11px; color: #666">→ ドロワー展開</div>
+              </div>
+            </div>
+            <div
+              style="
+                margin-top: 16px;
+                padding: 12px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+              "
+            >
+              <div style="font-size: 11px; color: #999; margin-bottom: 8px">ドロワー内容:</div>
+              <div style="font-size: 12px; color: #ccc; line-height: 2">
+                推薦を見る<br />お気に入り一覧<br />閲覧履歴<br /><span style="color: #666"
+                  >───────</span
+                ><br />推薦をリセット<br />ライセンス
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top: 80px">
+            <svg width="40" height="24" fill="none" stroke="var(--measure)" viewBox="0 0 40 24">
+              <path stroke-width="2" d="M2 12h36M30 6l8 6-8 6" />
+            </svg>
+          </div>
+
+          <!-- PC -->
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              padding: 20px;
+              width: 520px;
+            "
+          >
+            <div style="font-size: 12px; font-weight: 600; color: #999; margin-bottom: 16px">
+              DESKTOP (≥768px)
+            </div>
+            <!-- ヘッダー模式図 -->
+            <div
+              style="
+                background: #fff;
+                border-radius: 8px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
+                gap: 8px;
+                position: relative;
+              "
+            >
+              <div style="font-weight: 700; font-size: 13px; color: #1f2937">
+                <span style="color: var(--primary)">SCP</span>icks
+              </div>
+              <div
+                style="
+                  position: absolute;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  display: flex;
+                  gap: 2px;
+                "
+              >
+                <div
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 6px;
+                    background: #eff6ff;
+                    font-size: 11px;
+                    color: var(--primary);
+                    font-weight: 500;
+                  "
+                >
+                  推薦
+                </div>
+                <div
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    color: #6b7280;
+                    font-weight: 500;
+                  "
+                >
+                  お気に入り
+                </div>
+                <div
+                  style="
+                    padding: 5px 12px;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    color: #6b7280;
+                    font-weight: 500;
+                  "
+                >
+                  履歴
+                </div>
+              </div>
+              <div
+                style="
+                  margin-left: auto;
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 6px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <svg width="16" height="16" fill="none" stroke="#6B7280" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 5v.01M12 12v.01M12 19v.01"
+                  />
+                </svg>
+              </div>
+            </div>
+            <!-- アノテーション -->
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 8px;
+                font-size: 10px;
+              "
+            >
+              <span style="color: var(--annotation)">← ロゴ左</span>
+              <span style="color: var(--annotation)">ナビ中央 →</span>
+              <span style="color: var(--annotation)">アイコン右 →</span>
+            </div>
+            <div
+              style="
+                margin-top: 12px;
+                padding: 10px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+              "
+            >
+              <div style="font-size: 11px; color: #999">3点メニュー → ドロップダウン:</div>
+              <div style="font-size: 12px; color: #ccc; margin-top: 4px">
+                嗜好リセット / ライセンス
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PillNav（案A採用） + サイドパネル -->
+      <div>
+        <div class="frame-label">PC版レイアウト決定事項</div>
+        <div style="display: flex; gap: 40px">
+          <!-- 案A（採用） -->
+          <div
+            style="
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: 12px;
+              padding: 20px;
+              width: 600px;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px">
+              <div
+                style="
+                  background: var(--primary);
+                  color: white;
+                  font-size: 11px;
+                  font-weight: 700;
+                  padding: 3px 10px;
+                  border-radius: 50px;
+                "
+              >
+                採用
+              </div>
+              <div style="font-size: 13px; font-weight: 600; color: #ccc">
+                案A: カード近く + サイドパネル区切り
+              </div>
+            </div>
+            <!-- 模式図 -->
+            <div style="background: #e5e7eb; border-radius: 8px; display: flex; overflow: hidden">
+              <div
+                style="
+                  flex: 1;
+                  background: #f3f4f6;
+                  padding: 20px 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div style="font-size: 10px; color: #9ca3af; writing-mode: vertical-rl">
+                  サイドパネル (#F3F4F6 + inset shadow)
+                </div>
+              </div>
+              <div style="width: 320px; background: #f5f5f5; padding: 12px">
+                <div
+                  style="
+                    background: white;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                  "
+                >
+                  <div style="font-size: 10px; color: #333">
+                    SCP記事コンテンツ (max-width: 768px)
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; justify-content: center">
+                  <div
+                    style="
+                      padding: 8px 16px;
+                      border-radius: 8px;
+                      background: white;
+                      border: 1px solid #e5e7eb;
+                      font-size: 10px;
+                      color: #6b7280;
+                    "
+                  >
+                    お気に入り
+                  </div>
+                  <div
+                    style="
+                      padding: 8px 16px;
+                      border-radius: 8px;
+                      background: var(--primary);
+                      font-size: 10px;
+                      color: white;
+                    "
+                  >
+                    次の記事へ
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  background: #f3f4f6;
+                  padding: 20px 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <div style="font-size: 10px; color: #9ca3af; writing-mode: vertical-rl">
+                  サイドパネル (#F3F4F6 + inset shadow)
+                </div>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: #10b981; margin-top: 12px">
+              ✓ 操作対象の近くにアクション配置
+            </div>
+            <div style="font-size: 11px; color: #10b981">
+              ✓ サイドパネルで中央コンテンツが視覚的に区切られる
+            </div>
+            <div style="font-size: 11px; color: #10b981">
+              ✓ 進捗バー・記事数表示は削除（シンプル化）
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: 推薦画面 ===== -->
+    <div class="canvas page" id="page-recommend">
+      <div style="margin-bottom: 32px">
+        <h1 style="font-size: 24px; font-weight: 700">推薦画面</h1>
+        <p style="font-size: 13px; color: #999">SCP記事閲覧 + お気に入り/次へアクション</p>
+      </div>
+
+      <div style="display: flex; gap: 48px; align-items: start">
+        <!-- モバイル版 -->
+        <div>
+          <div class="frame-label">Mobile — 375 x 812</div>
+          <div
+            class="device-frame mobile"
+            style="height: 812px; position: relative; overflow: hidden"
+          >
+            <!-- メニューボタン -->
+            <div class="mock-menu-btn">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </div>
+
+            <!-- 記事 -->
+            <div class="mock-article" style="height: 100%; overflow: hidden">
+              <div class="mock-article-header">
+                <span>SCP記事</span><span style="margin-left: 16px">情報とアイフワフ</span>
+              </div>
+              <div class="mock-article-body">
+                <h2>SCP-5000</h2>
+                <div class="rating">評価: +574</div>
+                <div class="field"><b>アイテム番号:</b> SCP-5000</div>
+                <div class="field"><b>オブジェクトクラス:</b> Safe</div>
+                <p>
+                  SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存されます。
+                </p>
+                <p>
+                  SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。
+                </p>
+              </div>
+            </div>
+
+            <!-- プログレスバー -->
+            <div style="position: absolute; bottom: 96px; left: 32px; right: 32px">
+              <div class="mock-progress"><div class="mock-progress-fill"></div></div>
+            </div>
+
+            <!-- ピルナビ -->
+            <div style="position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%)">
+              <div class="mock-pill-nav">
+                <div class="mock-pill-btn heart">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </div>
+                <div class="mock-pill-btn next">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2.5"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- アノテーション -->
+            <div class="anno left" style="top: 16px; left: 64px">40x40 glassy btn</div>
+            <div class="anno left" style="bottom: 40px; left: 230px">pill nav: blur(20px)</div>
+            <div class="anno left" style="bottom: 100px; left: 240px">progress: 2px</div>
+          </div>
+        </div>
+
+        <!-- PC版（案A） -->
+        <div>
+          <div class="frame-label">Desktop — 1280 x 800 (案A: カード横)</div>
+          <div
+            class="device-frame desktop"
+            style="height: 800px; position: relative; overflow: hidden"
+          >
+            <!-- グローバルヘッダー -->
+            <div class="mock-header">
+              <div class="logo"><b>SCP</b>icks</div>
+              <nav>
+                <a href="#" class="active">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                  推薦
+                </a>
+                <a href="#">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                  お気に入り
+                </a>
+                <a href="#">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  履歴
+                </a>
+              </nav>
+              <div class="icons">
+                <div class="icon-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- サイドパネル + 記事（中央寄せ） -->
+            <div style="display: flex; height: calc(100% - 56px)">
+              <!-- 左サイドパネル -->
+              <div
+                style="
+                  flex: 1;
+                  background: #f3f4f6;
+                  box-shadow: inset -1px 0 3px rgba(0, 0, 0, 0.06);
+                "
+              ></div>
+
+              <div style="max-width: 768px; width: 768px; flex-shrink: 0">
+                <div class="mock-article">
+                  <div class="mock-article-header">
+                    <span>SCP記事</span><span style="margin-left: 16px">情報とアイフワフ</span>
+                  </div>
+                  <div class="mock-article-body">
+                    <h2>SCP-5000</h2>
+                    <div class="rating">評価: +574</div>
+                    <div class="field"><b>アイテム番号:</b> SCP-5000</div>
+                    <div class="field"><b>オブジェクトクラス:</b> Safe</div>
+                    <p>
+                      SCP-5000は起動していない状態でサイト-22の標準的な保管ロッカーに収容されます。SCP-5000から回収された全てのファイルと情報は安全なサーバーに保存され、アーカイブ部門の要請に応じてバックアップが閲覧可能です。
+                    </p>
+                    <p>
+                      SCP-5000は機能性の無いパワードスーツであり、内部回路図ではSCP財団が設計した"絶対的除外ハーネス"とされています。
+                    </p>
+                  </div>
+                </div>
+                <!-- 案A: カード近くボタン -->
+                <div class="mock-card-actions">
+                  <div class="mock-card-btn fav">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
+                    </svg>
+                    お気に入り
+                  </div>
+                  <div class="mock-card-btn next-btn">
+                    次の記事へ
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 右サイドパネル -->
+              <div
+                style="
+                  flex: 1;
+                  background: #f3f4f6;
+                  box-shadow: inset 1px 0 3px rgba(0, 0, 0, 0.06);
+                "
+              ></div>
+            </div>
+
+            <!-- 寸法アノテーション -->
+            <div class="anno left" style="top: 16px; right: 24px; left: auto">h: 56px header</div>
+            <div class="anno top" style="top: 64px; left: 240px">
+              max-width: 768px centered + side panels
+            </div>
+
+            <!-- 左余白の寸法線 -->
+            <div class="measure h" style="top: 76px; left: 0; width: 256px">
+              <span class="val">#F3F4F6 + shadow</span>
+            </div>
+            <div class="measure h" style="top: 76px; right: 0; width: 256px">
+              <span class="val">#F3F4F6 + shadow</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: お気に入り ===== -->
+    <div class="canvas page" id="page-favorites">
+      <div style="margin-bottom: 32px">
+        <h1 style="font-size: 24px; font-weight: 700">お気に入り画面</h1>
+        <p style="font-size: 13px; color: #999">保存した記事の一覧表示</p>
+      </div>
+
+      <div style="display: flex; gap: 48px; align-items: start">
+        <!-- モバイル -->
+        <div>
+          <div class="frame-label">Mobile — 375 x 812</div>
+          <div
+            class="device-frame mobile"
+            style="min-height: 812px; background: #f9fafb; position: relative"
+          >
+            <div class="mock-menu-btn">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </div>
+            <div
+              style="
+                padding: 16px 16px 0 56px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <div style="font-size: 17px; font-weight: 600; color: #1f2937">お気に入り</div>
+              <div style="font-size: 13px; color: #9ca3af">12件</div>
+            </div>
+            <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 12px">
+              <div class="mock-fav-card">
+                <div style="flex: 1">
+                  <div style="display: flex; align-items: center; gap: 6px">
+                    <span class="badge" style="background: var(--safe)">Safe</span
+                    ><span class="rating-sm">+574</span>
+                  </div>
+                  <h4>SCP-5000</h4>
+                  <p>Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
+                </div>
+                <div class="chevron">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div class="mock-fav-card">
+                <div style="flex: 1">
+                  <div style="display: flex; align-items: center; gap: 6px">
+                    <span class="badge" style="background: var(--keter)">Keter</span
+                    ><span class="rating-sm">+2,841</span>
+                  </div>
+                  <h4>SCP-682</h4>
+                  <p>不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
+                </div>
+                <div class="chevron">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div class="mock-fav-card">
+                <div style="flex: 1">
+                  <div style="display: flex; align-items: center; gap: 6px">
+                    <span class="badge" style="background: var(--euclid)">Euclid</span
+                    ><span class="rating-sm">+4,102</span>
+                  </div>
+                  <h4>SCP-173</h4>
+                  <p>彫刻 - 視線を外すと高速で移動し首を折る彫刻</p>
+                </div>
+                <div class="chevron">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div class="mock-fav-card">
+                <div style="flex: 1">
+                  <div style="display: flex; align-items: center; gap: 6px">
+                    <span class="badge" style="background: var(--safe)">Safe</span
+                    ><span class="rating-sm">+1,256</span>
+                  </div>
+                  <h4>SCP-999</h4>
+                  <p>くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
+                </div>
+                <div class="chevron">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PC -->
+        <div>
+          <div class="frame-label">Desktop — 1280 x 800</div>
+          <div
+            class="device-frame desktop"
+            style="min-height: 800px; background: #f9fafb; position: relative"
+          >
+            <div class="mock-header">
+              <div class="logo"><b>SCP</b>icks</div>
+              <nav>
+                <a href="#">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                  推薦
+                </a>
+                <a href="#" class="active">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                  お気に入り
+                </a>
+                <a href="#">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  履歴
+                </a>
+              </nav>
+              <div class="icons">
+                <div class="icon-btn">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div style="max-width: 768px; margin: 0 auto; padding: 16px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 16px;
+                "
+              >
+                <div style="font-size: 17px; font-weight: 600; color: #1f2937">お気に入り</div>
+                <div style="font-size: 13px; color: #9ca3af">12件</div>
+              </div>
+              <!-- 1カラムリスト（時系列順を暗示） -->
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--safe)">Safe</span
+                      ><span class="rating-sm">+574</span>
+                    </div>
+                    <h4>SCP-5000</h4>
+                    <p>Why? - 財団が人類との敵対を決定した代替タイムラインから来たパワードスーツ</p>
+                  </div>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--keter)">Keter</span
+                      ><span class="rating-sm">+2,841</span>
+                    </div>
+                    <h4>SCP-682</h4>
+                    <p>不死身の爬虫類 - 全ての生命への激しい敵意を持つ再生能力を持った生物</p>
+                  </div>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--euclid)">Euclid</span
+                      ><span class="rating-sm">+4,102</span>
+                    </div>
+                    <h4>SCP-173</h4>
+                    <p>彫刻 - 視線を外すと高速で移動し首を折る彫刻</p>
+                  </div>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div class="mock-fav-card">
+                  <div style="flex: 1">
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <span class="badge" style="background: var(--safe)">Safe</span
+                      ><span class="rating-sm">+1,256</span>
+                    </div>
+                    <h4>SCP-999</h4>
+                    <p>くすぐりオバケ - 触れた人を幸福にするオレンジ色のスライム状生物</p>
+                  </div>
+                  <div class="chevron">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="anno top" style="top: 64px; left: 50%; transform: translateX(-50%)">
+              max-width: 768px ・ 1カラムリスト（時系列暗示）・ hover: translateY(-2px)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: オンボーディング ===== -->
+    <div class="canvas page" id="page-onboarding">
+      <div style="margin-bottom: 32px">
+        <h1 style="font-size: 24px; font-weight: 700">オンボーディング画面</h1>
+        <p style="font-size: 13px; color: #999">初回利用時のスターターパック選択 + SCP番号入力</p>
+      </div>
+
+      <div style="display: flex; gap: 48px; align-items: start">
+        <!-- モバイル -->
+        <div>
+          <div class="frame-label">Mobile — 375 x 812</div>
+          <div
+            class="device-frame mobile"
+            style="min-height: 812px; background: #f9fafb; position: relative"
+          >
+            <div style="background: white; border-bottom: 1px solid #e5e7eb">
+              <div style="padding: 48px 24px 24px">
+                <div style="font-size: 22px; font-weight: 700; color: #1f2937">SCPicks</div>
+                <div style="font-size: 13px; color: #6b7280; margin-top: 8px">
+                  あなたの好みに合わせたSCP記事を推薦します
+                </div>
+              </div>
+              <div class="mock-tabs">
+                <div class="mock-tab active">スターターパック</div>
+                <div class="mock-tab">SCP番号を入力</div>
+              </div>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px">
+                好みに近いパックを選んでください（複数選択可）
+              </div>
+              <div class="mock-pack-card selected">
+                <div class="mock-pack-check">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="3"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <div class="icon-box" style="background: #fef3c7">
+                  <svg fill="none" stroke="#F59E0B" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4>定番・名作</h4>
+                  <p>SCP-173, 682, 999など</p>
+                </div>
+              </div>
+              <div class="mock-pack-card">
+                <div class="icon-box" style="background: #f3e8ff">
+                  <svg fill="none" stroke="#A855F7" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4>ホラー・恐怖</h4>
+                  <p>背筋が凍るような恐怖系SCP</p>
+                </div>
+              </div>
+              <div class="mock-pack-card">
+                <div class="icon-box" style="background: #dbeafe">
+                  <svg fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h4>SF・テクノロジー</h4>
+                  <p>未来技術や宇宙に関連</p>
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 16px;
+                background: linear-gradient(transparent, #f9fafb 30%);
+              "
+            >
+              <div class="mock-float-btn">推薦を開始</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PC -->
+        <div>
+          <div class="frame-label">Desktop — 1280 x 800</div>
+          <div
+            class="device-frame desktop"
+            style="min-height: 800px; background: #f9fafb; position: relative"
+          >
+            <!-- ヘッダー（ロゴのみ中央） -->
+            <div
+              style="
+                height: 56px;
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <div style="font-weight: 700; font-size: 16px; color: #1f2937">
+                <span style="color: var(--primary)">SCP</span>icks
+              </div>
+            </div>
+
+            <div style="max-width: 768px; margin: 0 auto">
+              <div style="background: white; border-bottom: 1px solid #e5e7eb">
+                <div style="padding: 32px 24px 24px; text-align: center">
+                  <div style="font-size: 26px; font-weight: 700; color: #1f2937">SCPicks</div>
+                  <div style="font-size: 14px; color: #6b7280; margin-top: 8px">
+                    あなたの好みに合わせたSCP記事を推薦します
+                  </div>
+                </div>
+                <div class="mock-tabs">
+                  <div class="mock-tab active">スターターパック</div>
+                  <div class="mock-tab">SCP番号を入力</div>
+                </div>
+              </div>
+
+              <div style="padding: 20px 16px">
+                <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px">
+                  好みに近いパックを選んでください（複数選択可）
+                </div>
+                <!-- 2列グリッド -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+                  <div class="mock-pack-card selected">
+                    <div class="mock-pack-check">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                    <div class="icon-box" style="background: #fef3c7">
+                      <svg fill="none" stroke="#F59E0B" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>定番・名作</h4>
+                      <p>SCP-173, 682, 999など</p>
+                    </div>
+                  </div>
+                  <div class="mock-pack-card">
+                    <div class="icon-box" style="background: #f3e8ff">
+                      <svg fill="none" stroke="#A855F7" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>ホラー・恐怖</h4>
+                      <p>背筋が凍るような恐怖系SCP</p>
+                    </div>
+                  </div>
+                  <div class="mock-pack-card">
+                    <div class="icon-box" style="background: #dbeafe">
+                      <svg fill="none" stroke="#3B82F6" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>SF・テクノロジー</h4>
+                      <p>未来技術や宇宙に関連</p>
+                    </div>
+                  </div>
+                  <div class="mock-pack-card">
+                    <div class="icon-box" style="background: #fce7f3">
+                      <svg fill="none" stroke="#EC4899" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>感動・ハートフル</h4>
+                      <p>心温まる物語や切ないSCP</p>
+                    </div>
+                  </div>
+                  <div class="mock-pack-card">
+                    <div class="icon-box" style="background: #d1fae5">
+                      <svg fill="none" stroke="#10B981" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>ミステリー・考察</h4>
+                      <p>謎解きや深い考察が必要</p>
+                    </div>
+                  </div>
+                  <div class="mock-pack-card">
+                    <div class="icon-box" style="background: #fee2e2">
+                      <svg fill="none" stroke="#EF4444" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4>日本支部オリジナル</h4>
+                      <p>SCP-JP発の人気作品</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding: 16px; margin-top: 8px">
+                <div class="mock-float-btn">推薦を開始</div>
+              </div>
+            </div>
+
+            <div class="anno top" style="top: 64px; left: 50%; transform: translateX(-50%)">
+              オンボーディング: ロゴのみ中央（ナビなし）
+            </div>
+            <div class="anno left" style="top: 300px; right: 24px; left: auto">
+              2列グリッド (≥768px)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: Tokens ===== -->
+    <div class="canvas page" id="page-tokens">
+      <div style="margin-bottom: 32px">
+        <h1 style="font-size: 24px; font-weight: 700">Design Tokens</h1>
+        <p style="font-size: 13px; color: #999">レスポンシブ対応で追加・変更されたトークン</p>
+      </div>
+
+      <div style="display: flex; gap: 24px; flex-wrap: wrap">
+        <!-- Breakpoints -->
+        <div class="token-panel">
+          <h3>Breakpoints</h3>
+          <table class="spec-table">
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
+              <th>Usage</th>
+            </tr>
+            <tr>
+              <td>md</td>
+              <td><code>768px</code></td>
+              <td>Mobile → PC</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Layout -->
+        <div class="token-panel">
+          <h3>Layout</h3>
+          <table class="spec-table">
+            <tr>
+              <th>Property</th>
+              <th>Value</th>
+            </tr>
+            <tr>
+              <td>Content max-width</td>
+              <td><code>768px</code></td>
+            </tr>
+            <tr>
+              <td>Header height</td>
+              <td><code>56px</code></td>
+            </tr>
+            <tr>
+              <td>Header padding</td>
+              <td><code>0 24px</code></td>
+            </tr>
+            <tr>
+              <td>Pack grid (PC)</td>
+              <td><code>2 columns</code></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Colors -->
+        <div class="token-panel">
+          <h3>Colors</h3>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #3b82f6"></div>
+            <div class="token-name">Primary</div>
+            <div class="token-value">#3B82F6</div>
+          </div>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #eff6ff"></div>
+            <div class="token-name">Active nav bg</div>
+            <div class="token-value">#EFF6FF</div>
+          </div>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #f3f4f6"></div>
+            <div class="token-name">Hover bg</div>
+            <div class="token-value">#F3F4F6</div>
+          </div>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #e5e7eb"></div>
+            <div class="token-name">Header border</div>
+            <div class="token-value">#E5E7EB</div>
+          </div>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #1f2937"></div>
+            <div class="token-name">Logo text</div>
+            <div class="token-value">#1F2937</div>
+          </div>
+          <div class="token-row">
+            <div class="token-swatch" style="background: #6b7280"></div>
+            <div class="token-name">Nav text</div>
+            <div class="token-value">#6B7280</div>
+          </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="token-panel">
+          <h3>Typography (PC Header)</h3>
+          <table class="spec-table">
+            <tr>
+              <th>Element</th>
+              <th>Size</th>
+              <th>Weight</th>
+            </tr>
+            <tr>
+              <td>Logo</td>
+              <td><code>16px</code></td>
+              <td><code>700</code></td>
+            </tr>
+            <tr>
+              <td>Nav link</td>
+              <td><code>14px</code></td>
+              <td><code>500</code></td>
+            </tr>
+            <tr>
+              <td>Dropdown item</td>
+              <td><code>14px</code></td>
+              <td><code>400</code></td>
+            </tr>
+            <tr>
+              <td>Card action btn</td>
+              <td><code>15px</code></td>
+              <td><code>500</code></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Spacing -->
+        <div class="token-panel">
+          <h3>Component Specs (PC)</h3>
+          <table class="spec-table">
+            <tr>
+              <th>Component</th>
+              <th>Property</th>
+              <th>Value</th>
+            </tr>
+            <tr>
+              <td>Nav link</td>
+              <td>padding</td>
+              <td><code>8px 16px</code></td>
+            </tr>
+            <tr>
+              <td>Nav link</td>
+              <td>radius</td>
+              <td><code>8px</code></td>
+            </tr>
+            <tr>
+              <td>Nav link</td>
+              <td>gap</td>
+              <td><code>6px</code></td>
+            </tr>
+            <tr>
+              <td>Icon btn</td>
+              <td>size</td>
+              <td><code>36x36</code></td>
+            </tr>
+            <tr>
+              <td>Icon btn</td>
+              <td>radius</td>
+              <td><code>8px</code></td>
+            </tr>
+            <tr>
+              <td>Dropdown</td>
+              <td>radius</td>
+              <td><code>12px</code></td>
+            </tr>
+            <tr>
+              <td>Dropdown</td>
+              <td>shadow</td>
+              <td><code>0 4px 24px</code></td>
+            </tr>
+            <tr>
+              <td>Card action</td>
+              <td>padding</td>
+              <td><code>12px 28px</code></td>
+            </tr>
+            <tr>
+              <td>Card action</td>
+              <td>radius</td>
+              <td><code>12px</code></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Mobile vs PC差分 -->
+        <div class="token-panel" style="width: 520px">
+          <h3>Mobile → PC 差分一覧</h3>
+          <table class="spec-table">
+            <tr>
+              <th>要素</th>
+              <th>Mobile</th>
+              <th>PC (≥768px)</th>
+            </tr>
+            <tr>
+              <td>ナビゲーション</td>
+              <td>ドロワー（左スライド）</td>
+              <td>ヘッダーグローバルナビ</td>
+            </tr>
+            <tr>
+              <td>メニューボタン</td>
+              <td>左上固定 40x40</td>
+              <td><code>display: none</code></td>
+            </tr>
+            <tr>
+              <td>コンテンツ幅</td>
+              <td>100%</td>
+              <td><code>max-width: 768px</code></td>
+            </tr>
+            <tr>
+              <td>PillNav</td>
+              <td>下部中央フローティング</td>
+              <td>カード下部テキストボタン（案A採用）</td>
+            </tr>
+            <tr>
+              <td>サイドパネル</td>
+              <td>なし</td>
+              <td><code>#F3F4F6 + inset shadow</code></td>
+            </tr>
+            <tr>
+              <td>お気に入りカード</td>
+              <td>1列リスト</td>
+              <td>1列リスト + hover浮き上がり（max-w: 768px）</td>
+            </tr>
+            <tr>
+              <td>パックカード</td>
+              <td>1列縦並び</td>
+              <td>2列グリッド</td>
+            </tr>
+            <tr>
+              <td>お気に入りタイトル</td>
+              <td>pl: 56px（メニュー避け）</td>
+              <td>pl: 0（メニューなし）</td>
+            </tr>
+            <tr>
+              <td>オンボーディング見出し</td>
+              <td>左寄せ</td>
+              <td>中央寄せ + font-size大</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showPage(name) {
+        document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+        document.getElementById("page-" + name).classList.add("active");
+        document.querySelectorAll(".page-tab").forEach((t) => t.classList.remove("active"));
+        event.target.classList.add("active");
+      }
+    </script>
+  </body>
+</html>

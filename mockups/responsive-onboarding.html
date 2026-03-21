@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>レスポンシブオンボーディング - SCP Recommend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #3B82F6;
+    }
+
+    /* スターターパックカード */
+    .pack-card {
+      background: white;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .pack-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    .pack-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    .pack-card.selected .pack-check { display: flex; }
+    .pack-check {
+      display: none;
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 24px; height: 24px;
+      background: var(--primary);
+      border-radius: 50%;
+      align-items: center; justify-content: center;
+    }
+
+    /* フローティングボタン */
+    .float-btn {
+      background: var(--primary);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+      transition: all 0.2s ease;
+    }
+    .float-btn:active { transform: scale(0.95); }
+    .float-btn:disabled { background: #D1D5DB; box-shadow: none; }
+
+    /* SCP入力フィールド */
+    .scp-input {
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+    }
+    .scp-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+      outline: none;
+    }
+
+    /* タブ */
+    .tab {
+      padding: 12px 20px;
+      color: #9CA3AF;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .tab.active {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* PC版グローバルヘッダー */
+    .global-header {
+      display: none;
+      background: white;
+      border-bottom: 1px solid #E5E7EB;
+      height: 56px;
+      align-items: center;
+      padding: 0 24px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+    }
+    .global-header .logo { font-weight: 700; font-size: 16px; color: #1F2937; white-space: nowrap; }
+    .global-header .logo span { color: var(--primary); }
+
+    /* PC版: オンボーディングはナビなし、ロゴ中央表示 */
+    .global-header.onboarding-header {
+      justify-content: center;
+    }
+
+    /* PC版カード2列グリッド */
+    .pack-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* レスポンシブ */
+    @media (min-width: 768px) {
+      .global-header { display: flex; }
+      .main-content { padding-top: 56px; }
+      .content-wrapper {
+        max-width: 768px;
+        margin: 0 auto;
+      }
+      /* PC: 2列グリッド */
+      .pack-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      /* PC: オンボーディングヘッダー調整 */
+      .onboarding-intro {
+        text-align: center;
+        padding-top: 32px;
+        padding-bottom: 8px;
+      }
+      .onboarding-intro h1 {
+        font-size: 1.75rem;
+      }
+      /* PC: 下部ボタン中央寄せ */
+      .bottom-action {
+        max-width: 768px;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+      }
+      /* PC: 入力も2列 */
+      .input-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .input-grid .full-width {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- ===== PC版ヘッダー（オンボーディング用: ロゴのみ中央） ===== -->
+  <header class="global-header onboarding-header">
+    <div class="logo"><span>SCP</span>icks</div>
+  </header>
+
+  <!-- ===== オンボーディングヘッダー ===== -->
+  <header class="main-content bg-white border-b border-gray-100">
+    <div class="content-wrapper">
+      <div class="onboarding-intro px-6 pt-12 pb-6">
+        <h1 class="text-2xl font-bold text-gray-800">SCPicks</h1>
+        <p class="text-gray-500 mt-2">あなたの好みに合わせたSCP記事を推薦します</p>
+      </div>
+      <!-- タブ -->
+      <div class="flex border-b border-gray-100">
+        <button id="tabPack" class="tab active flex-1" onclick="showTab('pack')">スターターパック</button>
+        <button id="tabManual" class="tab flex-1" onclick="showTab('manual')">SCP番号を入力</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== スターターパック選択 ===== -->
+  <main id="packContent" class="px-4 py-6 pb-28">
+    <div class="content-wrapper">
+      <p class="text-sm text-gray-500 mb-4">好みに近いパックを選んでください（複数選択可）</p>
+
+      <div class="pack-grid">
+        <!-- パック1: 定番 -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-amber-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">定番・名作</h3>
+              <p class="text-sm text-gray-500">SCP-173, 682, 999など誰もが知る人気作</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- パック2: ホラー -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-purple-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">ホラー・恐怖</h3>
+              <p class="text-sm text-gray-500">背筋が凍るような恐怖系SCP</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- パック3: SF -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-blue-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">SF・テクノロジー</h3>
+              <p class="text-sm text-gray-500">未来技術や宇宙に関連したSCP</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- パック4: 感動 -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-pink-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">感動・ハートフル</h3>
+              <p class="text-sm text-gray-500">心温まる物語や切ないSCP</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- パック5: ミステリー -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-emerald-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">ミステリー・考察</h3>
+              <p class="text-sm text-gray-500">謎解きや深い考察が必要なSCP</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- パック6: 日本支部 -->
+        <div class="pack-card relative p-4" onclick="togglePack(this)">
+          <div class="pack-check">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-content">
+              <svg class="w-7 h-7 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">日本支部オリジナル</h3>
+              <p class="text-sm text-gray-500">SCP-JP発の人気作品</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== SCP番号入力 ===== -->
+  <main id="manualContent" class="px-4 py-6 pb-28 hidden">
+    <div class="content-wrapper">
+      <p class="text-sm text-gray-500 mb-4">好きなSCPの番号を入力してください（最大5つ）</p>
+      <div class="input-grid space-y-3">
+        <input type="text" class="scp-input w-full px-4 py-3 text-lg" placeholder="例: 173">
+        <input type="text" class="scp-input w-full px-4 py-3 text-lg" placeholder="例: 5000">
+        <input type="text" class="scp-input w-full px-4 py-3 text-lg" placeholder="例: 999">
+        <input type="text" class="scp-input w-full px-4 py-3 text-lg" placeholder="">
+        <input type="text" class="scp-input w-full px-4 py-3 text-lg full-width" placeholder="">
+      </div>
+      <p class="text-xs text-gray-400 mt-4">※ 番号のみ入力。JPの場合は「999-JP」のように入力</p>
+    </div>
+  </main>
+
+  <!-- ===== 開始ボタン ===== -->
+  <div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-50 via-gray-50">
+    <div class="bottom-action">
+      <button id="startBtn" class="float-btn w-full py-4 rounded-full text-white font-semibold text-lg" disabled>
+        推薦を開始
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let selectedCount = 0;
+
+    function togglePack(el) {
+      el.classList.toggle('selected');
+      selectedCount = document.querySelectorAll('.pack-card.selected').length;
+      updateButton();
+    }
+
+    function updateButton() {
+      document.getElementById('startBtn').disabled = selectedCount === 0;
+    }
+
+    function showTab(tab) {
+      const packContent = document.getElementById('packContent');
+      const manualContent = document.getElementById('manualContent');
+      const tabPack = document.getElementById('tabPack');
+      const tabManual = document.getElementById('tabManual');
+
+      if (tab === 'pack') {
+        packContent.classList.remove('hidden');
+        manualContent.classList.add('hidden');
+        tabPack.classList.add('active');
+        tabManual.classList.remove('active');
+      } else {
+        packContent.classList.add('hidden');
+        manualContent.classList.remove('hidden');
+        tabPack.classList.remove('active');
+        tabManual.classList.add('active');
+      }
+    }
+
+    document.querySelectorAll('.scp-input').forEach(input => {
+      input.addEventListener('input', () => {
+        const hasValue = Array.from(document.querySelectorAll('.scp-input')).some(i => i.value.trim());
+        document.getElementById('startBtn').disabled = !hasValue;
+      });
+    });
+  </script>
+
+</body>
+</html>
