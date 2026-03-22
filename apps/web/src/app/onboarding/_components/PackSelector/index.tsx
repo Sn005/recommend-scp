@@ -28,14 +28,16 @@ function PackCardSkeleton() {
 function PackSelectorSkeleton() {
   return (
     <>
-      <main className="flex-1 space-y-3 px-4 py-6 pb-28" data-testid="pack-selector-skeleton">
+      <main className="flex-1 px-4 py-6 pb-28" data-testid="pack-selector-skeleton">
         <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-200" />
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <PackCardSkeleton key={i} />
-        ))}
+        <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <PackCardSkeleton key={i} />
+          ))}
+        </div>
       </main>
       {/* 開始ボタン（固定フッター） */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4 md:left-0 md:right-0 md:max-w-[768px] md:mx-auto">
         <button
           disabled
           className="w-full rounded-full bg-gray-300 py-4 text-lg font-semibold text-white"
@@ -106,19 +108,24 @@ export function PackSelector({ visitorId, onComplete }: PackSelectorProps) {
   return (
     <>
       {/* パック一覧 */}
-      <main className="flex-1 space-y-3 px-4 py-6 pb-28" data-testid="pack-selector">
+      <main className="flex-1 px-4 py-6 pb-28" data-testid="pack-selector">
         <p className="mb-4 text-sm text-gray-500">好みに近いパックを選んでください（複数選択可）</p>
-        {packs.map((pack) => (
-          <PackCard
-            key={pack.type}
-            pack={pack}
-            isSelected={selectedPacks.has(pack.type)}
-            onSelect={() => {
-              togglePack(pack.type);
-            }}
-            disabled={isConfirming}
-          />
-        ))}
+        <div
+          data-testid="pack-card-grid"
+          className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0"
+        >
+          {packs.map((pack) => (
+            <PackCard
+              key={pack.type}
+              pack={pack}
+              isSelected={selectedPacks.has(pack.type)}
+              onSelect={() => {
+                togglePack(pack.type);
+              }}
+              disabled={isConfirming}
+            />
+          ))}
+        </div>
       </main>
 
       {/* エラーメッセージ */}
@@ -129,7 +136,10 @@ export function PackSelector({ visitorId, onComplete }: PackSelectorProps) {
       )}
 
       {/* 開始ボタン（固定フッター） */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
+      <div
+        data-testid="start-button-container"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4 md:left-0 md:right-0 md:max-w-[768px] md:mx-auto"
+      >
         <button
           data-testid="complete-button"
           onClick={() => {
