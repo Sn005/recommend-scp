@@ -14,7 +14,8 @@ const MD_BREAKPOINT = 768;
 export function useIframeAutoHeight(
   iframeRef: RefObject<HTMLIFrameElement | null>,
   containerRef: RefObject<HTMLDivElement | null>,
-  isLoading: boolean
+  isLoading: boolean,
+  isVisible?: boolean
 ) {
   useEffect(() => {
     if (isLoading) return;
@@ -48,8 +49,8 @@ export function useIframeAutoHeight(
       }
     };
 
-    // 初期高さ設定
-    updateHeight();
+    // 初期高さ設定（rAFで次フレームに遅延し、レイアウト確定後に計算）
+    requestAnimationFrame(updateHeight);
 
     // コンテンツサイズ変更を追跡（画像読み込み、動的コンテンツ等）
     const observer = new ResizeObserver(updateHeight);
@@ -88,5 +89,5 @@ export function useIframeAutoHeight(
         // cross-origin fallback
       }
     };
-  }, [isLoading, iframeRef, containerRef]);
+  }, [isLoading, iframeRef, containerRef, isVisible]);
 }

@@ -59,7 +59,8 @@ export function ArticleWebView({
   useIosSafariScrollFix({ isVisible, containerRef, iframeRef });
 
   // PC版: iframeの高さをコンテンツに合わせて自動調整（bodyスクロールに統一）
-  useIframeAutoHeight(iframeRef, containerRef, isIframeLoading);
+  // isVisibleを依存に含め、プリロード→表示昇格時に高さを再計算する
+  useIframeAutoHeight(iframeRef, containerRef, isIframeLoading, isVisible);
 
   // 404検知・NotFound UI状態管理
   const { showNotFound, handleSuggest } = useNotFoundState({
