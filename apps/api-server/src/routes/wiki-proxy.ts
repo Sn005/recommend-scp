@@ -60,6 +60,9 @@ const URL_REWRITE_MAP: readonly (readonly [string, string])[] = [
  */
 const INJECTED_STYLE = [
   "<style>",
+  // ページオプション（評価モジュール等）非表示: アプリ独自UIで代替するため不要
+  // 背景色がACSバー等に重なりレイアウトを阻害するため除去
+  "#page-options-container{display:none!important}",
   // Wikidot構造要素のレイアウトリセット
   // - margin:0 → 旧テーマのmarginで記事幅が狭くなる問題を解消
   // - max-width:100% → 新テーマ(Sigma等)のwidth:60remがモバイルではみ出すのを制約
@@ -71,15 +74,20 @@ const INJECTED_STYLE = [
   // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正
   // Wikidot CSSがbody/htmlにoverflow:hiddenを設定し、iOS Safariのiframe内スクロールを阻害するため上書き
   "html,body{overflow-x:hidden!important;overflow-y:visible!important}",
-  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%}",
+  // テーマCSSのbody背景リセット: Black Highlighter等のテーマがbodyに
+  // background-image(グラデーション)やbackground-color(暗色)を設定し、
+  // iframe内で記事コンテンツに被さるため、白背景にリセットする
+  "body{font-family:'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3',Meiryo,sans-serif;line-height:1.8!important;-webkit-text-size-adjust:100%;background:#fff!important;background-image:none!important}",
   // 記事可読性: コンテンツ領域（左右16px余白はモック準拠）
   "#page-content{font-size:15px!important;overflow-wrap:break-word;word-break:break-word;padding:0 16px!important}",
   // 記事可読性: 段落間スペーシング
   "#page-content p{margin-bottom:1em!important}",
   // 記事可読性: 画像レスポンシブ化 + 上下マージン
-  "#page-content img{max-width:100%!important;height:auto!important;display:block;margin:16px 0}",
+  // ACSバー(.anom-bar-container)内の小アイコンはdisplay:blockで崩れるため除外
+  "#page-content img:not(.anom-bar-container img){max-width:100%!important;height:auto!important;display:block;margin:16px 0}",
   // レイアウト崩れ防止: Wikidot記事のfloatブロックを無効化
-  "#page-content .block-left,#page-content .block-right{float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
+  // ただしACSバー(.anom-bar-container)内はfloatレイアウトに依存するため除外
+  "#page-content .block-left:not(.anom-bar-container .block-left),#page-content .block-right:not(.anom-bar-container .block-right){float:none!important;clear:both!important;text-align:left!important;margin:0 auto!important}",
   // コンポーネントコードビューア非表示: テーマ等のコンポーネントincludeに付随する
   // CSSソースコード表示用collapsible-blockを非表示にする（記事本文ではない）
   ".collapsible-block:has(>.collapsible-block-unfolded>.collapsible-block-content>.code){display:none!important}",
@@ -222,43 +230,6 @@ const WIKIDOT_STUB = [
   "window.OneSignal=window.OneSignal||[];",
   "</script>",
 ].join("");
-
-/**
- * インラインstyle属性の選択的フィルタリング
- *
- * Wikidot記事には `style="text-align: right;"` 等のインラインスタイルが含まれることがあり、
- * モバイル表示でレイアウト崩れを起こす。一方で、ACSバー等のコンポーネントは
- * width/max-width/overflow等のレイアウト系プロパティに依存しているため、
- * これらは保持する必要がある。
- *
- * 戦略: style属性を個別プロパティに分解し、保持すべきプロパティのみ残す。
- * 残るプロパティがなければstyle属性ごと除去する。
- */
-
-/** レイアウトに必要なため保持するCSSプロパティのパターン */
-const PRESERVED_STYLE_PROPS_RE =
-  /^(display|width|min-width|max-width|height|min-height|max-height|overflow|overflow-x|overflow-y|box-sizing|position|top|left|right|bottom|z-index|opacity|visibility|grid-template|grid-column|grid-row|flex|flex-basis|flex-grow|flex-shrink|order)$/i;
-
-/**
- * インラインstyle属性値から保持すべきプロパティのみを抽出する。
- * 保持するプロパティがなければ空文字を返す。
- */
-function filterStyleValue(styleValue: string): string {
-  const preserved = styleValue
-    .split(";")
-    .map((decl) => decl.trim())
-    .filter((decl) => {
-      if (!decl) return false;
-      const colonIndex = decl.indexOf(":");
-      if (colonIndex === -1) return false;
-      const prop = decl.slice(0, colonIndex).trim();
-      return PRESERVED_STYLE_PROPS_RE.test(prop);
-    });
-  return preserved.length > 0 ? preserved.join("; ") + ";" : "";
-}
-
-/** style属性全体にマッチする正規表現 */
-const INLINE_STYLE_ATTR_RE = / style="([^"]*)"/gi;
 
 /**
  * href="/path" 形式の絶対パスリンクを href="/api/wiki-proxy/path" に書き換える正規表現
@@ -448,20 +419,14 @@ function buildHtml(content: ExtractedContent): string {
  * HTML内のURLを書き換え + インラインstyle除去
  *
  * 処理順序:
- * 1. インラインstyle属性の除去（レイアウト崩れ防止）
- * 2. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
- * 3. CloudFront URLのプロトコル変換（http:// → https://）
- * 4. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
- * 5. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
+ * 1. フルURL書き換え（URL_REWRITE_MAP: http://domain/ → /proxy-path/）
+ * 2. CloudFront URLのプロトコル変換（http:// → https://）
+ * 3. 絶対パスhref書き換え（/scp-456 → /api/wiki-proxy/scp-456）
+ * 4. /wiki/ 記事hrefをプロキシ経由に変換（/wiki/scp-456 → /api/wiki-proxy/scp-456）
  */
 function rewriteUrls(html: string): string {
   let result = html;
-  // 1. インラインstyle属性の選択的フィルタリング（レイアウト系プロパティは保持）
-  result = result.replace(INLINE_STYLE_ATTR_RE, (_match, value: string) => {
-    const filtered = filterStyleValue(value);
-    return filtered ? ` style="${filtered}"` : "";
-  });
-  // 2. フルURL書き換え
+  // 1. フルURL書き換え
   for (const [from, to] of URL_REWRITE_MAP) {
     result = result.replaceAll(from, to);
   }

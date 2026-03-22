@@ -710,10 +710,10 @@ describe("GET /wiki-proxy/*", () => {
   });
 
   // ----------------------------------------------------------
-  // インラインstyle属性の除去
+  // インラインstyle属性の保持（ACSバー等のコンポーネント対応）
   // ----------------------------------------------------------
-  describe("インラインstyle属性の除去", () => {
-    it("style属性が除去される", async () => {
+  describe("インラインstyle属性の保持", () => {
+    it("インラインstyle属性がそのまま保持される", async () => {
       const html = createWikidotHtml({
         pageContent: '<div style="text-align: right;">テスト</div>',
       });
@@ -723,30 +723,13 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain("<div>テスト</div>");
-      expect(text).not.toContain('style="text-align: right;"');
+      expect(text).toContain('style="text-align: right;"');
     });
 
-    it("複数のstyle属性が全て除去される", async () => {
-      const html = createWikidotHtml({
-        pageContent: '<p style="color: red;">赤</p><span style="float: left;">左</span>',
-      });
-      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
-
-      const app = createApp();
-      const res = await app.request("/wiki-proxy/scp-173");
-      const text = await res.text();
-
-      expect(text).toContain("<p>赤</p>");
-      expect(text).toContain("<span>左</span>");
-      expect(text).not.toContain('style="color: red;"');
-      expect(text).not.toContain('style="float: left;"');
-    });
-
-    it("display:noneを含むstyle属性は保持される", async () => {
+    it("ACSバー等のレイアウト・装飾プロパティが全て保持される", async () => {
       const html = createWikidotHtml({
         pageContent:
-          '<div style="display: none;"><div class="collapsible-block">コード</div></div>',
+          '<div style="width: 590px; max-width: 100%; background-color: #333; color: white; float: left;">ACSバー</div>',
       });
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
 
@@ -754,72 +737,14 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain('style="display: none;"');
-    });
-
-    it("display:none（スペースなし）を含むstyle属性も保持される", async () => {
-      const html = createWikidotHtml({
-        pageContent: '<div style="display:none"><span>隠し要素</span></div>',
-      });
-      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
-
-      const app = createApp();
-      const res = await app.request("/wiki-proxy/scp-173");
-      const text = await res.text();
-
-      // フィルタリング後、display:noneプロパティが保持される（セミコロン正規化あり）
-      expect(text).toContain('style="display:none;"');
-    });
-
-    it("display:noneと他のプロパティが混在するstyle属性はdisplayのみ保持される", async () => {
-      const html = createWikidotHtml({
-        pageContent: '<div style="margin: 0; display: none; color: red;">隠し</div>',
-      });
-      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
-
-      const app = createApp();
-      const res = await app.request("/wiki-proxy/scp-173");
-      const text = await res.text();
-
-      // margin/colorは除去され、displayのみ保持
-      expect(text).toContain('style="display: none;"');
-      expect(text).not.toContain("margin: 0;");
-      expect(text).not.toContain("color: red");
-    });
-
-    it("display:block等のnone以外のdisplay値もレイアウトプロパティとして保持される", async () => {
-      const html = createWikidotHtml({
-        pageContent: '<div style="display: block;">表示要素</div>',
-      });
-      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
-
-      const app = createApp();
-      const res = await app.request("/wiki-proxy/scp-173");
-      const text = await res.text();
-
-      // displayはレイアウトプロパティのため保持される
-      expect(text).toContain('style="display: block;"');
-    });
-
-    it("width/max-width/overflow等のレイアウトプロパティは保持される", async () => {
-      const html = createWikidotHtml({
-        pageContent:
-          '<div style="width: 590px; max-width: 100%; overflow-x: auto; color: red;">ACSバー</div>',
-      });
-      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
-
-      const app = createApp();
-      const res = await app.request("/wiki-proxy/scp-173");
-      const text = await res.text();
-
-      // レイアウト系は保持、装飾系(color)は除去
       expect(text).toContain("width: 590px");
       expect(text).toContain("max-width: 100%");
-      expect(text).toContain("overflow-x: auto");
-      expect(text).not.toContain("color: red");
+      expect(text).toContain("background-color: #333");
+      expect(text).toContain("color: white");
+      expect(text).toContain("float: left");
     });
 
-    it("他の属性は保持される", async () => {
+    it("他のHTML属性も保持される", async () => {
       const html = createWikidotHtml({
         pageContent: '<div class="test" style="margin: 0;" id="main">内容</div>',
       });
@@ -831,7 +756,7 @@ describe("GET /wiki-proxy/*", () => {
 
       expect(text).toContain('class="test"');
       expect(text).toContain('id="main"');
-      expect(text).not.toContain('style="margin: 0;"');
+      expect(text).toContain('style="margin: 0;"');
     });
   });
 
@@ -854,10 +779,10 @@ describe("GET /wiki-proxy/*", () => {
   });
 
   // ----------------------------------------------------------
-  // block-left/block-right CSSオーバーライド
+  // page-options-container非表示
   // ----------------------------------------------------------
-  describe("block-left/block-right CSSオーバーライド", () => {
-    it("block-left/block-rightのfloat無効化CSSが注入される", async () => {
+  describe("page-options-container非表示CSS", () => {
+    it("page-options-containerを非表示にするCSSが注入される", async () => {
       const html = createWikidotHtml();
       global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
 
@@ -865,8 +790,24 @@ describe("GET /wiki-proxy/*", () => {
       const res = await app.request("/wiki-proxy/scp-173");
       const text = await res.text();
 
-      expect(text).toContain(".block-left");
-      expect(text).toContain(".block-right");
+      expect(text).toContain("#page-options-container{display:none!important}");
+    });
+  });
+
+  // ----------------------------------------------------------
+  // block-left/block-right CSSオーバーライド
+  // ----------------------------------------------------------
+  describe("block-left/block-right CSSオーバーライド", () => {
+    it("block-left/block-rightのfloat無効化CSSが注入される（ACSバー除外）", async () => {
+      const html = createWikidotHtml();
+      global.fetch = vi.fn().mockResolvedValue(createHtmlResponse(html));
+
+      const app = createApp();
+      const res = await app.request("/wiki-proxy/scp-173");
+      const text = await res.text();
+
+      expect(text).toContain(".block-left:not(.anom-bar-container .block-left)");
+      expect(text).toContain(".block-right:not(.anom-bar-container .block-right)");
       expect(text).toContain("float:none!important");
     });
   });

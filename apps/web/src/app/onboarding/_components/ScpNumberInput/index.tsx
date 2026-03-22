@@ -111,25 +111,27 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
       <main className="flex-1 px-4 py-6 pb-28" data-testid="scp-number-input">
         <p className="mb-4 text-sm text-gray-500">好きなSCPの番号を入力してください（最大5つ）</p>
 
-        <div className="space-y-3">
+        <div
+          data-testid="scp-input-grid"
+          className="space-y-3 md:grid md:grid-cols-3 md:gap-3 md:space-y-0"
+        >
           {inputs.map((value, index) => (
-            <input
-              key={index}
-              type="text"
-              value={value}
-              onChange={(e) => {
-                handleInputChange(index, e.target.value);
-              }}
-              placeholder={PLACEHOLDERS[index]}
-              disabled={isConfirming}
-              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
-            />
+            <div key={index}>
+              <input
+                type="text"
+                value={value}
+                onChange={(e) => {
+                  handleInputChange(index, e.target.value);
+                }}
+                placeholder={PLACEHOLDERS[index]}
+                disabled={isConfirming}
+                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
+              />
+            </div>
           ))}
         </div>
 
-        <p className="mt-4 text-xs text-gray-400">
-          ※ 番号のみ入力。JPの場合は「999-JP」のように入力
-        </p>
+        <p className="mt-4 text-xs text-gray-400">※ 番号のみ入力してください</p>
 
         {/* エラーメッセージ */}
         {confirmError && (
@@ -140,7 +142,10 @@ export function ScpNumberInput({ visitorId, onComplete }: ScpNumberInputProps) {
       </main>
 
       {/* 開始ボタン（固定フッター） */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
+      <div
+        data-testid="start-button-container"
+        className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4 md:left-0 md:right-0 md:max-w-[768px] md:mx-auto"
+      >
         <button
           onClick={() => {
             void handleSubmit();

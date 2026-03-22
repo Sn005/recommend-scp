@@ -15,42 +15,46 @@ type TabType = "pack" | "manual";
  */
 function OnboardingSkeleton() {
   return (
-    <div data-testid="onboarding-skeleton" className="flex min-h-screen flex-col bg-gray-50">
+    <div data-testid="onboarding-skeleton" className="flex min-h-screen flex-col">
       {/* ヘッダースケルトン */}
       <header className="border-b border-gray-100 bg-white">
-        <div className="px-6 pb-6 pt-12">
-          <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
-          <div className="mt-3 h-4 w-72 animate-pulse rounded bg-gray-200" />
-        </div>
-        {/* タブスケルトン */}
-        <div className="flex border-b border-gray-100">
-          <div className="flex-1 border-b-2 border-gray-200 px-5 py-3">
-            <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+        <div className="md:max-w-[768px] md:mx-auto">
+          <div className="px-6 pb-6 pt-12">
+            <div className="h-8 w-48 animate-pulse rounded bg-gray-200" />
+            <div className="mt-3 h-4 w-72 animate-pulse rounded bg-gray-200" />
           </div>
-          <div className="flex-1 border-b-2 border-transparent px-5 py-3">
-            <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+          {/* タブスケルトン */}
+          <div className="flex border-b border-gray-100">
+            <div className="flex-1 border-b-2 border-gray-200 px-5 py-3">
+              <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+            </div>
+            <div className="flex-1 border-b-2 border-transparent px-5 py-3">
+              <div className="mx-auto h-4 w-28 animate-pulse rounded bg-gray-200" />
+            </div>
           </div>
         </div>
       </header>
 
       {/* パック一覧スケルトン */}
-      <main className="flex-1 space-y-3 px-4 py-6 pb-28">
-        <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-200" />
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="w-full rounded-2xl border-2 border-transparent bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 flex-shrink-0 animate-pulse rounded-full bg-gray-200" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
-                <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
+      <div className="md:max-w-[768px] md:mx-auto md:w-full">
+        <main className="flex-1 space-y-3 px-4 py-6 pb-28">
+          <div className="mb-4 h-4 w-64 animate-pulse rounded bg-gray-200" />
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="w-full rounded-2xl border-2 border-transparent bg-white p-4 shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 flex-shrink-0 animate-pulse rounded-full bg-gray-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
+                  <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </main>
+          ))}
+        </main>
+      </div>
 
       {/* 開始ボタンスケルトン */}
       <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 p-4">
@@ -179,40 +183,48 @@ function OnboardingPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      {/* ヘッダー */}
+    <div className="flex min-h-screen flex-col">
+      {/* ヘッダー（全幅白背景） */}
       <header className="border-b border-gray-100 bg-white">
-        <div className="px-6 pb-6 pt-12">
-          <h1 className="text-2xl font-bold text-gray-800">SCPicks</h1>
-          <p className="mt-2 text-gray-500">あなたの好みに合わせたSCP記事を推薦します</p>
-        </div>
-        {/* タブ */}
-        <div className="flex border-b border-gray-100" role="tablist">
-          <TabButton
-            active={activeTab === "pack"}
-            onClick={() => {
-              setActiveTab("pack");
-            }}
-          >
-            スターターパック
-          </TabButton>
-          <TabButton
-            active={activeTab === "manual"}
-            onClick={() => {
-              setActiveTab("manual");
-            }}
-          >
-            SCP番号を入力
-          </TabButton>
+        <div className="md:max-w-[768px] md:mx-auto">
+          <div data-testid="onboarding-intro" className="px-6 pb-6 pt-12 md:pt-8 md:pb-2">
+            <h1 className="text-2xl font-bold text-gray-800 md:text-center md:text-[1.75rem]">
+              SCPicks
+            </h1>
+            <p className="mt-2 text-gray-500 md:text-center">
+              あなたの好みに合わせたSCP記事を推薦します
+            </p>
+          </div>
+          {/* タブ */}
+          <div className="flex border-b border-gray-100" role="tablist">
+            <TabButton
+              active={activeTab === "pack"}
+              onClick={() => {
+                setActiveTab("pack");
+              }}
+            >
+              スターターパック
+            </TabButton>
+            <TabButton
+              active={activeTab === "manual"}
+              onClick={() => {
+                setActiveTab("manual");
+              }}
+            >
+              SCP番号を入力
+            </TabButton>
+          </div>
         </div>
       </header>
 
       {/* コンテンツ */}
-      {activeTab === "pack" ? (
-        <PackSelector visitorId={visitorId} onComplete={handleComplete} />
-      ) : (
-        <ScpNumberInput visitorId={visitorId} onComplete={handleComplete} />
-      )}
+      <div className="md:max-w-[768px] md:mx-auto md:w-full">
+        {activeTab === "pack" ? (
+          <PackSelector visitorId={visitorId} onComplete={handleComplete} />
+        ) : (
+          <ScpNumberInput visitorId={visitorId} onComplete={handleComplete} />
+        )}
+      </div>
     </div>
   );
 }
