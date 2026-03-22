@@ -40,7 +40,10 @@ export interface FavoriteListProps {
  */
 export function FavoriteList({ favorites, onRemove, removingIds }: FavoriteListProps) {
   return (
-    <div data-testid="favorite-list" className="space-y-3">
+    <div
+      data-testid="favorite-list"
+      className="space-y-3 md:flex md:flex-col md:gap-3 md:space-y-0"
+    >
       {favorites.map((article) => (
         <FavoriteCard
           key={article.id}
