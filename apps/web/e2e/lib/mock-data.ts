@@ -7,12 +7,12 @@
 
 /** ビジターID（オンボーディング完了済み） */
 export const mockVisitorOnboarded = {
-  visitorId: "e2e-test-visitor-001",
+  visitorId: "e2e00000-0000-4000-a000-000000000001",
 };
 
 /** ビジターID（新規、オンボーディング未完了） */
 export const mockVisitorNew = {
-  visitorId: "e2e-test-visitor-001",
+  visitorId: "e2e00000-0000-4000-a000-000000000002",
 };
 
 /** 閲覧履歴エントリ（localStorage用） */
