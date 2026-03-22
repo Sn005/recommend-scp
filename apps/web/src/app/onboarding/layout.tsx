@@ -16,16 +16,6 @@ export default function OnboardingLayout({
 }>) {
   return (
     <div data-testid="onboarding-layout" className="min-h-screen bg-gray-50">
-      {/* PC版ロゴヘッダー（オンボーディング専用: ロゴのみ中央表示） */}
-      <header
-        data-testid="onboarding-pc-header"
-        className="hidden bg-white md:flex md:justify-center md:items-center md:h-14 md:border-b md:border-gray-200"
-      >
-        <span className="text-base font-bold">
-          <span className="text-primary">SCP</span>
-          <span className="text-gray-800">icks</span>
-        </span>
-      </header>
       {children}
     </div>
   );

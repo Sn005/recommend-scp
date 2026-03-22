@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DrawerProvider, Drawer } from "@/shared/components/ui/Drawer";
 import { MenuButton } from "@/shared/components/ui/MenuButton";
+import { GlobalHeader } from "@/shared/components/ui/GlobalHeader";
 import { OnboardingGuard } from "./_components/OnboardingGuard";
 
 export const metadata: Metadata = {
@@ -23,9 +24,10 @@ export default function MainLayout({
     <DrawerProvider>
       <OnboardingGuard>
         <div className="relative min-h-screen">
+          <GlobalHeader />
           <MenuButton />
           <Drawer />
-          <main>{children}</main>
+          <main className="md:pt-14">{children}</main>
         </div>
       </OnboardingGuard>
     </DrawerProvider>

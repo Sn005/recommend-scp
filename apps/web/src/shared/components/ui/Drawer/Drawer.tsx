@@ -30,7 +30,7 @@ export const Drawer = () => {
       {/* オーバーレイ */}
       <div
         data-testid="drawer-overlay"
-        className="fixed inset-0 z-drawer-overlay bg-black/30"
+        className="fixed inset-0 z-drawer-overlay bg-black/30 md:hidden"
         onClick={close}
         role="button"
         tabIndex={0}
@@ -39,7 +39,7 @@ export const Drawer = () => {
       {/* ドロワー本体 */}
       <nav
         data-testid="drawer"
-        className="fixed left-0 top-0 z-drawer h-full w-drawer bg-white shadow-drawer"
+        className="fixed left-0 top-0 z-drawer h-full w-drawer bg-white shadow-drawer md:hidden"
         aria-label="メインナビゲーション"
       >
         <DrawerMenu />

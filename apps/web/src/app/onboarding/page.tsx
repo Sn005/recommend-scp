@@ -188,8 +188,9 @@ function OnboardingPageContent() {
       <header className="border-b border-gray-100 bg-white">
         <div className="md:max-w-[768px] md:mx-auto">
           <div data-testid="onboarding-intro" className="px-6 pb-6 pt-12 md:pt-8 md:pb-2">
-            <h1 className="text-2xl font-bold text-gray-800 md:text-center md:text-[1.75rem]">
-              SCPicks
+            <h1 className="text-2xl font-bold md:text-center md:text-[1.75rem]">
+              <span className="text-primary">SCP</span>
+              <span className="text-gray-800">icks</span>
             </h1>
             <p className="mt-2 text-gray-500 md:text-center">
               あなたの好みに合わせたSCP記事を推薦します

@@ -23,6 +23,11 @@ vi.mock("@/shared/hooks/useVisitorId", () => ({
   }),
 }));
 
+// GlobalHeaderのモック（DropdownMenu依存を回避）
+vi.mock("@/shared/components/ui/GlobalHeader", () => ({
+  GlobalHeader: () => <div data-testid="global-header">GlobalHeader</div>,
+}));
+
 import MainLayout from "./layout";
 
 describe("MainLayout", () => {
@@ -94,6 +99,54 @@ describe("MainLayout", () => {
 
       // ドロワーが閉じる
       expect(screen.queryByTestId("drawer")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("AC: レスポンシブ対応", () => {
+    it("GlobalHeaderが含まれている", () => {
+      render(
+        <MainLayout>
+          <div>Content</div>
+        </MainLayout>
+      );
+
+      expect(screen.getByTestId("global-header")).toBeInTheDocument();
+    });
+
+    it("メインコンテンツにmd:pt-14が適用されている", () => {
+      render(
+        <MainLayout>
+          <div data-testid="test-child">Content</div>
+        </MainLayout>
+      );
+
+      const main = screen.getByTestId("test-child").closest("main");
+      expect(main).toHaveClass("md:pt-14");
+    });
+
+    it("MenuButtonにmd:hiddenが適用されている", () => {
+      render(
+        <MainLayout>
+          <div>Content</div>
+        </MainLayout>
+      );
+
+      const menuButton = screen.getByRole("button", { name: /メニューを開く/ });
+      expect(menuButton).toHaveClass("md:hidden");
+    });
+
+    it("Drawerオーバーレイ・パネルにmd:hiddenが適用されている", async () => {
+      const user = userEvent.setup();
+      render(
+        <MainLayout>
+          <div>Content</div>
+        </MainLayout>
+      );
+
+      await user.click(screen.getByRole("button", { name: /メニューを開く/ }));
+
+      expect(screen.getByTestId("drawer-overlay")).toHaveClass("md:hidden");
+      expect(screen.getByTestId("drawer")).toHaveClass("md:hidden");
     });
   });
 

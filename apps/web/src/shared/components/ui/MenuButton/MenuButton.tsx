@@ -34,7 +34,7 @@ export const MenuButton = () => {
       className="fixed z-nav w-10 h-10 rounded-full
                  bg-white/80 backdrop-blur-md shadow-menu-button
                  flex items-center justify-center
-                 active:scale-95 select-none"
+                 active:scale-95 select-none md:hidden"
       style={{
         ...positionStyle,
         cursor: isDragging ? "grabbing" : "grab",
