@@ -283,6 +283,163 @@ describe("FavoritesPage", () => {
     });
   });
 
+  describe("AC-PC-1: コンテンツ中央寄せ（PC版レイアウト）", () => {
+    it("お気に入りリストのラッパーにmd:max-w-[768px]が適用される", () => {
+      render(<FavoritesPage />);
+
+      const page = screen.getByTestId("favorites-page");
+      const mainEl = page.querySelector("main");
+      expect(mainEl?.className).toContain("md:max-w-[768px]");
+    });
+
+    it("お気に入りリストのラッパーにmd:mx-autoが適用される", () => {
+      render(<FavoritesPage />);
+
+      const page = screen.getByTestId("favorites-page");
+      const mainEl = page.querySelector("main");
+      expect(mainEl?.className).toContain("md:mx-auto");
+    });
+
+    it("ローディング状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: true,
+        error: null,
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const page = screen.getByTestId("favorites-page");
+      const mainEl = page.querySelector("main");
+      expect(mainEl?.className).toContain("md:max-w-[768px]");
+      expect(mainEl?.className).toContain("md:mx-auto");
+    });
+
+    it("エラー状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: false,
+        error: new Error("error"),
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const page = screen.getByTestId("favorites-page");
+      const mainEl = page.querySelector("main");
+      expect(mainEl?.className).toContain("md:max-w-[768px]");
+      expect(mainEl?.className).toContain("md:mx-auto");
+    });
+
+    it("空状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: false,
+        error: null,
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const page = screen.getByTestId("favorites-page");
+      const mainEl = page.querySelector("main");
+      expect(mainEl?.className).toContain("md:max-w-[768px]");
+      expect(mainEl?.className).toContain("md:mx-auto");
+    });
+  });
+
+  describe("AC-PC-4: ページタイトルpadding調整（PC版）", () => {
+    it("ヘッダーにmd:pl-4クラスが付与される", () => {
+      render(<FavoritesPage />);
+
+      const title = screen.getByText("お気に入り");
+      const header = title.closest("div");
+      expect(header?.className).toContain("md:pl-4");
+    });
+
+    it("モバイル用pl-12クラスが維持される", () => {
+      render(<FavoritesPage />);
+
+      const title = screen.getByText("お気に入り");
+      const header = title.closest("div");
+      expect(header).toHaveClass("pl-12");
+    });
+
+    it("ローディング状態のヘッダーにもmd:pl-4が付与される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: true,
+        error: null,
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const title = screen.getByText("お気に入り");
+      const header = title.closest("div");
+      expect(header?.className).toContain("md:pl-4");
+    });
+
+    it("エラー状態のヘッダーにもmd:pl-4が付与される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: false,
+        error: new Error("error"),
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const title = screen.getByText("お気に入り");
+      const header = title.closest("div");
+      expect(header?.className).toContain("md:pl-4");
+    });
+
+    it("空状態のヘッダーにもmd:pl-4が付与される", () => {
+      mockUseFavorites.mockReturnValue({
+        favorites: [],
+        isLoading: false,
+        error: null,
+        removeFavorite: mockRemoveFavorite,
+        refresh: mockRefresh,
+      });
+
+      render(<FavoritesPage />);
+
+      const title = screen.getByText("お気に入り");
+      const header = title.closest("div");
+      expect(header?.className).toContain("md:pl-4");
+    });
+  });
+
+  describe("AC-PC-5: モバイル非破壊確認", () => {
+    it("PC版クラス追加後もカードクリックでarticleページへ遷移できる", async () => {
+      const user = userEvent.setup();
+      render(<FavoritesPage />);
+
+      const cards = screen.getAllByTestId("favorite-card");
+      await user.click(cards[0]);
+
+      expect(mockPush).toHaveBeenCalledWith("/article/scp-173");
+    });
+
+    it("PC版クラス追加後も削除ボタンでonRemoveが呼ばれる", async () => {
+      const user = userEvent.setup();
+      render(<FavoritesPage />);
+
+      const deleteButtons = screen.getAllByRole("button", { name: /お気に入りから削除/i });
+      await user.click(deleteButtons[0]);
+
+      expect(mockRemoveFavorite).toHaveBeenCalledWith("scp-173");
+    });
+  });
+
   describe("デザイン準拠チェック", () => {
     it("ヘッダーのタイトルにtext-lg font-semibold text-gray-800が適用される", () => {
       render(<FavoritesPage />);

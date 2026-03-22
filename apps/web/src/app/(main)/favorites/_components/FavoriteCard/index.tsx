@@ -99,6 +99,9 @@ export function FavoriteCard({ article, onRemove, isRemoving = false }: Favorite
       className={cn(
         "bg-white rounded-xl shadow-sm p-4 cursor-pointer",
         "transition-all duration-300",
+        "md:p-5",
+        "md:transition-all md:duration-200",
+        "md:hover:-translate-y-0.5 md:hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]",
         isRemoving && "opacity-0 scale-95"
       )}
       onClick={handleCardClick}

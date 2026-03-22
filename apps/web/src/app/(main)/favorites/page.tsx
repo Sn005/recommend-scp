@@ -45,9 +45,9 @@ export default function FavoritesPage() {
   if (isLoading) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4">
+        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12">
+          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
             <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
             <span className="text-sm text-gray-400">0件</span>
           </div>
@@ -61,9 +61,9 @@ export default function FavoritesPage() {
   if (error) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4">
+        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12">
+          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
             <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
             <span className="text-sm text-gray-400">0件</span>
           </div>
@@ -77,9 +77,9 @@ export default function FavoritesPage() {
   if (favorites.length === 0) {
     return (
       <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4">
+        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
           {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12">
+          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
             <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
             <span className="text-sm text-gray-400">0件</span>
           </div>
@@ -92,9 +92,9 @@ export default function FavoritesPage() {
   // AC-2, AC-8: 通常表示
   return (
     <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-      <main className="pb-8 px-4">
+      <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
         {/* AC-2: ヘッダー（スクロールで動く） */}
-        <div className="flex items-center justify-between py-4 pl-12">
+        <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
           <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
           <span className="text-sm text-gray-400">{favorites.length}件</span>
         </div>
