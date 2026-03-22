@@ -227,7 +227,10 @@ export default function RecommendPage() {
   // AC-2: iframeプールに基づくレンダリング
   // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
-    <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
+    <div
+      className="relative flex flex-col h-screen overflow-clip md:h-auto md:overflow-visible"
+      data-testid="article-viewer"
+    >
       {/* 019-02-01: 3カラムレイアウト（PC版サイドパネル付き） */}
       <div className="md:flex md:min-h-[calc(100vh-56px)]" data-testid="three-column-layout">
         {/* 左サイドパネル */}
@@ -269,8 +272,8 @@ export default function RecommendPage() {
                 className={
                   isCurrent
                     ? isVisible
-                      ? "flex-1 min-h-0 h-full opacity-100 z-10"
-                      : "flex-1 min-h-0 h-full opacity-0 z-10"
+                      ? "flex-1 min-h-0 h-full opacity-100 z-10 md:flex-none md:h-auto"
+                      : "flex-1 min-h-0 h-full opacity-0 z-10 md:flex-none md:h-auto"
                     : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
                 }
               />
@@ -288,13 +291,6 @@ export default function RecommendPage() {
               onDismissed={handleCardDismissed}
             />
           )}
-
-          {/* 019-02-02: PCアクションボタン（PC版のみ表示） */}
-          <PCActionButtons
-            isFavorited={isFavorited}
-            onFavorite={handleFavorite}
-            onNext={handleNext}
-          />
         </div>
 
         {/* 右サイドパネル */}
@@ -304,6 +300,36 @@ export default function RecommendPage() {
           data-testid="side-panel-right"
         />
       </div>
+
+      {/* PC版: Attribution footer（width 100%、画面最下部） */}
+      <footer
+        className="hidden md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-3 pb-24 text-center text-xs text-gray-500"
+        data-testid="pc-attribution-footer"
+      >
+        <p>
+          Content licensed under{" "}
+          <a
+            href="https://creativecommons.org/licenses/by-sa/3.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            CC BY-SA 3.0
+          </a>{" "}
+          &middot; SCP Foundation
+        </p>
+        <a
+          href={`https://scp-jp.wikidot.com/${currentArticle.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          原文を見る
+        </a>
+      </footer>
+
+      {/* 019-02-02: PCアクションボタン（PC版のみ、fixed overlay） */}
+      <PCActionButtons isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
 
       {/* AC-5: FloatingUI（ProgressBarなし） */}
       <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />

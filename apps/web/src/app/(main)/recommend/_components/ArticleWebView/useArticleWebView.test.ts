@@ -86,6 +86,8 @@ describe("useArticleWebView", () => {
       cb(0);
       return 0;
     });
+    // モバイルビューポートに設定（iframe内スクロール検知を有効化するため）
+    Object.defineProperty(window, "innerWidth", { value: 375, writable: true, configurable: true });
   });
 
   afterEach(() => {

@@ -20,6 +20,7 @@ interface UseArticleWebViewReturn {
 
 const SCROLL_END_THRESHOLD = 90;
 const IFRAME_LOAD_TIMEOUT_MS = 15_000;
+const MD_BREAKPOINT = 768;
 
 /**
  * スクロール率を正規化（0-100の範囲に収める）
@@ -71,11 +72,13 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
     };
   }, [url]);
 
-  // iframe contentWindowのスクロールを直接検知
+  // モバイル版: iframe contentWindowのスクロールを直接検知
   // wiki-proxy経由で同一オリジン配信のため、contentWindowに直接アクセス可能
-  // postMessage方式と異なり、iframe側へのスクリプト注入が不要
+  // PC版ではiframeがauto-heightのためwindowスクロールを使用（下のuseEffectで処理）
   useEffect(() => {
     if (isLoading) return;
+    // PC版ではwindowスクロールを使用するためスキップ
+    if (typeof window !== "undefined" && window.innerWidth >= MD_BREAKPOINT) return;
 
     const iframe = iframeRef.current;
     if (!iframe) return;
@@ -127,6 +130,54 @@ export function useArticleWebView(options: UseArticleWebViewOptions): UseArticle
       } catch {
         // iframe may have navigated away
       }
+    };
+  }, [isLoading, url]);
+
+  // PC版: windowスクロールを監視してiframe読了率を計算
+  // iframeがauto-heightで内部スクロールがないため、親ページのスクロール位置から算出
+  useEffect(() => {
+    if (isLoading) return;
+    if (typeof window === "undefined" || window.innerWidth < MD_BREAKPOINT) return;
+
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    let active = true;
+    let ticking = false;
+
+    const handleWindowScroll = () => {
+      if (ticking || !active) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (!active) return;
+
+        const rect = iframe.getBoundingClientRect();
+        const viewHeight = window.innerHeight;
+        const iframeHeight = iframe.offsetHeight;
+
+        if (iframeHeight <= viewHeight) return;
+
+        const scrolled = Math.max(0, -rect.top);
+        const maxScroll = Math.max(1, iframeHeight - viewHeight);
+        const raw = (scrolled / maxScroll) * 100;
+        const normalized = normalizePercentage(raw);
+
+        setScrollPercentage(normalized);
+        callbacksRef.current.onScrollChange?.(normalized);
+        if (!hasTriggeredEndRef.current && normalized >= SCROLL_END_THRESHOLD) {
+          setHasTriggeredEnd(true);
+          hasTriggeredEndRef.current = true;
+          callbacksRef.current.onScrollEnd?.();
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+
+    return () => {
+      active = false;
+      window.removeEventListener("scroll", handleWindowScroll);
     };
   }, [isLoading, url]);
 

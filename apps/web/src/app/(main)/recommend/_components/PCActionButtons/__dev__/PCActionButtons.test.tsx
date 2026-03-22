@@ -41,16 +41,18 @@ describe("019-02-02: PCアクションボタン", () => {
       expect(wrapper).toHaveClass("justify-center");
     });
 
-    it("ラッパーにmt-5（20px）が適用される", () => {
+    it("ラッパーにfixed配置クラスが適用される", () => {
       const { container } = render(<PCActionButtons {...defaultProps} />);
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass("mt-5");
+      expect(wrapper).toHaveClass("fixed");
+      expect(wrapper).toHaveClass("bottom-6");
     });
 
-    it("ラッパーにpx-4（16px）が適用される", () => {
+    it("ラッパーが中央寄せされる（left-1/2 -translate-x-1/2）", () => {
       const { container } = render(<PCActionButtons {...defaultProps} />);
       const wrapper = container.firstChild as HTMLElement;
-      expect(wrapper).toHaveClass("px-4");
+      expect(wrapper).toHaveClass("left-1/2");
+      expect(wrapper).toHaveClass("-translate-x-1/2");
     });
   });
 

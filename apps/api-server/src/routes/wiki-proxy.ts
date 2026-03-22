@@ -500,7 +500,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
     if (c.req.query("nav") === "floating") {
       html = html.replace(
         "</head>",
-        "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
+        "<style>@media(max-width:767px){.attribution-footer{padding-bottom:80px!important}}@media(min-width:768px){.attribution-footer{display:none!important}}</style></head>"
       );
     }
     return new Response(html, {
@@ -533,7 +533,7 @@ export const wikiProxyRoutes = new Hono().get("/*", async (c) => {
       if (c.req.query("nav") === "floating") {
         finalHtml = finalHtml.replace(
           "</head>",
-          "<style>.attribution-footer{padding-bottom:80px!important}</style></head>"
+          "<style>@media(max-width:767px){.attribution-footer{padding-bottom:80px!important}}@media(min-width:768px){.attribution-footer{display:none!important}}</style></head>"
         );
       }
       return new Response(finalHtml, {

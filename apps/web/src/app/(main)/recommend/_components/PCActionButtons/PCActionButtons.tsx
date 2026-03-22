@@ -10,14 +10,14 @@ interface Props {
 
 export function PCActionButtons({ isFavorited, onFavorite, onNext }: Props) {
   return (
-    <div className="hidden md:flex gap-3 justify-center mt-5 px-4 pb-5">
+    <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 gap-3 justify-center z-nav">
       {/* お気に入りボタン */}
       <button
         type="button"
         onClick={onFavorite}
         aria-label={isFavorited ? "お気に入りから削除" : "お気に入りに追加"}
         className={`
-          inline-flex items-center gap-2 px-7 py-3 rounded-xl text-[15px] font-medium border
+          inline-flex items-center gap-2 px-7 py-3 rounded-xl text-[15px] font-medium border shadow-lg
           ${
             isFavorited
               ? "bg-red-50 text-red-500 border-red-500"
@@ -34,7 +34,7 @@ export function PCActionButtons({ isFavorited, onFavorite, onNext }: Props) {
         type="button"
         onClick={onNext}
         aria-label="次の記事へ"
-        className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-[15px] font-medium bg-blue-500 text-white md:hover:bg-blue-600"
+        className="inline-flex items-center gap-2 px-7 py-3 rounded-xl text-[15px] font-medium bg-blue-500 text-white md:hover:bg-blue-600 shadow-lg"
       >
         次の記事へ
         <Icon name="chevron-right" size={20} />
