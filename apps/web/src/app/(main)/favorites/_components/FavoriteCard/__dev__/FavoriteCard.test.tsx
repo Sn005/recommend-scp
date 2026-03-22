@@ -222,6 +222,63 @@ describe("FavoriteCard", () => {
     });
   });
 
+  describe("AC-PC-2: カードホバーエフェクト（PC版クラス）", () => {
+    it("カードにmd:hover:-translate-y-0.5クラスが付与される", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card.className).toContain("md:hover:-translate-y-0.5");
+    });
+
+    it("カードにmd:hover:shadow相当のshadowクラスが付与される", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card.className).toMatch(/md:hover:shadow/);
+    });
+
+    it("カードにmd:duration-200クラスが含まれる", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card.className).toContain("md:duration-200");
+    });
+
+    it("モバイル用のhover:-translate-yクラス（md:プレフィックスなし）は付与されない", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      const classes = card.className.split(" ");
+      const mobileHoverTranslate = classes.filter(
+        (c) => c.startsWith("hover:-translate-y") && !c.startsWith("md:")
+      );
+      expect(mobileHoverTranslate).toHaveLength(0);
+    });
+
+    it("isRemoving=trueの場合もhoverクラスが共存する", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} isRemoving={true} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card.className).toContain("md:hover:-translate-y-0.5");
+    });
+  });
+
+  describe("AC-PC-3: カードパディング調整（PC版）", () => {
+    it("カードにmd:p-5クラスが付与される", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card.className).toContain("md:p-5");
+    });
+
+    it("モバイル用p-4クラスが維持される", () => {
+      render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);
+
+      const card = screen.getByTestId("favorite-card");
+      expect(card).toHaveClass("p-4");
+    });
+  });
+
   describe("デザイン準拠チェック", () => {
     it("カード背景色がwhite（bg-white）", () => {
       render(<FavoriteCard article={mockArticle} onRemove={mockOnRemove} />);

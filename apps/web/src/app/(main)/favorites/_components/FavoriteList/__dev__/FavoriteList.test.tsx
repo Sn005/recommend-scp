@@ -78,6 +78,22 @@ describe("FavoriteList", () => {
     });
   });
 
+  describe("AC-PC-3: カード間gap調整（PC版）", () => {
+    it("リストにmd:gap-3クラスが付与される", () => {
+      render(<FavoriteList favorites={mockFavorites} onRemove={mockOnRemove} />);
+
+      const list = screen.getByTestId("favorite-list");
+      expect(list.className).toContain("md:gap-3");
+    });
+
+    it("モバイル用space-y-3クラスが維持される", () => {
+      render(<FavoriteList favorites={mockFavorites} onRemove={mockOnRemove} />);
+
+      const list = screen.getByTestId("favorite-list");
+      expect(list).toHaveClass("space-y-3");
+    });
+  });
+
   describe("統合テスト", () => {
     it("各カードにタイトルが表示される", () => {
       render(<FavoriteList favorites={mockFavorites} onRemove={mockOnRemove} />);
