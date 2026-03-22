@@ -128,6 +128,11 @@ export default function RecommendPage() {
     transitioningRef.current = true;
     setIsSlotReady(false);
 
+    // PC版: bodyスクロールを先頭にリセット（次の記事の先頭から表示）
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      window.scrollTo(0, 0);
+    }
+
     // 即座にスロットローテーション（iframeのバックグラウンド読み込み開始）
     advance();
     goToNext();
@@ -232,10 +237,10 @@ export default function RecommendPage() {
       data-testid="article-viewer"
     >
       {/* 019-02-01: 3カラムレイアウト（PC版サイドパネル付き） */}
-      <div className="md:flex md:min-h-[calc(100vh-56px)]" data-testid="three-column-layout">
-        {/* 左サイドパネル */}
+      <div className="md:flex" data-testid="three-column-layout">
+        {/* 左サイドパネル（sticky: スクロール時も常にビューポートを埋める） */}
         <div
-          className="hidden md:block flex-1 bg-gray-100"
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
           style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
           data-testid="side-panel-left"
         />
@@ -293,9 +298,9 @@ export default function RecommendPage() {
           )}
         </div>
 
-        {/* 右サイドパネル */}
+        {/* 右サイドパネル（sticky: スクロール時も常にビューポートを埋める） */}
         <div
-          className="hidden md:block flex-1 bg-gray-100"
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
           style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
           data-testid="side-panel-right"
         />
@@ -303,7 +308,7 @@ export default function RecommendPage() {
 
       {/* PC版: Attribution footer（width 100%、画面最下部） */}
       <footer
-        className="hidden md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-3 pb-24 text-center text-xs text-gray-500"
+        className="hidden md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-3 pb-20 text-center text-xs text-gray-500"
         data-testid="pc-attribution-footer"
       >
         <p>

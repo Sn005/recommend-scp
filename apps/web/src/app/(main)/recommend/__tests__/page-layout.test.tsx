@@ -261,11 +261,12 @@ describe("019-02-01: サイドパネル＆コンテンツ中央寄せ", () => {
     });
   });
 
-  describe("AC-4: 最小高さ", () => {
-    it("ラッパーdivにmd:min-h-[calc(100vh-56px)]クラスが付与されている", () => {
+  describe("AC-4: サイドパネルのビューポート高さ", () => {
+    it("サイドパネルがstickyでビューポート高さを持つ", () => {
       render(<RecommendPage />);
-      const wrapper = getLayoutWrapper();
-      expect(wrapper).toHaveClass("md:min-h-[calc(100vh-56px)]");
+      const leftPanel = screen.getByTestId("side-panel-left");
+      expect(leftPanel).toHaveClass("md:sticky");
+      expect(leftPanel).toHaveClass("md:h-[calc(100vh-56px)]");
     });
   });
 });
