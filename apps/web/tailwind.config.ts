@@ -57,7 +57,17 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Hiragino Kaku Gothic Pro", "ヒラギノ角ゴ Pro W3", "Meiryo", "sans-serif"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Hiragino Kaku Gothic Pro",
+          "ヒラギノ角ゴ Pro W3",
+          "Noto Sans JP",
+          "Meiryo",
+          "Segoe UI",
+          "system-ui",
+          "sans-serif",
+        ],
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       borderRadius: {

@@ -28,7 +28,8 @@ export const iconPaths: Record<IconName, string> = {
   "alert-circle": "M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   "refresh-cw":
     "M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15",
-  "more-vertical": "M12 5v.01M12 12v.01M12 19v.01",
+  "more-vertical":
+    "M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z",
 };
 
 export const filledIcons: IconName[] = ["heart-filled"];

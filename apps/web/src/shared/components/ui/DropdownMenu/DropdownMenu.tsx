@@ -65,7 +65,7 @@ export const DropdownMenu = () => {
         aria-expanded={isOpen}
         className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
       >
-        <Icon name="more-vertical" size={18} aria-label="メニュー" />
+        <Icon name="more-vertical" size={20} aria-label="メニュー" />
       </button>
 
       {/* ドロップダウン */}
