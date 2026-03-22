@@ -20,6 +20,7 @@ import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
 import type { HistoryEntry } from "@/app/(main)/history/_types";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
 import { FloatingUI } from "./_components/FloatingUI";
+import { PCActionButtons } from "./_components/PCActionButtons";
 import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
@@ -227,52 +228,82 @@ export default function RecommendPage() {
   // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
     <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
-      {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
-      {slots.map((slot, i) => {
-        if (!slot) return null;
-        const isCurrent = i === 0;
-        const isVisible = isCurrent && !showCard && isSlotReady;
-
-        return (
-          <ArticleWebView
-            key={`slot-${String(slot.articleIndex)}`}
-            url={slot.url}
-            articleId={articles[slot.articleIndex]?.id}
-            isVisible={isVisible}
-            onScrollChange={isCurrent ? handleScrollChange : undefined}
-            onSkip={isCurrent ? goToNext : undefined}
-            onContentLoaded={isCurrent ? handleContentLoaded : undefined}
-            onIframeLoad={() => {
-              poolHandleIframeLoad(slot.articleIndex);
-            }}
-            onContentFullyReady={() => {
-              poolHandleFullyLoaded(slot.articleIndex);
-              if (isCurrent) {
-                handleCurrentIframeLoad();
-              }
-            }}
-            className={
-              isCurrent
-                ? isVisible
-                  ? "flex-1 min-h-0 h-full opacity-100 z-10"
-                  : "flex-1 min-h-0 h-full opacity-0 z-10"
-                : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
-            }
-          />
-        );
-      })}
-
-      {/* AC-1/AC-3: TransitionCard */}
-      {nextArticleForCard && (
-        <TransitionCard
-          scpNumber={nextArticleForCard.id}
-          objectClass={nextArticleForCard.objectClass}
-          rating={nextArticleForCard.rating}
-          isVisible={showCard}
-          isContentReady={isSlotReady}
-          onDismissed={handleCardDismissed}
+      {/* 019-02-01: 3カラムレイアウト（PC版サイドパネル付き） */}
+      <div className="md:flex md:min-h-[calc(100vh-56px)]" data-testid="three-column-layout">
+        {/* 左サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100"
+          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
+          data-testid="side-panel-left"
         />
-      )}
+
+        {/* 中央コンテンツ */}
+        <div
+          className="w-full md:max-w-[768px] md:shrink-0 relative flex flex-col"
+          data-testid="center-column"
+        >
+          {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
+          {slots.map((slot, i) => {
+            if (!slot) return null;
+            const isCurrent = i === 0;
+            const isVisible = isCurrent && !showCard && isSlotReady;
+
+            return (
+              <ArticleWebView
+                key={`slot-${String(slot.articleIndex)}`}
+                url={slot.url}
+                articleId={articles[slot.articleIndex]?.id}
+                isVisible={isVisible}
+                onScrollChange={isCurrent ? handleScrollChange : undefined}
+                onSkip={isCurrent ? goToNext : undefined}
+                onContentLoaded={isCurrent ? handleContentLoaded : undefined}
+                onIframeLoad={() => {
+                  poolHandleIframeLoad(slot.articleIndex);
+                }}
+                onContentFullyReady={() => {
+                  poolHandleFullyLoaded(slot.articleIndex);
+                  if (isCurrent) {
+                    handleCurrentIframeLoad();
+                  }
+                }}
+                className={
+                  isCurrent
+                    ? isVisible
+                      ? "flex-1 min-h-0 h-full opacity-100 z-10"
+                      : "flex-1 min-h-0 h-full opacity-0 z-10"
+                    : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
+                }
+              />
+            );
+          })}
+
+          {/* AC-1/AC-3: TransitionCard */}
+          {nextArticleForCard && (
+            <TransitionCard
+              scpNumber={nextArticleForCard.id}
+              objectClass={nextArticleForCard.objectClass}
+              rating={nextArticleForCard.rating}
+              isVisible={showCard}
+              isContentReady={isSlotReady}
+              onDismissed={handleCardDismissed}
+            />
+          )}
+
+          {/* 019-02-02: PCアクションボタン（PC版のみ表示） */}
+          <PCActionButtons
+            isFavorited={isFavorited}
+            onFavorite={handleFavorite}
+            onNext={handleNext}
+          />
+        </div>
+
+        {/* 右サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100"
+          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
+          data-testid="side-panel-right"
+        />
+      </div>
 
       {/* AC-5: FloatingUI（ProgressBarなし） */}
       <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
