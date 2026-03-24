@@ -200,6 +200,11 @@ vi.mock("../_components/ArticleWebView", () => ({
   },
 }));
 
+// PCActionButtons をモック（019-02-02で追加。既存テストへの影響を防ぐ）
+vi.mock("../_components/PCActionButtons", () => ({
+  PCActionButtons: () => <div data-testid="pc-action-buttons" />,
+}));
+
 // useHistory をモック
 vi.mock("@/app/(main)/history/_hooks/useHistory", () => ({
   useHistory: () => ({

@@ -20,6 +20,7 @@ import { useHistory } from "@/app/(main)/history/_hooks/useHistory";
 import type { HistoryEntry } from "@/app/(main)/history/_types";
 import { ArticleWebView, type ArticleContent } from "./_components/ArticleWebView";
 import { FloatingUI } from "./_components/FloatingUI";
+import { PCActionButtons } from "./_components/PCActionButtons";
 import { TransitionCard } from "./_components/TransitionCard";
 import { EmptyState } from "./_components/EmptyState";
 import { ErrorState } from "./_components/ErrorState";
@@ -127,6 +128,11 @@ export default function RecommendPage() {
     transitioningRef.current = true;
     setIsSlotReady(false);
 
+    // PC版: bodyスクロールを先頭にリセット（次の記事の先頭から表示）
+    if (typeof window !== "undefined" && window.innerWidth >= 768) {
+      window.scrollTo(0, 0);
+    }
+
     // 即座にスロットローテーション（iframeのバックグラウンド読み込み開始）
     advance();
     goToNext();
@@ -226,53 +232,109 @@ export default function RecommendPage() {
   // AC-2: iframeプールに基づくレンダリング
   // flex-colレイアウト: currentスロットはflex-1、preloadスロットはoff-screenに配置
   return (
-    <div className="relative flex flex-col h-screen overflow-clip" data-testid="article-viewer">
-      {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
-      {slots.map((slot, i) => {
-        if (!slot) return null;
-        const isCurrent = i === 0;
-        const isVisible = isCurrent && !showCard && isSlotReady;
-
-        return (
-          <ArticleWebView
-            key={`slot-${String(slot.articleIndex)}`}
-            url={slot.url}
-            articleId={articles[slot.articleIndex]?.id}
-            isVisible={isVisible}
-            onScrollChange={isCurrent ? handleScrollChange : undefined}
-            onSkip={isCurrent ? goToNext : undefined}
-            onContentLoaded={isCurrent ? handleContentLoaded : undefined}
-            onIframeLoad={() => {
-              poolHandleIframeLoad(slot.articleIndex);
-            }}
-            onContentFullyReady={() => {
-              poolHandleFullyLoaded(slot.articleIndex);
-              if (isCurrent) {
-                handleCurrentIframeLoad();
-              }
-            }}
-            className={
-              isCurrent
-                ? isVisible
-                  ? "flex-1 min-h-0 h-full opacity-100 z-10"
-                  : "flex-1 min-h-0 h-full opacity-0 z-10"
-                : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
-            }
-          />
-        );
-      })}
-
-      {/* AC-1/AC-3: TransitionCard */}
-      {nextArticleForCard && (
-        <TransitionCard
-          scpNumber={nextArticleForCard.id}
-          objectClass={nextArticleForCard.objectClass}
-          rating={nextArticleForCard.rating}
-          isVisible={showCard}
-          isContentReady={isSlotReady}
-          onDismissed={handleCardDismissed}
+    <div
+      className="relative flex flex-col h-screen overflow-clip md:h-auto md:overflow-visible"
+      data-testid="article-viewer"
+    >
+      {/* 019-02-01: 3カラムレイアウト（PC版サイドパネル付き） */}
+      <div className="md:flex" data-testid="three-column-layout">
+        {/* 左サイドパネル（sticky: スクロール時も常にビューポートを埋める） */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
+          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
+          data-testid="side-panel-left"
         />
-      )}
+
+        {/* 中央コンテンツ */}
+        <div
+          className="w-full md:max-w-[768px] md:shrink-0 relative flex flex-col"
+          data-testid="center-column"
+        >
+          {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}
+          {slots.map((slot, i) => {
+            if (!slot) return null;
+            const isCurrent = i === 0;
+            const isVisible = isCurrent && !showCard && isSlotReady;
+
+            return (
+              <ArticleWebView
+                key={`slot-${String(slot.articleIndex)}`}
+                url={slot.url}
+                articleId={articles[slot.articleIndex]?.id}
+                isVisible={isVisible}
+                onScrollChange={isCurrent ? handleScrollChange : undefined}
+                onSkip={isCurrent ? goToNext : undefined}
+                onContentLoaded={isCurrent ? handleContentLoaded : undefined}
+                onIframeLoad={() => {
+                  poolHandleIframeLoad(slot.articleIndex);
+                }}
+                onContentFullyReady={() => {
+                  poolHandleFullyLoaded(slot.articleIndex);
+                  if (isCurrent) {
+                    handleCurrentIframeLoad();
+                  }
+                }}
+                className={
+                  isCurrent
+                    ? isVisible
+                      ? "flex-1 min-h-0 h-full opacity-100 z-10 md:flex-none md:h-auto"
+                      : "flex-1 min-h-0 h-full opacity-0 z-10 md:flex-none md:h-auto"
+                    : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
+                }
+              />
+            );
+          })}
+
+          {/* AC-1/AC-3: TransitionCard */}
+          {nextArticleForCard && (
+            <TransitionCard
+              scpNumber={nextArticleForCard.id}
+              objectClass={nextArticleForCard.objectClass}
+              rating={nextArticleForCard.rating}
+              isVisible={showCard}
+              isContentReady={isSlotReady}
+              onDismissed={handleCardDismissed}
+            />
+          )}
+        </div>
+
+        {/* 右サイドパネル（sticky: スクロール時も常にビューポートを埋める） */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
+          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
+          data-testid="side-panel-right"
+        />
+      </div>
+
+      {/* PC版: Attribution footer（width 100%、画面最下部） */}
+      <footer
+        className="hidden md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-3 pb-20 text-center text-xs text-gray-500"
+        data-testid="pc-attribution-footer"
+      >
+        <p>
+          Content licensed under{" "}
+          <a
+            href="https://creativecommons.org/licenses/by-sa/3.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            CC BY-SA 3.0
+          </a>{" "}
+          &middot; SCP Foundation
+        </p>
+        <a
+          href={`https://scp-jp.wikidot.com/${currentArticle.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 underline"
+        >
+          原文を見る
+        </a>
+      </footer>
+
+      {/* 019-02-02: PCアクションボタン（PC版のみ、fixed overlay） */}
+      <PCActionButtons isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />
 
       {/* AC-5: FloatingUI（ProgressBarなし） */}
       <FloatingUI isFavorited={isFavorited} onFavorite={handleFavorite} onNext={handleNext} />

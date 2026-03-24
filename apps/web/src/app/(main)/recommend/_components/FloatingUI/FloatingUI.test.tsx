@@ -97,6 +97,14 @@ describe("FloatingUI", () => {
     });
   });
 
+  describe("019-02-02: PC版非表示", () => {
+    it("ラッパーにmd:hiddenクラスが付与されている", () => {
+      const { container } = render(<FloatingUI {...defaultProps} />);
+      const wrapper = container.firstChild as HTMLElement;
+      expect(wrapper).toHaveClass("md:hidden");
+    });
+  });
+
   describe("アニメーション", () => {
     it("transition-opacityとduration-300が適用される", () => {
       const { container } = render(<FloatingUI {...defaultProps} />);

@@ -16,7 +16,7 @@ export function FloatingUI({
   });
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-nav pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-nav pointer-events-none md:hidden">
       {/* PillNav - スクロールで表示/非表示 */}
       <div
         className={cn(

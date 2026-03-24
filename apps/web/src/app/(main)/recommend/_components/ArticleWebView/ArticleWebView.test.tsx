@@ -22,6 +22,11 @@ vi.mock("./useIframeLoadHandler", () => ({
   useIframeLoadHandler: vi.fn(),
 }));
 
+// useIframeAutoHeightのモック
+vi.mock("./useIframeAutoHeight", () => ({
+  useIframeAutoHeight: vi.fn(),
+}));
+
 import { useArticleWebView } from "./useArticleWebView";
 import { useNotFoundState } from "./useNotFoundState";
 import { useIframeLoadHandler } from "./useIframeLoadHandler";
