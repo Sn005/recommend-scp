@@ -237,10 +237,7 @@ export default function RecommendPage() {
       data-testid="article-viewer"
     >
       {/* 019-02-01: 3カラムレイアウト（PC版サイドパネル付き） */}
-      <div
-        className="flex-1 min-h-0 md:flex md:flex-initial md:min-h-fit"
-        data-testid="three-column-layout"
-      >
+      <div className="h-full md:h-auto md:flex" data-testid="three-column-layout">
         {/* 左サイドパネル（sticky: スクロール時も常にビューポートを埋める） */}
         <div
           className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
