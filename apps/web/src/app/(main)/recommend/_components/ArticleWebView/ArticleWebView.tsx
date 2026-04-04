@@ -111,8 +111,8 @@ export function ArticleWebView({
           セキュリティ: SCP Wikiは信頼できるサイトのため、スクリプト実行とsame-originを許可
           注意: allow-same-origin + allow-scriptsの組み合わせはsandbox制約を事実上無効化するため、
           信頼できないサイトには使用しないこと */}
-      {/* pb-20: FloatingUI(モバイル)・PCActionButtons分の余白を確保し記事末尾が隠れるのを防止 */}
-      <div className="w-full h-full pb-20">
+      {/* md:pb-20: PC版のみPCActionButtons分の余白を確保（モバイルはwiki-proxy内部で余白注入済み） */}
+      <div className="w-full h-full md:pb-20">
         <iframe
           ref={iframeRef}
           src={iframeSrc}
