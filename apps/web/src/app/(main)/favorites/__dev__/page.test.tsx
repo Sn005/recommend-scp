@@ -284,23 +284,24 @@ describe("FavoritesPage", () => {
   });
 
   describe("AC-PC-1: コンテンツ中央寄せ（PC版レイアウト）", () => {
-    it("お気に入りリストのラッパーにmd:max-w-[768px]が適用される", () => {
+    it("中央カラムにmd:max-w-[768px]とmd:shrink-0が適用される", () => {
       render(<FavoritesPage />);
 
       const page = screen.getByTestId("favorites-page");
-      const mainEl = page.querySelector("main");
-      expect(mainEl?.className).toContain("md:max-w-[768px]");
+      const centerColumn = page.querySelector(".md\\:max-w-\\[768px\\]");
+      expect(centerColumn).toBeInTheDocument();
+      expect(centerColumn?.className).toContain("md:shrink-0");
     });
 
-    it("お気に入りリストのラッパーにmd:mx-autoが適用される", () => {
+    it("三カラムレイアウトにmd:flexが適用される", () => {
       render(<FavoritesPage />);
 
       const page = screen.getByTestId("favorites-page");
-      const mainEl = page.querySelector("main");
-      expect(mainEl?.className).toContain("md:mx-auto");
+      const flexWrapper = page.querySelector(".md\\:flex");
+      expect(flexWrapper).toBeInTheDocument();
     });
 
-    it("ローディング状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+    it("ローディング状態でもmd:max-w-[768px]が適用される", () => {
       mockUseFavorites.mockReturnValue({
         favorites: [],
         isLoading: true,
@@ -312,12 +313,11 @@ describe("FavoritesPage", () => {
       render(<FavoritesPage />);
 
       const page = screen.getByTestId("favorites-page");
-      const mainEl = page.querySelector("main");
-      expect(mainEl?.className).toContain("md:max-w-[768px]");
-      expect(mainEl?.className).toContain("md:mx-auto");
+      const centerColumn = page.querySelector(".md\\:max-w-\\[768px\\]");
+      expect(centerColumn).toBeInTheDocument();
     });
 
-    it("エラー状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+    it("エラー状態でもmd:max-w-[768px]が適用される", () => {
       mockUseFavorites.mockReturnValue({
         favorites: [],
         isLoading: false,
@@ -329,12 +329,11 @@ describe("FavoritesPage", () => {
       render(<FavoritesPage />);
 
       const page = screen.getByTestId("favorites-page");
-      const mainEl = page.querySelector("main");
-      expect(mainEl?.className).toContain("md:max-w-[768px]");
-      expect(mainEl?.className).toContain("md:mx-auto");
+      const centerColumn = page.querySelector(".md\\:max-w-\\[768px\\]");
+      expect(centerColumn).toBeInTheDocument();
     });
 
-    it("空状態でもmd:max-w-[768px] md:mx-autoが適用される", () => {
+    it("空状態でもmd:max-w-[768px]が適用される", () => {
       mockUseFavorites.mockReturnValue({
         favorites: [],
         isLoading: false,
@@ -346,9 +345,8 @@ describe("FavoritesPage", () => {
       render(<FavoritesPage />);
 
       const page = screen.getByTestId("favorites-page");
-      const mainEl = page.querySelector("main");
-      expect(mainEl?.className).toContain("md:max-w-[768px]");
-      expect(mainEl?.className).toContain("md:mx-auto");
+      const centerColumn = page.querySelector(".md\\:max-w-\\[768px\\]");
+      expect(centerColumn).toBeInTheDocument();
     });
   });
 
