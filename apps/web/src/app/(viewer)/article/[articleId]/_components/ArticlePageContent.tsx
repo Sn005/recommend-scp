@@ -58,22 +58,46 @@ export function ArticlePageContent({ articleId }: ArticlePageContentProps) {
   }, []);
 
   return (
-    <div className="relative flex flex-col h-screen overflow-hidden" data-testid="article-page">
-      <div
-        ref={containerRef}
-        data-testid="article-webview"
-        className={cn("relative w-full flex-1 min-h-0")}
-      >
-        <iframe
-          src={iframeSrc}
-          className="w-full h-full border-0"
-          title="SCP記事"
-          sandbox="allow-scripts allow-same-origin allow-popups"
-          onLoad={handleIframeLoad}
+    <div
+      className="relative flex flex-col h-screen overflow-hidden md:h-auto md:overflow-visible"
+      data-testid="article-page"
+    >
+      <div className="md:flex md:min-h-[calc(100vh-56px)]">
+        {/* 左サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
+          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
+        />
+
+        {/* 中央コンテンツ */}
+        <div
+          className={cn(
+            "w-full md:max-w-[768px] md:shrink-0 relative flex flex-col flex-1 min-h-0 md:flex-none"
+          )}
+        >
+          <div
+            ref={containerRef}
+            data-testid="article-webview"
+            className={cn("relative w-full flex-1 min-h-0")}
+          >
+            <iframe
+              src={iframeSrc}
+              className="w-full h-full border-0"
+              title="SCP記事"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+              onLoad={handleIframeLoad}
+            />
+          </div>
+          <AttributionFooter articleId={articleId} authorName={authorName} />
+          <FloatingFavoriteButton articleId={articleId} />
+        </div>
+
+        {/* 右サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
+          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
         />
       </div>
-      <AttributionFooter articleId={articleId} authorName={authorName} />
-      <FloatingFavoriteButton articleId={articleId} />
     </div>
   );
 }
