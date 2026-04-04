@@ -74,7 +74,7 @@ export default function FavoritesPage() {
         />
 
         {/* 中央コンテンツ */}
-        <div className="w-full md:max-w-[768px] md:shrink-0 pb-8 px-4">
+        <div className="w-full md:max-w-[768px] md:shrink-0 md:h-screen md:overflow-y-auto pb-8 px-4">
           {/* AC-2: ヘッダー（スクロールで動く） */}
           <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
             <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>

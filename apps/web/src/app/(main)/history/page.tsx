@@ -34,7 +34,7 @@ export default function HistoryPage() {
         />
 
         {/* 中央コンテンツ */}
-        <div className="w-full md:max-w-[768px] md:shrink-0">
+        <div className="w-full md:max-w-[768px] md:shrink-0 md:h-screen md:overflow-y-auto">
           {/* ヘッダー（AC-1, AC-5: 固定しない） */}
           <div className="p-4 pl-16 md:pl-4">
             <h1 className="text-lg font-semibold text-gray-800">閲覧履歴</h1>
