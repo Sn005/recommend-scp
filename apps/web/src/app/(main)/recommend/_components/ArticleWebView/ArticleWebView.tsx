@@ -4,7 +4,6 @@ import { useRef, useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
 import { useArticleWebView } from "./useArticleWebView";
 import { useIosSafariScrollFix } from "./useIosSafariScrollFix";
-import { useIframeAutoHeight } from "./useIframeAutoHeight";
 import { useNotFoundState } from "./useNotFoundState";
 import { useIframeLoadHandler } from "./useIframeLoadHandler";
 import { TranslationNotFound } from "../TranslationNotFound";
@@ -58,10 +57,6 @@ export function ArticleWebView({
   // iOS Safari: プリロード→表示昇格時のスクロール修正
   useIosSafariScrollFix({ isVisible, containerRef, iframeRef });
 
-  // PC版: iframeの高さをコンテンツに合わせて自動調整（bodyスクロールに統一）
-  // isVisibleを依存に含め、プリロード→表示昇格時に高さを再計算する
-  useIframeAutoHeight(iframeRef, containerRef, isIframeLoading, isVisible);
-
   // 404検知・NotFound UI状態管理
   const { showNotFound, handleSuggest } = useNotFoundState({
     url,
@@ -85,7 +80,7 @@ export function ArticleWebView({
   // サジェスト画面表示（通常のArticleWebViewと同じ高さを維持し、次記事が見えないようにする）
   if (showNotFound) {
     return (
-      <div className={cn("relative w-full h-screen", className)}>
+      <div className={cn("relative w-full h-screen md:h-[calc(100vh-56px)]", className)}>
         <TranslationNotFound onSuggest={handleSuggest} />
       </div>
     );
@@ -96,7 +91,7 @@ export function ArticleWebView({
       ref={containerRef}
       data-testid="article-webview"
       data-url={url}
-      className={cn("relative w-full h-screen md:h-auto", className)}
+      className={cn("relative w-full h-screen md:h-[calc(100vh-56px)]", className)}
     >
       {/* エラー表示 */}
       {error && (

@@ -277,8 +277,8 @@ export default function RecommendPage() {
                 className={
                   isCurrent
                     ? isVisible
-                      ? "flex-1 min-h-0 h-full opacity-100 z-10 md:flex-none md:h-auto"
-                      : "flex-1 min-h-0 h-full opacity-0 z-10 md:flex-none md:h-auto"
+                      ? "flex-1 min-h-0 h-full opacity-100 z-10 md:flex-none md:h-[calc(100vh-56px)]"
+                      : "flex-1 min-h-0 h-full opacity-0 z-10 md:flex-none md:h-[calc(100vh-56px)]"
                     : "absolute -left-[9999px] top-0 w-screen opacity-0 pointer-events-none"
                 }
               />
@@ -308,7 +308,7 @@ export default function RecommendPage() {
 
       {/* PC版: Attribution footer（width 100%、画面最下部） */}
       <footer
-        className="hidden md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-3 pb-20 text-center text-xs text-gray-500"
+        className="hidden md:fixed md:bottom-0 md:left-0 md:right-0 md:block w-full border-t border-gray-200 bg-gray-50 px-4 py-2 text-center text-xs text-gray-500 z-40"
         data-testid="pc-attribution-footer"
       >
         <p>
