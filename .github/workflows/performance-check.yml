@@ -1,0 +1,231 @@
+# GitHub Actions Performance Check
+# Subtask: 018-03-01 AC2, AC3
+#
+# 本番APIのレスポンスタイムとスロークエリを定期確認するワークフロー。
+# - AC2: POST /recommend, GET /favorites のレスポンスタイムが 200ms 以内
+# - AC3: pg_stat_statements のスロークエリがベースラインの 200% 以内
+#
+# 必要なシークレット/変数:
+#   vars.API_BASE_URL              本番APIのベースURL (例: https://scpicks.app/api)
+#   secrets.TEST_VISITOR_ID        オンボーディング完了済みのvisitor_id (UUID)
+#   secrets.SUPABASE_URL           本番SupabaseのURL
+#   secrets.SUPABASE_SERVICE_ROLE_KEY  Supabase Service Roleキー
+
+name: Performance Check
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # 毎日 01:00 UTC（JST 10:00）
+  workflow_dispatch: {} # 手動実行
+
+jobs:
+  api-performance:
+    name: "AC2: APIレスポンスタイム計測"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run API performance check (AC2)
+        id: perf
+        run: |
+          npx tsx scripts/check-api-performance.ts 2>&1 | tee /tmp/perf-result.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          # 結果をJob Summaryに出力
+          echo "## AC2: APIレスポンスタイム計測結果" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/perf-result.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          exit $EXIT_CODE
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          TEST_VISITOR_ID: ${{ secrets.TEST_VISITOR_ID }}
+        continue-on-error: true
+
+      - name: Handle performance degradation
+        if: steps.perf.outputs.exit_code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = require('fs').readFileSync('/tmp/perf-result.txt', 'utf8');
+            const timestamp = new Date().toISOString();
+            const apiUrl = '${{ vars.API_BASE_URL }}';
+
+            // 重複チェック: perf:degraded ラベル付きOpenなIssue
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,perf:degraded',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            const body = [
+              `## APIレスポンスタイム劣化レポート`,
+              ``,
+              `| 項目 | 値 |`,
+              `| --- | --- |`,
+              `| 検知時刻 | ${timestamp} |`,
+              `| 対象URL | ${apiUrl} |`,
+              `| 閾値 | 200ms |`,
+              ``,
+              `### 計測結果`,
+              `\`\`\``,
+              result,
+              `\`\`\``,
+              ``,
+              `### 対応手順`,
+              `1. Vercelダッシュボードでサーバーレスファンクションのログを確認`,
+              `2. Supabaseダッシュボードで Query Performance を確認`,
+              `3. \`docs/operations/slow-query-optimization.md\` の対応記録を参照`,
+            ].join('\n');
+
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: `## 継続劣化報告\n\n検知時刻: ${timestamp}\n\n\`\`\`\n${result}\n\`\`\``
+              });
+              core.info(`Issue #${existingIssues[0].number} に継続劣化コメントを追加しました`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Performance] APIレスポンスタイム劣化検知 (${new Date().toISOString().slice(0,10)})`,
+                body,
+                labels: ['type:ops', 'perf:degraded']
+              });
+              core.info('新規パフォーマンス劣化Issueを作成しました');
+            }
+
+      - name: Fail job on degradation
+        if: steps.perf.outputs.exit_code != '0'
+        run: exit 1
+
+  slow-query-check:
+    name: "AC3: スロークエリ確認"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run slow query check (AC3)
+        id: sq
+        run: |
+          npx tsx scripts/check-slow-queries.ts 2>&1 | tee /tmp/sq-result.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          # 結果をJob Summaryに出力
+          echo "## AC3: スロークエリ確認結果" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/sq-result.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          # 終了コード2は「手動確認が必要」= 警告扱い（CIを失敗させない）
+          if [ "$EXIT_CODE" = "2" ]; then
+            echo "::warning::スロークエリ自動取得不可。Supabaseダッシュボードで手動確認が必要です。"
+            exit 0
+          fi
+          exit $EXIT_CODE
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        continue-on-error: true
+
+      - name: Handle slow query alert
+        if: steps.sq.outputs.exit_code == '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const result = require('fs').readFileSync('/tmp/sq-result.txt', 'utf8');
+            const timestamp = new Date().toISOString();
+
+            // 重複チェック: slow-query ラベル付きOpenなIssue
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,slow-query',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            const body = [
+              `## スロークエリ劣化レポート`,
+              ``,
+              `| 項目 | 値 |`,
+              `| --- | --- |`,
+              `| 検知時刻 | ${timestamp} |`,
+              `| 判定基準 | ベースライン × 200% 超過 |`,
+              ``,
+              `### 確認結果`,
+              `\`\`\``,
+              result,
+              `\`\`\``,
+              ``,
+              `### ベースライン`,
+              `| クエリ | ベースライン | 閾値 |`,
+              `| --- | --- | --- |`,
+              `| search_articles_by_embedding | 391ms | 782ms |`,
+              `| search_articles_by_unexplored_tags | 604ms | 1,208ms |`,
+              ``,
+              `### 対応手順`,
+              `1. Supabaseダッシュボード > SQL Editor で \`pg_stat_statements\` を確認`,
+              `2. \`docs/operations/slow-query-optimization.md\` の対応フローに従って対応`,
+              `3. 必要であれば EPIC-012 のマイグレーションを参照`,
+            ].join('\n');
+
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: `## 継続劣化報告\n\n検知時刻: ${timestamp}\n\n\`\`\`\n${result}\n\`\`\``
+              });
+              core.info(`Issue #${existingIssues[0].number} に継続スロークエリコメントを追加しました`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Performance] スロークエリ劣化検知 (${new Date().toISOString().slice(0,10)})`,
+                body,
+                labels: ['type:ops', 'slow-query']
+              });
+              core.info('新規スロークエリIssueを作成しました');
+            }
+
+      - name: Fail job on slow query
+        if: steps.sq.outputs.exit_code == '1'
+        run: exit 1
