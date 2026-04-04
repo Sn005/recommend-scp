@@ -78,7 +78,8 @@ async function measureEndpoint(
 
   // 中央値
   const sorted = [...measurements].sort((a, b) => a - b);
-  const median = sorted[1];
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted[mid];
 
   return {
     endpoint: label,
