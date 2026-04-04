@@ -18,6 +18,9 @@ export function useIframeAutoHeight(
   isVisible?: boolean
 ) {
   useEffect(() => {
+    // 非表示スロット（プリロード用）はheight展開しない
+    // 展開するとドキュメントのスクロール領域が拡大し、可視iframeのレイアウトに干渉する
+    if (!isVisible) return;
     if (isLoading) return;
     if (typeof window === "undefined" || window.innerWidth < MD_BREAKPOINT) return;
 
