@@ -247,7 +247,7 @@ export default function RecommendPage() {
 
         {/* 中央コンテンツ */}
         <div
-          className="w-full md:max-w-[768px] md:shrink-0 relative flex flex-col"
+          className="w-full h-screen md:max-w-[768px] md:shrink-0 relative flex flex-col md:h-auto"
           data-testid="center-column"
         >
           {/* AC-2: iframeプール（key付きでDOM保持 → プリロード有効化） */}

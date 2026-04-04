@@ -111,15 +111,18 @@ export function ArticleWebView({
           セキュリティ: SCP Wikiは信頼できるサイトのため、スクリプト実行とsame-originを許可
           注意: allow-same-origin + allow-scriptsの組み合わせはsandbox制約を事実上無効化するため、
           信頼できないサイトには使用しないこと */}
-      <iframe
-        ref={iframeRef}
-        src={iframeSrc}
-        className="w-full h-full border-0"
-        onLoad={handleIframeLoad}
-        onError={handleError}
-        title="SCP記事"
-        sandbox="allow-scripts allow-same-origin allow-popups"
-      />
+      {/* pb-20: FloatingUI(モバイル)・PCActionButtons分の余白を確保し記事末尾が隠れるのを防止 */}
+      <div className="w-full h-full pb-20">
+        <iframe
+          ref={iframeRef}
+          src={iframeSrc}
+          className="w-full h-full border-0"
+          onLoad={handleIframeLoad}
+          onError={handleError}
+          title="SCP記事"
+          sandbox="allow-scripts allow-same-origin allow-popups"
+        />
+      </div>
     </div>
   );
 }
