@@ -19,8 +19,8 @@ describe("PillNav", () => {
       render(<PillNav {...defaultProps} />);
 
       const nav = screen.getByRole("navigation");
-      // 背景: rgba(255, 255, 255, 0.3) + blur(20px)
-      expect(nav).toHaveClass("bg-white/30");
+      // 背景: rgba(255, 255, 255, 0.8) + blur(20px)
+      expect(nav).toHaveClass("bg-white/80");
       expect(nav).toHaveClass("backdrop-blur-glass");
     });
 

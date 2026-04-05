@@ -71,9 +71,11 @@ const INJECTED_STYLE = [
   "#main-content{margin:0!important;padding:0!important;max-width:100%!important}",
   // 記事タイトル: フォントサイズ調整（design-tokens --font-size-3xl: 24px 準拠）
   "#page-title{font-size:24px!important;font-weight:bold!important;padding:0 8px}",
-  // 記事可読性: ベースタイポグラフィ + iOS Safari iframe scroll修正
-  // Wikidot CSSがbody/htmlにoverflow:hiddenを設定し、iOS Safariのiframe内スクロールを阻害するため上書き
-  "html,body{overflow-x:hidden!important;overflow-y:visible!important}",
+  // 記事可読性: ベースタイポグラフィ + iframe scroll修正
+  // Wikidot CSSがbody/htmlにoverflow:hiddenを設定し、iframe内スクロールを阻害するため上書き
+  // visible→auto変更理由: visibleはスクロール機構を生成せず、
+  // h-screen固定のiframe内で100vhを超えるコンテンツが閲覧不能になっていた
+  "html,body{overflow-x:hidden!important;overflow-y:auto!important}",
   // テーマCSSのbody背景リセット: Black Highlighter等のテーマがbodyに
   // background-image(グラデーション)やbackground-color(暗色)を設定し、
   // iframe内で記事コンテンツに被さるため、白背景にリセットする
