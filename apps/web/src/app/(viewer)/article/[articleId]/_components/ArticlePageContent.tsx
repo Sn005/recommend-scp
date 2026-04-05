@@ -26,7 +26,9 @@ interface ArticlePageContentProps {
 export function ArticlePageContent({ articleId }: ArticlePageContentProps) {
   const iframeSrc = `/api/wiki-proxy/${articleId}`;
   const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [authorName, setAuthorName] = useState<string | undefined>(undefined);
+  const [iframeHeight, setIframeHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAuthor = async () => {
@@ -41,28 +43,29 @@ export function ArticlePageContent({ articleId }: ArticlePageContentProps) {
     void fetchAuthor();
   }, [articleId]);
 
-  // iOS Safari iframe スクロール修正: 親divのheightを一瞬除去してリフローを強制。
-  // iOS Safariではiframe親コンテナのスクロール領域が初回レンダリング時に正しく計算されない。
-  // DevToolsでh-screenのチェックを外す→戻す操作で治ることから、
-  // 2回のペイントサイクルを経てheightをトグルする必要がある（double rAF）。
+  // iframeコンテンツの高さを取得して親に反映する。
+  // wiki-proxyは同一オリジンなのでcontentDocumentにアクセス可能。
+  // これによりiframeがコンテンツ全体を表示でき、ページ自体がスクロール可能になる。
   const handleIframeLoad = useCallback(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.style.height = "auto";
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          container.style.height = "";
-        });
-      });
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    try {
+      const doc = iframe.contentDocument;
+      if (doc) {
+        // コンテンツの高さを取得してiframeの高さに設定
+        const height = doc.documentElement.scrollHeight || doc.body.scrollHeight;
+        setIframeHeight(height);
+      }
+    } catch {
+      // cross-originでアクセスできない場合はフォールバック
+      setIframeHeight(null);
     }
   }, []);
 
   return (
-    <div
-      className="relative flex flex-col h-screen overflow-hidden md:h-auto md:overflow-visible"
-      data-testid="article-page"
-    >
-      <div className="md:flex md:min-h-[calc(100vh-56px)]">
+    <div className="relative flex flex-col min-h-screen md:h-auto" data-testid="article-page">
+      <div className="flex flex-col flex-1 md:flex-row md:min-h-[calc(100vh-56px)]">
         {/* 左サイドパネル */}
         <div
           className="hidden md:block flex-1 bg-gray-100 md:sticky md:top-14 md:h-[calc(100vh-56px)] md:self-start"
@@ -78,11 +81,13 @@ export function ArticlePageContent({ articleId }: ArticlePageContentProps) {
           <div
             ref={containerRef}
             data-testid="article-webview"
-            className={cn("relative w-full flex-1 min-h-0")}
+            className={cn("relative w-full flex-1")}
           >
             <iframe
+              ref={iframeRef}
               src={iframeSrc}
-              className="w-full h-full border-0"
+              className="w-full border-0"
+              style={iframeHeight ? { height: `${String(iframeHeight)}px` } : { height: "100vh" }}
               title="SCP記事"
               sandbox="allow-scripts allow-same-origin allow-popups"
               onLoad={handleIframeLoad}
