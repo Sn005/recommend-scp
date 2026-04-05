@@ -85,7 +85,7 @@ export function ArticleWebView({
   // サジェスト画面表示（通常のArticleWebViewと同じ高さを維持し、次記事が見えないようにする）
   if (showNotFound) {
     return (
-      <div className={cn("relative w-full h-screen", className)}>
+      <div className={cn("relative w-full h-screen md:h-auto", className)}>
         <TranslationNotFound onSuggest={handleSuggest} />
       </div>
     );

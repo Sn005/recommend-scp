@@ -41,70 +41,54 @@ import { SkeletonLoader } from "./_components/SkeletonLoader";
 export default function FavoritesPage() {
   const { favorites, isLoading, error, removeFavorite, refresh } = useFavorites();
 
-  // AC-6: ローディング状態
+  // 状態に応じたコンテンツとカウントを決定
+  let content: React.ReactNode;
+  let count: string;
+
   if (isLoading) {
-    return (
-      <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
-          {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
-            <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
-            <span className="text-sm text-gray-400">0件</span>
-          </div>
-          <SkeletonLoader />
-        </main>
-      </div>
+    content = <SkeletonLoader />;
+    count = "0件";
+  } else if (error) {
+    content = <ErrorState onRetry={() => void refresh()} />;
+    count = "0件";
+  } else if (favorites.length === 0) {
+    content = <EmptyState />;
+    count = "0件";
+  } else {
+    content = (
+      <FavoriteList
+        favorites={favorites}
+        onRemove={(articleId) => void removeFavorite(articleId)}
+      />
     );
+    count = `${String(favorites.length)}件`;
   }
 
-  // AC-5: エラー状態
-  if (error) {
-    return (
-      <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
-          {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
-            <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
-            <span className="text-sm text-gray-400">0件</span>
-          </div>
-          <ErrorState onRetry={() => void refresh()} />
-        </main>
-      </div>
-    );
-  }
-
-  // AC-4: 空状態
-  if (favorites.length === 0) {
-    return (
-      <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-        <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
-          {/* ヘッダー */}
-          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
-            <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
-            <span className="text-sm text-gray-400">0件</span>
-          </div>
-          <EmptyState />
-        </main>
-      </div>
-    );
-  }
-
-  // AC-2, AC-8: 通常表示
   return (
     <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
-      <main className="pb-8 px-4 md:max-w-[768px] md:mx-auto">
-        {/* AC-2: ヘッダー（スクロールで動く） */}
-        <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
-          <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
-          <span className="text-sm text-gray-400">{favorites.length}件</span>
+      <div className="md:flex">
+        {/* 左サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100"
+          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
+        />
+
+        {/* 中央コンテンツ */}
+        <div className="w-full md:max-w-[768px] md:shrink-0 md:h-screen md:overflow-y-auto pb-8 px-4">
+          {/* AC-2: ヘッダー（スクロールで動く） */}
+          <div className="flex items-center justify-between py-4 pl-12 md:pl-4">
+            <h1 className="text-lg font-semibold text-gray-800">お気に入り</h1>
+            <span className="text-sm text-gray-400">{count}</span>
+          </div>
+          {content}
         </div>
 
-        {/* AC-8: お気に入りリスト */}
-        <FavoriteList
-          favorites={favorites}
-          onRemove={(articleId) => void removeFavorite(articleId)}
+        {/* 右サイドパネル */}
+        <div
+          className="hidden md:block flex-1 bg-gray-100"
+          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
         />
-      </main>
+      </div>
     </div>
   );
 }
