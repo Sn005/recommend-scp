@@ -30,6 +30,7 @@ export { useArticleContent } from "./useArticleContent";
 export { useIosSafariScrollFix } from "./useIosSafariScrollFix";
 export { useNotFoundState } from "./useNotFoundState";
 export { useIframeLoadHandler } from "./useIframeLoadHandler";
+export { useIframeAutoHeight } from "./useIframeAutoHeight";
 export type {
   ArticleContent,
   UseArticleContentOptions,
