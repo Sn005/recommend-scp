@@ -68,10 +68,7 @@ export default function FavoritesPage() {
     <div data-testid="favorites-page" className="min-h-screen bg-gray-50">
       <div className="md:flex">
         {/* 左サイドパネル */}
-        <div
-          className="hidden md:block flex-1 bg-gray-100"
-          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
-        />
+        <div className="hidden md:block flex-1" />
 
         {/* 中央コンテンツ */}
         <div className="w-full md:max-w-[768px] md:shrink-0 md:h-screen md:overflow-y-auto pb-8 px-4">
@@ -84,10 +81,7 @@ export default function FavoritesPage() {
         </div>
 
         {/* 右サイドパネル */}
-        <div
-          className="hidden md:block flex-1 bg-gray-100"
-          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
-        />
+        <div className="hidden md:block flex-1" />
       </div>
     </div>
   );
