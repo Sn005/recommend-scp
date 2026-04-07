@@ -172,20 +172,12 @@ describe("FavoritesPage", () => {
       expect(screen.getByText("まだお気に入りがありません")).toBeInTheDocument();
     });
 
-    it("「記事を探す」ボタンが表示される", () => {
+    it("補足メッセージが表示される", () => {
       render(<FavoritesPage />);
 
-      expect(screen.getByRole("button", { name: /記事を探す/ })).toBeInTheDocument();
-    });
-
-    it("ボタンタップで/recommendに遷移する", async () => {
-      const user = userEvent.setup();
-      render(<FavoritesPage />);
-
-      const button = screen.getByRole("button", { name: /記事を探す/ });
-      await user.click(button);
-
-      expect(mockPush).toHaveBeenCalledWith("/recommend");
+      expect(
+        screen.getByText("気に入った記事を保存して、いつでも読み返せます")
+      ).toBeInTheDocument();
     });
   });
 
