@@ -179,6 +179,22 @@ describe("FavoritesPage", () => {
         screen.getByText("気に入った記事を保存して、いつでも読み返せます")
       ).toBeInTheDocument();
     });
+
+    it("「記事を探す」ボタンが表示される", () => {
+      render(<FavoritesPage />);
+
+      expect(screen.getByRole("button", { name: /記事を探す/ })).toBeInTheDocument();
+    });
+
+    it("ボタンタップで/recommendに遷移する", async () => {
+      const user = userEvent.setup();
+      render(<FavoritesPage />);
+
+      const button = screen.getByRole("button", { name: /記事を探す/ });
+      await user.click(button);
+
+      expect(mockPush).toHaveBeenCalledWith("/recommend");
+    });
   });
 
   describe("AC-5: エラー状態", () => {
