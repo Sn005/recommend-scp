@@ -28,10 +28,7 @@ export default function HistoryPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="md:flex">
         {/* 左サイドパネル */}
-        <div
-          className="hidden md:block flex-1 bg-gray-100"
-          style={{ boxShadow: "inset -1px 0 3px rgba(0,0,0,0.06)" }}
-        />
+        <div className="hidden md:block flex-1" />
 
         {/* 中央コンテンツ */}
         <div className="w-full md:max-w-[768px] md:shrink-0 md:h-screen md:overflow-y-auto">
@@ -44,9 +41,9 @@ export default function HistoryPage() {
           {/* 履歴一覧（AC-2） */}
           <div className="space-y-3 px-4 pb-4">
             {history.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <p className="text-gray-400">まだ閲覧履歴がありません</p>
-                <p className="text-sm text-gray-400 mt-1">
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <p className="text-gray-500">まだ閲覧履歴がありません</p>
+                <p className="text-sm text-gray-400 mt-2">
                   記事を閲覧すると、ここに履歴が表示されます
                 </p>
               </div>
@@ -59,10 +56,7 @@ export default function HistoryPage() {
         </div>
 
         {/* 右サイドパネル */}
-        <div
-          className="hidden md:block flex-1 bg-gray-100"
-          style={{ boxShadow: "inset 1px 0 3px rgba(0,0,0,0.06)" }}
-        />
+        <div className="hidden md:block flex-1" />
       </div>
     </div>
   );

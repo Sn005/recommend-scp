@@ -69,7 +69,7 @@ export function HistoryCard({ entry }: HistoryCardProps) {
   return (
     <Link
       href={`/article/${encodeURIComponent(entry.scpNumber)}`}
-      className="block bg-white rounded-xl shadow-sm p-4 transition-transform active:scale-[0.98]"
+      className="block bg-white rounded-xl shadow-sm p-4 transition-all duration-200 active:scale-[0.98] md:hover:-translate-y-0.5 md:hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
       data-testid="history-card"
     >
       <div className="flex items-start gap-3">
