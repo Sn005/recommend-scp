@@ -2,7 +2,7 @@
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **story-id**: 018-03
 - **epic-id**: 018
 

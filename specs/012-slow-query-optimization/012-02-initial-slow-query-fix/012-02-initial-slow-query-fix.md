@@ -3,9 +3,10 @@ id: "012-02"
 epic_id: "012"
 epic_title: "スロークエリ最適化"
 title: "初回スロークエリ対応"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
-updated_at: "2026-02-15"
+updated_at: "2026-04-18"
+completed_at: "2026-04-18"
 ---
 
 # Story: 初回スロークエリ対応
@@ -25,16 +26,16 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [ ] WHEN pg_stat_statements データが共有された際
+- [x] WHEN pg_stat_statements データが共有された際
       GIVEN スロークエリが1件以上特定された場合
       THEN 各クエリの実行計画分析と対応優先度が判定されている
 
-- [ ] WHEN スロークエリの改善方針が決定された際
+- [x] WHEN スロークエリの改善方針が決定された際
       GIVEN インデックス追加またはクエリ書き換えが必要な場合
       THEN マイグレーションファイルが `supabase/migrations/` に作成されている
       AND 既存のAPI入出力互換性が維持されている
 
-- [ ] WHEN 改善マイグレーションが適用された後
+- [x] WHEN 改善マイグレーションが適用された後
       GIVEN 改善対象のクエリが存在する場合
       THEN 対応記録が `docs/operations/slow-query-optimization.md` に追記されている
       AND 各改善に「Why（なぜその対応を選択したか）」が記録されている

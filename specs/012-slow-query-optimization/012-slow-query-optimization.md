@@ -1,9 +1,10 @@
 ---
 id: "012"
 title: "スロークエリ最適化"
-status: "pending"
+status: "completed"
 created_at: "2026-02-15"
-updated_at: "2026-02-15"
+updated_at: "2026-04-18"
+completed_at: "2026-04-18"
 ---
 
 # EPIC: スロークエリ最適化
@@ -19,17 +20,17 @@ updated_at: "2026-02-15"
 
 ## Acceptance Criteria
 
-- [ ] WHEN Supabaseダッシュボードの pg_stat_statements データが共有された際
+- [x] WHEN Supabaseダッシュボードの pg_stat_statements データが共有された際
       GIVEN スロークエリが特定されている場合
       THEN 各クエリに対して分析と改善方針が「Why」付きでドキュメント化されている
       AND 改善マイグレーションがリポジトリにコミットされている
 
-- [ ] WHEN スロークエリ改善が適用された後
+- [x] WHEN スロークエリ改善が適用された後
       GIVEN 改善対象のクエリが存在する場合
       THEN Supabaseダッシュボード上のアラートが解消されている
       AND APIレスポンスが目標値（≤ 200ms）以内に収まっている
 
-- [ ] WHILE スロークエリ対応を進めている間
+- [x] WHILE スロークエリ対応を進めている間
       THE SYSTEM SHALL 既存のAPI入出力互換性を維持する
       AND 既存テストが全て通過する状態を保つ
 
