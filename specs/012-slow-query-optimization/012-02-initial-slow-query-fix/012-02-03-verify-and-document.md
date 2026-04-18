@@ -70,15 +70,15 @@ completed_at: "2026-04-18"
 - 改善率: Z%
 ```
 
+## 実装状況
+
+- **status**: completed
+
 ## 完了確認
 
 - 確認日: 2026-04-18
 - 確認者: Claude
 - 備考: マイグレーションファイルコメントからPhase B/C/D実測値を取得し記録。embedding 33.5ms達成（AC1充足）。unexplored_tags はPhase D後の本番実測値なし（196ms→50ms以下期待）。
-
-## 実装状況
-
-- **status**: completed
 
 ## 参照ドキュメント
 

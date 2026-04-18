@@ -2,7 +2,7 @@
 
 ## ステータス
 
-- **status**: pending
+- **status**: completed
 - **created**: 2026-03-09
 - **epic-id**: 018
 
