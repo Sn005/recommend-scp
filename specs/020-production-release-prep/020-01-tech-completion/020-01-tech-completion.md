@@ -23,12 +23,12 @@
 
 ### ゲートチェック結果（2026-04-18）
 
-| AC | 結果 | 備考 |
-|----|------|------|
-| EPIC-012-02 全Subtask completed | ✅ | 012-02-03 を completed に更新（B案効果は018-03-01で本番確認済み） |
-| EPIC-018-02 completed | ✅ | 既に completed |
-| EPIC-018-03 全Subtask completed | ✅ | 018-03-01 completed → Story 018-03 ステータスも更新 |
-| epic-list.md EPIC-012, EPIC-018 completed 更新 | ✅ | 両EPIC を completed に更新 |
+| AC                                             | 結果 | 備考                                                              |
+| ---------------------------------------------- | ---- | ----------------------------------------------------------------- |
+| EPIC-012-02 全Subtask completed                | ✅   | 012-02-03 を completed に更新（B案効果は018-03-01で本番確認済み） |
+| EPIC-018-02 completed                          | ✅   | 既に completed                                                    |
+| EPIC-018-03 全Subtask completed                | ✅   | 018-03-01 completed → Story 018-03 ステータスも更新               |
+| epic-list.md EPIC-012, EPIC-018 completed 更新 | ✅   | 両EPIC を completed に更新                                        |
 
 ## 備考
 
