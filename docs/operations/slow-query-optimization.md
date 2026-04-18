@@ -289,18 +289,37 @@ A案で79%改善したが目標100msに対して3.9〜6.0倍の乖離が残存�
 #### How
 
 - **改善方法**: HNSWパラメータ調整 + クエリ書き換え + インデックス追加
-- **マイグレーションファイル**: `supabase/migrations/20260228000001_optimize_slow_queries_phase_b.sql`
+- **マイグレーションファイル**:
+  - `supabase/migrations/20260228000001_optimize_slow_queries_phase_b.sql` (B案)
+  - `supabase/migrations/20260228000002_optimize_slow_queries_phase_c.sql` (C案: LATERAL JOIN遅延適用)
+  - `supabase/migrations/20260301000001_optimize_slow_queries_phase_d.sql` (D案: ratingインデックス + IF/ELSE分岐)
 - **変更内容の概要**:
   - B-1: ef_search を 40 → 20 に削減（推薦用途での精度トレードオフ許容）
   - B-2: over-fetch 倍率を 5x → 3x に削減（JOIN処理を40%軽量化）
   - B-3: article_translations に部分インデックス追加（日本語翻訳済み記事専用）
   - B-4: unexplored_tags の NOT && → 正引き(&&)+NOT EXISTS パターンに書き換え（GINインデックス活用可能に）
+  - C-1: unexplored_tags の LATERAL JOIN を LIMIT 後に遅延適用（全候補行→10件に削減）
+  - C-2: embedding検索も同様に LATERAL JOIN を最終LIMIT後に移動
+  - D-1: rating DESC 部分インデックス追加（tags IS NOT NULL条件付き）
+  - D-2: CASE WHEN ORDER BY → IF/ELSE 分岐に変更（インデックススキャン有効化）
 
 #### 効果
 
-| 指標                         | B案適用前 | B案適用後 | 目標値  |
-| ---------------------------- | --------- | --------- | ------- |
-| embedding 平均実行時間       | 391ms     | (要計測)  | ≤ 100ms |
-| unexplored_tags 平均実行時間 | 604ms     | (要計測)  | ≤ 100ms |
+**Phase B実測値**（`20260228000001_optimize_slow_queries_phase_b.sql` 適用後）:
 
-- **アラート解消**: (B案適用後に再計測して判定)
+| 指標                         | B案適用前 | B案適用後 | 改善率 | 目標値  |
+| ---------------------------- | --------- | --------- | ------ | ------- |
+| embedding 平均実行時間       | 391ms     | 33.5ms    | -91%   | ≤ 100ms |
+| unexplored_tags 平均実行時間 | 604ms     | 304.4ms   | -50%   | ≤ 100ms |
+
+**Phase C実測値**（`20260228000002_optimize_slow_queries_phase_c.sql` 適用後）:
+
+| 指標                         | C案適用前 | C案適用後 | 目標値  |
+| ---------------------------- | --------- | --------- | ------- |
+| unexplored_tags 平均実行時間 | 304.4ms   | 196.66ms  | ≤ 100ms |
+
+**Phase D**（`20260301000001_optimize_slow_queries_phase_d.sql` 適用）: ratingインデックス追加 + IF/ELSE分岐、196ms → 50ms以下を期待。適用後の本番実測値は未計測。
+
+- **アラート解消**:
+  - embedding: **解消済み**（33.5ms、目標100ms達成）
+  - unexplored_tags: **未解消**（Phase D後の実測値なし、196ms → 50ms以下期待）
