@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { ServiceWorkerRegistrar } from "@/shared/components/ServiceWorkerRegistrar";
 import { VisitorProvider } from "@/shared/contexts/VisitorProvider";
 import { siteConfig } from "@/shared/lib/site-config";
@@ -127,6 +128,7 @@ export default function RootLayout({
         />
         <ServiceWorkerRegistrar />
         <VisitorProvider>{children}</VisitorProvider>
+        <Analytics />
       </body>
     </html>
   );
