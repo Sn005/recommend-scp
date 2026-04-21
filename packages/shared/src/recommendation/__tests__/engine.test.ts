@@ -1471,4 +1471,98 @@ describe("RecommendationEngine", () => {
       expect(batchCalls[0][0]).toHaveLength(50);
     });
   });
+
+  describe("recalculateOnRequest デフォルトおよび preloadedProfile", () => {
+    it("config 未指定時は recalculateOnRequest が false（嗜好ベクトル再計算なし）", async () => {
+      const storage = createMockStorage({
+        getProfile: vi.fn().mockResolvedValue(createTestProfile(visitorId, testEmbedding)),
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        saveProfile: vi.fn().mockResolvedValue(undefined),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+      });
+
+      // config 未指定（デフォルト動作）
+      const engine = new RecommendationEngine(storage, vectorSearch);
+      await engine.getRecommendations(visitorId);
+
+      // 再計算系のサイドエフェクトが発生しないこと
+      expect(storage.saveProfile).not.toHaveBeenCalled();
+      expect(vectorSearch.getEmbeddings).not.toHaveBeenCalled();
+    });
+
+    it("preloadedProfile を渡すと storage.getProfile は呼ばれない（recalc off）", async () => {
+      const profile = createTestProfile(visitorId, testEmbedding);
+      const getProfileMock = vi.fn().mockResolvedValue(null);
+      const storage = createMockStorage({
+        getProfile: getProfileMock,
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+      });
+      await engine.getRecommendations(visitorId, 10, [], profile);
+
+      expect(getProfileMock).not.toHaveBeenCalled();
+    });
+
+    it("preloadedProfile 渡しても recalc on なら profile は再取得される", async () => {
+      const preloaded = createTestProfile(visitorId, testEmbedding);
+      const freshProfile = createTestProfile(visitorId, testEmbedding);
+      const getProfileMock = vi.fn().mockResolvedValue(freshProfile);
+      const storage = createMockStorage({
+        getProfile: getProfileMock,
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+        saveProfile: vi.fn().mockResolvedValue(undefined),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+        getEmbeddings: vi.fn().mockResolvedValue(new Map()),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: true,
+      });
+      await engine.getRecommendations(visitorId, 10, [], preloaded);
+
+      // recalc 実施により saveProfile 用の getProfile と最終取得が少なくとも1回は発生
+      expect(getProfileMock).toHaveBeenCalled();
+    });
+
+    it("preloadedProfile なし かつ recalc off なら従来どおり storage.getProfile を1回呼ぶ", async () => {
+      const profile = createTestProfile(visitorId, testEmbedding);
+      const getProfileMock = vi.fn().mockResolvedValue(profile);
+      const storage = createMockStorage({
+        getProfile: getProfileMock,
+        getViewHistory: vi.fn().mockResolvedValue([]),
+        getFeedback: vi.fn().mockResolvedValue([]),
+        getFavorites: vi.fn().mockResolvedValue([]),
+      });
+
+      const vectorSearch = createMockVectorSearch({
+        searchByEmbedding: vi.fn().mockResolvedValue([]),
+      });
+
+      const engine = new RecommendationEngine(storage, vectorSearch, {
+        recalculateOnRequest: false,
+      });
+      await engine.getRecommendations(visitorId);
+
+      expect(getProfileMock).toHaveBeenCalledTimes(1);
+    });
+  });
 });

@@ -21,6 +21,7 @@ vi.mock("../logger", () => ({
 // Redisクライアントモック
 const mockRedisGet = vi.fn();
 const mockRedisSet = vi.fn();
+const mockRedisDel = vi.fn();
 const mockGetRedisClient = vi.fn();
 
 vi.mock("../redis", () => ({
@@ -102,6 +103,37 @@ describe("cacheGet / cacheSet", () => {
 
     const { cacheSet } = await import("../cache");
     await expect(cacheSet("test:key", "value", 3600)).resolves.toBeUndefined();
+
+    expect(mockLogger.error).toHaveBeenCalled();
+  });
+
+  it("cacheDeleteはRedisクライアントのdelを呼ぶ", async () => {
+    const mockClient = { get: mockRedisGet, set: mockRedisSet, del: mockRedisDel };
+    mockGetRedisClient.mockReturnValue(mockClient);
+    mockRedisDel.mockResolvedValue(1);
+
+    const { cacheDelete } = await import("../cache");
+    await cacheDelete("test:key");
+
+    expect(mockRedisDel).toHaveBeenCalledWith("test:key");
+  });
+
+  it("Redisクライアントがnullの場合、cacheDeleteは何もしない", async () => {
+    mockGetRedisClient.mockReturnValue(null);
+
+    const { cacheDelete } = await import("../cache");
+    await cacheDelete("test:key");
+
+    expect(mockRedisDel).not.toHaveBeenCalled();
+  });
+
+  it("cacheDeleteのRedisエラー時はログ出力して例外を伝播しない", async () => {
+    const mockClient = { get: mockRedisGet, set: mockRedisSet, del: mockRedisDel };
+    mockGetRedisClient.mockReturnValue(mockClient);
+    mockRedisDel.mockRejectedValue(new Error("Redis delete failed"));
+
+    const { cacheDelete } = await import("../cache");
+    await expect(cacheDelete("test:key")).resolves.toBeUndefined();
 
     expect(mockLogger.error).toHaveBeenCalled();
   });

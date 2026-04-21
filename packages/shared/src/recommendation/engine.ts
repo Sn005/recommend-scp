@@ -108,9 +108,19 @@ const DEFAULT_EXPLORED_TAGS_VIEW_HISTORY_LIMIT = 50;
 
 /**
  * デフォルト設定
+ *
+ * recalculateOnRequest は既定で false。
+ * 嗜好ベクトル再計算は `/recommend` の critical path に載ると
+ * saveProfile UPDATE と追加の getProfile/getEmbeddings が発生し、体感速度を悪化させるため、
+ * 非同期ジョブ（バッチ or 別エンドポイント）で実施する運用に寄せる。
+ * 明示的に true を指定した呼び出し側（テスト等）では従来通りの振る舞い。
+ *
+ * TODO: バッチ再計算エンドポイント（例: /internal/recalculate-preferences）を
+ *   実装するまでは、フィードバック後の推薦精度更新は onboarding 完了時の
+ *   初期ベクトルに依存する。運用上の暫定状態。
  */
 const DEFAULT_CONFIG: RecommendationEngineConfig = {
-  recalculateOnRequest: true,
+  recalculateOnRequest: false,
   candidatePoolMultiplier: DEFAULT_CANDIDATE_POOL_MULTIPLIER,
 };
 
@@ -151,13 +161,19 @@ export class RecommendationEngine {
    *
    * @param visitorId 訪問者ID
    * @param limit 取得件数上限（デフォルト: 10）
+   * @param additionalExcludeIds 追加で除外する記事ID
+   * @param preloadedProfile 呼び出し側で事前取得済みの profile。
+   *        渡された場合、recalculate off のときは storage.getProfile の再呼び出しを省略する
+   *        （サービス層の onboarding チェックなどで取得済みの profile を再利用）。
+   *        recalculate on のときは saveProfile 後の値を得るため再取得される。
    * @returns 推薦記事リスト（類似度降順）
    * @throws オンボーディング未完了の場合
    */
   async getRecommendations(
     visitorId: string,
     limit: number = 10,
-    additionalExcludeIds: string[] = []
+    additionalExcludeIds: string[] = [],
+    preloadedProfile: PreferenceProfile | null = null
   ): Promise<RecommendedArticle[]> {
     // 全行動データを1回だけ並列取得（recalculate + excludeIds + shouldForceSerendipity で共用）
     const [feedbacks, viewHistories, favorites, recentLogs] = await Promise.all([
@@ -168,11 +184,15 @@ export class RecommendationEngine {
     ]);
 
     // 嗜好ベクトルを再計算（バッチEmbedding取得で高速化）
+    let profile: PreferenceProfile | null = preloadedProfile;
     if (this.config.recalculateOnRequest) {
       await this.recalculatePreferenceVector(visitorId, feedbacks, viewHistories, favorites);
+      // recalculate 後は saveProfile による更新後の profile を使うため必ず再取得
+      profile = await this.storage.getProfile(visitorId);
+    } else if (!profile) {
+      profile = await this.storage.getProfile(visitorId);
     }
 
-    const profile = await this.storage.getProfile(visitorId);
     if (!profile?.preferenceEmbedding) {
       throw new Error("Onboarding not completed: preferenceEmbedding is missing");
     }

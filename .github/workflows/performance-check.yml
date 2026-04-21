@@ -53,7 +53,9 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           exit $EXIT_CODE
         env:
-          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          # 本番ドメインを明示。CDN経由の実体験値を計測するため `scpicks.app` を使用。
+          # `vars.API_BASE_URL` が未設定なら本番ドメインをフォールバック。
+          API_BASE_URL: ${{ vars.API_BASE_URL || 'https://scpicks.app/api' }}
           TEST_VISITOR_ID: ${{ secrets.TEST_VISITOR_ID }}
         continue-on-error: true
 
@@ -64,7 +66,7 @@ jobs:
           script: |
             const result = require('fs').readFileSync('/tmp/perf-result.txt', 'utf8');
             const timestamp = new Date().toISOString();
-            const apiUrl = '${{ vars.API_BASE_URL }}';
+            const apiUrl = '${{ vars.API_BASE_URL }}' || 'https://scpicks.app/api';
 
             // 重複チェック: perf:degraded ラベル付きOpenなIssue
             const { data: existingIssues } = await github.rest.issues.listForRepo({
@@ -77,6 +79,43 @@ jobs:
               per_page: 1
             });
 
+            // 既存Openがあれば継続劣化コメントで通知（既に認知済みの問題として扱う）
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: `## 継続劣化報告\n\n検知時刻: ${timestamp}\n\n\`\`\`\n${result}\n\`\`\``
+              });
+              core.info(`Issue #${existingIssues[0].number} に継続劣化コメントを追加しました`);
+              return;
+            }
+
+            // 新規Issue作成は「3日連続FAIL」のみ。
+            // 単発のスパイクでIssueを量産しないようノイズを抑制する。
+            const { data: recentRuns } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'performance-check.yml',
+              event: 'schedule',
+              per_page: 10,
+            });
+            // 直近のscheduled runを最新→過去順に並べ、現在進行中の自分自身を除外
+            const pastRuns = recentRuns.workflow_runs
+              .filter((r) => r.id !== context.runId && r.status === 'completed')
+              .slice(0, 2); // 直近完了した2件（今回のFAILと合わせて計3件）
+            const allPastFailed =
+              pastRuns.length >= 2 && pastRuns.every((r) => r.conclusion === 'failure');
+
+            if (!allPastFailed) {
+              core.notice(
+                `直近のscheduled runが3日連続FAILに達していないため新規Issueは作成しません (直近: ${pastRuns
+                  .map((r) => r.conclusion)
+                  .join(', ')})`
+              );
+              return;
+            }
+
             const body = [
               `## APIレスポンスタイム劣化レポート`,
               ``,
@@ -84,7 +123,7 @@ jobs:
               `| --- | --- |`,
               `| 検知時刻 | ${timestamp} |`,
               `| 対象URL | ${apiUrl} |`,
-              `| 閾値 | 200ms |`,
+              `| 判定基準 | 3日連続FAIL |`,
               ``,
               `### 計測結果`,
               `\`\`\``,
@@ -97,24 +136,14 @@ jobs:
               `3. \`docs/operations/slow-query-optimization.md\` の対応記録を参照`,
             ].join('\n');
 
-            if (existingIssues.length > 0) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existingIssues[0].number,
-                body: `## 継続劣化報告\n\n検知時刻: ${timestamp}\n\n\`\`\`\n${result}\n\`\`\``
-              });
-              core.info(`Issue #${existingIssues[0].number} に継続劣化コメントを追加しました`);
-            } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `[Performance] APIレスポンスタイム劣化検知 (${new Date().toISOString().slice(0,10)})`,
-                body,
-                labels: ['type:ops', 'perf:degraded']
-              });
-              core.info('新規パフォーマンス劣化Issueを作成しました');
-            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Performance] APIレスポンスタイム劣化検知 (${new Date().toISOString().slice(0,10)})`,
+              body,
+              labels: ['type:ops', 'perf:degraded']
+            });
+            core.info('3日連続FAILのため新規パフォーマンス劣化Issueを作成しました');
 
       - name: Fail job on degradation
         if: steps.perf.outputs.exit_code != '0'

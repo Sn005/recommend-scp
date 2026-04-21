@@ -39,3 +39,16 @@ export const cacheSet = async (key: string, value: unknown, ttlSeconds: number):
     logger.error({ err: error, key }, "Redisキャッシュ保存エラー");
   }
 };
+
+/**
+ * キャッシュからキーを削除する（invalidation用）
+ * Redis未設定時・エラー時は何もしない（graceful degradation）。
+ */
+export const cacheDelete = async (key: string): Promise<void> => {
+  if (!redis) return;
+  try {
+    await redis.del(key);
+  } catch (error) {
+    logger.error({ err: error, key }, "Redisキャッシュ削除エラー");
+  }
+};
