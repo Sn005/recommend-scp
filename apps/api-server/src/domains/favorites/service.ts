@@ -8,6 +8,10 @@ import type { FavoritesRepository } from "./repository";
 import type { VisitorsRepository } from "../visitors/repository";
 import type { FavoriteWithArticle, AddFavoriteResult } from "./types";
 import { NotFoundError } from "../../lib/errors";
+import { cacheGet, cacheSet, cacheDelete } from "../../lib/cache";
+
+const FAVORITES_CACHE_TTL_SECONDS = 60;
+const favoritesCacheKey = (visitorId: string): string => `favorites:${visitorId}`;
 
 /**
  * FavoritesService
@@ -35,7 +39,14 @@ export class FavoritesService {
       throw new NotFoundError("Visitor", visitorId);
     }
 
-    return this.favoritesRepository.getByVisitorId(visitorId);
+    // キャッシュヒット時はDBアクセスをスキップ
+    const cacheKey = favoritesCacheKey(visitorId);
+    const cached = await cacheGet<FavoriteWithArticle[]>(cacheKey);
+    if (cached !== null) return cached;
+
+    const favorites = await this.favoritesRepository.getByVisitorId(visitorId);
+    await cacheSet(cacheKey, favorites, FAVORITES_CACHE_TTL_SECONDS);
+    return favorites;
   };
 
   /**
@@ -58,6 +69,9 @@ export class FavoritesService {
 
     // Repository.addで追加（UPSERT）
     const result: AddFavoriteResult = await this.favoritesRepository.add(visitorId, articleId);
+
+    // キャッシュ無効化（次回の getFavorites で最新リストを再計算）
+    await cacheDelete(favoritesCacheKey(visitorId));
 
     return {
       articleId: result.articleId,
@@ -86,5 +100,8 @@ export class FavoritesService {
     if (!deleted) {
       throw new NotFoundError("Favorite", articleId);
     }
+
+    // キャッシュ無効化
+    await cacheDelete(favoritesCacheKey(visitorId));
   };
 }

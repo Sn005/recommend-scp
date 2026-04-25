@@ -10,6 +10,19 @@ import type { VisitorsRepository } from "../../visitors/repository";
 import { FavoritesService } from "../service";
 import { NotFoundError } from "../../../lib/errors";
 
+// cacheヘルパーをモック
+const mockCacheGet = vi.fn();
+const mockCacheSet = vi.fn();
+const mockCacheDelete = vi.fn();
+vi.mock("../../../lib/cache", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  cacheGet: (...args: unknown[]) => mockCacheGet(...args),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  cacheSet: (...args: unknown[]) => mockCacheSet(...args),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  cacheDelete: (...args: unknown[]) => mockCacheDelete(...args),
+}));
+
 describe("FavoritesService", () => {
   let service: FavoritesService;
   let mockFavoritesRepo: {
@@ -23,6 +36,9 @@ describe("FavoritesService", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCacheGet.mockResolvedValue(null);
+    mockCacheSet.mockResolvedValue(undefined);
+    mockCacheDelete.mockResolvedValue(undefined);
 
     mockFavoritesRepo = {
       getByVisitorId: vi.fn().mockResolvedValue([]),
@@ -205,6 +221,90 @@ describe("FavoritesService", () => {
         expect(error).toBeInstanceOf(NotFoundError);
         expect((error as NotFoundError).detail).toContain("Favorite");
       }
+    });
+  });
+
+  describe("キャッシュ動作", () => {
+    const mockFavorites = [
+      {
+        id: "fav-1",
+        articleId: "SCP-173",
+        title: "The Sculpture",
+        objectClass: "euclid",
+        rating: 850,
+        favoritedAt: "2025-01-20T10:00:00Z",
+      },
+    ];
+
+    it("getFavorites: キャッシュヒット時はDBアクセスを行わずキャッシュから返す", async () => {
+      mockCacheGet.mockResolvedValue(mockFavorites);
+
+      const result = await service.getFavorites("visitor-1");
+
+      expect(result).toEqual(mockFavorites);
+      expect(mockCacheGet).toHaveBeenCalledWith("favorites:visitor-1");
+      expect(mockFavoritesRepo.getByVisitorId).not.toHaveBeenCalled();
+    });
+
+    it("getFavorites: キャッシュミス時はDBから取得しキャッシュに保存する", async () => {
+      mockCacheGet.mockResolvedValue(null);
+      mockFavoritesRepo.getByVisitorId.mockResolvedValue(mockFavorites);
+
+      const result = await service.getFavorites("visitor-1");
+
+      expect(result).toEqual(mockFavorites);
+      expect(mockFavoritesRepo.getByVisitorId).toHaveBeenCalledWith("visitor-1");
+      expect(mockCacheSet).toHaveBeenCalledWith("favorites:visitor-1", mockFavorites, 60);
+    });
+
+    it("getFavorites: 空配列でもキャッシュに保存する", async () => {
+      mockCacheGet.mockResolvedValue(null);
+      mockFavoritesRepo.getByVisitorId.mockResolvedValue([]);
+
+      const result = await service.getFavorites("visitor-1");
+
+      expect(result).toEqual([]);
+      expect(mockCacheSet).toHaveBeenCalledWith("favorites:visitor-1", [], 60);
+    });
+
+    it("getFavorites: visitor不在時はキャッシュに触れない", async () => {
+      mockVisitorsRepo.findByVisitorId.mockResolvedValue(null);
+
+      await expect(service.getFavorites("nonexistent")).rejects.toThrow(NotFoundError);
+
+      expect(mockCacheGet).not.toHaveBeenCalled();
+      expect(mockCacheSet).not.toHaveBeenCalled();
+    });
+
+    it("addFavorite: 追加成功時はキャッシュを無効化する", async () => {
+      mockFavoritesRepo.add.mockResolvedValue({
+        id: "fav-new",
+        articleId: "SCP-173",
+        addedAt: "2025-01-20T10:00:00Z",
+        isNew: true,
+      });
+
+      await service.addFavorite("visitor-1", "SCP-173");
+
+      expect(mockCacheDelete).toHaveBeenCalledWith("favorites:visitor-1");
+    });
+
+    it("removeFavorite: 削除成功時はキャッシュを無効化する", async () => {
+      mockFavoritesRepo.remove.mockResolvedValue(true);
+
+      await service.removeFavorite("visitor-1", "SCP-173");
+
+      expect(mockCacheDelete).toHaveBeenCalledWith("favorites:visitor-1");
+    });
+
+    it("removeFavorite: 削除失敗時はキャッシュ無効化も行わない", async () => {
+      mockFavoritesRepo.remove.mockResolvedValue(false);
+
+      await expect(service.removeFavorite("visitor-1", "SCP-NONEXISTENT")).rejects.toThrow(
+        NotFoundError
+      );
+
+      expect(mockCacheDelete).not.toHaveBeenCalled();
     });
   });
 });

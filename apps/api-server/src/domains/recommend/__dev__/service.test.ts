@@ -110,8 +110,15 @@ describe("RecommendService", () => {
 
         expect(result).toEqual(mockRecommendations);
         expect(mockVisitorsRepo.findByVisitorId).toHaveBeenCalledWith("valid-visitor");
+        // getProfile は service 層で1回だけ呼ばれ、engine には取得済み profile を渡す
+        expect(mockStorage.getProfile).toHaveBeenCalledTimes(1);
         expect(mockStorage.getProfile).toHaveBeenCalledWith("valid-visitor");
-        expect(mockEngine.getRecommendations).toHaveBeenCalledWith("valid-visitor", 10, []);
+        expect(mockEngine.getRecommendations).toHaveBeenCalledWith(
+          "valid-visitor",
+          10,
+          [],
+          mockProfile
+        );
       });
 
       it("limitパラメータが正しく渡される", async () => {
@@ -121,7 +128,12 @@ describe("RecommendService", () => {
 
         await service.getRecommendations("valid-visitor", 5);
 
-        expect(mockEngine.getRecommendations).toHaveBeenCalledWith("valid-visitor", 5, []);
+        expect(mockEngine.getRecommendations).toHaveBeenCalledWith(
+          "valid-visitor",
+          5,
+          [],
+          mockProfile
+        );
       });
 
       it("デフォルトlimit=10で動作する", async () => {
@@ -131,7 +143,12 @@ describe("RecommendService", () => {
 
         await service.getRecommendations("valid-visitor");
 
-        expect(mockEngine.getRecommendations).toHaveBeenCalledWith("valid-visitor", 10, []);
+        expect(mockEngine.getRecommendations).toHaveBeenCalledWith(
+          "valid-visitor",
+          10,
+          [],
+          mockProfile
+        );
       });
 
       it("推薦結果が空配列の場合も正常に返す", async () => {

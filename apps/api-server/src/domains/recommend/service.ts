@@ -88,8 +88,9 @@ export class RecommendService {
     }
 
     // RecommendationEngineで推薦取得
+    // 取得済み profile を渡して engine 内部での storage.getProfile 重複呼び出しを回避
     try {
-      return await this.engine.getRecommendations(visitorId, limit, excludeIds);
+      return await this.engine.getRecommendations(visitorId, limit, excludeIds, profile);
     } catch (error) {
       // preferenceEmbedding関連のエラーはOnboardingRequiredErrorに変換
       if (error instanceof Error && error.message.includes("preferenceEmbedding")) {
