@@ -86,9 +86,10 @@ export default tseslint.config(
       "n/no-process-env": "off",
     },
   },
-  // Playwright設定ではprocess.env.CI参照が必須
+  // Playwright設定とE2Eテストヘルパーではprocess.env参照を許可
+  // (CI/PLAYWRIGHT_BASE_URL/PLAYWRIGHT_API_URL等の参照が必須)
   {
-    files: ["**/e2e/playwright.config.ts"],
+    files: ["**/e2e/playwright.config.ts", "**/e2e/lib/**/*.ts"],
     rules: {
       "n/no-process-env": "off",
       "no-console": "off",

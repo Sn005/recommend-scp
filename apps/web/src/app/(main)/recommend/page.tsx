@@ -12,6 +12,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useInfiniteArticles } from "./_hooks/useInfiniteArticles";
 import { useFeedback, calculateInterestLevel } from "./_hooks/useFeedback";
 import { useArticleFavorite } from "@/shared/hooks/useArticleFavorite";
@@ -42,8 +43,16 @@ import { SkeletonLoader } from "@/shared/components/ui/SkeletonLoader";
  * AC-10: prefers-reduced-motion対応
  */
 export default function RecommendPage() {
+  const router = useRouter();
   const { articles, currentIndex, isLoading, error, isEmpty, goToNext, refetch } =
     useInfiniteArticles();
+
+  // OnboardingRequired (400) は再試行しても解消しないため /onboarding に誘導する
+  useEffect(() => {
+    if (error?.name === "OnboardingRequiredError") {
+      router.replace("/onboarding");
+    }
+  }, [error, router]);
 
   const { recordNext, recordFavorite } = useFeedback();
   const currentArticle = articles[currentIndex] as (typeof articles)[number] | undefined;

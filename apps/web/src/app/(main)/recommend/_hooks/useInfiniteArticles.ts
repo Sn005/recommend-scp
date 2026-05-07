@@ -21,6 +21,40 @@ const DEFAULT_PREFETCH_THRESHOLD = 3;
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
+ * RFC 7807 Problem Details の type が onboarding-required の場合に true を返す
+ */
+function isOnboardingRequiredProblem(json: unknown): boolean {
+  if (typeof json !== "object" || json === null) return false;
+  const type = (json as { type?: unknown }).type;
+  return typeof type === "string" && type.endsWith("/onboarding-required");
+}
+
+/**
+ * 推薦API失敗時のエラーオブジェクトを生成する
+ *
+ * - 400 onboarding_required: 「オンボーディングが完了していません」と日本語で表現
+ * - その他: 「記事の取得に失敗しました」を表示し、status は内部エラーとしてのみ保持
+ */
+async function buildRecommendApiError(res: Response): Promise<Error> {
+  let body: unknown = null;
+  try {
+    body = await res.clone().json();
+  } catch {
+    // 本文が JSON でない場合は無視
+  }
+
+  if (res.status === 400 && isOnboardingRequiredProblem(body)) {
+    const err = new Error(
+      "オンボーディングが完了していません。再度オンボーディングをお試しください。"
+    );
+    err.name = "OnboardingRequiredError";
+    return err;
+  }
+
+  return new Error("記事の取得に失敗しました。時間をおいて再試行してください。");
+}
+
+/**
  * 有効なURLを持つ記事のみをフィルタする
  * 空文字列のURLは翻訳なしとみなし除外する
  */
@@ -91,7 +125,7 @@ export function useInfiniteArticles(
 
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- res.ok は実行時に false になる可能性がある
         if (!res.ok) {
-          throw new Error(`API error: ${String(res.status)}`);
+          throw await buildRecommendApiError(res);
         }
 
         const data = (await res.json()) as RecommendResponse;
