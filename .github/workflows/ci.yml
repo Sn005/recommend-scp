@@ -146,6 +146,10 @@ jobs:
           fi
 
       # --- E2E実行（リモートURLが取得できた場合のみ） ---
+      # E2E setup helper (apps/web/e2e/lib/api-setup.ts) は PLAYWRIGHT_API_URL が
+      # 未指定の場合 ${PLAYWRIGHT_BASE_URL}/api にフォールバックする。
+      # PR(preview)/push(prod) いずれでもテスト対象URLと同じホストの API を叩くため、
+      # ここでは PLAYWRIGHT_API_URL を明示しない（preview の /api を確実に使うため）。
       - name: Run Critical E2E Tests
         if: steps.e2e_target.outputs.skip != 'true'
         run: pnpm --filter web test:e2e --grep @critical --reporter=list,blob

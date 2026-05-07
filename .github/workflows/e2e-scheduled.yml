@@ -1,0 +1,183 @@
+# 毎日定期 E2E テスト
+#
+# main マージ時の E2E（ci.yml）に加え、本番URL対向のE2Eを毎日1回実行して
+# 本番デプロイ後の劣化（Vercel/Supabase/Upstash等の外部要因含む）を翌マージを
+# 待たずに検知する。
+#
+# 失敗時は health-check.yml と同じパターンで type:ops + e2e:failure ラベル付きの
+# Issue を自動起票（同ラベルの Open Issue があれば追記、なければ新規作成）。
+#
+# Required Secrets:
+#   secrets.PRODUCTION_URL  本番Web URL（例: https://scpicks.app）
+#                           E2E setup helper が ${PRODUCTION_URL}/api を API ベースURLとして使う
+
+name: E2E Scheduled
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # JST 03:00（UTC 18:00）
+  workflow_dispatch: {} # 手動テスト用
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    name: E2E Tests (Scheduled)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Run Critical E2E Tests
+        id: e2e_critical
+        run: pnpm --filter web test:e2e --grep @critical --reporter=list,blob
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report
+
+      - name: Run Non-Critical E2E Tests
+        id: e2e_non_critical
+        if: always()
+        run: pnpm --filter web test:e2e --grep-invert @critical --reporter=list,blob
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PRODUCTION_URL }}
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report
+
+      - name: Merge E2E Reports
+        if: always()
+        run: |
+          if find apps/web/blob-report -name '*.zip' 2>/dev/null | grep -q .; then
+            pnpm --filter web exec playwright merge-reports --reporter=html ./blob-report
+          else
+            echo "::warning::No blob report files found, skipping merge"
+          fi
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-scheduled-${{ github.run_id }}
+          path: apps/web/playwright-report/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload Test Results (Traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-scheduled-${{ github.run_id }}
+          path: apps/web/e2e/test-results/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Handle E2E failure
+        if: failure() && steps.e2e_critical.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,e2e:failure',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            const body = [
+              `## 定期 E2E 失敗レポート`,
+              ``,
+              `| 項目 | 値 |`,
+              `| --- | --- |`,
+              `| 検知時刻 | ${timestamp} |`,
+              `| 対象URL | ${{ secrets.PRODUCTION_URL }} |`,
+              `| ワークフロー実行 | ${runUrl} |`,
+              ``,
+              `### 確認手順`,
+              `1. 上記ワークフロー実行ページから Playwright Report (artifact) をダウンロード`,
+              `2. 失敗したテストの screenshot / trace を確認`,
+              `3. 本番アプリ・API・Supabase・Upstash の状態を確認`,
+              `4. 一過性なら手動再実行（workflow_dispatch）、再現するなら fix PR を作成`,
+            ].join('\n');
+
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body
+              });
+              core.info(`Issue #${existingIssues[0].number} に継続失敗コメントを追加`);
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[E2E Scheduled] 本番E2E失敗 - ${timestamp.slice(0, 10)}`,
+                body,
+                labels: ['type:ops', 'e2e:failure']
+              });
+              core.info('新規 e2e:failure Issue を作成');
+            }
+
+      - name: Handle E2E recovery
+        if: success() && steps.e2e_critical.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'type:ops,e2e:failure',
+              state: 'open',
+              sort: 'created',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            if (existingIssues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: [
+                  `## 復旧確認`,
+                  ``,
+                  `定期E2Eが正常に戻りました。`,
+                  ``,
+                  `| 項目 | 値 |`,
+                  `| --- | --- |`,
+                  `| 復旧時刻 | ${timestamp} |`,
+                  `| ワークフロー実行 | ${runUrl} |`,
+                  ``,
+                  `> このIssueは手動でクローズしてください。`,
+                ].join('\n')
+              });
+              core.info(`Issue #${existingIssues[0].number} に復旧コメントを追加`);
+            }
