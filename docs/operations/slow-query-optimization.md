@@ -323,3 +323,36 @@ A案で79%改善したが目標100msに対して3.9〜6.0倍の乖離が残存�
 - **アラート解消**:
   - embedding: **解消済み**（33.5ms、目標100ms達成）
   - unexplored_tags: **未解消**（Phase D後の実測値なし、196ms → 50ms以下期待）
+
+### [2026-05-07] 対応 #3: API ネットワークレイテンシ最適化（Vercel Functions リージョン統一）
+
+スロークエリ範囲外だが、issue #340（APIレスポンスタイム劣化）の根本対応として記録する。
+
+#### 検出
+
+- issue #340 で 2026-04-19 以降、`POST /api/recommend` warm 中央値 1,500〜1,800ms（閾値 1,000ms）、`GET /api/favorites` warm 中央値 850〜940ms（閾値 500ms）が継続 FAIL。
+- DB 単体クエリ（embedding 33.5ms）は Phase B〜D で最適化済み、PR #342 で API 層のキャッシュ導入・getProfile 重複除去・keep-warm 導入も完了済み。それでも閾値超過が続いていた。
+
+#### 分析
+
+- `apps/web/vercel.json` に `regions` 指定がなく、Vercel Functions が **デフォルトで `iad1`（us-east-1, バージニア）** にデプロイされていた。
+- Upstash Redis は `docs/operations/setup-upstash-redis.md` で `ap-northeast-1`（東京）推奨、Supabase プロジェクトも日本向けサービスのため東京リージョン想定。
+- iad1 ↔ 東京の RTT は約 150〜180 ms/往復。`/recommend` の 4〜10 RTT、`/favorites` の 3〜4 RTT が累積し、計測値とほぼ整合。
+
+#### Why
+
+DB 最適化と API 層の最適化を尽くしても閾値超過が継続している以上、**残存する支配要因はネットワークレイテンシのみ**であり、Vercel Function のリージョンを Supabase/Upstash と同一リージョンに統一することで解消可能と判断した。
+
+#### How
+
+`apps/web/vercel.json` に `"regions": ["hnd1"]` を追加（Tokyo）。
+
+#### 期待効果
+
+- `/recommend` warm 中央値: 1,500〜1,800ms → **300〜600ms**（-1,000ms 程度）
+- `/favorites` warm 中央値: 850〜940ms → **150〜400ms**（-500ms 程度）
+- 018-03-01 AC2 を PASS に到達させる。
+
+#### 注意
+
+Supabase プロジェクトのリージョンが東京以外（例: シンガポール `sin1`、ソウル `icn1`、フランクフルト `fra1` 等）の場合は、`vercel.json` の `regions` 値もそれに合わせること。Supabase Dashboard → Settings → Infrastructure で確認可能。
