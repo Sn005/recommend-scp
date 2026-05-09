@@ -29,6 +29,7 @@ function createMockPage() {
     fill: mockFill,
     waitFor: mockWaitFor,
     first: vi.fn().mockReturnThis(),
+    filter: vi.fn().mockReturnThis(),
   };
   const mockGetByTestId = vi.fn().mockReturnValue(mockLocator);
   const mockGoto = vi.fn().mockResolvedValue(undefined);

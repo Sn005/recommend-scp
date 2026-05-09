@@ -16,6 +16,7 @@ export function PCActionButtons({ isFavorited, onFavorite, onNext }: Props) {
         type="button"
         onClick={onFavorite}
         aria-label={isFavorited ? "お気に入りから削除" : "お気に入りに追加"}
+        data-testid="floating-favorite-button"
         className={`
           inline-flex items-center gap-2 px-7 py-3 rounded-xl text-[15px] font-medium border shadow-lg
           ${
